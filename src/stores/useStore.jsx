@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { mainCharacterMaterialDefaults } from '../config/mainCharacterMaterials.js'
 
 const PALETTE = soundJourneyPalette
 
@@ -56,13 +57,26 @@ const createStore = () =>
              * Character parameters
              */
             characterParameters: {
-                modelScale: 0.35,
-                modelYOffset: 0.4,
-                rotationOffset: Math.PI / 2,
+                modelScale: 0.51,
+                modelYOffset: 0.59,
+                rotationOffset: 1.57,
                 idleTimeScale: 1,
                 runTimeScale: 1.2,
                 runBlendInSpeed: 18,
                 runBlendOutSpeed: 3,
+            },
+
+            /**
+             * Character toon material parameters
+             */
+            characterMaterialParameters: {
+                palettePreset: 'previous',
+                lightDirectionX: 1,
+                lightDirectionY: 0.21,
+                lightDirectionZ: 0.22,
+                threshold: 0,
+                softness: 0,
+                materials: mainCharacterMaterialDefaults,
             },
 
             /**

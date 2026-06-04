@@ -1,11 +1,13 @@
 import { useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
+import { mainCharacterMaterialGroups, mainCharacterMaterialPresets } from '../config/mainCharacterMaterials.js'
 
 export default function Controls() {
     const terrainParameters = useStore((state) => state.terrainParameters)
     const borderParameters = useStore((state) => state.borderParameters)
     const ditheringParameters = useStore((state) => state.ditheringParameters)
     const characterParameters = useStore((state) => state.characterParameters)
+    const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
@@ -15,6 +17,51 @@ export default function Controls() {
             [section]: {
                 ...state[section],
                 [param]: value,
+            },
+        }))
+    }
+
+    const setCharacterMaterialParam = (slotId, param) => (value) => {
+        useStore.setState((state) => ({
+            characterMaterialParameters: {
+                ...state.characterMaterialParameters,
+                palettePreset: 'custom',
+                materials: {
+                    ...state.characterMaterialParameters.materials,
+                    [slotId]: {
+                        ...state.characterMaterialParameters.materials[slotId],
+                        [param]: value,
+                    },
+                },
+            },
+        }))
+    }
+
+    const setCharacterMaterialPreset = (presetId) => {
+        const preset = mainCharacterMaterialPresets[presetId]
+        if (!preset) {
+            useStore.setState((state) => ({
+                characterMaterialParameters: {
+                    ...state.characterMaterialParameters,
+                    palettePreset: presetId,
+                },
+            }))
+            return
+        }
+
+        useStore.setState((state) => ({
+            characterMaterialParameters: {
+                ...state.characterMaterialParameters,
+                palettePreset: presetId,
+                materials: Object.fromEntries(
+                    Object.entries(preset.materials).map(([id, colors]) => [
+                        id,
+                        {
+                            ...state.characterMaterialParameters.materials[id],
+                            ...colors,
+                        },
+                    ])
+                ),
             },
         }))
     }
@@ -186,6 +233,64 @@ export default function Controls() {
             step: 0.5,
             onChange: setParam('characterParameters', 'runBlendOutSpeed'),
         },
+    })
+
+    useControls('Character Toon', {
+        palettePreset: {
+            value: characterMaterialParameters.palettePreset,
+            options: {
+                Tuned: 'tuned',
+                Previous: 'previous',
+                Custom: 'custom',
+            },
+            onChange: setCharacterMaterialPreset,
+        },
+        lightDirectionX: {
+            value: characterMaterialParameters.lightDirectionX,
+            min: -1,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'lightDirectionX'),
+        },
+        lightDirectionY: {
+            value: characterMaterialParameters.lightDirectionY,
+            min: -1,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'lightDirectionY'),
+        },
+        lightDirectionZ: {
+            value: characterMaterialParameters.lightDirectionZ,
+            min: -1,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'lightDirectionZ'),
+        },
+        threshold: {
+            value: characterMaterialParameters.threshold,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'threshold'),
+        },
+        softness: {
+            value: characterMaterialParameters.softness,
+            min: 0,
+            max: 0.5,
+            step: 0.001,
+            onChange: setParam('characterMaterialParameters', 'softness'),
+        },
+        ...mainCharacterMaterialGroups.reduce((controls, group) => {
+            controls[`${group.label} Base`] = {
+                value: characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor,
+                onChange: setCharacterMaterialParam(group.id, 'baseColor'),
+            }
+            controls[`${group.label} Toon`] = {
+                value: characterMaterialParameters.materials[group.id]?.toonColor ?? group.toonColor,
+                onChange: setCharacterMaterialParam(group.id, 'toonColor'),
+            }
+            return controls
+        }, {}),
     })
 
     useControls('Camera Debug', {

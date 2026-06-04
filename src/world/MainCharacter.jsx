@@ -8,6 +8,7 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
+import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT
@@ -28,6 +29,85 @@ const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
+
+const CHARACTER_TOON_VERTEX_SHADER = `
+    varying vec3 vWorldNormal;
+
+    #include <common>
+    #include <uv_pars_vertex>
+    #include <morphtarget_pars_vertex>
+    #include <skinning_pars_vertex>
+
+    void main() {
+        #include <uv_vertex>
+        #include <beginnormal_vertex>
+        #include <morphnormal_vertex>
+        #include <skinbase_vertex>
+        #include <skinnormal_vertex>
+        #include <defaultnormal_vertex>
+
+        vWorldNormal = normalize(mat3(modelMatrix) * objectNormal);
+
+        #include <begin_vertex>
+        #include <morphtarget_vertex>
+        #include <skinning_vertex>
+        #include <project_vertex>
+    }
+`
+
+const CHARACTER_TOON_FRAGMENT_SHADER = `
+    uniform vec3 uBaseColor;
+    uniform vec3 uToonColor;
+    uniform vec3 uLightDirection;
+    uniform float uThreshold;
+    uniform float uSoftness;
+
+    varying vec3 vWorldNormal;
+
+    void main() {
+        vec3 normalDirection = normalize(vWorldNormal);
+        vec3 lightDirection = normalize(uLightDirection);
+        float safeSoftness = max(uSoftness, 0.0001);
+        float lightAmount = dot(normalDirection, lightDirection) * 0.5 + 0.5;
+        float toonBand = smoothstep(uThreshold - safeSoftness, uThreshold + safeSoftness, lightAmount);
+        vec3 finalColor = mix(uToonColor, uBaseColor, toonBand);
+
+        gl_FragColor = vec4(finalColor, 1.0);
+
+        #include <colorspace_fragment>
+    }
+`
+
+function createCharacterToonMaterial(sourceMaterial, materialSettings, toonSettings) {
+    const fallbackColor = sourceMaterial?.color?.getStyle?.() ?? '#ffffff'
+    const baseColor = new THREE.Color(materialSettings?.baseColor ?? fallbackColor)
+    const toonColor = new THREE.Color(materialSettings?.toonColor ?? '#19133f')
+
+    return new THREE.ShaderMaterial({
+        name: `toon_${sourceMaterial?.name || 'material'}`,
+        vertexShader: CHARACTER_TOON_VERTEX_SHADER,
+        fragmentShader: CHARACTER_TOON_FRAGMENT_SHADER,
+        uniforms: {
+            uBaseColor: { value: baseColor },
+            uToonColor: { value: toonColor },
+            uLightDirection: { value: new THREE.Vector3(toonSettings.lightDirectionX, toonSettings.lightDirectionY, toonSettings.lightDirectionZ) },
+            uThreshold: { value: toonSettings.threshold },
+            uSoftness: { value: toonSettings.softness },
+        },
+        transparent: sourceMaterial?.transparent ?? false,
+        opacity: sourceMaterial?.opacity ?? 1,
+        alphaTest: sourceMaterial?.alphaTest ?? 0,
+        toneMapped: false,
+    })
+}
+
+function updateCharacterToonMaterial(material, materialSettings, toonSettings) {
+    material.uniforms.uBaseColor.value.set(materialSettings.baseColor)
+    material.uniforms.uToonColor.value.set(materialSettings.toonColor)
+    material.uniforms.uLightDirection.value.set(toonSettings.lightDirectionX, toonSettings.lightDirectionY, toonSettings.lightDirectionZ)
+    material.uniforms.uThreshold.value = toonSettings.threshold
+    material.uniforms.uSoftness.value = toonSettings.softness
+}
 
 function dampAngle(current, target, lambda, delta) {
     const angleDelta = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -296,12 +376,68 @@ export default function MainCharacter() {
 
 const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const characterParameters = useStore((state) => state.characterParameters)
+    const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const animationRootRef = useRef(null)
     const mixerRef = useRef(null)
     const actionsRef = useRef({ idle: null, run: null })
+    const toonMaterialsRef = useRef(new Map())
     const movingRef = useRef(false)
     const runBlendRef = useRef(0)
     const { nodes, animations } = useGLTF(mainCharacterUrl)
+    const materialSlotsByMeshName = useMemo(() => {
+        return mainCharacterMaterialSlots.reduce((slots, slot) => {
+            slots[slot.meshName] = slot
+            return slots
+        }, {})
+    }, [])
+
+    useEffect(() => {
+        if (!animationRootRef.current) return
+
+        const getToonMaterial = (object, sourceMaterial, materialIndex = 0) => {
+            const materialKey = `${object.uuid}:${materialIndex}`
+            const slot = materialSlotsByMeshName[object.name]
+            const toonSettings = useStore.getState().characterMaterialParameters
+            const materialSettings = toonSettings.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
+
+            if (!toonMaterialsRef.current.has(materialKey)) {
+                toonMaterialsRef.current.set(materialKey, createCharacterToonMaterial(sourceMaterial, materialSettings, toonSettings))
+            }
+
+            return toonMaterialsRef.current.get(materialKey)
+        }
+
+        animationRootRef.current.traverse((object) => {
+            if (!object.isMesh && !object.isSkinnedMesh) return
+
+            object.material = Array.isArray(object.material)
+                ? object.material.map((material, index) => getToonMaterial(object, material, index))
+                : getToonMaterial(object, object.material)
+        })
+
+        return () => {
+            toonMaterialsRef.current.forEach((material) => material.dispose())
+            toonMaterialsRef.current.clear()
+        }
+    }, [materialSlotsByMeshName, nodes])
+
+    useEffect(() => {
+        if (!animationRootRef.current) return
+
+        animationRootRef.current.traverse((object) => {
+            if (!object.isMesh && !object.isSkinnedMesh) return
+
+            const slot = materialSlotsByMeshName[object.name]
+            const materialSettings = characterMaterialParameters.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
+            if (!materialSettings) return
+
+            const objectMaterials = Array.isArray(object.material) ? object.material : [object.material]
+            objectMaterials.forEach((material) => {
+                if (!material?.uniforms?.uBaseColor) return
+                updateCharacterToonMaterial(material, materialSettings, characterMaterialParameters)
+            })
+        })
+    }, [characterMaterialParameters, materialSlotsByMeshName])
 
     useEffect(() => {
         if (!animationRootRef.current) return
