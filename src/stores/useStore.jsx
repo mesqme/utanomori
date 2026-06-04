@@ -1,0 +1,118 @@
+import { create } from 'zustand'
+import { subscribeWithSelector } from 'zustand/middleware'
+import * as THREE from 'three'
+import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+
+const PALETTE = soundJourneyPalette
+
+const createStore = () =>
+    create(
+        subscribeWithSelector((set) => ({
+            ballPosition: new THREE.Vector3(0, 0, 0),
+            setBallPosition: (position) => {
+                set({ ballPosition: position })
+            },
+
+            smoothedCircleCenter: new THREE.Vector3(0, 0, 0),
+            setSmoothedCircleCenter: (position) => {
+                set({ smoothedCircleCenter: position })
+            },
+
+            /**
+             * Terrain parameters
+             */
+            terrainParameters: {
+                color: PALETTE.terrain,
+                backgroundColor: PALETTE.background,
+                chunkSize: 9,
+                segments: 19,
+                scale: 0.08,
+                amplitude: 0.7,
+                groundTextureScale: 0.11,
+                groundTextureContrast: 0.34,
+            },
+
+            /**Border parameters */
+            borderParameters: {
+                noiseStrength: 0.45,
+                noiseScale: 0.35,
+                circleRadiusFactor: 0.9,
+                groundOffset: -0.75,
+                groundFadeOffset: 1.0,
+            },
+            setBorderParameters: (parameters) => {
+                set({ borderParameters: parameters })
+            },
+
+            /**
+             * Dithering parameters
+             */
+            ditheringParameters: {
+                ditherMode: 'Diamond', // 'Diamond' | 'Bayer'
+                pixelSize: 1,
+            },
+
+            /**
+             * Character parameters
+             */
+            characterParameters: {
+                modelScale: 0.35,
+                modelYOffset: 0.4,
+                rotationOffset: Math.PI / 2,
+                idleTimeScale: 1,
+                runTimeScale: 1.2,
+                runBlendInSpeed: 18,
+                runBlendOutSpeed: 3,
+            },
+
+            /**
+             * Camera debug parameters
+             */
+            cameraParameters: {
+                debugOrbit: false,
+                debugOrbitAngle: 0,
+                debugOrbitDistance: 12,
+                debugOrbitHeight: 8,
+                debugTargetYOffset: 0.4,
+            },
+
+            /**
+             * Performance & Debug parameters
+             */
+            perfVisible: false,
+            setPerfVisible: (visible) => {
+                set({ perfVisible: visible })
+            },
+
+            backgroundWireframe: false,
+            setBackgroundWireframe: (visible) => {
+                set({ backgroundWireframe: visible })
+            },
+
+            /**
+             * Controls
+             */
+            controls: {
+                forward: false,
+                backward: false,
+                leftward: false,
+                rightward: false,
+                jump: false,
+            },
+            setControl: (name, value) => {
+                set((state) => ({
+                    controls: {
+                        ...state.controls,
+                        [name]: value,
+                    },
+                }))
+            },
+        }))
+    )
+
+const useStore = import.meta?.hot?.data?.store ?? createStore()
+if (import.meta?.hot) {
+    import.meta.hot.data.store = useStore
+}
+
+export default useStore
