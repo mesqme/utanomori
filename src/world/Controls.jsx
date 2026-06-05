@@ -4,6 +4,7 @@ import { mainCharacterMaterialGroups, mainCharacterMaterialPresets } from '../co
 
 export default function Controls() {
     const terrainParameters = useStore((state) => state.terrainParameters)
+    const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
     const ditheringParameters = useStore((state) => state.ditheringParameters)
     const characterParameters = useStore((state) => state.characterParameters)
@@ -127,6 +128,51 @@ export default function Controls() {
             max: 50,
             step: 1,
             onChange: setParam('terrainParameters', 'chunkSize'),
+        },
+    })
+
+    useControls('Lantern Ground Light', {
+        radius: {
+            value: lanternGroundLightParameters.radius,
+            min: 0.25,
+            max: 15,
+            step: 0.05,
+            onChange: setParam('lanternGroundLightParameters', 'radius'),
+        },
+        edgeSoftness: {
+            value: lanternGroundLightParameters.edgeSoftness,
+            min: 0,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('lanternGroundLightParameters', 'edgeSoftness'),
+        },
+        edgeNoiseScale: {
+            value: lanternGroundLightParameters.edgeNoiseScale,
+            min: 0.01,
+            max: 3,
+            step: 0.01,
+            onChange: setParam('lanternGroundLightParameters', 'edgeNoiseScale'),
+        },
+        edgeNoiseStrength: {
+            value: lanternGroundLightParameters.edgeNoiseStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('lanternGroundLightParameters', 'edgeNoiseStrength'),
+        },
+        innerBrightness: {
+            value: lanternGroundLightParameters.innerBrightness,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('lanternGroundLightParameters', 'innerBrightness'),
+        },
+        outerDarkness: {
+            value: lanternGroundLightParameters.outerDarkness,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('lanternGroundLightParameters', 'outerDarkness'),
         },
     })
 

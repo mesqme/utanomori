@@ -121,6 +121,7 @@ export default function Terrain() {
         const state = useStore.getState()
 
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
+        terrainMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
 
         const ballPosition = state.ballPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)

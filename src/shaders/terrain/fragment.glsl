@@ -14,6 +14,13 @@ uniform float uNoiseScale;
 uniform sampler2D uGroundTexture;
 uniform float uGroundTextureScale;
 uniform float uGroundTextureContrast;
+uniform vec3 uLanternPosition;
+uniform float uLanternLightRadius;
+uniform float uLanternLightEdgeSoftness;
+uniform float uLanternLightNoiseScale;
+uniform float uLanternLightNoiseStrength;
+uniform float uLanternLightInnerBrightness;
+uniform float uLanternLightOuterDarkness;
 uniform float uPixelSize;
 uniform int uDitherMode;
 
@@ -119,6 +126,23 @@ void main() {
   float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
   float groundVariation = (groundValue - 0.5) * 2.0;
   vec3 color = clamp(uBaseColor * (1.0 + groundVariation * uGroundTextureContrast), 0.0, 1.0);
+
+  vec2 lanternNoiseUV = worldXZ * uLanternLightNoiseScale * 0.1;
+  float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUV).r * 2.0 - 1.0;
+  float lanternNoisyRadius = uLanternLightRadius * (1.0 + lanternNoise * uLanternLightNoiseStrength);
+  float lanternDistance = length(worldXZ - uLanternPosition.xz);
+  float lanternSoftness = max(uLanternLightEdgeSoftness, 0.0001);
+  float lanternMask = 1.0 - smoothstep(
+      lanternNoisyRadius - lanternSoftness,
+      lanternNoisyRadius + lanternSoftness,
+      lanternDistance
+  );
+  float lanternLightMultiplier = mix(
+      1.0 - uLanternLightOuterDarkness,
+      1.0 + uLanternLightInnerBrightness,
+      lanternMask
+  );
+  color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
   gl_FragColor = vec4(color, 1.0);
 

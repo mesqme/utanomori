@@ -19,6 +19,11 @@ const createStore = () =>
                 set({ smoothedCircleCenter: position })
             },
 
+            lanternPosition: new THREE.Vector3(0, 0, 0),
+            setLanternPosition: (position) => {
+                set({ lanternPosition: position })
+            },
+
             /**
              * Terrain parameters
              */
@@ -28,9 +33,21 @@ const createStore = () =>
                 chunkSize: 9,
                 segments: 19,
                 scale: 0.08,
-                amplitude: 0.7,
+                amplitude: 0,
                 groundTextureScale: 0.11,
                 groundTextureContrast: 0.34,
+            },
+
+            /**
+             * Lantern ground light parameters
+             */
+            lanternGroundLightParameters: {
+                radius: 3,
+                edgeSoftness: 0,
+                edgeNoiseScale: 0.28,
+                edgeNoiseStrength: 0.39,
+                innerBrightness: 0.11,
+                outerDarkness: 0.34,
             },
 
             /**Border parameters */

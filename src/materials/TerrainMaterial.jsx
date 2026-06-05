@@ -14,6 +14,7 @@ export default function useTerrainMaterial({
     const terrainColor = useStore((s) => s.terrainParameters.color)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
     const groundTextureContrast = useStore((s) => s.terrainParameters.groundTextureContrast)
+    const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
     const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
@@ -36,6 +37,13 @@ export default function useTerrainMaterial({
                 uGroundTexture: { value: groundTexture },
                 uGroundTextureScale: { value: groundTextureScale },
                 uGroundTextureContrast: { value: groundTextureContrast },
+                uLanternPosition: { value: new THREE.Vector3() },
+                uLanternLightRadius: { value: lanternGroundLightParameters.radius },
+                uLanternLightEdgeSoftness: { value: lanternGroundLightParameters.edgeSoftness },
+                uLanternLightNoiseScale: { value: lanternGroundLightParameters.edgeNoiseScale },
+                uLanternLightNoiseStrength: { value: lanternGroundLightParameters.edgeNoiseStrength },
+                uLanternLightInnerBrightness: { value: lanternGroundLightParameters.innerBrightness },
+                uLanternLightOuterDarkness: { value: lanternGroundLightParameters.outerDarkness },
                 uPixelSize: { value: pixelSize },
                 uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
             },
@@ -56,6 +64,12 @@ export default function useTerrainMaterial({
         u.uGroundTexture.value = groundTexture
         u.uGroundTextureScale.value = groundTextureScale
         u.uGroundTextureContrast.value = groundTextureContrast
+        u.uLanternLightRadius.value = lanternGroundLightParameters.radius
+        u.uLanternLightEdgeSoftness.value = lanternGroundLightParameters.edgeSoftness
+        u.uLanternLightNoiseScale.value = lanternGroundLightParameters.edgeNoiseScale
+        u.uLanternLightNoiseStrength.value = lanternGroundLightParameters.edgeNoiseStrength
+        u.uLanternLightInnerBrightness.value = lanternGroundLightParameters.innerBrightness
+        u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
     }, [
@@ -70,6 +84,7 @@ export default function useTerrainMaterial({
         groundTexture,
         groundTextureScale,
         groundTextureContrast,
+        lanternGroundLightParameters,
         pixelSize,
         ditherModeValue,
     ])

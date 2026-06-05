@@ -377,12 +377,14 @@ export default function MainCharacter() {
 const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
+    const setLanternPosition = useStore((state) => state.setLanternPosition)
     const animationRootRef = useRef(null)
     const mixerRef = useRef(null)
     const actionsRef = useRef({ idle: null, run: null })
     const toonMaterialsRef = useRef(new Map())
     const movingRef = useRef(false)
     const runBlendRef = useRef(0)
+    const lanternWorldPositionRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
     const materialSlotsByMeshName = useMemo(() => {
         return mainCharacterMaterialSlots.reduce((slots, slot) => {
@@ -511,6 +513,11 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
         }
 
         mixerRef.current?.update(delta)
+
+        if (nodes.lantern_1) {
+            nodes.lantern_1.getWorldPosition(lanternWorldPositionRef.current)
+            setLanternPosition(lanternWorldPositionRef.current)
+        }
     })
 
     return (
