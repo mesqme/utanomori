@@ -1,8 +1,18 @@
 import { useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import { mainCharacterMaterialGroups, mainCharacterMaterialPresets } from '../config/mainCharacterMaterials.js'
+import { sceneStylePresets } from '../config/sceneStyles.js'
+
+const SCENE_STYLE_SECTIONS = new Set([
+    'terrainParameters',
+    'lanternGroundLightParameters',
+    'borderParameters',
+    'ditheringParameters',
+    'characterParameters',
+])
 
 export default function Controls() {
+    const sceneStylePreset = useStore((state) => state.sceneStylePreset)
     const terrainParameters = useStore((state) => state.terrainParameters)
     const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
@@ -13,13 +23,32 @@ export default function Controls() {
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
-    const setParam = (section, param) => (value) => {
+    const setParam = (section, param) => (value, _, context) => {
         useStore.setState((state) => ({
+            sceneStylePreset: SCENE_STYLE_SECTIONS.has(section) && !context?.initial ? 'custom' : state.sceneStylePreset,
             [section]: {
                 ...state[section],
                 [param]: value,
             },
         }))
+    }
+
+    const setSceneStylePreset = (presetId) => {
+        const preset = sceneStylePresets[presetId]
+
+        if (!preset) {
+            useStore.setState({ sceneStylePreset: presetId })
+            return
+        }
+
+        useStore.setState({
+            sceneStylePreset: presetId,
+            terrainParameters: { ...preset.terrainParameters },
+            lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
+            borderParameters: { ...preset.borderParameters },
+            ditheringParameters: { ...preset.ditheringParameters },
+            characterParameters: { ...preset.characterParameters },
+        })
     }
 
     const setCharacterMaterialParam = (slotId, param) => (value) => {
@@ -75,6 +104,17 @@ export default function Controls() {
         bgWireframe: {
             value: backgroundWireframe,
             onChange: (value) => useStore.getState().setBackgroundWireframe(value),
+        },
+    })
+
+    useControls('Scene Style', {
+        preset: {
+            value: sceneStylePreset,
+            options: {
+                'Flat Style': 'flatStyle',
+                Custom: 'custom',
+            },
+            onChange: setSceneStylePreset,
         },
     })
 

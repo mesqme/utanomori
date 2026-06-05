@@ -1,10 +1,8 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
-import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { mainCharacterMaterialDefaults } from '../config/mainCharacterMaterials.js'
-
-const PALETTE = soundJourneyPalette
+import { defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
 const createStore = () =>
     create(
@@ -24,40 +22,20 @@ const createStore = () =>
                 set({ lanternPosition: position })
             },
 
+            sceneStylePreset: defaultSceneStyleId,
+
             /**
              * Terrain parameters
              */
-            terrainParameters: {
-                color: PALETTE.terrain,
-                backgroundColor: PALETTE.background,
-                chunkSize: 9,
-                segments: 19,
-                scale: 0.08,
-                amplitude: 0,
-                groundTextureScale: 0.11,
-                groundTextureContrast: 0.34,
-            },
+            terrainParameters: { ...defaultSceneStyle.terrainParameters },
 
             /**
              * Lantern ground light parameters
              */
-            lanternGroundLightParameters: {
-                radius: 3,
-                edgeSoftness: 0,
-                edgeNoiseScale: 0.28,
-                edgeNoiseStrength: 0.39,
-                innerBrightness: 0.11,
-                outerDarkness: 0.34,
-            },
+            lanternGroundLightParameters: { ...defaultSceneStyle.lanternGroundLightParameters },
 
             /**Border parameters */
-            borderParameters: {
-                noiseStrength: 0.45,
-                noiseScale: 0.35,
-                circleRadiusFactor: 0.9,
-                groundOffset: -0.75,
-                groundFadeOffset: 1.0,
-            },
+            borderParameters: { ...defaultSceneStyle.borderParameters },
             setBorderParameters: (parameters) => {
                 set({ borderParameters: parameters })
             },
@@ -65,23 +43,12 @@ const createStore = () =>
             /**
              * Dithering parameters
              */
-            ditheringParameters: {
-                ditherMode: 'Diamond', // 'Diamond' | 'Bayer'
-                pixelSize: 1,
-            },
+            ditheringParameters: { ...defaultSceneStyle.ditheringParameters },
 
             /**
              * Character parameters
              */
-            characterParameters: {
-                modelScale: 0.51,
-                modelYOffset: 0.59,
-                rotationOffset: 1.57,
-                idleTimeScale: 1,
-                runTimeScale: 1.2,
-                runBlendInSpeed: 18,
-                runBlendOutSpeed: 3,
-            },
+            characterParameters: { ...defaultSceneStyle.characterParameters },
 
             /**
              * Character toon material parameters
