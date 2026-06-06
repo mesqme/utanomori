@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber'
-import { useGLTF, useKeyboardControls } from '@react-three/drei'
+import { useGLTF, useKeyboardControls, useTexture } from '@react-three/drei'
 import { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
@@ -8,7 +8,12 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
+import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
+import paintaryAlpha03Url from '../assets/textures/paintaryAlpha_03.png'
+import paintaryAlpha04Url from '../assets/textures/paintaryAlpha_04.png'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
+import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT
@@ -29,85 +34,8 @@ const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
-
-const CHARACTER_TOON_VERTEX_SHADER = `
-    varying vec3 vWorldNormal;
-
-    #include <common>
-    #include <uv_pars_vertex>
-    #include <morphtarget_pars_vertex>
-    #include <skinning_pars_vertex>
-
-    void main() {
-        #include <uv_vertex>
-        #include <beginnormal_vertex>
-        #include <morphnormal_vertex>
-        #include <skinbase_vertex>
-        #include <skinnormal_vertex>
-        #include <defaultnormal_vertex>
-
-        vWorldNormal = normalize(mat3(modelMatrix) * objectNormal);
-
-        #include <begin_vertex>
-        #include <morphtarget_vertex>
-        #include <skinning_vertex>
-        #include <project_vertex>
-    }
-`
-
-const CHARACTER_TOON_FRAGMENT_SHADER = `
-    uniform vec3 uBaseColor;
-    uniform vec3 uToonColor;
-    uniform vec3 uLightDirection;
-    uniform float uThreshold;
-    uniform float uSoftness;
-
-    varying vec3 vWorldNormal;
-
-    void main() {
-        vec3 normalDirection = normalize(vWorldNormal);
-        vec3 lightDirection = normalize(uLightDirection);
-        float safeSoftness = max(uSoftness, 0.0001);
-        float lightAmount = dot(normalDirection, lightDirection) * 0.5 + 0.5;
-        float toonBand = smoothstep(uThreshold - safeSoftness, uThreshold + safeSoftness, lightAmount);
-        vec3 finalColor = mix(uToonColor, uBaseColor, toonBand);
-
-        gl_FragColor = vec4(finalColor, 1.0);
-
-        #include <colorspace_fragment>
-    }
-`
-
-function createCharacterToonMaterial(sourceMaterial, materialSettings, toonSettings) {
-    const fallbackColor = sourceMaterial?.color?.getStyle?.() ?? '#ffffff'
-    const baseColor = new THREE.Color(materialSettings?.baseColor ?? fallbackColor)
-    const toonColor = new THREE.Color(materialSettings?.toonColor ?? '#19133f')
-
-    return new THREE.ShaderMaterial({
-        name: `toon_${sourceMaterial?.name || 'material'}`,
-        vertexShader: CHARACTER_TOON_VERTEX_SHADER,
-        fragmentShader: CHARACTER_TOON_FRAGMENT_SHADER,
-        uniforms: {
-            uBaseColor: { value: baseColor },
-            uToonColor: { value: toonColor },
-            uLightDirection: { value: new THREE.Vector3(toonSettings.lightDirectionX, toonSettings.lightDirectionY, toonSettings.lightDirectionZ) },
-            uThreshold: { value: toonSettings.threshold },
-            uSoftness: { value: toonSettings.softness },
-        },
-        transparent: sourceMaterial?.transparent ?? false,
-        opacity: sourceMaterial?.opacity ?? 1,
-        alphaTest: sourceMaterial?.alphaTest ?? 0,
-        toneMapped: false,
-    })
-}
-
-function updateCharacterToonMaterial(material, materialSettings, toonSettings) {
-    material.uniforms.uBaseColor.value.set(materialSettings.baseColor)
-    material.uniforms.uToonColor.value.set(materialSettings.toonColor)
-    material.uniforms.uLightDirection.value.set(toonSettings.lightDirectionX, toonSettings.lightDirectionY, toonSettings.lightDirectionZ)
-    material.uniforms.uThreshold.value = toonSettings.threshold
-    material.uniforms.uSoftness.value = toonSettings.softness
-}
+const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04']
+const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url]
 
 function dampAngle(current, target, lambda, delta) {
     const angleDelta = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -381,11 +309,27 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const animationRootRef = useRef(null)
     const mixerRef = useRef(null)
     const actionsRef = useRef({ idle: null, run: null })
-    const toonMaterialsRef = useRef(new Map())
+    const stylizedMaterialsRef = useRef(new Map())
     const movingRef = useRef(false)
     const runBlendRef = useRef(0)
     const lanternWorldPositionRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
+    const painterlyTextures = useTexture(PAINTERLY_TEXTURE_URLS)
+    const painterlyTexturesById = useMemo(() => {
+        return Object.fromEntries(
+            painterlyTextures.map((texture, index) => {
+                texture.wrapS = THREE.RepeatWrapping
+                texture.wrapT = THREE.RepeatWrapping
+                texture.colorSpace = THREE.NoColorSpace
+                texture.minFilter = THREE.LinearMipmapLinearFilter
+                texture.magFilter = THREE.LinearFilter
+                texture.needsUpdate = true
+                return [PAINTERLY_TEXTURE_IDS[index], texture]
+            })
+        )
+    }, [painterlyTextures])
+    const selectedPainterlyTexture =
+        painterlyTexturesById[characterMaterialParameters.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
     const materialSlotsByMeshName = useMemo(() => {
         return mainCharacterMaterialSlots.reduce((slots, slot) => {
             slots[slot.meshName] = slot
@@ -396,32 +340,36 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     useEffect(() => {
         if (!animationRootRef.current) return
 
-        const getToonMaterial = (object, sourceMaterial, materialIndex = 0) => {
+        const getStylizedMaterial = (object, sourceMaterial, materialIndex = 0) => {
             const materialKey = `${object.uuid}:${materialIndex}`
             const slot = materialSlotsByMeshName[object.name]
-            const toonSettings = useStore.getState().characterMaterialParameters
-            const materialSettings = toonSettings.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
+            const stylizedSettings = useStore.getState().characterMaterialParameters
+            const materialSettings = stylizedSettings.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
+            const painterlyTexture = painterlyTexturesById[stylizedSettings.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
 
-            if (!toonMaterialsRef.current.has(materialKey)) {
-                toonMaterialsRef.current.set(materialKey, createCharacterToonMaterial(sourceMaterial, materialSettings, toonSettings))
+            if (!stylizedMaterialsRef.current.has(materialKey)) {
+                stylizedMaterialsRef.current.set(
+                    materialKey,
+                    createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture)
+                )
             }
 
-            return toonMaterialsRef.current.get(materialKey)
+            return stylizedMaterialsRef.current.get(materialKey)
         }
 
         animationRootRef.current.traverse((object) => {
             if (!object.isMesh && !object.isSkinnedMesh) return
 
             object.material = Array.isArray(object.material)
-                ? object.material.map((material, index) => getToonMaterial(object, material, index))
-                : getToonMaterial(object, object.material)
+                ? object.material.map((material, index) => getStylizedMaterial(object, material, index))
+                : getStylizedMaterial(object, object.material)
         })
 
         return () => {
-            toonMaterialsRef.current.forEach((material) => material.dispose())
-            toonMaterialsRef.current.clear()
+            stylizedMaterialsRef.current.forEach((material) => material.dispose())
+            stylizedMaterialsRef.current.clear()
         }
-    }, [materialSlotsByMeshName, nodes])
+    }, [materialSlotsByMeshName, nodes, painterlyTexturesById])
 
     useEffect(() => {
         if (!animationRootRef.current) return
@@ -436,10 +384,10 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             const objectMaterials = Array.isArray(object.material) ? object.material : [object.material]
             objectMaterials.forEach((material) => {
                 if (!material?.uniforms?.uBaseColor) return
-                updateCharacterToonMaterial(material, materialSettings, characterMaterialParameters)
+                updateCharacterStylizedMaterial(material, materialSettings, characterMaterialParameters, selectedPainterlyTexture)
             })
         })
-    }, [characterMaterialParameters, materialSlotsByMeshName])
+    }, [characterMaterialParameters, materialSlotsByMeshName, selectedPainterlyTexture])
 
     useEffect(() => {
         if (!animationRootRef.current) return

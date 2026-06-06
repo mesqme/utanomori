@@ -2,6 +2,7 @@ import { useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import { mainCharacterMaterialGroups, mainCharacterMaterialPresets } from '../config/mainCharacterMaterials.js'
 import { sceneStylePresets } from '../config/sceneStyles.js'
+import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
     'terrainParameters',
@@ -652,7 +653,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Character Toon', {
+    useControls('Character Stylized', {
         palettePreset: {
             value: characterMaterialParameters.palettePreset,
             options: {
@@ -662,49 +663,56 @@ export default function Controls() {
             },
             onChange: setCharacterMaterialPreset,
         },
-        lightDirectionX: {
-            value: characterMaterialParameters.lightDirectionX,
-            min: -1,
-            max: 1,
-            step: 0.01,
-            onChange: setParam('characterMaterialParameters', 'lightDirectionX'),
+        debug: {
+            value: characterMaterialParameters.debugMode,
+            options: stylizedDebugModes,
+            onChange: setParam('characterMaterialParameters', 'debugMode'),
         },
-        lightDirectionY: {
-            value: characterMaterialParameters.lightDirectionY,
-            min: -1,
-            max: 1,
-            step: 0.01,
-            onChange: setParam('characterMaterialParameters', 'lightDirectionY'),
+        painterly: {
+            value: characterMaterialParameters.painterlyEnabled,
+            onChange: setParam('characterMaterialParameters', 'painterlyEnabled'),
         },
-        lightDirectionZ: {
-            value: characterMaterialParameters.lightDirectionZ,
-            min: -1,
-            max: 1,
-            step: 0.01,
-            onChange: setParam('characterMaterialParameters', 'lightDirectionZ'),
+        pTexture: {
+            value: characterMaterialParameters.painterlyTexture,
+            options: painterlyTextureOptions,
+            onChange: setParam('characterMaterialParameters', 'painterlyTexture'),
         },
-        threshold: {
-            value: characterMaterialParameters.threshold,
+        pScale: {
+            value: characterMaterialParameters.painterlyScale,
             min: 0,
             max: 1,
             step: 0.01,
-            onChange: setParam('characterMaterialParameters', 'threshold'),
+            onChange: setParam('characterMaterialParameters', 'painterlyScale'),
         },
-        softness: {
-            value: characterMaterialParameters.softness,
+        pContrast: {
+            value: characterMaterialParameters.painterlyContrast,
             min: 0,
-            max: 0.5,
-            step: 0.001,
-            onChange: setParam('characterMaterialParameters', 'softness'),
+            max: 4,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'painterlyContrast'),
+        },
+        pColor: {
+            value: characterMaterialParameters.painterlyColor,
+            onChange: setParam('characterMaterialParameters', 'painterlyColor'),
+        },
+        pTint: {
+            value: characterMaterialParameters.painterlyColorStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'painterlyColorStrength'),
+        },
+        pBrightness: {
+            value: characterMaterialParameters.painterlyBrightnessVariation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('characterMaterialParameters', 'painterlyBrightnessVariation'),
         },
         ...mainCharacterMaterialGroups.reduce((controls, group) => {
             controls[`${group.label} Base`] = {
                 value: characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor,
                 onChange: setCharacterMaterialParam(group.id, 'baseColor'),
-            }
-            controls[`${group.label} Toon`] = {
-                value: characterMaterialParameters.materials[group.id]?.toonColor ?? group.toonColor,
-                onChange: setCharacterMaterialParam(group.id, 'toonColor'),
             }
             return controls
         }, {}),

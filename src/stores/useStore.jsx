@@ -3,8 +3,10 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { mainCharacterMaterialDefaults } from '../config/mainCharacterMaterials.js'
 import { defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
+import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
 
 const GRASS_STYLE_VERSION = 9
+const CHARACTER_STYLIZED_VERSION = 2
 
 const createStore = () =>
     create(
@@ -26,6 +28,7 @@ const createStore = () =>
 
             sceneStylePreset: defaultSceneStyleId,
             grassStyleVersion: GRASS_STYLE_VERSION,
+            characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
 
             /**
              * Terrain parameters
@@ -62,15 +65,11 @@ const createStore = () =>
             characterParameters: { ...defaultSceneStyle.characterParameters },
 
             /**
-             * Character toon material parameters
+             * Character stylized material parameters
              */
             characterMaterialParameters: {
+                ...characterStylizedDefaults,
                 palettePreset: 'previous',
-                lightDirectionX: 1,
-                lightDirectionY: 0.21,
-                lightDirectionZ: 0.22,
-                threshold: 0,
-                softness: 0,
                 materials: mainCharacterMaterialDefaults,
             },
 
@@ -123,8 +122,10 @@ const useStore = import.meta?.hot?.data?.store ?? createStore()
 if (import.meta?.hot) {
     const state = useStore.getState()
     const applyGrassStyleDefaults = state.grassStyleVersion !== GRASS_STYLE_VERSION
+    const applyCharacterStylizedDefaults = state.characterStylizedVersion !== CHARACTER_STYLIZED_VERSION
     useStore.setState({
         grassStyleVersion: GRASS_STYLE_VERSION,
+        characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         terrainParameters: {
             ...defaultSceneStyle.terrainParameters,
             ...state.terrainParameters,
@@ -152,6 +153,17 @@ if (import.meta?.hot) {
                   ...state.borderParameters,
               },
         ditheringParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.ditheringParameters } : state.ditheringParameters,
+        characterMaterialParameters: applyCharacterStylizedDefaults
+            ? {
+                  ...characterStylizedDefaults,
+                  palettePreset: 'previous',
+                  materials: mainCharacterMaterialDefaults,
+              }
+            : {
+                  ...characterStylizedDefaults,
+                  ...state.characterMaterialParameters,
+                  materials: state.characterMaterialParameters?.materials ?? mainCharacterMaterialDefaults,
+              },
     })
     import.meta.hot.data.store = useStore
 }
