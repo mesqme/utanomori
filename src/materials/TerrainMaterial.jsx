@@ -12,6 +12,7 @@ export default function useTerrainMaterial({
     groundTexture,
 }) {
     const terrainColor = useStore((s) => s.terrainParameters.color)
+    const terrainBaseBrightness = useStore((s) => s.terrainParameters.baseBrightness)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
     const groundTextureContrast = useStore((s) => s.terrainParameters.groundTextureContrast)
     const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
@@ -26,6 +27,7 @@ export default function useTerrainMaterial({
         return new THREE.ShaderMaterial({
             uniforms: {
                 uBaseColor: { value: new THREE.Color(terrainColor) },
+                uBaseBrightness: { value: terrainBaseBrightness },
                 uCircleCenter: { value: new THREE.Vector3() },
                 uPatchSize: { value: chunkSize },
                 uCircleRadiusFactor: { value: initialCircleRadius },
@@ -55,6 +57,7 @@ export default function useTerrainMaterial({
     useEffect(() => {
         const u = material.uniforms
         u.uBaseColor.value.set(terrainColor)
+        u.uBaseBrightness.value = terrainBaseBrightness
         u.uPatchSize.value = chunkSize
         u.uGroundOffset.value = borderGroundOffset
         u.uGroundFadeOffset.value = borderGroundFadeOffset
@@ -75,6 +78,7 @@ export default function useTerrainMaterial({
     }, [
         material,
         terrainColor,
+        terrainBaseBrightness,
         chunkSize,
         borderGroundOffset,
         borderGroundFadeOffset,

@@ -5,6 +5,10 @@ import { sceneStylePresets } from '../config/sceneStyles.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
     'terrainParameters',
+    'grassParameters',
+    'grassPatchParameters',
+    'roadParameters',
+    'windParameters',
     'lanternGroundLightParameters',
     'borderParameters',
     'ditheringParameters',
@@ -14,6 +18,10 @@ const SCENE_STYLE_SECTIONS = new Set([
 export default function Controls() {
     const sceneStylePreset = useStore((state) => state.sceneStylePreset)
     const terrainParameters = useStore((state) => state.terrainParameters)
+    const grassParameters = useStore((state) => state.grassParameters)
+    const grassPatchParameters = useStore((state) => state.grassPatchParameters)
+    const roadParameters = useStore((state) => state.roadParameters)
+    const windParameters = useStore((state) => state.windParameters)
     const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
     const ditheringParameters = useStore((state) => state.ditheringParameters)
@@ -44,6 +52,10 @@ export default function Controls() {
         useStore.setState({
             sceneStylePreset: presetId,
             terrainParameters: { ...preset.terrainParameters },
+            grassParameters: { ...preset.grassParameters },
+            grassPatchParameters: { ...preset.grassPatchParameters },
+            roadParameters: { ...preset.roadParameters },
+            windParameters: { ...preset.windParameters },
             lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
             borderParameters: { ...preset.borderParameters },
             ditheringParameters: { ...preset.ditheringParameters },
@@ -127,6 +139,13 @@ export default function Controls() {
             value: terrainParameters.backgroundColor,
             onChange: setParam('terrainParameters', 'backgroundColor'),
         },
+        baseBrightness: {
+            value: terrainParameters.baseBrightness,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('terrainParameters', 'baseBrightness'),
+        },
         segments: {
             value: terrainParameters.segments,
             min: 1,
@@ -168,6 +187,292 @@ export default function Controls() {
             max: 50,
             step: 1,
             onChange: setParam('terrainParameters', 'chunkSize'),
+        },
+    })
+
+    useControls('Grass', {
+        count: {
+            value: grassParameters.count,
+            min: 0,
+            max: 10000,
+            step: 100,
+            onChange: setParam('grassParameters', 'count'),
+        },
+        segments: {
+            value: grassParameters.segmentsCount,
+            min: 1,
+            max: 8,
+            step: 1,
+            onChange: setParam('grassParameters', 'segmentsCount'),
+        },
+        width: {
+            value: grassParameters.width,
+            min: 0.01,
+            max: 0.5,
+            step: 0.01,
+            onChange: setParam('grassParameters', 'width'),
+        },
+        height: {
+            value: grassParameters.height,
+            min: 0.05,
+            max: 3,
+            step: 0.01,
+            onChange: setParam('grassParameters', 'height'),
+        },
+        baseColor: {
+            value: grassParameters.colorBase,
+            onChange: setParam('grassParameters', 'colorBase'),
+        },
+        baseBrightness: {
+            value: grassParameters.baseBrightness,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('grassParameters', 'baseBrightness'),
+        },
+        lean: {
+            value: grassParameters.leanFactor,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('grassParameters', 'leanFactor'),
+        },
+        sobelMode: {
+            value: grassParameters.sobelMode,
+            options: {
+                '2 Tap': 0,
+                '4 Tap': 1,
+                '8 Tap Sobel': 2,
+            },
+            onChange: setParam('grassParameters', 'sobelMode'),
+        },
+    })
+
+    useControls('Wind', {
+        direction: {
+            value: windParameters.direction,
+            min: -Math.PI,
+            max: Math.PI,
+            step: 0.01,
+            onChange: setParam('windParameters', 'direction'),
+        },
+        scale: {
+            value: windParameters.scale,
+            min: 0,
+            max: 3,
+            step: 0.01,
+            onChange: setParam('windParameters', 'scale'),
+        },
+        strength: {
+            value: windParameters.strength,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('windParameters', 'strength'),
+        },
+        speed: {
+            value: windParameters.speed,
+            min: 0,
+            max: 5,
+            step: 0.01,
+            onChange: setParam('windParameters', 'speed'),
+        },
+    })
+
+    useControls('Grass Patches', {
+        worldSeed: {
+            value: grassPatchParameters.worldSeed,
+            step: 1,
+            onChange: setParam('grassPatchParameters', 'worldSeed'),
+        },
+        spacing: {
+            value: grassPatchParameters.spacing,
+            min: 0.5,
+            max: 8,
+            step: 0.05,
+            onChange: setParam('grassPatchParameters', 'spacing'),
+        },
+        jitter: {
+            value: grassPatchParameters.jitter,
+            min: 0,
+            max: 0.95,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'jitter'),
+        },
+        warpScale: {
+            value: grassPatchParameters.domainWarpScale,
+            min: 0.01,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'domainWarpScale'),
+        },
+        warpStrength: {
+            value: grassPatchParameters.domainWarpStrength,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'domainWarpStrength'),
+        },
+        patchHeightVariation: {
+            value: grassPatchParameters.patchHeightVariation,
+            min: 0,
+            max: 0.9,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'patchHeightVariation'),
+        },
+        patchWidthVariation: {
+            value: grassPatchParameters.patchWidthVariation,
+            min: 0,
+            max: 0.9,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'patchWidthVariation'),
+        },
+        patchColorVariation: {
+            value: grassPatchParameters.patchColorVariation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'patchColorVariation'),
+        },
+        internalNoiseScale: {
+            value: grassPatchParameters.internalNoiseScale,
+            min: 0.05,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'internalNoiseScale'),
+        },
+        internalHeightVariation: {
+            value: grassPatchParameters.internalHeightVariation,
+            min: 0,
+            max: 0.9,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'internalHeightVariation'),
+        },
+        internalWidthVariation: {
+            value: grassPatchParameters.internalWidthVariation,
+            min: 0,
+            max: 0.9,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'internalWidthVariation'),
+        },
+        internalColorVariation: {
+            value: grassPatchParameters.internalColorVariation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'internalColorVariation'),
+        },
+        internalLeanVariation: {
+            value: grassPatchParameters.internalLeanVariation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'internalLeanVariation'),
+        },
+        radialLean: {
+            value: grassPatchParameters.radialLeanStrength,
+            min: 0,
+            max: 1.5,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'radialLeanStrength'),
+        },
+        cameraFacing: {
+            value: grassPatchParameters.cameraFacingStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'cameraFacingStrength'),
+        },
+        orientationVariation: {
+            value: grassPatchParameters.orientationVariation,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'orientationVariation'),
+        },
+        borderWidth: {
+            value: grassPatchParameters.borderWidth,
+            min: 0.01,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'borderWidth'),
+        },
+        borderMinScale: {
+            value: grassPatchParameters.borderMinScale,
+            min: 0.05,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('grassPatchParameters', 'borderMinScale'),
+        },
+        tintCyan: {
+            value: grassPatchParameters.tintColorCyan,
+            onChange: setParam('grassPatchParameters', 'tintColorCyan'),
+        },
+        tintViolet: {
+            value: grassPatchParameters.tintColorViolet,
+            onChange: setParam('grassPatchParameters', 'tintColorViolet'),
+        },
+        tintYellow: {
+            value: grassPatchParameters.tintColorYellow,
+            onChange: setParam('grassPatchParameters', 'tintColorYellow'),
+        },
+        tintGreen: {
+            value: grassPatchParameters.tintColorGreen,
+            onChange: setParam('grassPatchParameters', 'tintColorGreen'),
+        },
+    })
+
+    useControls('Roads', {
+        enabled: {
+            value: roadParameters.enabled,
+            onChange: setParam('roadParameters', 'enabled'),
+        },
+        worldSeed: {
+            value: roadParameters.worldSeed,
+            step: 1,
+            onChange: setParam('roadParameters', 'worldSeed'),
+        },
+        laneSpacing: {
+            value: roadParameters.laneSpacing,
+            min: 6,
+            max: 80,
+            step: 0.5,
+            onChange: setParam('roadParameters', 'laneSpacing'),
+        },
+        nodeSpacing: {
+            value: roadParameters.nodeSpacing,
+            min: 3,
+            max: 40,
+            step: 0.5,
+            onChange: setParam('roadParameters', 'nodeSpacing'),
+        },
+        meander: {
+            value: roadParameters.meanderStrength,
+            min: 0,
+            max: 20,
+            step: 0.1,
+            onChange: setParam('roadParameters', 'meanderStrength'),
+        },
+        width: {
+            value: roadParameters.width,
+            min: 0.1,
+            max: 8,
+            step: 0.05,
+            onChange: setParam('roadParameters', 'width'),
+        },
+        softness: {
+            value: roadParameters.softness,
+            min: 0.01,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'softness'),
+        },
+        grassMinScale: {
+            value: roadParameters.grassMinScale,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'grassMinScale'),
         },
     })
 
@@ -244,6 +549,13 @@ export default function Controls() {
             max: 3.0,
             step: 0.01,
             onChange: setParam('borderParameters', 'groundFadeOffset'),
+        },
+        grassFade: {
+            value: borderParameters.grassFadeOffset,
+            min: 0.01,
+            max: 5,
+            step: 0.01,
+            onChange: setParam('borderParameters', 'grassFadeOffset'),
         },
         groundOffset: {
             value: borderParameters.groundOffset,

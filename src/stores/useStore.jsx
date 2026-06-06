@@ -4,6 +4,8 @@ import * as THREE from 'three'
 import { mainCharacterMaterialDefaults } from '../config/mainCharacterMaterials.js'
 import { defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
+const GRASS_STYLE_VERSION = 9
+
 const createStore = () =>
     create(
         subscribeWithSelector((set) => ({
@@ -23,11 +25,21 @@ const createStore = () =>
             },
 
             sceneStylePreset: defaultSceneStyleId,
+            grassStyleVersion: GRASS_STYLE_VERSION,
 
             /**
              * Terrain parameters
              */
             terrainParameters: { ...defaultSceneStyle.terrainParameters },
+
+            /**
+             * Grass and wind parameters
+             */
+            grassParameters: { ...defaultSceneStyle.grassParameters },
+            grassPatchParameters: { ...defaultSceneStyle.grassPatchParameters },
+            roadParameters: { ...defaultSceneStyle.roadParameters },
+            windParameters: { ...defaultSceneStyle.windParameters },
+            trailParameters: { ...defaultSceneStyle.trailParameters },
 
             /**
              * Lantern ground light parameters
@@ -110,6 +122,39 @@ const createStore = () =>
 
 const useStore = import.meta?.hot?.data?.store ?? createStore()
 if (import.meta?.hot) {
+    const state = useStore.getState()
+    const applyGrassStyleDefaults = state.grassStyleVersion !== GRASS_STYLE_VERSION
+    useStore.setState({
+        grassStyleVersion: GRASS_STYLE_VERSION,
+        terrainParameters: {
+            ...defaultSceneStyle.terrainParameters,
+            ...state.terrainParameters,
+        },
+        grassParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.grassParameters } : state.grassParameters ?? { ...defaultSceneStyle.grassParameters },
+        grassPatchParameters: {
+            ...defaultSceneStyle.grassPatchParameters,
+            ...(applyGrassStyleDefaults ? {} : state.grassPatchParameters),
+            debugCenters: false,
+            debugBorders: false,
+            debugPatchColors: false,
+        },
+        roadParameters: {
+            ...defaultSceneStyle.roadParameters,
+            ...state.roadParameters,
+        },
+        windParameters: state.windParameters ?? { ...defaultSceneStyle.windParameters },
+        trailParameters: state.trailParameters ?? { ...defaultSceneStyle.trailParameters },
+        lanternGroundLightParameters: applyGrassStyleDefaults
+            ? { ...defaultSceneStyle.lanternGroundLightParameters }
+            : state.lanternGroundLightParameters,
+        borderParameters: applyGrassStyleDefaults
+            ? { ...defaultSceneStyle.borderParameters }
+            : {
+                  ...defaultSceneStyle.borderParameters,
+                  ...state.borderParameters,
+              },
+        ditheringParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.ditheringParameters } : state.ditheringParameters,
+    })
     import.meta.hot.data.store = useStore
 }
 

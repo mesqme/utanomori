@@ -3,6 +3,7 @@
 #endif
 
 uniform vec3 uBaseColor;        
+uniform float uBaseBrightness;
 uniform vec3 uCircleCenter;    
 uniform float uPatchSize;  
 uniform float uCircleRadiusFactor;
@@ -125,7 +126,7 @@ void main() {
   vec3 groundSample = texture2D(uGroundTexture, worldXZ * uGroundTextureScale).rgb;
   float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
   float groundVariation = (groundValue - 0.5) * 2.0;
-  vec3 color = clamp(uBaseColor * (1.0 + groundVariation * uGroundTextureContrast), 0.0, 1.0);
+  vec3 color = clamp(uBaseColor * (1.0 + groundVariation * uGroundTextureContrast) * uBaseBrightness, 0.0, 1.0);
 
   vec2 lanternNoiseUV = worldXZ * uLanternLightNoiseScale * 0.1;
   float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUV).r * 2.0 - 1.0;

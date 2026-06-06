@@ -7,6 +7,7 @@ import * as THREE from 'three'
 
 import TerrainChunk from './TerrainChunk.jsx'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
+import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 
@@ -62,10 +63,16 @@ export default function Terrain() {
         noiseTexture,
         groundTexture,
     })
+    const grassMaterial = useGrassMaterial({
+        chunkSize,
+        initialCircleRadius: START_CIRCLE_RADIUS,
+        noiseTexture,
+    })
 
     const setCircleRadius = (value) => {
         circleRadiusRef.current = value
         terrainMaterial.uniforms.uCircleRadiusFactor.value = value
+        grassMaterial.uniforms.uCircleRadiusFactor.value = value
     }
 
     useEffect(() => {
@@ -117,11 +124,15 @@ export default function Terrain() {
         prevPhaseRef.current = phase
     }, [phase, borderCircleRadius])
 
-    useFrame(() => {
+    useFrame((frameState) => {
         const state = useStore.getState()
 
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         terrainMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
+        grassMaterial.uniforms.uTime.value = frameState.clock.elapsedTime
+        grassMaterial.uniforms.uBallPosition.value.copy(state.ballPosition)
+        grassMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
+        grassMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
 
         const ballPosition = state.ballPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)
@@ -148,7 +159,15 @@ export default function Terrain() {
     return (
         <group>
             {activeChunks.map((chunk) => (
-                <TerrainChunk key={chunk.key} x={chunk.x} z={chunk.z} size={chunkSize} noise2D={noise2D} terrainMaterial={terrainMaterial} />
+                <TerrainChunk
+                    key={chunk.key}
+                    x={chunk.x}
+                    z={chunk.z}
+                    size={chunkSize}
+                    noise2D={noise2D}
+                    terrainMaterial={terrainMaterial}
+                    grassMaterial={grassMaterial}
+                />
             ))}
         </group>
     )
