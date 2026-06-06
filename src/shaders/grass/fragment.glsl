@@ -16,7 +16,6 @@ varying vec3 vColor;
 varying vec4 vGrassData;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
-varying float vTrailValue;
 varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
 
@@ -156,11 +155,6 @@ void main() {
     lanternMask
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
-
-  // Smoothly darken grass where the ball has moved
-  float trailMask = smoothstep(0.0, 0.9, vTrailValue);
-  float darkenFactor = mix(1.0, 0.5, trailMask);
-  color *= darkenFactor;
 
   // Apply Dithering
   // Only apply fade if we are in the fade region (vGrassData.w < 1.0)

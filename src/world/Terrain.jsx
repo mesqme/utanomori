@@ -130,7 +130,6 @@ export default function Terrain() {
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         terrainMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
         grassMaterial.uniforms.uTime.value = frameState.clock.elapsedTime
-        grassMaterial.uniforms.uBallPosition.value.copy(state.ballPosition)
         grassMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         grassMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
 

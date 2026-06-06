@@ -237,15 +237,6 @@ export default function Controls() {
             step: 0.01,
             onChange: setParam('grassParameters', 'leanFactor'),
         },
-        sobelMode: {
-            value: grassParameters.sobelMode,
-            options: {
-                '2 Tap': 0,
-                '4 Tap': 1,
-                '8 Tap Sobel': 2,
-            },
-            onChange: setParam('grassParameters', 'sobelMode'),
-        },
     })
 
     useControls('Wind', {
@@ -473,6 +464,34 @@ export default function Controls() {
             max: 1,
             step: 0.01,
             onChange: setParam('roadParameters', 'grassMinScale'),
+        },
+        groundBrightness: {
+            value: roadParameters.groundBrightness,
+            min: -1,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'groundBrightness'),
+        },
+        groundNoiseScale: {
+            value: roadParameters.groundNoiseScale,
+            min: 0.01,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'groundNoiseScale'),
+        },
+        groundNoiseStrength: {
+            value: roadParameters.groundNoiseStrength,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'groundNoiseStrength'),
+        },
+        groundEdgeSharpness: {
+            value: roadParameters.groundEdgeSharpness,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('roadParameters', 'groundEdgeSharpness'),
         },
     })
 

@@ -15,6 +15,13 @@ uniform float uNoiseScale;
 uniform sampler2D uGroundTexture;
 uniform float uGroundTextureScale;
 uniform float uGroundTextureContrast;
+uniform int uRoadEnabled;
+uniform float uRoadWidth;
+uniform float uRoadSoftness;
+uniform float uRoadGroundBrightness;
+uniform float uRoadGroundNoiseScale;
+uniform float uRoadGroundNoiseStrength;
+uniform float uRoadGroundEdgeSharpness;
 uniform vec3 uLanternPosition;
 uniform float uLanternLightRadius;
 uniform float uLanternLightEdgeSoftness;
@@ -28,6 +35,7 @@ uniform int uDitherMode;
 // Varyings
 varying vec3 vWorldPosition;
 varying vec2 vUv;
+varying float vRoadDistance;
 
 // --- Dither Functions ---
 
@@ -127,6 +135,15 @@ void main() {
   float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
   float groundVariation = (groundValue - 0.5) * 2.0;
   vec3 color = clamp(uBaseColor * (1.0 + groundVariation * uGroundTextureContrast) * uBaseBrightness, 0.0, 1.0);
+
+  if (uRoadEnabled == 1) {
+      float roadNoise = texture2D(uNoiseTexture, worldXZ * uRoadGroundNoiseScale * 0.1).r * 2.0 - 1.0;
+      float noisyRoadDistance = vRoadDistance + roadNoise * uRoadGroundNoiseStrength;
+      float roadInnerRadius = uRoadWidth * 0.5;
+      float roadSoftness = max(uRoadSoftness * mix(1.0, 0.05, uRoadGroundEdgeSharpness), 0.0001);
+      float roadMask = 1.0 - smoothstep(roadInnerRadius, roadInnerRadius + roadSoftness, noisyRoadDistance);
+      color = clamp(color * (1.0 + roadMask * uRoadGroundBrightness), 0.0, 1.0);
+  }
 
   vec2 lanternNoiseUV = worldXZ * uLanternLightNoiseScale * 0.1;
   float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUV).r * 2.0 - 1.0;

@@ -16,7 +16,6 @@ export default function useGrassMaterial({
     const windParameters = useStore((s) => s.windParameters)
     const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
     const roadParameters = useStore((s) => s.roadParameters)
-    const trailCanvasSize = useStore((s) => s.trailParameters.chunkSize)
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
     const borderGrassFadeOffset = useStore((s) => s.borderParameters.grassFadeOffset)
@@ -24,12 +23,6 @@ export default function useGrassMaterial({
     const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
-
-    const emptyTrailTexture = useMemo(() => {
-        const texture = new THREE.DataTexture(new Uint8Array([0]), 1, 1, THREE.RedFormat)
-        texture.needsUpdate = true
-        return texture
-    }, [])
 
     const material = useMemo(
         () =>
@@ -54,11 +47,7 @@ export default function useGrassMaterial({
                     uWindScale: { value: windParameters.scale },
                     uWindStrength: { value: windParameters.strength },
                     uWindSpeed: { value: windParameters.speed },
-                    uTrailTexture: { value: emptyTrailTexture },
-                    uBallPosition: { value: new THREE.Vector3() },
                     uCircleCenter: { value: new THREE.Vector3() },
-                    uTrailCanvasSize: { value: trailCanvasSize },
-                    uSobelMode: { value: grassParameters.sobelMode },
 
                     uNoiseTexture: { value: noiseTexture },
                     uNoiseStrength: { value: borderNoiseStrength },
@@ -79,7 +68,7 @@ export default function useGrassMaterial({
                 fragmentShader: grassFragmentShader,
                 side: THREE.FrontSide,
             }),
-        [emptyTrailTexture]
+        []
     )
 
     useEffect(() => {
@@ -102,8 +91,6 @@ export default function useGrassMaterial({
         u.uWindScale.value = windParameters.scale
         u.uWindStrength.value = windParameters.strength
         u.uWindSpeed.value = windParameters.speed
-        u.uTrailCanvasSize.value = trailCanvasSize
-        u.uSobelMode.value = grassParameters.sobelMode
 
         u.uNoiseTexture.value = noiseTexture
         u.uNoiseStrength.value = borderNoiseStrength
@@ -125,7 +112,6 @@ export default function useGrassMaterial({
         windParameters,
         lanternGroundLightParameters,
         roadParameters,
-        trailCanvasSize,
         chunkSize,
         noiseTexture,
         borderNoiseStrength,
@@ -140,9 +126,8 @@ export default function useGrassMaterial({
     useEffect(() => {
         return () => {
             material.dispose()
-            emptyTrailTexture.dispose()
         }
-    }, [material, emptyTrailTexture])
+    }, [material])
 
     return material
 }

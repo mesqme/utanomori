@@ -15,6 +15,7 @@ export default function useTerrainMaterial({
     const terrainBaseBrightness = useStore((s) => s.terrainParameters.baseBrightness)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
     const groundTextureContrast = useStore((s) => s.terrainParameters.groundTextureContrast)
+    const roadParameters = useStore((s) => s.roadParameters)
     const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
@@ -39,6 +40,13 @@ export default function useTerrainMaterial({
                 uGroundTexture: { value: groundTexture },
                 uGroundTextureScale: { value: groundTextureScale },
                 uGroundTextureContrast: { value: groundTextureContrast },
+                uRoadEnabled: { value: roadParameters.enabled ? 1 : 0 },
+                uRoadWidth: { value: roadParameters.width },
+                uRoadSoftness: { value: roadParameters.softness },
+                uRoadGroundBrightness: { value: roadParameters.groundBrightness },
+                uRoadGroundNoiseScale: { value: roadParameters.groundNoiseScale },
+                uRoadGroundNoiseStrength: { value: roadParameters.groundNoiseStrength },
+                uRoadGroundEdgeSharpness: { value: roadParameters.groundEdgeSharpness },
                 uLanternPosition: { value: new THREE.Vector3() },
                 uLanternLightRadius: { value: lanternGroundLightParameters.radius },
                 uLanternLightEdgeSoftness: { value: lanternGroundLightParameters.edgeSoftness },
@@ -67,6 +75,13 @@ export default function useTerrainMaterial({
         u.uGroundTexture.value = groundTexture
         u.uGroundTextureScale.value = groundTextureScale
         u.uGroundTextureContrast.value = groundTextureContrast
+        u.uRoadEnabled.value = roadParameters.enabled ? 1 : 0
+        u.uRoadWidth.value = roadParameters.width
+        u.uRoadSoftness.value = roadParameters.softness
+        u.uRoadGroundBrightness.value = roadParameters.groundBrightness
+        u.uRoadGroundNoiseScale.value = roadParameters.groundNoiseScale
+        u.uRoadGroundNoiseStrength.value = roadParameters.groundNoiseStrength
+        u.uRoadGroundEdgeSharpness.value = roadParameters.groundEdgeSharpness
         u.uLanternLightRadius.value = lanternGroundLightParameters.radius
         u.uLanternLightEdgeSoftness.value = lanternGroundLightParameters.edgeSoftness
         u.uLanternLightNoiseScale.value = lanternGroundLightParameters.edgeNoiseScale
@@ -88,6 +103,7 @@ export default function useTerrainMaterial({
         groundTexture,
         groundTextureScale,
         groundTextureContrast,
+        roadParameters,
         lanternGroundLightParameters,
         pixelSize,
         ditherModeValue,

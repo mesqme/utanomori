@@ -8,8 +8,8 @@ export const sceneStylePresets = Object.freeze({
             segments: 19,
             scale: 0.08,
             amplitude: 0,
-            groundTextureScale: 0.11,
-            groundTextureContrast: 0,
+            groundTextureScale: 0.05,
+            groundTextureContrast: 0.45,
             chunkSize: 9,
         },
         grassParameters: {
@@ -20,7 +20,6 @@ export const sceneStylePresets = Object.freeze({
             colorBase: '#337632',
             baseBrightness: 1,
             leanFactor: 0,
-            sobelMode: 0,
         },
         grassPatchParameters: {
             worldSeed: 9187,
@@ -57,16 +56,17 @@ export const sceneStylePresets = Object.freeze({
             meanderStrength: 6,
             width: 1.5,
             softness: 0.75,
-            grassMinScale: 0.05,
+            grassMinScale: 0.09,
+            groundBrightness: -0.09,
+            groundNoiseScale: 0.88,
+            groundNoiseStrength: 0.61,
+            groundEdgeSharpness: 1,
         },
         windParameters: {
             direction: 0.65,
             scale: 0.35,
             strength: 0.2,
             speed: 1.1,
-        },
-        trailParameters: {
-            chunkSize: 256,
         },
         lanternGroundLightParameters: {
             radius: 3,

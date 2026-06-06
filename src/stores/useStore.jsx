@@ -39,7 +39,6 @@ const createStore = () =>
             grassPatchParameters: { ...defaultSceneStyle.grassPatchParameters },
             roadParameters: { ...defaultSceneStyle.roadParameters },
             windParameters: { ...defaultSceneStyle.windParameters },
-            trailParameters: { ...defaultSceneStyle.trailParameters },
 
             /**
              * Lantern ground light parameters
@@ -143,7 +142,6 @@ if (import.meta?.hot) {
             ...state.roadParameters,
         },
         windParameters: state.windParameters ?? { ...defaultSceneStyle.windParameters },
-        trailParameters: state.trailParameters ?? { ...defaultSceneStyle.trailParameters },
         lanternGroundLightParameters: applyGrassStyleDefaults
             ? { ...defaultSceneStyle.lanternGroundLightParameters }
             : state.lanternGroundLightParameters,
