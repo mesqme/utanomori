@@ -72,12 +72,15 @@ export default class PainterlyEdgePass extends Pass {
             tensorBuffer: { value: this.tensorTarget.texture },
             kuwaharaBuffer: { value: this.kuwaharaTarget.texture },
             filterStrength: { value: settings.filterStrength },
+            edgeRestoreStrength: { value: settings.edgeRestoreStrength },
+            edgeRestoreThreshold: { value: settings.edgeRestoreThreshold },
             debugMode: { value: settings.debugMode },
             sensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
             luminanceNoise: { value: settings.luminanceNoise },
             chromaNoise: { value: settings.chromaNoise },
             sensorNoiseScale: { value: settings.sensorNoiseScale },
             resolution: { value: this.fullResolution },
+            texelSize: { value: new THREE.Vector2(1, 1) },
             noiseSeed: { value: settings.noiseSeed },
         })
 
@@ -104,6 +107,8 @@ export default class PainterlyEdgePass extends Pass {
 
         const composite = this.compositeMaterial.uniforms
         composite.filterStrength.value = settings.filterStrength
+        composite.edgeRestoreStrength.value = settings.edgeRestoreStrength
+        composite.edgeRestoreThreshold.value = settings.edgeRestoreThreshold
         composite.debugMode.value = settings.debugMode
         composite.sensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
         composite.luminanceNoise.value = settings.luminanceNoise
@@ -135,6 +140,7 @@ export default class PainterlyEdgePass extends Pass {
         const scaledHeight = Math.max(1, Math.round(safeHeight * this.renderScale))
 
         this.fullResolution.set(safeWidth, safeHeight)
+        this.compositeMaterial.uniforms.texelSize.value.set(1 / safeWidth, 1 / safeHeight)
         this.scaledResolution.set(scaledWidth, scaledHeight)
         this.scaledTexelSize.set(1 / scaledWidth, 1 / scaledHeight)
         this.displacedTarget.setSize(scaledWidth, scaledHeight)

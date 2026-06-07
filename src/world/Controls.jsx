@@ -665,6 +665,20 @@ export default function Controls() {
             step: 0.01,
             onChange: setParam('painterlyPostParameters', 'filterStrength'),
         },
+        edgeRestore: {
+            value: painterlyPostParameters.edgeRestoreStrength,
+            min: 0,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'edgeRestoreStrength'),
+        },
+        edgeThreshold: {
+            value: painterlyPostParameters.edgeRestoreThreshold,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'edgeRestoreThreshold'),
+        },
         sensorNoise: {
             value: painterlyPostParameters.sensorNoiseEnabled,
             onChange: setParam('painterlyPostParameters', 'sensorNoiseEnabled'),

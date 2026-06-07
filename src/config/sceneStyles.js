@@ -150,7 +150,7 @@ const flatColorsStyle = {
     },
     painterlyPostParameters: {
         ...complexStyle.painterlyPostParameters,
-        enabled: true,
+        enabled: false,
     },
     characterMaterialParameters: {
         ...complexStyle.characterMaterialParameters,
@@ -162,6 +162,15 @@ const flatColorsStyle = {
 const magicGlowStyle = {
     ...complexStyle,
     label: 'Magic Glow',
+    lanternGroundLightParameters: {
+        ...complexStyle.lanternGroundLightParameters,
+        radius: 3.55,
+        edgeSoftness: 1.99,
+        edgeNoiseScale: 0.39,
+        edgeNoiseStrength: 0,
+        innerBrightness: 2.0,
+        outerDarkness: 0,
+    },
     painterlyPostParameters: {
         ...complexStyle.painterlyPostParameters,
         enabled: true,
