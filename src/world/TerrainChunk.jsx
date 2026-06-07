@@ -11,6 +11,7 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
     const terrainScale = terrainParameters.scale
     const terrainAmplitude = terrainParameters.amplitude
     const terrainSegments = terrainParameters.segments
+    const grassEnabled = useStore((s) => s.grassParameters.enabled)
     const roadParameters = useStore((s) => s.roadParameters)
 
     const geometry = useMemo(() => {
@@ -37,18 +38,29 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
     return (
         <group position={[x * size, 0, z * size]}>
             <mesh geometry={geometry} material={terrainMaterial} rotation-x={-Math.PI / 2} />
-            <Grass
-                size={size}
-                chunkX={x * size}
-                chunkZ={z * size}
-                chunkIndexX={x}
-                chunkIndexZ={z}
-                noise2D={noise2D}
-                scale={terrainScale}
-                amplitude={terrainAmplitude}
-                grassMaterial={grassMaterial}
-            />
-            <GrassPatchDebug chunkX={x * size} chunkZ={z * size} size={size} noise2D={noise2D} scale={terrainScale} amplitude={terrainAmplitude} />
+            {grassEnabled && (
+                <>
+                    <Grass
+                        size={size}
+                        chunkX={x * size}
+                        chunkZ={z * size}
+                        chunkIndexX={x}
+                        chunkIndexZ={z}
+                        noise2D={noise2D}
+                        scale={terrainScale}
+                        amplitude={terrainAmplitude}
+                        grassMaterial={grassMaterial}
+                    />
+                    <GrassPatchDebug
+                        chunkX={x * size}
+                        chunkZ={z * size}
+                        size={size}
+                        noise2D={noise2D}
+                        scale={terrainScale}
+                        amplitude={terrainAmplitude}
+                    />
+                </>
+            )}
         </group>
     )
 }

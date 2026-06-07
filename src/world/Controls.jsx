@@ -1,7 +1,7 @@
 import { useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
-import { mainCharacterMaterialGroups, mainCharacterMaterialPresets } from '../config/mainCharacterMaterials.js'
-import { sceneStylePresets } from '../config/sceneStyles.js'
+import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
+import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
@@ -14,7 +14,13 @@ const SCENE_STYLE_SECTIONS = new Set([
     'borderParameters',
     'ditheringParameters',
     'characterParameters',
+    'characterMaterialParameters',
 ])
+
+const sceneStyleOptions = Object.freeze({
+    ...Object.fromEntries(Object.entries(sceneStylePresets).map(([id, preset]) => [preset.label, id])),
+    Custom: 'custom',
+})
 
 export default function Controls() {
     const sceneStylePreset = useStore((state) => state.sceneStylePreset)
@@ -61,14 +67,15 @@ export default function Controls() {
             borderParameters: { ...preset.borderParameters },
             ditheringParameters: { ...preset.ditheringParameters },
             characterParameters: { ...preset.characterParameters },
+            characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
         })
     }
 
-    const setCharacterMaterialParam = (slotId, param) => (value) => {
+    const setCharacterMaterialParam = (slotId, param) => (value, _, context) => {
         useStore.setState((state) => ({
+            sceneStylePreset: context?.initial ? state.sceneStylePreset : 'custom',
             characterMaterialParameters: {
                 ...state.characterMaterialParameters,
-                palettePreset: 'custom',
                 materials: {
                     ...state.characterMaterialParameters.materials,
                     [slotId]: {
@@ -80,36 +87,12 @@ export default function Controls() {
         }))
     }
 
-    const setCharacterMaterialPreset = (presetId) => {
-        const preset = mainCharacterMaterialPresets[presetId]
-        if (!preset) {
-            useStore.setState((state) => ({
-                characterMaterialParameters: {
-                    ...state.characterMaterialParameters,
-                    palettePreset: presetId,
-                },
-            }))
-            return
-        }
-
-        useStore.setState((state) => ({
-            characterMaterialParameters: {
-                ...state.characterMaterialParameters,
-                palettePreset: presetId,
-                materials: Object.fromEntries(
-                    Object.entries(preset.materials).map(([id, colors]) => [
-                        id,
-                        {
-                            ...state.characterMaterialParameters.materials[id],
-                            ...colors,
-                        },
-                    ])
-                ),
-            },
-        }))
-    }
-
     useControls('General', {
+        style: {
+            value: sceneStylePreset,
+            options: sceneStyleOptions,
+            onChange: setSceneStylePreset,
+        },
         perfMonitor: {
             value: perfVisible,
             onChange: (value) => useStore.getState().setPerfVisible(value),
@@ -120,18 +103,11 @@ export default function Controls() {
         },
     })
 
-    useControls('Scene Style', {
-        preset: {
-            value: sceneStylePreset,
-            options: {
-                'Flat Style': 'flatStyle',
-                Custom: 'custom',
-            },
-            onChange: setSceneStylePreset,
-        },
-    })
-
     useControls('Terrain', {
+        groundTexture: {
+            value: terrainParameters.groundTextureEnabled,
+            onChange: setParam('terrainParameters', 'groundTextureEnabled'),
+        },
         color: {
             value: terrainParameters.color,
             onChange: setParam('terrainParameters', 'color'),
@@ -192,6 +168,10 @@ export default function Controls() {
     })
 
     useControls('Grass', {
+        enabled: {
+            value: grassParameters.enabled,
+            onChange: setParam('grassParameters', 'enabled'),
+        },
         count: {
             value: grassParameters.count,
             min: 0,
@@ -654,15 +634,6 @@ export default function Controls() {
     })
 
     useControls('Character Stylized', {
-        palettePreset: {
-            value: characterMaterialParameters.palettePreset,
-            options: {
-                Tuned: 'tuned',
-                Previous: 'previous',
-                Custom: 'custom',
-            },
-            onChange: setCharacterMaterialPreset,
-        },
         debug: {
             value: characterMaterialParameters.debugMode,
             options: stylizedDebugModes,

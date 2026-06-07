@@ -13,6 +13,7 @@ uniform sampler2D uNoiseTexture;
 uniform float uNoiseStrength;
 uniform float uNoiseScale;
 uniform sampler2D uGroundTexture;
+uniform int uGroundTextureEnabled;
 uniform float uGroundTextureScale;
 uniform float uGroundTextureContrast;
 uniform int uRoadEnabled;
@@ -131,10 +132,14 @@ void main() {
       }
   }
 
-  vec3 groundSample = texture2D(uGroundTexture, worldXZ * uGroundTextureScale).rgb;
-  float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
-  float groundVariation = (groundValue - 0.5) * 2.0;
-  vec3 color = clamp(uBaseColor * (1.0 + groundVariation * uGroundTextureContrast) * uBaseBrightness, 0.0, 1.0);
+  vec3 color = uBaseColor * uBaseBrightness;
+  if (uGroundTextureEnabled == 1) {
+      vec3 groundSample = texture2D(uGroundTexture, worldXZ * uGroundTextureScale).rgb;
+      float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
+      float groundVariation = (groundValue - 0.5) * 2.0;
+      color *= 1.0 + groundVariation * uGroundTextureContrast;
+  }
+  color = clamp(color, 0.0, 1.0);
 
   if (uRoadEnabled == 1) {
       float roadNoise = texture2D(uNoiseTexture, worldXZ * uRoadGroundNoiseScale * 0.1).r * 2.0 - 1.0;

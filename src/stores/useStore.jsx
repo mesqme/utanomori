@@ -1,9 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
-import { mainCharacterMaterialDefaults } from '../config/mainCharacterMaterials.js'
-import { defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
-import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
+import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
 const GRASS_STYLE_VERSION = 9
 const CHARACTER_STYLIZED_VERSION = 2
@@ -67,11 +65,7 @@ const createStore = () =>
             /**
              * Character stylized material parameters
              */
-            characterMaterialParameters: {
-                ...characterStylizedDefaults,
-                palettePreset: 'previous',
-                materials: mainCharacterMaterialDefaults,
-            },
+            characterMaterialParameters: cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters),
 
             /**
              * Camera debug parameters
@@ -123,7 +117,26 @@ if (import.meta?.hot) {
     const state = useStore.getState()
     const applyGrassStyleDefaults = state.grassStyleVersion !== GRASS_STYLE_VERSION
     const applyCharacterStylizedDefaults = state.characterStylizedVersion !== CHARACTER_STYLIZED_VERSION
+    const characterMaterialParameters = applyCharacterStylizedDefaults
+        ? cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters)
+        : {
+              ...defaultSceneStyle.characterMaterialParameters,
+              ...state.characterMaterialParameters,
+              materials: Object.fromEntries(
+                  Object.entries(defaultSceneStyle.characterMaterialParameters.materials).map(([id, colors]) => [
+                      id,
+                      {
+                          ...colors,
+                          ...state.characterMaterialParameters?.materials?.[id],
+                      },
+                  ])
+              ),
+          }
+
+    delete characterMaterialParameters.palettePreset
+
     useStore.setState({
+        sceneStylePreset: state.sceneStylePreset === 'flatStyle' ? defaultSceneStyleId : state.sceneStylePreset ?? defaultSceneStyleId,
         grassStyleVersion: GRASS_STYLE_VERSION,
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         terrainParameters: {
@@ -153,17 +166,7 @@ if (import.meta?.hot) {
                   ...state.borderParameters,
               },
         ditheringParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.ditheringParameters } : state.ditheringParameters,
-        characterMaterialParameters: applyCharacterStylizedDefaults
-            ? {
-                  ...characterStylizedDefaults,
-                  palettePreset: 'previous',
-                  materials: mainCharacterMaterialDefaults,
-              }
-            : {
-                  ...characterStylizedDefaults,
-                  ...state.characterMaterialParameters,
-                  materials: state.characterMaterialParameters?.materials ?? mainCharacterMaterialDefaults,
-              },
+        characterMaterialParameters,
     })
     import.meta.hot.data.store = useStore
 }

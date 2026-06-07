@@ -13,6 +13,7 @@ export default function useTerrainMaterial({
 }) {
     const terrainColor = useStore((s) => s.terrainParameters.color)
     const terrainBaseBrightness = useStore((s) => s.terrainParameters.baseBrightness)
+    const groundTextureEnabled = useStore((s) => s.terrainParameters.groundTextureEnabled)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
     const groundTextureContrast = useStore((s) => s.terrainParameters.groundTextureContrast)
     const roadParameters = useStore((s) => s.roadParameters)
@@ -38,6 +39,7 @@ export default function useTerrainMaterial({
                 uNoiseStrength: { value: borderNoiseStrength },
                 uNoiseScale: { value: borderNoiseScale },
                 uGroundTexture: { value: groundTexture },
+                uGroundTextureEnabled: { value: groundTextureEnabled ? 1 : 0 },
                 uGroundTextureScale: { value: groundTextureScale },
                 uGroundTextureContrast: { value: groundTextureContrast },
                 uRoadEnabled: { value: roadParameters.enabled ? 1 : 0 },
@@ -73,6 +75,7 @@ export default function useTerrainMaterial({
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale
         u.uGroundTexture.value = groundTexture
+        u.uGroundTextureEnabled.value = groundTextureEnabled ? 1 : 0
         u.uGroundTextureScale.value = groundTextureScale
         u.uGroundTextureContrast.value = groundTextureContrast
         u.uRoadEnabled.value = roadParameters.enabled ? 1 : 0
@@ -101,6 +104,7 @@ export default function useTerrainMaterial({
         borderNoiseStrength,
         borderNoiseScale,
         groundTexture,
+        groundTextureEnabled,
         groundTextureScale,
         groundTextureContrast,
         roadParameters,
