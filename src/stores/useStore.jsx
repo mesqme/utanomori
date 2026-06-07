@@ -58,6 +58,11 @@ const createStore = () =>
             ditheringParameters: { ...defaultSceneStyle.ditheringParameters },
 
             /**
+             * Global painterly postprocessing parameters
+             */
+            painterlyPostParameters: { ...defaultSceneStyle.painterlyPostParameters },
+
+            /**
              * Character parameters
              */
             characterParameters: { ...defaultSceneStyle.characterParameters },
@@ -166,6 +171,10 @@ if (import.meta?.hot) {
                   ...state.borderParameters,
               },
         ditheringParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.ditheringParameters } : state.ditheringParameters,
+        painterlyPostParameters: {
+            ...defaultSceneStyle.painterlyPostParameters,
+            ...state.painterlyPostParameters,
+        },
         characterMaterialParameters,
     })
     import.meta.hot.data.store = useStore

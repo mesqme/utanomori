@@ -2,6 +2,7 @@ import { useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
+import { painterlyPostDebugModes } from '../config/painterlyPostDefaults.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
@@ -13,6 +14,7 @@ const SCENE_STYLE_SECTIONS = new Set([
     'lanternGroundLightParameters',
     'borderParameters',
     'ditheringParameters',
+    'painterlyPostParameters',
     'characterParameters',
     'characterMaterialParameters',
 ])
@@ -32,6 +34,7 @@ export default function Controls() {
     const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
     const ditheringParameters = useStore((state) => state.ditheringParameters)
+    const painterlyPostParameters = useStore((state) => state.painterlyPostParameters)
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
@@ -66,6 +69,7 @@ export default function Controls() {
             lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
             borderParameters: { ...preset.borderParameters },
             ditheringParameters: { ...preset.ditheringParameters },
+            painterlyPostParameters: { ...preset.painterlyPostParameters },
             characterParameters: { ...preset.characterParameters },
             characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
         })
@@ -578,6 +582,156 @@ export default function Controls() {
             max: 10,
             step: 1,
             onChange: setParam('ditheringParameters', 'pixelSize'),
+        },
+    })
+
+    useControls('Painterly Postprocess', {
+        enabled: {
+            value: painterlyPostParameters.enabled,
+            onChange: setParam('painterlyPostParameters', 'enabled'),
+        },
+        debug: {
+            value: painterlyPostParameters.debugMode,
+            options: painterlyPostDebugModes,
+            onChange: setParam('painterlyPostParameters', 'debugMode'),
+        },
+        renderScale: {
+            value: painterlyPostParameters.renderScale,
+            min: 0.25,
+            max: 1,
+            step: 0.05,
+            onChange: setParam('painterlyPostParameters', 'renderScale'),
+        },
+        largeNScale: {
+            value: painterlyPostParameters.largeNoiseScale,
+            min: 0.1,
+            max: 40,
+            step: 0.1,
+            onChange: setParam('painterlyPostParameters', 'largeNoiseScale'),
+        },
+        largeNStrength: {
+            value: painterlyPostParameters.largeNoiseStrength,
+            min: 0,
+            max: 8,
+            step: 0.05,
+            onChange: setParam('painterlyPostParameters', 'largeNoiseStrength'),
+        },
+        fineNScale: {
+            value: painterlyPostParameters.fineNoiseScale,
+            min: 1,
+            max: 400,
+            step: 1,
+            onChange: setParam('painterlyPostParameters', 'fineNoiseScale'),
+        },
+        fineNStrength: {
+            value: painterlyPostParameters.fineNoiseStrength,
+            min: 0,
+            max: 4,
+            step: 0.05,
+            onChange: setParam('painterlyPostParameters', 'fineNoiseStrength'),
+        },
+        noiseSeed: {
+            value: painterlyPostParameters.noiseSeed,
+            min: 0,
+            max: 100,
+            step: 1,
+            onChange: setParam('painterlyPostParameters', 'noiseSeed'),
+        },
+        radius: {
+            value: painterlyPostParameters.radius,
+            min: 1,
+            max: 8,
+            step: 1,
+            onChange: setParam('painterlyPostParameters', 'radius'),
+        },
+        anisotropy: {
+            value: painterlyPostParameters.anisotropy,
+            min: 0,
+            max: 2,
+            step: 0.05,
+            onChange: setParam('painterlyPostParameters', 'anisotropy'),
+        },
+        eccentricity: {
+            value: painterlyPostParameters.eccentricity,
+            min: 0,
+            max: 4,
+            step: 0.05,
+            onChange: setParam('painterlyPostParameters', 'eccentricity'),
+        },
+        filterStrength: {
+            value: painterlyPostParameters.filterStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'filterStrength'),
+        },
+        sensorNoise: {
+            value: painterlyPostParameters.sensorNoiseEnabled,
+            onChange: setParam('painterlyPostParameters', 'sensorNoiseEnabled'),
+        },
+        lumaNoise: {
+            value: painterlyPostParameters.luminanceNoise,
+            min: 0,
+            max: 0.2,
+            step: 0.001,
+            onChange: setParam('painterlyPostParameters', 'luminanceNoise'),
+        },
+        chromaNoise: {
+            value: painterlyPostParameters.chromaNoise,
+            min: 0,
+            max: 0.1,
+            step: 0.001,
+            onChange: setParam('painterlyPostParameters', 'chromaNoise'),
+        },
+        sensorScale: {
+            value: painterlyPostParameters.sensorNoiseScale,
+            min: 1,
+            max: 8,
+            step: 1,
+            onChange: setParam('painterlyPostParameters', 'sensorNoiseScale'),
+        },
+        bloom: {
+            value: painterlyPostParameters.bloomEnabled,
+            onChange: setParam('painterlyPostParameters', 'bloomEnabled'),
+        },
+        bloomIntensity: {
+            value: painterlyPostParameters.bloomIntensity,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'bloomIntensity'),
+        },
+        bloomThreshold: {
+            value: painterlyPostParameters.bloomThreshold,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'bloomThreshold'),
+        },
+        bloomSmooth: {
+            value: painterlyPostParameters.bloomSmoothing,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'bloomSmoothing'),
+        },
+        bloomRadius: {
+            value: painterlyPostParameters.bloomRadius,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'bloomRadius'),
+        },
+        sharpen: {
+            value: painterlyPostParameters.sharpenEnabled,
+            onChange: setParam('painterlyPostParameters', 'sharpenEnabled'),
+        },
+        sharpenStrength: {
+            value: painterlyPostParameters.sharpenStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painterlyPostParameters', 'sharpenStrength'),
         },
     })
 

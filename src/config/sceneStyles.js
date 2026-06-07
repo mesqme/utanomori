@@ -1,4 +1,5 @@
 import { mainCharacterMaterialPresets } from './mainCharacterMaterials.js'
+import { painterlyPostDebugModes, painterlyPostDefaults } from './painterlyPostDefaults.js'
 import { characterStylizedDefaults } from './stylizedMaterialDefaults.js'
 
 function cloneMaterials(materials) {
@@ -96,6 +97,9 @@ const complexStyle = {
         ditherMode: 'Bayer',
         pixelSize: 1,
     },
+    painterlyPostParameters: {
+        ...painterlyPostDefaults,
+    },
     characterParameters: {
         modelScale: 0.51,
         modelYOffset: 0.59,
@@ -144,6 +148,10 @@ const flatColorsStyle = {
         grassFadeOffset: 2.45,
         groundOffset: -2.4,
     },
+    painterlyPostParameters: {
+        ...complexStyle.painterlyPostParameters,
+        enabled: true,
+    },
     characterMaterialParameters: {
         ...complexStyle.characterMaterialParameters,
         painterlyEnabled: false,
@@ -151,9 +159,41 @@ const flatColorsStyle = {
     },
 }
 
+const magicGlowStyle = {
+    ...complexStyle,
+    label: 'Magic Glow',
+    painterlyPostParameters: {
+        ...complexStyle.painterlyPostParameters,
+        enabled: true,
+        debugMode: painterlyPostDebugModes.Original,
+        renderScale: 1,
+        largeNoiseScale: 0.1,
+        largeNoiseStrength: 8,
+        fineNoiseScale: 400,
+        fineNoiseStrength: 0,
+        noiseSeed: 100,
+        radius: 8,
+        anisotropy: 2,
+        eccentricity: 4,
+        filterStrength: 1,
+        sensorNoiseEnabled: false,
+        luminanceNoise: 0.2,
+        chromaNoise: 0.1,
+        sensorNoiseScale: 8,
+        bloomEnabled: false,
+        bloomIntensity: 2,
+        bloomThreshold: 1,
+        bloomSmoothing: 1,
+        bloomRadius: 0.5,
+        sharpenEnabled: true,
+        sharpenStrength: 1,
+    },
+}
+
 export const sceneStylePresets = Object.freeze({
     complex: complexStyle,
     flatColors: flatColorsStyle,
+    magicGlow: magicGlowStyle,
 })
 
 export const defaultSceneStyleId = 'flatColors'
