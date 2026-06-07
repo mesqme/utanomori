@@ -1,11 +1,18 @@
 uniform sampler2D inputBuffer;
 uniform vec2 texelSize;
+uniform int enabled;
 uniform float strength;
 
 varying vec2 vUv;
 
 void main() {
     vec3 center = texture2D(inputBuffer, vUv).rgb;
+
+    if (enabled == 0) {
+        gl_FragColor = vec4(center, 1.0);
+        return;
+    }
+
     vec3 neighbors =
         texture2D(inputBuffer, vUv + vec2(texelSize.x, 0.0)).rgb +
         texture2D(inputBuffer, vUv - vec2(texelSize.x, 0.0)).rgb +

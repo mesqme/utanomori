@@ -199,10 +199,62 @@ const magicGlowStyle = {
     },
 }
 
+const painteryStyle = {
+    ...complexStyle,
+    label: 'Paintery',
+    terrainParameters: {
+        ...complexStyle.terrainParameters,
+        backgroundColor: '#0d0764',
+        baseBrightness: 1.8,
+    },
+
+    grassParameters: {
+        ...complexStyle.grassParameters,
+        enabled: true,
+        baseBrightness: 1.46,
+    },
+    lanternGroundLightParameters: {
+        ...complexStyle.lanternGroundLightParameters,
+        radius: 3.0,
+        edgeSoftness: 1.99,
+        edgeNoiseScale: 0.39,
+        edgeNoiseStrength: 0,
+        innerBrightness: 1.2,
+        outerDarkness: 0,
+    },
+    painterlyPostParameters: {
+        ...complexStyle.painterlyPostParameters,
+        enabled: true,
+        debugMode: painterlyPostDebugModes.Kuwahara,
+        renderScale: 1,
+        largeNoiseScale: 0.1,
+        largeNoiseStrength: 0,
+        fineNoiseScale: 1,
+        fineNoiseStrength: 0,
+        noiseSeed: 0,
+        radius: 8,
+        anisotropy: 0.0,
+        eccentricity: 0.0,
+        filterStrength: 0.0,
+        sensorNoiseEnabled: true,
+        luminanceNoise: 0.01,
+        chromaNoise: 0.0,
+        sensorNoiseScale: 1,
+        bloomEnabled: true,
+        bloomIntensity: 1.41,
+        bloomThreshold: 0.0,
+        bloomSmoothing: 0.68,
+        bloomRadius: 0.0,
+        sharpenEnabled: true,
+        sharpenStrength: 0.35,
+    },
+}
+
 export const sceneStylePresets = Object.freeze({
     complex: complexStyle,
     flatColors: flatColorsStyle,
     magicGlow: magicGlowStyle,
+    paintery: painteryStyle,
 })
 
 export const defaultSceneStyleId = 'flatColors'

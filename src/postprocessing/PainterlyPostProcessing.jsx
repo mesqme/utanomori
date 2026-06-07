@@ -12,8 +12,7 @@ export default function PainterlyPostProcessing() {
 
     useEffect(() => {
         painterlyPass.update(settings)
-        sharpenPass.update(settings.sharpenStrength)
-        sharpenPass.enabled = settings.sharpenEnabled
+        sharpenPass.update(settings.sharpenEnabled, settings.sharpenStrength)
     }, [painterlyPass, settings, sharpenPass])
 
     useEffect(

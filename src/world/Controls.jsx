@@ -1,4 +1,5 @@
-import { useControls } from 'leva'
+import { useEffect, useRef } from 'react'
+import { levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
@@ -24,7 +25,149 @@ const sceneStyleOptions = Object.freeze({
     Custom: 'custom',
 })
 
+const LEVA_SECTION_PATHS = Object.freeze({
+    Terrain: {
+        groundTexture: 'groundTextureEnabled',
+        color: 'color',
+        backgroundColor: 'backgroundColor',
+        baseBrightness: 'baseBrightness',
+        segments: 'segments',
+        scale: 'scale',
+        amplitude: 'amplitude',
+        groundTextureScale: 'groundTextureScale',
+        groundTextureContrast: 'groundTextureContrast',
+        chunkSize: 'chunkSize',
+    },
+    Grass: {
+        enabled: 'enabled',
+        count: 'count',
+        segments: 'segmentsCount',
+        width: 'width',
+        height: 'height',
+        baseColor: 'colorBase',
+        baseBrightness: 'baseBrightness',
+        lean: 'leanFactor',
+    },
+    Wind: {
+        direction: 'direction',
+        scale: 'scale',
+        strength: 'strength',
+        speed: 'speed',
+    },
+    'Grass Patches': {
+        worldSeed: 'worldSeed',
+        spacing: 'spacing',
+        jitter: 'jitter',
+        warpScale: 'domainWarpScale',
+        warpStrength: 'domainWarpStrength',
+        patchHeightVariation: 'patchHeightVariation',
+        patchWidthVariation: 'patchWidthVariation',
+        patchColorVariation: 'patchColorVariation',
+        internalNoiseScale: 'internalNoiseScale',
+        internalHeightVariation: 'internalHeightVariation',
+        internalWidthVariation: 'internalWidthVariation',
+        internalColorVariation: 'internalColorVariation',
+        internalLeanVariation: 'internalLeanVariation',
+        radialLean: 'radialLeanStrength',
+        cameraFacing: 'cameraFacingStrength',
+        orientationVariation: 'orientationVariation',
+        borderWidth: 'borderWidth',
+        borderMinScale: 'borderMinScale',
+        tintCyan: 'tintColorCyan',
+        tintViolet: 'tintColorViolet',
+        tintYellow: 'tintColorYellow',
+        tintGreen: 'tintColorGreen',
+    },
+    Roads: {
+        enabled: 'enabled',
+        worldSeed: 'worldSeed',
+        laneSpacing: 'laneSpacing',
+        nodeSpacing: 'nodeSpacing',
+        meander: 'meanderStrength',
+        width: 'width',
+        softness: 'softness',
+        grassMinScale: 'grassMinScale',
+        groundBrightness: 'groundBrightness',
+        groundNoiseScale: 'groundNoiseScale',
+        groundNoiseStrength: 'groundNoiseStrength',
+        groundEdgeSharpness: 'groundEdgeSharpness',
+    },
+    'Lantern Ground Light': {
+        radius: 'radius',
+        edgeSoftness: 'edgeSoftness',
+        edgeNoiseScale: 'edgeNoiseScale',
+        edgeNoiseStrength: 'edgeNoiseStrength',
+        innerBrightness: 'innerBrightness',
+        outerDarkness: 'outerDarkness',
+    },
+    Border: {
+        nStrength: 'noiseStrength',
+        nScale: 'noiseScale',
+        radius: 'circleRadiusFactor',
+        edgeFade: 'groundFadeOffset',
+        grassFade: 'grassFadeOffset',
+        groundOffset: 'groundOffset',
+    },
+    'Dithering Params': {
+        ditherMode: 'ditherMode',
+        pixelSize: 'pixelSize',
+    },
+    'Painterly Postprocess': {
+        enabled: 'enabled',
+        debug: 'debugMode',
+        renderScale: 'renderScale',
+        largeNScale: 'largeNoiseScale',
+        largeNStrength: 'largeNoiseStrength',
+        fineNScale: 'fineNoiseScale',
+        fineNStrength: 'fineNoiseStrength',
+        noiseSeed: 'noiseSeed',
+        radius: 'radius',
+        anisotropy: 'anisotropy',
+        eccentricity: 'eccentricity',
+        filterStrength: 'filterStrength',
+        edgeRestore: 'edgeRestoreStrength',
+        edgeThreshold: 'edgeRestoreThreshold',
+        sensorNoise: 'sensorNoiseEnabled',
+        lumaNoise: 'luminanceNoise',
+        chromaNoise: 'chromaNoise',
+        sensorScale: 'sensorNoiseScale',
+        bloom: 'bloomEnabled',
+        bloomIntensity: 'bloomIntensity',
+        bloomThreshold: 'bloomThreshold',
+        bloomSmooth: 'bloomSmoothing',
+        bloomRadius: 'bloomRadius',
+        sharpen: 'sharpenEnabled',
+        sharpenStrength: 'sharpenStrength',
+    },
+    Character: {
+        modelScale: 'modelScale',
+        modelYOffset: 'modelYOffset',
+        rotationOffset: 'rotationOffset',
+        idleTimeScale: 'idleTimeScale',
+        runTimeScale: 'runTimeScale',
+        runBlendInSpeed: 'runBlendInSpeed',
+        runBlendOutSpeed: 'runBlendOutSpeed',
+    },
+    'Character Stylized': {
+        debug: 'debugMode',
+        painterly: 'painterlyEnabled',
+        pTexture: 'painterlyTexture',
+        pScale: 'painterlyScale',
+        pContrast: 'painterlyContrast',
+        pColor: 'painterlyColor',
+        pTint: 'painterlyColorStrength',
+        pBrightness: 'painterlyBrightnessVariation',
+    },
+})
+
+function addLevaSectionValues(values, folder, section, paths) {
+    Object.entries(paths).forEach(([control, parameter]) => {
+        values[`${folder}.${control}`] = section[parameter]
+    })
+}
+
 export default function Controls() {
+    const syncingLeva = useRef(false)
     const sceneStylePreset = useStore((state) => state.sceneStylePreset)
     const terrainParameters = useStore((state) => state.terrainParameters)
     const grassParameters = useStore((state) => state.grassParameters)
@@ -42,8 +185,10 @@ export default function Controls() {
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
     const setParam = (section, param) => (value, _, context) => {
+        if (syncingLeva.current || context?.initial) return
+
         useStore.setState((state) => ({
-            sceneStylePreset: SCENE_STYLE_SECTIONS.has(section) && !context?.initial ? 'custom' : state.sceneStylePreset,
+            sceneStylePreset: SCENE_STYLE_SECTIONS.has(section) ? 'custom' : state.sceneStylePreset,
             [section]: {
                 ...state[section],
                 [param]: value,
@@ -52,6 +197,8 @@ export default function Controls() {
     }
 
     const setSceneStylePreset = (presetId) => {
+        if (syncingLeva.current) return
+
         const preset = sceneStylePresets[presetId]
 
         if (!preset) {
@@ -61,6 +208,7 @@ export default function Controls() {
 
         useStore.setState({
             sceneStylePreset: presetId,
+            ...(preset.generalParameters ?? {}),
             terrainParameters: { ...preset.terrainParameters },
             grassParameters: { ...preset.grassParameters },
             grassPatchParameters: { ...preset.grassPatchParameters },
@@ -76,8 +224,10 @@ export default function Controls() {
     }
 
     const setCharacterMaterialParam = (slotId, param) => (value, _, context) => {
+        if (syncingLeva.current || context?.initial) return
+
         useStore.setState((state) => ({
-            sceneStylePreset: context?.initial ? state.sceneStylePreset : 'custom',
+            sceneStylePreset: 'custom',
             characterMaterialParameters: {
                 ...state.characterMaterialParameters,
                 materials: {
@@ -91,19 +241,57 @@ export default function Controls() {
         }))
     }
 
+    useEffect(() => {
+        const values = {
+            'General.style': sceneStylePreset,
+            'General.perfMonitor': perfVisible,
+            'General.bgWireframe': backgroundWireframe,
+        }
+
+        addLevaSectionValues(values, 'Terrain', terrainParameters, LEVA_SECTION_PATHS.Terrain)
+        addLevaSectionValues(values, 'Grass', grassParameters, LEVA_SECTION_PATHS.Grass)
+        addLevaSectionValues(values, 'Wind', windParameters, LEVA_SECTION_PATHS.Wind)
+        addLevaSectionValues(values, 'Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
+        addLevaSectionValues(values, 'Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
+        addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
+        addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
+        addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
+        addLevaSectionValues(values, 'Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
+        addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
+        addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
+
+        mainCharacterMaterialGroups.forEach((group) => {
+            values[`Character Stylized.${group.label} Base`] =
+                characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor
+        })
+
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [sceneStylePreset])
+
     useControls('General', {
         style: {
             value: sceneStylePreset,
             options: sceneStyleOptions,
-            onChange: setSceneStylePreset,
+            onChange: (value, _, context) => {
+                if (!context?.initial) setSceneStylePreset(value)
+            },
         },
         perfMonitor: {
             value: perfVisible,
-            onChange: (value) => useStore.getState().setPerfVisible(value),
+            onChange: (value, _, context) => {
+                if (!context?.initial && !syncingLeva.current) useStore.getState().setPerfVisible(value)
+            },
         },
         bgWireframe: {
             value: backgroundWireframe,
-            onChange: (value) => useStore.getState().setBackgroundWireframe(value),
+            onChange: (value, _, context) => {
+                if (!context?.initial && !syncingLeva.current) useStore.getState().setBackgroundWireframe(value)
+            },
         },
     })
 

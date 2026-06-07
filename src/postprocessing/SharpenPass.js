@@ -13,6 +13,7 @@ export default class SharpenPass extends Pass {
             uniforms: {
                 inputBuffer: { value: null },
                 texelSize: { value: new THREE.Vector2(1, 1) },
+                enabled: { value: 1 },
                 strength: { value: strength },
             },
             depthTest: false,
@@ -23,7 +24,8 @@ export default class SharpenPass extends Pass {
         this.fullscreenMaterial = this.material
     }
 
-    update(strength) {
+    update(enabled, strength) {
+        this.material.uniforms.enabled.value = enabled ? 1 : 0
         this.material.uniforms.strength.value = strength
     }
 
