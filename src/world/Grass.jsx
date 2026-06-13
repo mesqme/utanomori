@@ -5,12 +5,14 @@ import useStore from '../stores/useStore.jsx'
 import { mulberry32 } from './utils/randomUtils.js'
 import { createGrassPatchSampler } from './utils/grassPatchField.js'
 import { createRoadSampler } from './utils/roadField.js'
+import { createObjectFieldSampler } from './utils/objectField.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 
 export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude, grassMaterial }) {
     const grassParameters = useStore((s) => s.grassParameters)
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const roadParameters = useStore((s) => s.roadParameters)
+    const objectParameters = useStore((s) => s.objectParameters)
     const patchGenerationKey = [
         grassPatchParameters.worldSeed,
         grassPatchParameters.spacing,
@@ -41,6 +43,16 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         roadParameters.meanderStrength,
         roadParameters.width,
         roadParameters.softness,
+    ].join('|')
+    const objectGenerationKey = [
+        objectParameters.enabled,
+        objectParameters.worldSeed,
+        objectParameters.cellSize,
+        objectParameters.groupJitter,
+        objectParameters.density,
+        objectParameters.roadClearance,
+        objectParameters.groupScale,
+        objectParameters.minObjectSpacing,
     ].join('|')
 
     const grassGeometry = useMemo(() => {
@@ -90,6 +102,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         const debugColor = new THREE.Color()
         const patchSampler = createGrassPatchSampler(grassPatchParameters)
         const roadSampler = createRoadSampler(roadParameters)
+        const objectSampler = createObjectFieldSampler(objectParameters, roadParameters)
         const rng = mulberry32((chunkIndexX * 73856093) ^ (chunkIndexZ * 19349663) ^ 0xdecafbad)
 
         for (let i = 0; i < grassParameters.count; i++) {
@@ -100,7 +113,8 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             const worldZ = z + chunkZ
             const y = noise2D ? noise2D(worldX * scale, worldZ * scale) * amplitude : 0
             const patch = patchSampler.sample(worldX, worldZ)
-            const roadMask = roadSampler.sampleMask(worldX, worldZ)
+            const objectCoverage = objectSampler.sampleCoverage(worldX, worldZ)
+            const roadMask = Math.max(roadSampler.sampleMask(worldX, worldZ), objectCoverage)
 
             positions[i * 3] = x
             positions[i * 3 + 1] = y
@@ -133,7 +147,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         grassGeometry.setAttribute('aRoadMask', new THREE.InstancedBufferAttribute(roadMasks, 1))
 
         return grassGeometry
-    }, [grassParameters.segmentsCount, grassParameters.count, grassParameters.colorBase, patchGenerationKey, roadGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude])
+    }, [grassParameters.segmentsCount, grassParameters.count, grassParameters.colorBase, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude])
 
     useEffect(() => {
         return () => {

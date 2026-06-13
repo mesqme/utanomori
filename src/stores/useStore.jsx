@@ -42,6 +42,11 @@ const createStore = () =>
             windParameters: { ...defaultSceneStyle.windParameters },
 
             /**
+             * Scattered object groups (trees, stones, mushrooms)
+             */
+            objectParameters: { ...defaultSceneStyle.objectParameters },
+
+            /**
              * Lantern ground light parameters
              */
             lanternGroundLightParameters: { ...defaultSceneStyle.lanternGroundLightParameters },
@@ -159,6 +164,10 @@ if (import.meta?.hot) {
         roadParameters: {
             ...defaultSceneStyle.roadParameters,
             ...state.roadParameters,
+        },
+        objectParameters: {
+            ...defaultSceneStyle.objectParameters,
+            ...state.objectParameters,
         },
         windParameters: state.windParameters ?? { ...defaultSceneStyle.windParameters },
         lanternGroundLightParameters: applyGrassStyleDefaults

@@ -3,12 +3,14 @@
 #endif
 
 uniform vec3 uBaseColor;        
+uniform vec3 uBackgroundColor;
 uniform float uBaseBrightness;
 uniform vec3 uCircleCenter;    
 uniform float uPatchSize;  
 uniform float uCircleRadiusFactor;
 uniform float uGroundOffset;
 uniform float uGroundFadeOffset;
+uniform int uFadeMode;
 uniform sampler2D uNoiseTexture;
 uniform float uNoiseStrength;
 uniform float uNoiseScale;
@@ -104,11 +106,14 @@ bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
 }
 
 void main() {
-  vec3 worldCenterPos = getWorldAtBigPixelCenter(vWorldPosition, gl_FragCoord.xy, uPixelSize);
-  vec2 worldXZ = worldCenterPos.xz;
+  vec2 worldXZ = vWorldPosition.xz;
+  vec2 fadeWorldXZ = worldXZ;
+  if (uFadeMode == 0) {
+      fadeWorldXZ = getWorldAtBigPixelCenter(vWorldPosition, gl_FragCoord.xy, uPixelSize).xz;
+  }
   vec2 circleXZ = uCircleCenter.xz;
 
-  float distToCircle = length(worldXZ - circleXZ);
+  float distToCircle = length(fadeWorldXZ - circleXZ);
 
   // Sample noise texture at world position
   vec2 noiseUV = worldXZ * uNoiseScale * 0.1;
@@ -124,7 +129,7 @@ void main() {
   float t = smoothstep(groundRadius, groundFadeRadius, distToCircle);
 
   // Apply Dithering
-  if (t > 0.0) {
+  if (uFadeMode == 0 && t > 0.0) {
       float fade = t;
       
       if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
@@ -166,6 +171,10 @@ void main() {
       lanternMask
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
+
+  if (uFadeMode == 1) {
+      color = mix(color, uBackgroundColor, t);
+  }
 
   gl_FragColor = vec4(color, 1.0);
 

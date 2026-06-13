@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import useStore from '../stores/useStore.jsx'
 import Grass from './Grass.jsx'
 import GrassPatchDebug from './GrassPatchDebug.jsx'
+import ObjectGroups from './ObjectGroups.jsx'
 import { createRoadSampler } from './utils/roadField.js'
 
 export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, grassMaterial }) {
@@ -12,6 +13,7 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
     const terrainAmplitude = terrainParameters.amplitude
     const terrainSegments = terrainParameters.segments
     const grassEnabled = useStore((s) => s.grassParameters.enabled)
+    const objectsEnabled = useStore((s) => s.objectParameters.enabled)
     const roadParameters = useStore((s) => s.roadParameters)
 
     const geometry = useMemo(() => {
@@ -60,6 +62,18 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
                         amplitude={terrainAmplitude}
                     />
                 </>
+            )}
+            {objectsEnabled && (
+                <ObjectGroups
+                    chunkX={x * size}
+                    chunkZ={z * size}
+                    chunkIndexX={x}
+                    chunkIndexZ={z}
+                    size={size}
+                    noise2D={noise2D}
+                    scale={terrainScale}
+                    amplitude={terrainAmplitude}
+                />
             )}
         </group>
     )

@@ -1,4 +1,5 @@
 import { mainCharacterMaterialPresets } from './mainCharacterMaterials.js'
+import { objectFieldDefaults } from './objectFieldDefaults.js'
 import { painterlyPostDebugModes, painterlyPostDefaults } from './painterlyPostDefaults.js'
 import { characterStylizedDefaults } from './stylizedMaterialDefaults.js'
 
@@ -71,6 +72,9 @@ const complexStyle = {
         groundNoiseStrength: 2,
         groundEdgeSharpness: 1,
     },
+    objectParameters: {
+        ...objectFieldDefaults,
+    },
     windParameters: {
         direction: 0.65,
         scale: 0.35,
@@ -86,6 +90,7 @@ const complexStyle = {
         outerDarkness: 0,
     },
     borderParameters: {
+        fadeMode: 'Color',
         noiseStrength: 0.77,
         noiseScale: 0.23,
         circleRadiusFactor: 1,
@@ -130,6 +135,10 @@ const flatColorsStyle = {
         ...complexStyle.roadParameters,
         enabled: false,
     },
+    objectParameters: {
+        ...complexStyle.objectParameters,
+        enabled: false,
+    },
     lanternGroundLightParameters: {
         ...complexStyle.lanternGroundLightParameters,
         radius: 3,
@@ -141,6 +150,7 @@ const flatColorsStyle = {
     },
     borderParameters: {
         ...complexStyle.borderParameters,
+        fadeMode: 'Dither',
         noiseStrength: 0.08,
         noiseScale: 0.13,
         circleRadiusFactor: 1,
@@ -162,6 +172,10 @@ const flatColorsStyle = {
 const magicGlowStyle = {
     ...complexStyle,
     label: 'Magic Glow',
+    borderParameters: {
+        ...complexStyle.borderParameters,
+        fadeMode: 'Dither',
+    },
     lanternGroundLightParameters: {
         ...complexStyle.lanternGroundLightParameters,
         radius: 3.55,
@@ -257,7 +271,7 @@ export const sceneStylePresets = Object.freeze({
     paintery: painteryStyle,
 })
 
-export const defaultSceneStyleId = 'flatColors'
+export const defaultSceneStyleId = 'complex'
 export const defaultSceneStyle = sceneStylePresets[defaultSceneStyleId]
 
 export function cloneSceneStyleSection(section) {

@@ -11,6 +11,7 @@ const SCENE_STYLE_SECTIONS = new Set([
     'grassParameters',
     'grassPatchParameters',
     'roadParameters',
+    'objectParameters',
     'windParameters',
     'lanternGroundLightParameters',
     'borderParameters',
@@ -92,6 +93,16 @@ const LEVA_SECTION_PATHS = Object.freeze({
         groundNoiseStrength: 'groundNoiseStrength',
         groundEdgeSharpness: 'groundEdgeSharpness',
     },
+    Objects: {
+        enabled: 'enabled',
+        worldSeed: 'worldSeed',
+        cellSize: 'cellSize',
+        groupJitter: 'groupJitter',
+        density: 'density',
+        roadClearance: 'roadClearance',
+        groupScale: 'groupScale',
+        minObjectSpacing: 'minObjectSpacing',
+    },
     'Lantern Ground Light': {
         radius: 'radius',
         edgeSoftness: 'edgeSoftness',
@@ -101,6 +112,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
         outerDarkness: 'outerDarkness',
     },
     Border: {
+        fadeMode: 'fadeMode',
         nStrength: 'noiseStrength',
         nScale: 'noiseScale',
         radius: 'circleRadiusFactor',
@@ -173,6 +185,7 @@ export default function Controls() {
     const grassParameters = useStore((state) => state.grassParameters)
     const grassPatchParameters = useStore((state) => state.grassPatchParameters)
     const roadParameters = useStore((state) => state.roadParameters)
+    const objectParameters = useStore((state) => state.objectParameters)
     const windParameters = useStore((state) => state.windParameters)
     const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
@@ -213,6 +226,7 @@ export default function Controls() {
             grassParameters: { ...preset.grassParameters },
             grassPatchParameters: { ...preset.grassPatchParameters },
             roadParameters: { ...preset.roadParameters },
+            objectParameters: { ...preset.objectParameters },
             windParameters: { ...preset.windParameters },
             lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
             borderParameters: { ...preset.borderParameters },
@@ -253,6 +267,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Wind', windParameters, LEVA_SECTION_PATHS.Wind)
         addLevaSectionValues(values, 'Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
         addLevaSectionValues(values, 'Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
+        addLevaSectionValues(values, 'Objects', objectParameters, LEVA_SECTION_PATHS.Objects)
         addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
         addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
@@ -668,6 +683,60 @@ export default function Controls() {
         },
     })
 
+    useControls('Objects', {
+        enabled: {
+            value: objectParameters.enabled,
+            onChange: setParam('objectParameters', 'enabled'),
+        },
+        worldSeed: {
+            value: objectParameters.worldSeed,
+            step: 1,
+            onChange: setParam('objectParameters', 'worldSeed'),
+        },
+        cellSize: {
+            value: objectParameters.cellSize,
+            min: 2,
+            max: 24,
+            step: 0.5,
+            onChange: setParam('objectParameters', 'cellSize'),
+        },
+        groupJitter: {
+            value: objectParameters.groupJitter,
+            min: 0,
+            max: 0.95,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'groupJitter'),
+        },
+        density: {
+            value: objectParameters.density,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'density'),
+        },
+        roadClearance: {
+            value: objectParameters.roadClearance,
+            min: 0,
+            max: 10,
+            step: 0.1,
+            onChange: setParam('objectParameters', 'roadClearance'),
+        },
+        groupScale: {
+            value: objectParameters.groupScale,
+            min: 0.2,
+            max: 3,
+            step: 0.05,
+            onChange: setParam('objectParameters', 'groupScale'),
+        },
+        minObjectSpacing: {
+            value: objectParameters.minObjectSpacing,
+            min: 0.05,
+            max: 3,
+            step: 0.05,
+            onChange: setParam('objectParameters', 'minObjectSpacing'),
+        },
+    })
+
     useControls('Lantern Ground Light', {
         radius: {
             value: lanternGroundLightParameters.radius,
@@ -714,6 +783,11 @@ export default function Controls() {
     })
 
     useControls('Border', {
+        fadeMode: {
+            value: borderParameters.fadeMode,
+            options: ['Color', 'Dither'],
+            onChange: setParam('borderParameters', 'fadeMode'),
+        },
         nStrength: {
             value: borderParameters.noiseStrength,
             min: 0,

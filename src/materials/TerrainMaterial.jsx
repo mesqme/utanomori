@@ -12,6 +12,7 @@ export default function useTerrainMaterial({
     groundTexture,
 }) {
     const terrainColor = useStore((s) => s.terrainParameters.color)
+    const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
     const terrainBaseBrightness = useStore((s) => s.terrainParameters.baseBrightness)
     const groundTextureEnabled = useStore((s) => s.terrainParameters.groundTextureEnabled)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
@@ -22,6 +23,7 @@ export default function useTerrainMaterial({
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
     const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
     const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
+    const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
@@ -29,12 +31,14 @@ export default function useTerrainMaterial({
         return new THREE.ShaderMaterial({
             uniforms: {
                 uBaseColor: { value: new THREE.Color(terrainColor) },
+                uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                 uBaseBrightness: { value: terrainBaseBrightness },
                 uCircleCenter: { value: new THREE.Vector3() },
                 uPatchSize: { value: chunkSize },
                 uCircleRadiusFactor: { value: initialCircleRadius },
                 uGroundOffset: { value: borderGroundOffset },
                 uGroundFadeOffset: { value: borderGroundFadeOffset },
+                uFadeMode: { value: borderFadeMode === 'Color' ? 1 : 0 },
                 uNoiseTexture: { value: noiseTexture },
                 uNoiseStrength: { value: borderNoiseStrength },
                 uNoiseScale: { value: borderNoiseScale },
@@ -67,10 +71,12 @@ export default function useTerrainMaterial({
     useEffect(() => {
         const u = material.uniforms
         u.uBaseColor.value.set(terrainColor)
+        u.uBackgroundColor.value.set(backgroundColor)
         u.uBaseBrightness.value = terrainBaseBrightness
         u.uPatchSize.value = chunkSize
         u.uGroundOffset.value = borderGroundOffset
         u.uGroundFadeOffset.value = borderGroundFadeOffset
+        u.uFadeMode.value = borderFadeMode === 'Color' ? 1 : 0
         u.uNoiseTexture.value = noiseTexture
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale
@@ -96,10 +102,12 @@ export default function useTerrainMaterial({
     }, [
         material,
         terrainColor,
+        backgroundColor,
         terrainBaseBrightness,
         chunkSize,
         borderGroundOffset,
         borderGroundFadeOffset,
+        borderFadeMode,
         noiseTexture,
         borderNoiseStrength,
         borderNoiseScale,

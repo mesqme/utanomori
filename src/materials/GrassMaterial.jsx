@@ -11,6 +11,7 @@ export default function useGrassMaterial({
     noiseTexture,
 }) {
     const grassParameters = useStore((s) => s.grassParameters)
+    const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
     const grassBaseBrightness = useStore((s) => s.grassParameters.baseBrightness)
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const windParameters = useStore((s) => s.windParameters)
@@ -21,6 +22,7 @@ export default function useGrassMaterial({
     const borderGrassFadeOffset = useStore((s) => s.borderParameters.grassFadeOffset)
     const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
     const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
+    const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
@@ -30,6 +32,8 @@ export default function useGrassMaterial({
                 uniforms: {
                     uPixelSize: { value: pixelSize },
                     uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
+                    uFadeMode: { value: borderFadeMode === 'Color' ? 1 : 0 },
+                    uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                     uTime: { value: 0 },
                     uGrassSegments: { value: grassParameters.segmentsCount },
                     uGrassChunkSize: { value: chunkSize },
@@ -75,6 +79,8 @@ export default function useGrassMaterial({
         const u = material.uniforms
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
+        u.uFadeMode.value = borderFadeMode === 'Color' ? 1 : 0
+        u.uBackgroundColor.value.set(backgroundColor)
         u.uGrassSegments.value = grassParameters.segmentsCount
         u.uGrassChunkSize.value = chunkSize
         u.uGrassWidth.value = grassParameters.width
@@ -107,6 +113,7 @@ export default function useGrassMaterial({
     }, [
         material,
         grassParameters,
+        backgroundColor,
         grassBaseBrightness,
         grassPatchParameters,
         windParameters,
@@ -119,6 +126,7 @@ export default function useGrassMaterial({
         borderGrassFadeOffset,
         borderGroundOffset,
         borderGroundFadeOffset,
+        borderFadeMode,
         pixelSize,
         ditherModeValue,
     ])

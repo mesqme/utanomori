@@ -1,5 +1,7 @@
 uniform float uPixelSize;
 uniform int uDitherMode;
+uniform int uFadeMode;
+uniform vec3 uBackgroundColor;
 uniform int uDebugBorders;
 uniform int uDebugPatchColors;
 uniform float uBaseBrightness;
@@ -156,12 +158,17 @@ void main() {
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
-  // Apply Dithering
-  // Only apply fade if we are in the fade region (vGrassData.w < 1.0)
-  if (vGrassData.w < 0.99) {
+  float borderFade = 1.0 - vGrassData.w;
+
+  if (uFadeMode == 1) {
+      color = mix(color, uBackgroundColor, borderFade);
+  }
+
+  // Only dither styles configured to use the legacy border fade.
+  if (uFadeMode == 0 && vGrassData.w < 0.99) {
       // Determine fade value (0 = opaque, 1 = transparent)
       // vGrassData.w goes from 1 (opaque) to 0 (transparent)
-      float fade = 1.0 - vGrassData.w;
+      float fade = borderFade;
       
       if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
           discard;
