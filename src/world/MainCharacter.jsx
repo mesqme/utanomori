@@ -8,6 +8,7 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
+import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
@@ -267,7 +268,12 @@ export default function MainCharacter() {
 
         setBallPosition(visualPosition)
 
-        if (phase === PHASES.start) recordTrail(visualPosition)
+        if (phase === PHASES.start) {
+            recordTrail(visualPosition)
+            setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, groundY, visualPosition.z)
+        } else {
+            clearTrampler(TRAMPLE_SLOT_MAIN)
+        }
 
         const cameraPosition = cameraPositionRef.current
         const cameraTarget = cameraTargetRef.current

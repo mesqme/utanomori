@@ -4,6 +4,15 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
+import { getTrampleData } from '../world/utils/trampleField.js'
+
+// Characters press the grass down within this radius, shrinking + leaning + tinting
+// blades. Tuned constants — promote to store/Leva later if they need tweaking.
+const TRAMPLE_RADIUS = 1.7
+const TRAMPLE_HEIGHT_SCALE = 0.32
+const TRAMPLE_LEAN = 0.9
+const TRAMPLE_COLOR = '#0a2410'
+const TRAMPLE_COLOR_STRENGTH = 0.4
 
 export default function useGrassMaterial({
     chunkSize,
@@ -52,6 +61,13 @@ export default function useGrassMaterial({
                     uWindStrength: { value: windParameters.strength },
                     uWindSpeed: { value: windParameters.speed },
                     uCircleCenter: { value: new THREE.Vector3() },
+
+                    uTramplers: { value: getTrampleData() },
+                    uTrampleRadius: { value: TRAMPLE_RADIUS },
+                    uTrampleHeightScale: { value: TRAMPLE_HEIGHT_SCALE },
+                    uTrampleLean: { value: TRAMPLE_LEAN },
+                    uTrampleColor: { value: new THREE.Color(TRAMPLE_COLOR) },
+                    uTrampleColorStrength: { value: TRAMPLE_COLOR_STRENGTH },
 
                     uNoiseTexture: { value: noiseTexture },
                     uNoiseStrength: { value: borderNoiseStrength },

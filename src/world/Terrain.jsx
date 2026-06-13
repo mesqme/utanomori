@@ -6,6 +6,7 @@ import { gsap } from 'gsap'
 import * as THREE from 'three'
 
 import TerrainChunk from './TerrainChunk.jsx'
+import ScatteredObjects from './ScatteredObjects.jsx'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
 import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
@@ -168,6 +169,7 @@ export default function Terrain() {
                     grassMaterial={grassMaterial}
                 />
             ))}
+            <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} noise2D={noise2D} />
         </group>
     )
 }

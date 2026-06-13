@@ -13,6 +13,8 @@ uniform float uLanternLightNoiseScale;
 uniform float uLanternLightNoiseStrength;
 uniform float uLanternLightInnerBrightness;
 uniform float uLanternLightOuterDarkness;
+uniform vec3 uTrampleColor;
+uniform float uTrampleColorStrength;
 
 varying vec3 vColor;
 varying vec4 vGrassData;
@@ -20,6 +22,7 @@ varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
+varying float vTrample;
 
 // --- Dither Functions ---
 // 0. Diamond Dither
@@ -157,6 +160,8 @@ void main() {
     lanternMask
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
+
+  color = mix(color, uTrampleColor, vTrample * uTrampleColorStrength);
 
   float borderFade = 1.0 - vGrassData.w;
 

@@ -15,6 +15,11 @@ uniform float uWindDirection;
 
 uniform vec3 uCircleCenter;
 
+uniform vec4 uTramplers[8];
+uniform float uTrampleRadius;
+uniform float uTrampleHeightScale;
+uniform float uTrampleLean;
+
 uniform sampler2D uNoiseTexture;
 uniform float uNoiseStrength;
 uniform float uNoiseScale;
@@ -34,6 +39,7 @@ varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
+varying float vTrample;
 
 #include includes.glsl
 
@@ -54,6 +60,21 @@ void main() {
   float grassMask = 1.0 - smoothstep(grassRadius - uGrassFadeOffset, grassRadius, distToCircle);
   grassHeightMask *= grassMask;
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
+
+  // Trample: characters press grass down and push it outward from where they stand.
+  float trampleInfluence = 0.0;
+  vec2 tramplePush = vec2(0.0);
+  for (int i = 0; i < 8; i++) {
+    if (uTramplers[i].w < 0.5) continue;
+    vec2 toBlade = worldXZ - uTramplers[i].xz;
+    float trampleDist = length(toBlade);
+    float influence = 1.0 - smoothstep(uTrampleRadius * 0.35, uTrampleRadius, trampleDist);
+    trampleInfluence = max(trampleInfluence, influence);
+    tramplePush += (trampleDist > 0.0001 ? toBlade / trampleDist : vec2(0.0)) * influence;
+  }
+  trampleInfluence = clamp(trampleInfluence, 0.0, 1.0);
+  grassHeightMask *= mix(1.0, uTrampleHeightScale, trampleInfluence);
+  vTrample = trampleInfluence;
 
   int vertFrontBackId = gl_VertexID % (grassVertices * 2);
   int vertId = vertFrontBackId % grassVertices;
@@ -85,10 +106,11 @@ void main() {
   vec2 windDirection = vec2(cos(uWindDirection), sin(uWindDirection));
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
+  vec2 trampleOffset = tramplePush * uTrampleLean * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
-    widthDirection.x * x + radialOffset.x + windOffset.x,
+    widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x,
     heightPercent * height * verticalCompression,
-    widthDirection.y * x + radialOffset.y + windOffset.y
+    widthDirection.y * x + radialOffset.y + windOffset.y + trampleOffset.y
   );
 
   vec4 mvPosition = modelViewMatrix * vec4(grassLocalPosition, 1.0);

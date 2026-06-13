@@ -44,7 +44,10 @@ function getSettings(parameters = {}, roadParameters = {}) {
 
 // Deterministic group cache. Groups can overhang chunk borders, so the same cell
 // may be queried by several chunks / by grass; we generate it once and reuse it.
+// Capped with FIFO eviction so an endless world doesn't grow it without bound —
+// evicted cells regenerate deterministically on next query.
 const groupCache = new Map()
+const MAX_CACHED_CELLS = 4096
 let cacheSignature = ''
 
 function ensureCache(settings) {
@@ -103,6 +106,11 @@ function buildCellGroup(cellX, cellZ, settings) {
     const targetCount = Math.round(minCount + rng() * (maxCount - minCount))
     const radius = archetype.radius * settings.groupScale
 
+    // Per-instance road clearance: the group gate only checks the anchor, but
+    // instances scatter up to `radius` away and could still land on a road.
+    const roadEnabled = settings.roadParameters?.enabled
+    const roadHalfWidth = roadEnabled ? Math.max(0.05, settings.roadParameters.width ?? 1.5) * 0.5 : 0
+
     const instances = []
     const maxAttempts = targetCount * 6
     let attempts = 0
@@ -118,6 +126,12 @@ function buildCellGroup(cellX, cellZ, settings) {
         const localZ = Math.sin(angle) * distance
         const scale = 0.82 + rng() * 0.5
         const footprintRadius = library.footprintRadius * scale
+
+        // Keep the object's footprint off the road surface (with a small margin).
+        if (roadEnabled) {
+            const roadDistance = sampleRoadDistance(anchorX + localX, anchorZ + localZ, settings.roadParameters)
+            if (roadDistance < roadHalfWidth + footprintRadius + 0.25) continue
+        }
 
         let fits = true
         for (const other of instances) {
@@ -165,6 +179,16 @@ function getCellGroup(cellX, cellZ, settings) {
 
     const group = buildCellGroup(cellX, cellZ, settings)
     groupCache.set(key, group)
+
+    if (groupCache.size > MAX_CACHED_CELLS) {
+        const evictCount = groupCache.size - MAX_CACHED_CELLS
+        let evicted = 0
+        for (const cachedKey of groupCache.keys()) {
+            groupCache.delete(cachedKey)
+            if (++evicted >= evictCount) break
+        }
+    }
+
     return group
 }
 

@@ -7,25 +7,25 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import CompanionCreature from './CompanionCreature.jsx'
-import TargetArrow from './TargetArrow.jsx'
+import TargetIndicator from './TargetIndicator.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
+import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
+import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 
 const SEARCH_MIN_RADIUS = 10
 const SEARCH_MAX_RADIUS = 18
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
-const FOLLOW_SPACING = 1.35
+const FOLLOW_SPACING = 1.5
 const FOLLOW_DAMP = 10
 const HEADING_DAMP = 9
 
 function dampAngle(current, target, lambda, delta) {
-    const delta2 = Math.atan2(Math.sin(target - current), Math.cos(target - current))
-    return current + delta2 * (1 - Math.exp(-lambda * delta))
+    const difference = Math.atan2(Math.sin(target - current), Math.cos(target - current))
+    return current + difference * (1 - Math.exp(-lambda * delta))
 }
 
-// Pick a spawn point within the search ring that is currently off-screen, so the
-// player has to use the arrow to find it. Falls back to the last candidate.
 const spawnProbe = new THREE.Vector3()
 function findHiddenSpawn(player, camera) {
     let fallback = null
@@ -42,40 +42,59 @@ function findHiddenSpawn(player, camera) {
     return fallback
 }
 
-function TargetCreature({ target }) {
+function CompanionShadow({ geometry, material, radius }) {
+    return <mesh geometry={geometry} material={material} rotation-x={-Math.PI / 2} position={[0, 0.02, 0]} scale={radius} renderOrder={1} />
+}
+
+function TargetCreature({ target, shadowGeometry, shadowMaterial }) {
     const groupRef = useRef(null)
+    const creatureRef = useRef(null)
+
+    useEffect(() => () => clearTrampler(TRAMPLE_SLOT_TARGET), [])
 
     useFrame((state) => {
         if (!groupRef.current) return
-        const bob = Math.abs(Math.sin(state.clock.elapsedTime * 2.5)) * 0.12
-        groupRef.current.position.set(target.x, getGroundY(target.x, target.z) + bob, target.z)
+        const groundY = getGroundY(target.x, target.z)
+        groupRef.current.position.set(target.x, groundY, target.z)
 
         const player = useStore.getState().ballPosition
         groupRef.current.rotation.y = Math.atan2(player.x - target.x, player.z - target.z)
+
+        if (creatureRef.current) {
+            creatureRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 2.5)) * 0.12
+        }
+
+        setTrampler(TRAMPLE_SLOT_TARGET, target.x, groundY, target.z)
     })
 
     return (
         <group ref={groupRef}>
-            <CompanionCreature definition={target} />
+            <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(target.scale ?? 0.5) * 0.62} />
+            <group ref={creatureRef}>
+                <CompanionCreature definition={target} />
+            </group>
         </group>
     )
 }
 
-function Follower({ definition, index }) {
+function Follower({ definition, index, shadowGeometry, shadowMaterial }) {
     const groupRef = useRef(null)
+    const creatureRef = useRef(null)
     const positionRef = useRef(new THREE.Vector3())
     const previousRef = useRef(new THREE.Vector3())
     const headingRef = useRef(0)
     const initializedRef = useRef(false)
     const sample = useMemo(() => ({}), [])
+    const slot = TRAMPLE_SLOT_FOLLOWER + index
+
+    useEffect(() => () => clearTrampler(slot), [slot])
 
     useFrame((state, delta) => {
         const group = groupRef.current
         if (!group) return
 
         const safeDelta = Math.min(delta, 0.1)
-        const distanceBehind = FOLLOW_SPACING * (index + 1)
-        const result = sampleTrail(distanceBehind, sample)
+        const result = sampleTrail(FOLLOW_SPACING * (index + 1), sample)
         if (!result) {
             group.visible = false
             return
@@ -84,7 +103,6 @@ function Follower({ definition, index }) {
 
         const position = positionRef.current
         if (!initializedRef.current) {
-            // Start where the friend was met, then slide into the follow line.
             position.set(definition.x, getGroundY(definition.x, definition.z), definition.z)
             previousRef.current.copy(position)
             initializedRef.current = true
@@ -97,20 +115,33 @@ function Follower({ definition, index }) {
 
         const speed = position.distanceTo(previousRef.current) / safeDelta
         previousRef.current.copy(position)
-        const bob = Math.sin(state.clock.elapsedTime * 10 + index) * Math.min(0.12, speed * 0.03)
 
-        group.position.set(position.x, position.y + bob, position.z)
+        // Group sits on the ground; jump arc + bob live on the inner creature so the
+        // shadow stays planted and the trampler reports the ground position.
+        const groundY = getGroundY(position.x, position.z)
+        group.position.set(position.x, groundY, position.z)
+
+        if (creatureRef.current) {
+            const jump = Math.max(0, position.y - groundY)
+            const bob = Math.sin(state.clock.elapsedTime * 10 + index) * Math.min(0.12, speed * 0.03)
+            creatureRef.current.position.y = jump + bob
+        }
 
         if (result.headingX !== 0 || result.headingZ !== 0) {
             const targetHeading = Math.atan2(result.headingX, result.headingZ)
             headingRef.current = dampAngle(headingRef.current, targetHeading, HEADING_DAMP, safeDelta)
         }
         group.rotation.y = headingRef.current
+
+        setTrampler(slot, position.x, groundY, position.z)
     })
 
     return (
         <group ref={groupRef}>
-            <CompanionCreature definition={definition} />
+            <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(definition.scale ?? 0.5) * 0.62} />
+            <group ref={creatureRef}>
+                <CompanionCreature definition={definition} />
+            </group>
         </group>
     )
 }
@@ -121,12 +152,32 @@ export default function Companions() {
     const found = useCompanions((state) => state.found)
     const [subscribeKeys] = useKeyboardControls()
 
-    // Reset the party whenever we leave the gameplay phase.
+    const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 24), [])
+    const shadowMaterial = useMemo(
+        () =>
+            new THREE.MeshBasicMaterial({
+                color: new THREE.Color(soundJourneyPalette.loaderBackground),
+                transparent: true,
+                opacity: 0.3,
+                depthWrite: false,
+                polygonOffset: true,
+                polygonOffsetFactor: -2,
+                polygonOffsetUnits: -2,
+            }),
+        []
+    )
+
+    useEffect(() => {
+        return () => {
+            shadowGeometry.dispose()
+            shadowMaterial.dispose()
+        }
+    }, [shadowGeometry, shadowMaterial])
+
     useEffect(() => {
         if (phase !== PHASES.start) useCompanions.getState().reset()
     }, [phase])
 
-    // Interact via keyboard; "start over" via the reset key during gameplay.
     useEffect(() => {
         const unsubscribeInteract = subscribeKeys(
             (state) => state.interact,
@@ -160,9 +211,7 @@ export default function Companions() {
             return
         }
 
-        const dx = player.x - companions.target.x
-        const dz = player.z - companions.target.z
-        const distance = Math.hypot(dx, dz)
+        const distance = Math.hypot(player.x - companions.target.x, player.z - companions.target.z)
 
         if (distance > ABANDON_RADIUS) {
             const spawn = findHiddenSpawn(player, state.camera)
@@ -175,11 +224,11 @@ export default function Companions() {
 
     return (
         <>
-            {target && <TargetCreature key={target.key} target={target} />}
+            {target && <TargetCreature key={target.key} target={target} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} />}
             {found.map((member, index) => (
-                <Follower key={member.key} definition={member} index={index} />
+                <Follower key={member.key} definition={member} index={index} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} />
             ))}
-            <TargetArrow />
+            <TargetIndicator />
         </>
     )
 }
