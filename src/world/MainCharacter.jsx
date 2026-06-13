@@ -7,6 +7,7 @@ import { gsap } from 'gsap'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
+import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
@@ -108,6 +109,7 @@ export default function MainCharacter() {
 
         setBallPosition(positionRef.current)
         smoothedCircleCenter.copy(positionRef.current)
+        resetTrail(positionRef.current)
     }, [getGroundY, setBallPosition, setModelTransform, smoothedCircleCenter])
 
     const handleReset = useCallback(() => {
@@ -264,6 +266,8 @@ export default function MainCharacter() {
         }
 
         setBallPosition(visualPosition)
+
+        if (phase === PHASES.start) recordTrail(visualPosition)
 
         const cameraPosition = cameraPositionRef.current
         const cameraTarget = cameraTargetRef.current

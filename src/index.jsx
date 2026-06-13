@@ -7,6 +7,7 @@ import { Leva } from 'leva'
 import Loader from './loader/Loader.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'
+import InteractionPrompt from './ui/InteractionPrompt.jsx'
 import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 
 applySoundJourneyCssVariables()
@@ -24,6 +25,7 @@ root.render(
                 { name: 'jump', keys: ['Space'] },
                 { name: 'run', keys: ['Shift'] },
                 { name: 'reset', keys: ['Enter'] },
+                { name: 'interact', keys: ['KeyE'] },
             ]}
         >
             <Canvas
@@ -39,6 +41,7 @@ root.render(
             </Canvas>
             <Leva collapsed />
             <ControlsIcons />
+            <InteractionPrompt />
         </KeyboardControls>
         <Loader />
         <Links />
