@@ -102,6 +102,23 @@ const LEVA_SECTION_PATHS = Object.freeze({
         roadClearance: 'roadClearance',
         groupScale: 'groupScale',
         minObjectSpacing: 'minObjectSpacing',
+        painterly: 'painterlyEnabled',
+        painterlyScale: 'painterlyScale',
+        painterlyContrast: 'painterlyContrast',
+        painterlyBrightness: 'painterlyBrightness',
+        painterlyTint: 'painterlyColorStrength',
+        fadeOffset: 'fadeOffset',
+    },
+    'Grass Trample': {
+        enabled: 'trampleEnabled',
+        heightScale: 'trampleHeightScale',
+        lean: 'trampleLean',
+        strength: 'trampleStrength',
+        threshold: 'trampleThreshold',
+        brighten: 'trampleBrighten',
+        dissolve: 'trampleFadeStart',
+        dissolveAlpha: 'trampleDissolveAlpha',
+        dissolveDither: 'trampleDissolveDither',
     },
     'Lantern Ground Light': {
         radius: 'radius',
@@ -268,6 +285,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
         addLevaSectionValues(values, 'Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
         addLevaSectionValues(values, 'Objects', objectParameters, LEVA_SECTION_PATHS.Objects)
+        addLevaSectionValues(values, 'Grass Trample', grassParameters, LEVA_SECTION_PATHS['Grass Trample'])
         addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
         addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
@@ -734,6 +752,108 @@ export default function Controls() {
             max: 3,
             step: 0.05,
             onChange: setParam('objectParameters', 'minObjectSpacing'),
+        },
+        painterly: {
+            value: objectParameters.painterlyEnabled,
+            onChange: setParam('objectParameters', 'painterlyEnabled'),
+        },
+        painterlyScale: {
+            value: objectParameters.painterlyScale,
+            min: 0,
+            max: 0.5,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'painterlyScale'),
+        },
+        painterlyContrast: {
+            value: objectParameters.painterlyContrast,
+            min: 0,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'painterlyContrast'),
+        },
+        painterlyBrightness: {
+            value: objectParameters.painterlyBrightness,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'painterlyBrightness'),
+        },
+        painterlyTint: {
+            value: objectParameters.painterlyColorStrength,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('objectParameters', 'painterlyColorStrength'),
+        },
+        fadeOffset: {
+            value: objectParameters.fadeOffset,
+            min: 0,
+            max: 8,
+            step: 0.1,
+            onChange: setParam('objectParameters', 'fadeOffset'),
+        },
+    })
+
+    useControls('Grass Trample', {
+        enabled: {
+            value: grassParameters.trampleEnabled,
+            onChange: setParam('grassParameters', 'trampleEnabled'),
+        },
+        heightScale: {
+            value: grassParameters.trampleHeightScale,
+            min: 0,
+            max: 1,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleHeightScale'),
+        },
+        lean: {
+            value: grassParameters.trampleLean,
+            min: 0,
+            max: 3,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleLean'),
+        },
+        strength: {
+            value: grassParameters.trampleStrength,
+            min: 0,
+            max: 8,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleStrength'),
+        },
+        threshold: {
+            value: grassParameters.trampleThreshold,
+            min: 0,
+            max: 1,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleThreshold'),
+        },
+        brighten: {
+            value: grassParameters.trampleBrighten,
+            min: 0,
+            max: 2,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleBrighten'),
+        },
+        dissolve: {
+            value: grassParameters.trampleFadeStart,
+            min: 0,
+            max: 1,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleFadeStart'),
+        },
+        dissolveAlpha: {
+            value: grassParameters.trampleDissolveAlpha,
+            min: 0,
+            max: 4,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleDissolveAlpha'),
+        },
+        dissolveDither: {
+            value: grassParameters.trampleDissolveDither,
+            min: 0,
+            max: 4,
+            step: 0.005,
+            onChange: setParam('grassParameters', 'trampleDissolveDither'),
         },
     })
 

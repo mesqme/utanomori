@@ -16,6 +16,7 @@ import paintaryAlpha03Url from '../assets/textures/paintaryAlpha_03.png'
 import paintaryAlpha04Url from '../assets/textures/paintaryAlpha_04.png'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
+import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT
@@ -73,17 +74,7 @@ export default function MainCharacter() {
 
     const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 32), [])
 
-    const shadowMaterial = useMemo(() => {
-        return new THREE.MeshBasicMaterial({
-            color: new THREE.Color('#050312'),
-            transparent: true,
-            opacity: SHADOW_MAX_OPACITY,
-            depthWrite: false,
-            polygonOffset: true,
-            polygonOffsetFactor: -2,
-            polygonOffsetUnits: -2,
-        })
-    }, [])
+    const shadowMaterial = useMemo(() => createGroundShadowMaterial({ color: '#050312', opacity: SHADOW_MAX_OPACITY }), [])
 
     const getGroundY = useCallback((x, z) => {
         const terrainParameters = useStore.getState().terrainParameters
@@ -264,6 +255,7 @@ export default function MainCharacter() {
             shadowRef.current.position.set(visualPosition.x, groundY + SHADOW_GROUND_OFFSET, visualPosition.z)
             shadowRef.current.scale.set(shadowScale, shadowScale, 1)
             shadowRef.current.material.opacity = shadowOpacity
+            updateGroundShadowMaterial(shadowMaterial)
         }
 
         setBallPosition(visualPosition)

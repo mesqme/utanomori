@@ -30,6 +30,15 @@ const complexStyle = {
         colorBase: '#028600',
         baseBrightness: 1,
         leanFactor: 0,
+        trampleEnabled: true,
+        trampleHeightScale: 0.32,
+        trampleLean: 0.24,
+        trampleStrength: 0.7,
+        trampleThreshold: 0.2,
+        trampleBrighten: 0.16,
+        trampleFadeStart: 0.1,
+        trampleDissolveAlpha: 1.0,
+        trampleDissolveDither: 1.0,
     },
     grassPatchParameters: {
         worldSeed: 9187,
@@ -74,6 +83,12 @@ const complexStyle = {
     },
     objectParameters: {
         ...objectFieldDefaults,
+        painterlyEnabled: true,
+        painterlyScale: 0.08,
+        painterlyContrast: 1.05,
+        painterlyBrightness: 0.5,
+        painterlyColorStrength: 0,
+        fadeOffset: 2.5,
     },
     windParameters: {
         direction: 0.65,

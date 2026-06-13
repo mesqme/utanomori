@@ -54,12 +54,10 @@ function buildCreatureGeometry({ bodyColor, accentColor, pupilColor, ears = 'non
     return merged
 }
 
-export default function CompanionCreature({ definition }) {
+export default function CompanionCreature({ definition, material }) {
     const geometry = useMemo(() => buildCreatureGeometry(definition), [definition])
-    const material = useMemo(() => new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }), [])
 
     useEffect(() => () => geometry.dispose(), [geometry])
-    useEffect(() => () => material.dispose(), [material])
 
-    return <mesh geometry={geometry} material={material} scale={definition.scale ?? 0.5} castShadow />
+    return <mesh geometry={geometry} material={material} scale={definition.scale ?? 0.5} />
 }

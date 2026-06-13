@@ -25,17 +25,8 @@ export default function TargetIndicator() {
 
     useEffect(() => {
         const element = document.createElement('div')
-        element.style.position = 'fixed'
-        element.style.left = '0'
-        element.style.top = '0'
-        element.style.width = '46px'
-        element.style.height = '46px'
-        element.style.marginLeft = '-23px'
-        element.style.marginTop = '-23px'
-        element.style.pointerEvents = 'none'
-        element.style.zIndex = '90'
-        element.style.display = 'none'
-        element.style.filter = 'drop-shadow(0 2px 6px rgba(9, 8, 34, 0.5))'
+        element.style.cssText =
+            'position:fixed;left:0;top:0;width:46px;height:46px;margin-left:-23px;margin-top:-23px;pointer-events:none;z-index:90;display:none;filter:drop-shadow(0 2px 6px rgba(9,8,34,0.5))'
         element.innerHTML = ARROW_SVG
         document.body.appendChild(element)
         elementRef.current = element
@@ -63,7 +54,6 @@ export default function TargetIndicator() {
         const width = size.width
         const height = size.height
 
-        // Project the friend (slightly above ground) into normalised device coords.
         projected.current.set(target.x, getGroundY(target.x, target.z) + 1.2, target.z)
         projected.current.project(state.camera)
 
@@ -77,14 +67,10 @@ export default function TargetIndicator() {
 
         const onScreen = !behind && ndcX >= -1 && ndcX <= 1 && ndcY >= -1 && ndcY <= 1
 
-        let screenX
-        let screenY
-        let rotation
-
         if (onScreen) {
             const bob = Math.sin(state.clock.elapsedTime * 5) * 4
-            screenX = (ndcX * 0.5 + 0.5) * width
-            screenY = (-ndcY * 0.5 + 0.5) * height - 44 + bob // float (and bob) above the creature
+            const screenX = (ndcX * 0.5 + 0.5) * width
+            const screenY = (-ndcY * 0.5 + 0.5) * height - 44 + bob // float (and bob) above the creature
             element.style.transform = `translate(${screenX}px, ${screenY}px) rotate(${Math.PI}rad)` // point down at it
             return
         }
@@ -93,11 +79,9 @@ export default function TargetIndicator() {
         const longest = Math.max(Math.abs(ndcX), Math.abs(ndcY)) || 1
         const edgeX = (ndcX / longest) * EDGE_MARGIN
         const edgeY = (ndcY / longest) * EDGE_MARGIN
-        screenX = (edgeX * 0.5 + 0.5) * width
-        screenY = (-edgeY * 0.5 + 0.5) * height
-        // Arrow points up at rotation 0; aim it along the screen-space direction.
-        rotation = Math.atan2(edgeX, edgeY)
-        element.style.transform = `translate(${screenX}px, ${screenY}px) rotate(${rotation}rad)`
+        const screenX = (edgeX * 0.5 + 0.5) * width
+        const screenY = (-edgeY * 0.5 + 0.5) * height
+        element.style.transform = `translate(${screenX}px, ${screenY}px) rotate(${Math.atan2(edgeX, edgeY)}rad)`
     })
 
     return null

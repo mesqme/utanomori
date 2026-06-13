@@ -7,6 +7,8 @@ import * as THREE from 'three'
 
 import TerrainChunk from './TerrainChunk.jsx'
 import ScatteredObjects from './ScatteredObjects.jsx'
+import GrassTrail from './GrassTrail.jsx'
+import { revealCircle } from './utils/revealCircle.js'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
 import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
@@ -74,6 +76,7 @@ export default function Terrain() {
         circleRadiusRef.current = value
         terrainMaterial.uniforms.uCircleRadiusFactor.value = value
         grassMaterial.uniforms.uCircleRadiusFactor.value = value
+        revealCircle.radiusFactor = value
     }
 
     useEffect(() => {
@@ -134,6 +137,10 @@ export default function Terrain() {
         grassMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         grassMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
 
+        revealCircle.centerX = state.smoothedCircleCenter.x
+        revealCircle.centerZ = state.smoothedCircleCenter.z
+        revealCircle.chunkSize = chunkSize
+
         const ballPosition = state.ballPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)
         const chunkX = Math.round(ballPosition.x / safeChunkSize)
@@ -170,6 +177,7 @@ export default function Terrain() {
                 />
             ))}
             <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} noise2D={noise2D} />
+            <GrassTrail grassMaterial={grassMaterial} />
         </group>
     )
 }

@@ -4,15 +4,18 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
-import { getTrampleData } from '../world/utils/trampleField.js'
 
-// Characters press the grass down within this radius, shrinking + leaning + tinting
-// blades. Tuned constants — promote to store/Leva later if they need tweaking.
-const TRAMPLE_RADIUS = 1.7
-const TRAMPLE_HEIGHT_SCALE = 0.32
-const TRAMPLE_LEAN = 0.9
-const TRAMPLE_COLOR = '#0a2410'
-const TRAMPLE_COLOR_STRENGTH = 0.4
+// Characters paint a fading trail (see GrassTrail) that this material samples to
+// shorten / lean / lighten / dissolve blades they walk over. Tuned constants —
+// promote to store/Leva later if they need tweaking.
+const TRAMPLE_STRENGTH = 0.7 // boosts sampled trail intensity
+const TRAMPLE_HEIGHT_SCALE = 0.32 // blades shrink toward this fraction under contact
+const TRAMPLE_LEAN = 0.24 // gentle outward lean along the trail gradient
+const TRAMPLE_COLOR = '#cdeebf' // light highlight where trampled
+const TRAMPLE_COLOR_STRENGTH = 0.16
+const TRAMPLE_FADE_START = 0.1 // trail intensity at which the dissolve begins (>=1 disables it)
+const TRAMPLE_DISSOLVE_ALPHA = 1.0 // how transparent trampled blades go
+const TRAMPLE_DISSOLVE_DITHER = 1.0 // extra dithered cut-out on top of the alpha fade
 
 export default function useGrassMaterial({
     chunkSize,
@@ -62,12 +65,20 @@ export default function useGrassMaterial({
                     uWindSpeed: { value: windParameters.speed },
                     uCircleCenter: { value: new THREE.Vector3() },
 
-                    uTramplers: { value: getTrampleData() },
-                    uTrampleRadius: { value: TRAMPLE_RADIUS },
+                    uTrailTexture: { value: null },
+                    uTrailCenter: { value: new THREE.Vector2() },
+                    uTrailWorldSize: { value: 28 },
+                    uTrailResolution: { value: 256 },
+                    uTrampleEnabled: { value: 1 },
+                    uTrampleStrength: { value: TRAMPLE_STRENGTH },
+                    uTrampleThreshold: { value: 0.22 },
                     uTrampleHeightScale: { value: TRAMPLE_HEIGHT_SCALE },
                     uTrampleLean: { value: TRAMPLE_LEAN },
                     uTrampleColor: { value: new THREE.Color(TRAMPLE_COLOR) },
                     uTrampleColorStrength: { value: TRAMPLE_COLOR_STRENGTH },
+                    uTrampleFadeStart: { value: TRAMPLE_FADE_START },
+                    uTrampleDissolveAlpha: { value: TRAMPLE_DISSOLVE_ALPHA },
+                    uTrampleDissolveDither: { value: TRAMPLE_DISSOLVE_DITHER },
 
                     uNoiseTexture: { value: noiseTexture },
                     uNoiseStrength: { value: borderNoiseStrength },
@@ -87,6 +98,7 @@ export default function useGrassMaterial({
                 vertexShader: grassVertexShader,
                 fragmentShader: grassFragmentShader,
                 side: THREE.FrontSide,
+                transparent: true,
             }),
         []
     )
@@ -126,6 +138,16 @@ export default function useGrassMaterial({
         u.uLanternLightNoiseStrength.value = lanternGroundLightParameters.edgeNoiseStrength
         u.uLanternLightInnerBrightness.value = lanternGroundLightParameters.innerBrightness
         u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
+
+        u.uTrampleEnabled.value = (grassParameters.trampleEnabled ?? true) ? 1 : 0
+        u.uTrampleStrength.value = grassParameters.trampleStrength ?? TRAMPLE_STRENGTH
+        u.uTrampleThreshold.value = grassParameters.trampleThreshold ?? 0.22
+        u.uTrampleHeightScale.value = grassParameters.trampleHeightScale ?? TRAMPLE_HEIGHT_SCALE
+        u.uTrampleLean.value = grassParameters.trampleLean ?? TRAMPLE_LEAN
+        u.uTrampleColorStrength.value = grassParameters.trampleBrighten ?? TRAMPLE_COLOR_STRENGTH
+        u.uTrampleFadeStart.value = grassParameters.trampleFadeStart ?? TRAMPLE_FADE_START
+        u.uTrampleDissolveAlpha.value = grassParameters.trampleDissolveAlpha ?? TRAMPLE_DISSOLVE_ALPHA
+        u.uTrampleDissolveDither.value = grassParameters.trampleDissolveDither ?? TRAMPLE_DISSOLVE_DITHER
     }, [
         material,
         grassParameters,

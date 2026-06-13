@@ -1,15 +1,20 @@
 import { useEffect, useMemo, useRef } from 'react'
+import { useFrame } from '@react-three/fiber'
+import { useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { createBatchedMeshPool } from './utils/batchedMeshPool.js'
+import { revealCircle } from './utils/revealCircle.js'
+import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { objectLibrary, OBJECT_TYPES } from '../config/objectFieldDefaults.js'
+import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 // Every scattered object (trees, stones, mushrooms across all active chunks) is an
 // instance in ONE BatchedMesh (see createBatchedMeshPool) → ~1 draw call with
-// per-instance frustum culling. Chunks add / remove their instances as the player
-// roams; freed slots are reused.
+// per-instance frustum culling. The material is the character's stylized look,
+// extended to batch + fade at the reveal-circle edge (see PropStylizedMaterial).
 const MAX_OBJECT_INSTANCES = 4096
 
 function createPartGeometry(part) {
@@ -54,13 +59,40 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const terrainScale = useStore((s) => s.terrainParameters.scale)
     const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
 
+    const painterlyTexture = useTexture(paintaryAlpha01Url)
+    useMemo(() => {
+        painterlyTexture.wrapS = THREE.RepeatWrapping
+        painterlyTexture.wrapT = THREE.RepeatWrapping
+        painterlyTexture.colorSpace = THREE.NoColorSpace
+        painterlyTexture.needsUpdate = true
+    }, [painterlyTexture])
+
     const pool = useMemo(() => {
         const prototypes = buildPrototypes()
-        const material = new THREE.MeshStandardMaterial({ roughness: 1, metalness: 0, flatShading: true })
+        const material = createPropStylizedMaterial(painterlyTexture)
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
         return created
-    }, [])
+    }, [painterlyTexture])
+
+    useFrame(() => {
+        const state = useStore.getState()
+        updatePropStylizedMaterial(pool.mesh.material, {
+            circleCenterX: revealCircle.centerX,
+            circleCenterZ: revealCircle.centerZ,
+            radiusFactor: revealCircle.radiusFactor,
+            chunkSize: revealCircle.chunkSize,
+            fadeOffset: state.objectParameters.fadeOffset,
+            backgroundColor: state.terrainParameters.backgroundColor,
+            fadeMode: state.borderParameters.fadeMode,
+            pixelSize: state.ditheringParameters.pixelSize,
+            painterlyEnabled: state.objectParameters.painterlyEnabled,
+            painterlyScale: state.objectParameters.painterlyScale,
+            painterlyContrast: state.objectParameters.painterlyContrast,
+            painterlyBrightness: state.objectParameters.painterlyBrightness,
+            painterlyColorStrength: state.objectParameters.painterlyColorStrength,
+        })
+    })
 
     const chunkInstancesRef = useRef(new Map())
     const generationKeyRef = useRef(null)

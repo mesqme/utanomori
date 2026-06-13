@@ -15,6 +15,9 @@ uniform float uLanternLightInnerBrightness;
 uniform float uLanternLightOuterDarkness;
 uniform vec3 uTrampleColor;
 uniform float uTrampleColorStrength;
+uniform float uTrampleFadeStart;
+uniform float uTrampleDissolveAlpha;
+uniform float uTrampleDissolveDither;
 
 varying vec3 vColor;
 varying vec4 vGrassData;
@@ -161,7 +164,19 @@ void main() {
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
+  // Lighten on contact, then dissolve trampled blades: they go semi-transparent
+  // (alpha) with an optional dithered cut-out, instead of leaving a hard bald patch.
   color = mix(color, uTrampleColor, vTrample * uTrampleColorStrength);
+  float grassAlpha = 1.0;
+  if (uTrampleFadeStart < 0.999) {
+    float dissolveAmount = smoothstep(uTrampleFadeStart, 1.0, vTrample);
+    if (dissolveAmount > 0.0 && uTrampleDissolveDither > 0.0) {
+      if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolveAmount * uTrampleDissolveDither, uDitherMode)) {
+        discard;
+      }
+    }
+    grassAlpha = 1.0 - dissolveAmount * uTrampleDissolveAlpha;
+  }
 
   float borderFade = 1.0 - vGrassData.w;
 
@@ -180,7 +195,7 @@ void main() {
       }
   }
 
-  gl_FragColor = vec4(color, 1.0);
+  gl_FragColor = vec4(color, grassAlpha);
 
   #include <tonemapping_fragment>
   #include <colorspace_fragment>

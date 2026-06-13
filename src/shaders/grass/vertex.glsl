@@ -15,8 +15,13 @@ uniform float uWindDirection;
 
 uniform vec3 uCircleCenter;
 
-uniform vec4 uTramplers[8];
-uniform float uTrampleRadius;
+uniform sampler2D uTrailTexture;
+uniform vec2 uTrailCenter;
+uniform float uTrailWorldSize;
+uniform float uTrailResolution;
+uniform float uTrampleEnabled;
+uniform float uTrampleStrength;
+uniform float uTrampleThreshold;
 uniform float uTrampleHeightScale;
 uniform float uTrampleLean;
 
@@ -61,18 +66,27 @@ void main() {
   grassHeightMask *= grassMask;
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
 
-  // Trample: characters press grass down and push it outward from where they stand.
+  // Trail: sample the fading top-down trail canvas centred on the hero. Grass that
+  // characters have walked over shortens, leans away from the path and lightens.
+  // A threshold drops the faint tails so only the actual path reacts (no dribble),
+  // and the gradient is only taken where there's real signal (no black-area glitch).
   float trampleInfluence = 0.0;
-  vec2 tramplePush = vec2(0.0);
-  for (int i = 0; i < 8; i++) {
-    if (uTramplers[i].w < 0.5) continue;
-    vec2 toBlade = worldXZ - uTramplers[i].xz;
-    float trampleDist = length(toBlade);
-    float influence = 1.0 - smoothstep(uTrampleRadius * 0.35, uTrampleRadius, trampleDist);
-    trampleInfluence = max(trampleInfluence, influence);
-    tramplePush += (trampleDist > 0.0001 ? toBlade / trampleDist : vec2(0.0)) * influence;
+  vec2 trampleLeanDir = vec2(0.0);
+  if (uTrampleEnabled > 0.5) {
+    vec2 trailUv = (worldXZ - uTrailCenter) / uTrailWorldSize + 0.5;
+    if (trailUv.x > 0.0 && trailUv.x < 1.0 && trailUv.y > 0.0 && trailUv.y < 1.0) {
+      float rawTrail = texture2D(uTrailTexture, trailUv).r * uTrampleStrength;
+      trampleInfluence = smoothstep(uTrampleThreshold, 1.0, rawTrail);
+      if (trampleInfluence > 0.001) {
+        float texel = 1.0 / uTrailResolution;
+        float gradX = texture2D(uTrailTexture, trailUv + vec2(texel, 0.0)).r - texture2D(uTrailTexture, trailUv - vec2(texel, 0.0)).r;
+        float gradZ = texture2D(uTrailTexture, trailUv + vec2(0.0, texel)).r - texture2D(uTrailTexture, trailUv - vec2(0.0, texel)).r;
+        vec2 grad = vec2(-gradX, -gradZ);
+        float gradLen = length(grad);
+        trampleLeanDir = gradLen > 0.0001 ? grad / gradLen : vec2(0.0);
+      }
+    }
   }
-  trampleInfluence = clamp(trampleInfluence, 0.0, 1.0);
   grassHeightMask *= mix(1.0, uTrampleHeightScale, trampleInfluence);
   vTrample = trampleInfluence;
 
@@ -106,7 +120,7 @@ void main() {
   vec2 windDirection = vec2(cos(uWindDirection), sin(uWindDirection));
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
-  vec2 trampleOffset = tramplePush * uTrampleLean * height * bendProfile;
+  vec2 trampleOffset = trampleLeanDir * uTrampleLean * trampleInfluence * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
     widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x,
     heightPercent * height * verticalCompression,

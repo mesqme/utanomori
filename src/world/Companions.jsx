@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useKeyboardControls } from '@react-three/drei'
+import { useKeyboardControls, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
@@ -10,11 +10,13 @@ import CompanionCreature from './CompanionCreature.jsx'
 import TargetIndicator from './TargetIndicator.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
+import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
+import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
+import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
-const SEARCH_MIN_RADIUS = 10
-const SEARCH_MAX_RADIUS = 18
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
 const FOLLOW_SPACING = 1.5
@@ -26,27 +28,22 @@ function dampAngle(current, target, lambda, delta) {
     return current + difference * (1 - Math.exp(-lambda * delta))
 }
 
-const spawnProbe = new THREE.Vector3()
-function findHiddenSpawn(player, camera) {
-    let fallback = null
-    for (let attempt = 0; attempt < 14; attempt++) {
-        const angle = Math.random() * Math.PI * 2
-        const distance = SEARCH_MIN_RADIUS + Math.random() * (SEARCH_MAX_RADIUS - SEARCH_MIN_RADIUS)
-        const x = player.x + Math.cos(angle) * distance
-        const z = player.z + Math.sin(angle) * distance
-        spawnProbe.set(x, getGroundY(x, z) + 0.5, z).project(camera)
-        const onScreen = spawnProbe.x >= -1 && spawnProbe.x <= 1 && spawnProbe.y >= -1 && spawnProbe.y <= 1 && spawnProbe.z <= 1
-        if (!onScreen) return { x, z }
-        fallback = { x, z }
-    }
-    return fallback
+// Spawn the friend beyond the visible (non-faded) circle, so the next one is never
+// sitting next to the one you just collected — you follow the arrow out to find it.
+function findHiddenSpawn(player) {
+    const revealRadius = getRevealRadius()
+    const minDistance = Math.max(10, revealRadius * 1.35)
+    const maxDistance = Math.max(minDistance + 5, revealRadius * 2.1)
+    const angle = Math.random() * Math.PI * 2
+    const distance = minDistance + Math.random() * (maxDistance - minDistance)
+    return { x: player.x + Math.cos(angle) * distance, z: player.z + Math.sin(angle) * distance }
 }
 
 function CompanionShadow({ geometry, material, radius }) {
     return <mesh geometry={geometry} material={material} rotation-x={-Math.PI / 2} position={[0, 0.02, 0]} scale={radius} renderOrder={1} />
 }
 
-function TargetCreature({ target, shadowGeometry, shadowMaterial }) {
+function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMaterial }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
 
@@ -71,13 +68,13 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial }) {
         <group ref={groupRef}>
             <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(target.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
-                <CompanionCreature definition={target} />
+                <CompanionCreature definition={target} material={creatureMaterial} />
             </group>
         </group>
     )
 }
 
-function Follower({ definition, index, shadowGeometry, shadowMaterial }) {
+function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureMaterial }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const positionRef = useRef(new THREE.Vector3())
@@ -140,7 +137,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial }) {
         <group ref={groupRef}>
             <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(definition.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
-                <CompanionCreature definition={definition} />
+                <CompanionCreature definition={definition} material={creatureMaterial} />
             </group>
         </group>
     )
@@ -152,27 +149,29 @@ export default function Companions() {
     const found = useCompanions((state) => state.found)
     const [subscribeKeys] = useKeyboardControls()
 
+    const painterlyTexture = useTexture(paintaryAlpha01Url)
+    useMemo(() => {
+        painterlyTexture.wrapS = THREE.RepeatWrapping
+        painterlyTexture.wrapT = THREE.RepeatWrapping
+        painterlyTexture.colorSpace = THREE.NoColorSpace
+        painterlyTexture.needsUpdate = true
+    }, [painterlyTexture])
+
+    // Shared stylized material for every creature — same unlit + painterly look as the
+    // character and props, reading the merged geometry's per-vertex colours, and
+    // fading at the reveal-circle edge (so a far-off target stays hidden in the fog).
+    const creatureMaterial = useMemo(() => createPropStylizedMaterial(painterlyTexture, { vertexColors: true }), [painterlyTexture])
+
     const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 24), [])
-    const shadowMaterial = useMemo(
-        () =>
-            new THREE.MeshBasicMaterial({
-                color: new THREE.Color(soundJourneyPalette.loaderBackground),
-                transparent: true,
-                opacity: 0.3,
-                depthWrite: false,
-                polygonOffset: true,
-                polygonOffsetFactor: -2,
-                polygonOffsetUnits: -2,
-            }),
-        []
-    )
+    const shadowMaterial = useMemo(() => createGroundShadowMaterial({ color: soundJourneyPalette.loaderBackground, opacity: 0.3 }), [])
 
     useEffect(() => {
         return () => {
             shadowGeometry.dispose()
             shadowMaterial.dispose()
+            creatureMaterial.dispose()
         }
-    }, [shadowGeometry, shadowMaterial])
+    }, [shadowGeometry, shadowMaterial, creatureMaterial])
 
     useEffect(() => {
         if (phase !== PHASES.start) useCompanions.getState().reset()
@@ -197,16 +196,34 @@ export default function Companions() {
         }
     }, [subscribeKeys])
 
-    useFrame((state) => {
+    useFrame(() => {
+        const state = useStore.getState()
+        updatePropStylizedMaterial(creatureMaterial, {
+            circleCenterX: revealCircle.centerX,
+            circleCenterZ: revealCircle.centerZ,
+            radiusFactor: revealCircle.radiusFactor,
+            chunkSize: revealCircle.chunkSize,
+            fadeOffset: state.objectParameters.fadeOffset,
+            backgroundColor: state.terrainParameters.backgroundColor,
+            fadeMode: state.borderParameters.fadeMode,
+            pixelSize: state.ditheringParameters.pixelSize,
+            painterlyEnabled: state.objectParameters.painterlyEnabled,
+            painterlyScale: state.objectParameters.painterlyScale,
+            painterlyContrast: state.objectParameters.painterlyContrast,
+            painterlyBrightness: state.objectParameters.painterlyBrightness,
+            painterlyColorStrength: state.objectParameters.painterlyColorStrength,
+        })
+        updateGroundShadowMaterial(shadowMaterial)
+
         if (usePhases.getState().phase !== PHASES.start) return
 
         const companions = useCompanions.getState()
-        const player = useStore.getState().ballPosition
+        const player = state.ballPosition
 
         if (!companions.target) {
             if (companions.found.length < MAX_PARTY) {
-                const spawn = findHiddenSpawn(player, state.camera)
-                if (spawn) companions.spawnTarget(spawn.x, spawn.z)
+                const spawn = findHiddenSpawn(player)
+                companions.spawnTarget(spawn.x, spawn.z)
             }
             return
         }
@@ -214,8 +231,8 @@ export default function Companions() {
         const distance = Math.hypot(player.x - companions.target.x, player.z - companions.target.z)
 
         if (distance > ABANDON_RADIUS) {
-            const spawn = findHiddenSpawn(player, state.camera)
-            if (spawn) companions.relocateTarget(spawn.x, spawn.z)
+            const spawn = findHiddenSpawn(player)
+            companions.relocateTarget(spawn.x, spawn.z)
             return
         }
 
@@ -224,9 +241,18 @@ export default function Companions() {
 
     return (
         <>
-            {target && <TargetCreature key={target.key} target={target} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} />}
+            {target && (
+                <TargetCreature key={target.key} target={target} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} creatureMaterial={creatureMaterial} />
+            )}
             {found.map((member, index) => (
-                <Follower key={member.key} definition={member} index={index} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} />
+                <Follower
+                    key={member.key}
+                    definition={member}
+                    index={index}
+                    shadowGeometry={shadowGeometry}
+                    shadowMaterial={shadowMaterial}
+                    creatureMaterial={creatureMaterial}
+                />
             ))}
             <TargetIndicator />
         </>
