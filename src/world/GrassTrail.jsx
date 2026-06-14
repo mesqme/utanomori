@@ -20,11 +20,29 @@ const WORLD_SIZE = 28 // world units the canvas spans (centred on the hero)
 const FADE_PER_FRAME = 0.02 // how fast the trail recovers
 const MAIN_BRUSH_RADIUS = 1.15 // world units
 const COMPANION_BRUSH_RADIUS = 0.85
+const UPDATE_RATE = 30
+const UPDATE_INTERVAL = 1 / UPDATE_RATE
+
+function createBrush(radius) {
+    const diameter = Math.ceil(radius * 2)
+    const canvas = document.createElement('canvas')
+    canvas.width = diameter
+    canvas.height = diameter
+    const ctx = canvas.getContext('2d')
+    const center = diameter * 0.5
+    const gradient = ctx.createRadialGradient(center, center, 0, center, center, radius)
+    gradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
+    gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, diameter, diameter)
+    return canvas
+}
 
 export default function GrassTrail({ grassMaterial }) {
     const prev = useRef({ x: 0, z: 0, initialized: false })
+    const elapsedRef = useRef(0)
 
-    const { canvas, ctx, texture } = useMemo(() => {
+    const { canvas, ctx, texture, mainBrush, companionBrush } = useMemo(() => {
         const canvas = document.createElement('canvas')
         canvas.width = RESOLUTION
         canvas.height = RESOLUTION
@@ -39,7 +57,14 @@ export default function GrassTrail({ grassMaterial }) {
         texture.wrapS = THREE.ClampToEdgeWrapping
         texture.wrapT = THREE.ClampToEdgeWrapping
 
-        return { canvas, ctx, texture }
+        const scale = RESOLUTION / WORLD_SIZE
+        return {
+            canvas,
+            ctx,
+            texture,
+            mainBrush: createBrush(MAIN_BRUSH_RADIUS * scale),
+            companionBrush: createBrush(COMPANION_BRUSH_RADIUS * scale),
+        }
     }, [])
 
     useEffect(() => {
@@ -55,7 +80,12 @@ export default function GrassTrail({ grassMaterial }) {
         }
     }, [grassMaterial, texture])
 
-    useFrame(() => {
+    useFrame((_, delta) => {
+        elapsedRef.current += delta
+        if (elapsedRef.current < UPDATE_INTERVAL) return
+        const elapsed = elapsedRef.current
+        elapsedRef.current = 0
+
         const scale = RESOLUTION / WORLD_SIZE
         const ball = useStore.getState().ballPosition
         const centerX = ball.x
@@ -75,7 +105,7 @@ export default function GrassTrail({ grassMaterial }) {
 
         // Fade toward black (recovery).
         ctx.globalCompositeOperation = 'source-over'
-        ctx.globalAlpha = FADE_PER_FRAME
+        ctx.globalAlpha = 1 - Math.pow(1 - FADE_PER_FRAME, elapsed * 60)
         ctx.fillStyle = 'black'
         ctx.fillRect(0, 0, RESOLUTION, RESOLUTION)
         ctx.globalAlpha = 1
@@ -89,14 +119,8 @@ export default function GrassTrail({ grassMaterial }) {
             if (data[i * 4 + 3] < 0.5) continue
             const px = RESOLUTION * 0.5 + (data[i * 4] - centerX) * scale
             const py = RESOLUTION * 0.5 + (data[i * 4 + 2] - centerZ) * scale
-            const radius = (i === 0 ? MAIN_BRUSH_RADIUS : COMPANION_BRUSH_RADIUS) * scale
-            const gradient = ctx.createRadialGradient(px, py, 0, px, py, radius)
-            gradient.addColorStop(0, 'rgba(255, 255, 255, 1)')
-            gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
-            ctx.fillStyle = gradient
-            ctx.beginPath()
-            ctx.arc(px, py, radius, 0, Math.PI * 2)
-            ctx.fill()
+            const brush = i === 0 ? mainBrush : companionBrush
+            ctx.drawImage(brush, px - brush.width * 0.5, py - brush.height * 0.5)
         }
         ctx.globalCompositeOperation = 'source-over'
 

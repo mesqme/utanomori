@@ -1,4 +1,6 @@
 const UINT_MAX = 4294967296
+const cellCache = new Map()
+const MAX_CACHED_CELLS = 32768
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value))
@@ -54,7 +56,7 @@ function signedVariation(seed, channel) {
 function getSettings(parameters = {}) {
     if (parameters.normalizedGrassPatchSettings) return parameters
 
-    return {
+    const settings = {
         normalizedGrassPatchSettings: true,
         worldSeed: Math.floor(parameters.worldSeed ?? 9187),
         spacing: Math.max(0.25, parameters.spacing ?? 2.6),
@@ -73,15 +75,28 @@ function getSettings(parameters = {}) {
         borderWidth: Math.max(0.0001, parameters.borderWidth ?? 0.22),
         borderMinScale: clamp(parameters.borderMinScale ?? 0.78, 0.05, 1),
     }
+    settings.cacheSignature = [
+        settings.worldSeed,
+        settings.spacing,
+        settings.jitter,
+        settings.patchHeightVariation,
+        settings.patchWidthVariation,
+        settings.patchColorVariation,
+    ].join('|')
+    return settings
 }
 
 export function getGrassPatchCell(gridX, gridZ, parameters = {}) {
     const settings = getSettings(parameters)
+    const cacheKey = `${settings.cacheSignature}|${gridX},${gridZ}`
+    const cached = cellCache.get(cacheKey)
+    if (cached) return cached
+
     const seed = hashUint(gridX, gridZ, settings.worldSeed)
     const jitterX = (hash01(gridX, gridZ, settings.worldSeed ^ 0x4a19c2d7) - 0.5) * settings.jitter
     const jitterZ = (hash01(gridX, gridZ, settings.worldSeed ^ 0x6d2b79f5) - 0.5) * settings.jitter
 
-    return {
+    const cell = {
         id: `${gridX},${gridZ}`,
         seed,
         gridX,
@@ -94,9 +109,14 @@ export function getGrassPatchCell(gridX, gridZ, parameters = {}) {
         colorFamily: Math.floor(hash01(seed, 27, settings.worldSeed) * 4),
         meanLean: 0.8 + hash01(seed, 29, settings.worldSeed) * 0.4,
     }
+    cellCache.set(cacheKey, cell)
+    if (cellCache.size > MAX_CACHED_CELLS) {
+        cellCache.delete(cellCache.keys().next().value)
+    }
+    return cell
 }
 
-export function sampleGrassPatchField(worldX, worldZ, parameters = {}) {
+export function sampleGrassPatchField(worldX, worldZ, parameters = {}, out = {}) {
     const settings = getSettings(parameters)
     const warpX = perlinNoise2D(worldX * settings.domainWarpScale, worldZ * settings.domainWarpScale, settings.worldSeed ^ 0x174b9c21)
     const warpZ = perlinNoise2D(worldX * settings.domainWarpScale, worldZ * settings.domainWarpScale, settings.worldSeed ^ 0x5e6f7a8b)
@@ -141,21 +161,20 @@ export function sampleGrassPatchField(worldX, worldZ, parameters = {}) {
     const radialLength = Math.hypot(radialX, radialZ)
     const safeRadialLength = Math.max(radialLength, 0.0001)
 
-    return {
-        patchId: nearestCell.id,
-        patchSeed: nearestCell.seed,
-        centerX: nearestCell.centerX,
-        centerZ: nearestCell.centerZ,
-        borderDistance,
-        borderScale,
-        heightMultiplier: clamp(nearestCell.meanHeight * (1 + heightNoise * settings.internalHeightVariation) * borderScale, 0.1, 2),
-        widthMultiplier: clamp(nearestCell.meanWidth * (1 + widthNoise * settings.internalWidthVariation) * borderScale, 0.1, 2),
-        colorMix: clamp(nearestCell.meanColor + colorNoise * settings.internalColorVariation, 0, 1),
-        colorFamily: nearestCell.colorFamily,
-        leanX: radialX / safeRadialLength,
-        leanZ: radialZ / safeRadialLength,
-        leanStrength: settings.radialLeanStrength * nearestCell.meanLean * (1 + leanNoise * settings.internalLeanVariation),
-    }
+    out.patchId = nearestCell.id
+    out.patchSeed = nearestCell.seed
+    out.centerX = nearestCell.centerX
+    out.centerZ = nearestCell.centerZ
+    out.borderDistance = borderDistance
+    out.borderScale = borderScale
+    out.heightMultiplier = clamp(nearestCell.meanHeight * (1 + heightNoise * settings.internalHeightVariation) * borderScale, 0.1, 2)
+    out.widthMultiplier = clamp(nearestCell.meanWidth * (1 + widthNoise * settings.internalWidthVariation) * borderScale, 0.1, 2)
+    out.colorMix = clamp(nearestCell.meanColor + colorNoise * settings.internalColorVariation, 0, 1)
+    out.colorFamily = nearestCell.colorFamily
+    out.leanX = radialX / safeRadialLength
+    out.leanZ = radialZ / safeRadialLength
+    out.leanStrength = settings.radialLeanStrength * nearestCell.meanLean * (1 + leanNoise * settings.internalLeanVariation)
+    return out
 }
 
 export function getGrassPatchCellsInBounds(minX, maxX, minZ, maxZ, parameters = {}) {
@@ -183,7 +202,7 @@ export function createGrassPatchSampler(parameters = {}) {
     const settings = getSettings(parameters)
     return {
         getCell: (gridX, gridZ) => getGrassPatchCell(gridX, gridZ, settings),
-        sample: (worldX, worldZ) => sampleGrassPatchField(worldX, worldZ, settings),
+        sample: (worldX, worldZ, out) => sampleGrassPatchField(worldX, worldZ, settings, out),
         getCellsInBounds: (minX, maxX, minZ, maxZ) => getGrassPatchCellsInBounds(minX, maxX, minZ, maxZ, settings),
     }
 }

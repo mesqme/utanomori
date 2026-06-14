@@ -88,11 +88,24 @@ function findNearestLane(worldX, worldZ, settings) {
     return nearestLane
 }
 
+function findNearestLaneDistance(worldX, worldZ, settings) {
+    const baseLane = Math.round(worldX / settings.laneSpacing)
+    let nearestDistance = Infinity
+
+    for (let laneOffset = -2; laneOffset <= 2; laneOffset++) {
+        const lane = sampleLane(baseLane + laneOffset, worldZ, settings)
+        const perpendicularScale = Math.sqrt(1 + lane.directionX * lane.directionX)
+        nearestDistance = Math.min(nearestDistance, Math.abs(worldX - lane.x) / perpendicularScale)
+    }
+
+    return nearestDistance
+}
+
 export function sampleRoadDistance(worldX, worldZ, parameters = {}) {
     const settings = getSettings(parameters)
     if (!settings.enabled) return Infinity
 
-    return findNearestLane(worldX, worldZ, settings).distance
+    return findNearestLaneDistance(worldX, worldZ, settings)
 }
 
 export function sampleRoadDirection(worldX, worldZ, parameters = {}) {

@@ -45,12 +45,14 @@ void main() {
         vec3 squaredSum = vec3(0.0);
         float sampleCount = 0.0;
 
-        for (int distanceStep = 1; distanceStep <= MAX_RADIUS; distanceStep++) {
-            if (distanceStep <= radius) {
-                for (int angleStep = 0; angleStep < ANGLE_SAMPLE_COUNT; angleStep++) {
-                    float angleOffset = (float(angleStep) - 1.0) * 0.26179938779;
-                    float angle = sectorAngle + angleOffset;
-                    vec2 sampleOffset = anisotropyMatrix * (float(distanceStep) * vec2(cos(angle), sin(angle)));
+        for (int angleStep = 0; angleStep < ANGLE_SAMPLE_COUNT; angleStep++) {
+            float angleOffset = (float(angleStep) - 1.0) * 0.26179938779;
+            float angle = sectorAngle + angleOffset;
+            vec2 sampleDirection = anisotropyMatrix * vec2(cos(angle), sin(angle));
+
+            for (int distanceStep = 1; distanceStep <= MAX_RADIUS; distanceStep++) {
+                if (distanceStep <= radius) {
+                    vec2 sampleOffset = float(distanceStep) * sampleDirection;
                     vec3 sampleColor = texture2D(colorBuffer, vUv + sampleOffset * texelSize).rgb;
                     sum += sampleColor;
                     squaredSum += sampleColor * sampleColor;

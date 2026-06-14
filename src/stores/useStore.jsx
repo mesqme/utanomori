@@ -8,20 +8,20 @@ const CHARACTER_STYLIZED_VERSION = 2
 
 const createStore = () =>
     create(
-        subscribeWithSelector((set) => ({
+        subscribeWithSelector((set, get) => ({
             ballPosition: new THREE.Vector3(0, 0, 0),
             setBallPosition: (position) => {
-                set({ ballPosition: position })
+                get().ballPosition.copy(position)
             },
 
             smoothedCircleCenter: new THREE.Vector3(0, 0, 0),
             setSmoothedCircleCenter: (position) => {
-                set({ smoothedCircleCenter: position })
+                get().smoothedCircleCenter.copy(position)
             },
 
             lanternPosition: new THREE.Vector3(0, 0, 0),
             setLanternPosition: (position) => {
-                set({ lanternPosition: position })
+                get().lanternPosition.copy(position)
             },
 
             sceneStylePreset: defaultSceneStyleId,

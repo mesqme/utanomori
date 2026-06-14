@@ -30,6 +30,9 @@ export default function Terrain() {
     const radiusAnimationRef = useRef(null)
     const prevPhaseRef = useRef(PHASES.loading)
     const circleRadiusRef = useRef(START_CIRCLE_RADIUS)
+    const pendingChunksRef = useRef([])
+    const desiredChunkKeysRef = useRef(new Set())
+    const pruneChunksRef = useRef(false)
 
     const phase = usePhases((s) => s.phase)
     const chunkSize = useStore((s) => s.terrainParameters.chunkSize)
@@ -187,7 +190,30 @@ export default function Terrain() {
                     })
                 }
             }
-            setActiveChunks(newChunks)
+
+            desiredChunkKeysRef.current = new Set(newChunks.map((chunk) => chunk.key))
+            if (activeChunks.length === 0) {
+                setActiveChunks(newChunks)
+                pendingChunksRef.current = []
+                pruneChunksRef.current = false
+                return
+            }
+
+            const activeKeys = new Set(activeChunks.map((chunk) => chunk.key))
+            pendingChunksRef.current = newChunks.filter((chunk) => !activeKeys.has(chunk.key))
+            pruneChunksRef.current = true
+        }
+
+        // Stream one incoming edge chunk per frame. Existing edge chunks stay alive
+        // until all replacements are ready, avoiding both a visible gap and one large
+        // synchronous grass/object generation spike at every chunk boundary.
+        if (pendingChunksRef.current.length > 0) {
+            const nextChunk = pendingChunksRef.current.shift()
+            setActiveChunks((chunks) => (chunks.some((chunk) => chunk.key === nextChunk.key) ? chunks : [...chunks, nextChunk]))
+        } else if (pruneChunksRef.current) {
+            const desiredKeys = desiredChunkKeysRef.current
+            setActiveChunks((chunks) => chunks.filter((chunk) => desiredKeys.has(chunk.key)))
+            pruneChunksRef.current = false
         }
     })
 

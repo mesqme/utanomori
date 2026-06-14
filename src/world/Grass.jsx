@@ -104,6 +104,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         const roadSampler = createRoadSampler(roadParameters)
         const objectSampler = createObjectFieldSampler(objectParameters, roadParameters)
         const rng = mulberry32((chunkIndexX * 73856093) ^ (chunkIndexZ * 19349663) ^ 0xdecafbad)
+        const patch = {}
 
         for (let i = 0; i < grassParameters.count; i++) {
             const x = (rng() - 0.5) * size
@@ -112,7 +113,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             const worldX = x + chunkX
             const worldZ = z + chunkZ
             const y = noise2D ? noise2D(worldX * scale, worldZ * scale) * amplitude : 0
-            const patch = patchSampler.sample(worldX, worldZ)
+            patchSampler.sample(worldX, worldZ, patch)
             const objectCoverage = objectSampler.sampleCoverage(worldX, worldZ)
             const roadMask = Math.max(roadSampler.sampleMask(worldX, worldZ), objectCoverage)
 

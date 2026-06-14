@@ -318,7 +318,7 @@ const painteryStyle = {
         ...complexStyle.backgroundParameters,
         mode: 'Texture',
         textureSize: 599,
-        textureContrast: 0.32,
+        textureContrast: 0.26,
         textureLayer2: 0.35,
         starCellSize: 30,
         starDensity: 0.4,
