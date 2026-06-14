@@ -18,7 +18,7 @@ export function createBackgroundMaterial(painteryTexture) {
             uMode: { value: 0 },
             uColor: { value: new THREE.Color('#44336c') },
             uTexture: { value: painteryTexture },
-            uTextureScale: { value: 0.004 },
+            uTextureSize: { value: 250 },
             uTextureContrast: { value: 0.4 },
             uTextureLayer2: { value: 2.3 },
             uTime: { value: 0 },
@@ -35,13 +35,14 @@ export function createBackgroundMaterial(painteryTexture) {
 
 export function updateBackgroundMaterial(material, options) {
     const u = material.uniforms
+    const refScale = options.refScale ?? 1
     u.uMode.value = backgroundModeToInt(options.mode)
     u.uColor.value.set(options.color)
     u.uTime.value = options.time
-    u.uTextureScale.value = options.textureScale
+    u.uTextureSize.value = options.textureSize * refScale
     u.uTextureContrast.value = options.textureContrast
     u.uTextureLayer2.value = options.textureLayer2
-    u.uStarCellSize.value = options.starCellSize
+    u.uStarCellSize.value = options.starCellSize * refScale
     u.uStarDensity.value = options.starDensity
     u.uStarSize.value = options.starSize
     u.uStarBrightness.value = options.starBrightness

@@ -16,8 +16,12 @@ uniform float noiseSeed;
 
 varying vec2 vUv;
 
+// Pattern-free hash (Dave Hoskins) — the old sin(dot()) version banded into
+// visible diagonal lines; this gives clean, structure-free grain at no extra cost.
 float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233)) + noiseSeed * 23.17) * 43758.5453);
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031 + noiseSeed * 0.017);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
 vec3 getOriginalPositiveEdge() {
@@ -40,7 +44,9 @@ void main() {
     vec3 color = mix(displacedColor, kuwaharaColor, filterStrength);
 
     if (sensorNoiseEnabled == 1 && debugMode == 0) {
-        vec2 noiseCoord = floor(gl_FragCoord.xy / max(sensorNoiseScale, 1.0));
+        // Scale the grain cell with resolution so it looks the same at 1080p and 4k.
+        float grainScale = max(sensorNoiseScale * (resolution.y / 1080.0), 1.0);
+        vec2 noiseCoord = floor(gl_FragCoord.xy / grainScale);
         float luminanceVariation = hash(noiseCoord) * 2.0 - 1.0;
         vec3 chromaVariation = vec3(
             hash(noiseCoord + vec2(17.0, 7.0)),

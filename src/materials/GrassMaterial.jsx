@@ -49,7 +49,7 @@ export default function useGrassMaterial({
                     uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
                     uFadeMode: { value: fadeModeToInt(borderFadeMode) },
                     uPainteryTexture: { value: painteryTexture },
-                    uPainteryScale: { value: borderParameters.painteryScale },
+                    uPainterySize: { value: borderParameters.painterySize },
                     uPainteryScreenBlend: { value: borderParameters.painteryScreenBlend },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
                     uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
@@ -117,7 +117,7 @@ export default function useGrassMaterial({
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
-        u.uPainteryScale.value = borderParameters.painteryScale
+        u.uPainterySize.value = borderParameters.painterySize
         u.uPainteryScreenBlend.value = borderParameters.painteryScreenBlend
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale

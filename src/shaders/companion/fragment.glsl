@@ -14,7 +14,7 @@ uniform float uPainterlyBrightnessVariation;
 uniform vec3 uBackgroundColor;
 uniform int uPropFadeMode;
 uniform float uPixelSize;
-uniform float uPainteryScale;
+uniform float uPainterySize;
 uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
@@ -93,7 +93,7 @@ void main() {
         if (vPropMask <= 0.001) discard;
         finalColor = mix(uBackgroundColor, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
-        vec2 painteryUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy * uPainteryScale, uPainteryScreenBlend);
+        vec2 painteryUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
         float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
         painteryBrush = mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
         finalColor = mix(finalColor, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));

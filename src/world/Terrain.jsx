@@ -9,6 +9,7 @@ import TerrainChunk from './TerrainChunk.jsx'
 import ScatteredObjects from './ScatteredObjects.jsx'
 import GrassTrail from './GrassTrail.jsx'
 import { revealCircle } from './utils/revealCircle.js'
+import { getRefScale } from './utils/screenScale.js'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
 import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
@@ -157,6 +158,16 @@ export default function Terrain() {
         revealCircle.centerX = state.smoothedCircleCenter.x
         revealCircle.centerZ = state.smoothedCircleCenter.z
         revealCircle.chunkSize = chunkSize
+
+        // Bake the resolution factor into the screen-space sizes so the paintery edge
+        // and dithering stay consistent across 1080p / 4k.
+        const refScale = getRefScale(frameState)
+        const painterySize = state.borderParameters.painterySize * refScale
+        const pixelSize = state.ditheringParameters.pixelSize * refScale
+        terrainMaterial.uniforms.uPainterySize.value = painterySize
+        terrainMaterial.uniforms.uPixelSize.value = pixelSize
+        grassMaterial.uniforms.uPainterySize.value = painterySize
+        grassMaterial.uniforms.uPixelSize.value = pixelSize
 
         const ballPosition = state.ballPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)

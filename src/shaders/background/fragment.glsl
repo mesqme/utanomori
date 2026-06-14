@@ -1,7 +1,7 @@
 uniform int uMode; // 0 = colour, 1 = stylized texture, 2 = night sky
 uniform vec3 uColor;
 uniform sampler2D uTexture;
-uniform float uTextureScale;
+uniform float uTextureSize;
 uniform float uTextureContrast;
 uniform float uTextureLayer2;
 uniform float uTime;
@@ -29,7 +29,7 @@ void main() {
 
     if (uMode == 1) {
         // Stylized brush texture over the sky (screen space, two layers).
-        vec2 uv = gl_FragCoord.xy * uTextureScale;
+        vec2 uv = gl_FragCoord.xy / uTextureSize;
         float brush = texture2D(uTexture, uv).r;
         brush = mix(brush, texture2D(uTexture, uv * uTextureLayer2 + vec2(0.37)).r, 0.5);
         color *= 1.0 + (brush - 0.5) * 2.0 * uTextureContrast;

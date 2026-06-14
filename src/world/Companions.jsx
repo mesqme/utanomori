@@ -11,6 +11,7 @@ import TargetIndicator from './TargetIndicator.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
 import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
+import { getRefScale } from './utils/screenScale.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
@@ -198,6 +199,7 @@ export default function Companions() {
     useFrame((rootState) => {
         const store = useStore.getState()
         updateCompanionEyeMaterial(creatureMaterial, {
+            refScale: getRefScale(rootState),
             time: rootState.clock.elapsedTime,
             circleCenterX: revealCircle.centerX,
             circleCenterZ: revealCircle.centerZ,
@@ -209,7 +211,7 @@ export default function Companions() {
             pixelSize: store.ditheringParameters.pixelSize,
             painterlyEnabled: store.objectParameters.painterlyEnabled,
             paintery: {
-                scale: store.borderParameters.painteryScale,
+                size: store.borderParameters.painterySize,
                 screenBlend: store.borderParameters.painteryScreenBlend,
                 drift: store.borderParameters.painteryDrift,
                 layer2Scale: store.borderParameters.painteryLayer2Scale,

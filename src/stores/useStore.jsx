@@ -3,7 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
-const GRASS_STYLE_VERSION = 16
+const GRASS_STYLE_VERSION = 17
 const CHARACTER_STYLIZED_VERSION = 2
 
 const createStore = () =>

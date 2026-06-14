@@ -33,7 +33,7 @@ export function createCompanionEyeMaterial(painterlyTexture) {
             uBackgroundColor: { value: new THREE.Color(soundJourneyPalette.background) },
             uPropFadeMode: { value: 1 },
             uPixelSize: { value: 1 },
-            uPainteryScale: { value: 0.006 },
+            uPainterySize: { value: 167 },
             uPainteryScreenBlend: { value: 0.85 },
             uPainteryDrift: { value: 0.12 },
             uPainteryLayer2Scale: { value: 2.2 },
@@ -54,12 +54,13 @@ export function updateCompanionEyeMaterial(material, options) {
     u.uCircleRadiusFactor.value = options.radiusFactor
     u.uPropChunkSize.value = options.chunkSize
     u.uPropFadeOffset.value = options.fadeOffset
+    const refScale = options.refScale ?? 1
     u.uBackgroundColor.value.set(options.backgroundColor)
     u.uPropFadeMode.value = fadeModeToInt(options.fadeMode)
-    u.uPixelSize.value = options.pixelSize
+    u.uPixelSize.value = options.pixelSize * refScale
     u.uPainterlyEnabled.value = options.painterlyEnabled ? 1 : 0
     if (options.paintery) {
-        u.uPainteryScale.value = options.paintery.scale
+        u.uPainterySize.value = options.paintery.size * refScale
         u.uPainteryScreenBlend.value = options.paintery.screenBlend
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale

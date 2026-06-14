@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef } from 'react'
 
 import useStore from '../stores/useStore.jsx'
 import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials/BackgroundMaterial.js'
+import { getRefScale } from './utils/screenScale.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 export default function BackgroundSphere({ color }) {
@@ -35,6 +36,7 @@ export default function BackgroundSphere({ color }) {
         const store = useStore.getState()
         meshRef.current.position.copy(store.ballPosition)
         updateBackgroundMaterial(material, {
+            refScale: getRefScale(rootState),
             time: rootState.clock.elapsedTime,
             color,
             ...store.backgroundParameters,

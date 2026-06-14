@@ -7,6 +7,7 @@ import useStore from '../stores/useStore.jsx'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { createBatchedMeshPool } from './utils/batchedMeshPool.js'
 import { revealCircle } from './utils/revealCircle.js'
+import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { objectLibrary, OBJECT_TYPES } from '../config/objectFieldDefaults.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
@@ -75,9 +76,10 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         return created
     }, [painterlyTexture])
 
-    useFrame(() => {
+    useFrame((frameState) => {
         const state = useStore.getState()
         updatePropStylizedMaterial(pool.mesh.material, {
+            refScale: getRefScale(frameState),
             circleCenterX: revealCircle.centerX,
             circleCenterZ: revealCircle.centerZ,
             radiusFactor: revealCircle.radiusFactor,
@@ -92,7 +94,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             painterlyBrightness: state.objectParameters.painterlyBrightness,
             painterlyColorStrength: state.objectParameters.painterlyColorStrength,
             paintery: {
-                scale: state.borderParameters.painteryScale,
+                size: state.borderParameters.painterySize,
                 screenBlend: state.borderParameters.painteryScreenBlend,
                 drift: state.borderParameters.painteryDrift,
                 layer2Scale: state.borderParameters.painteryLayer2Scale,

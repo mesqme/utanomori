@@ -1,5 +1,5 @@
 #define SECTOR_COUNT 8
-#define MAX_RADIUS 8
+#define MAX_RADIUS 24
 #define ANGLE_SAMPLE_COUNT 3
 
 uniform sampler2D tensorBuffer;

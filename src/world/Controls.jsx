@@ -137,7 +137,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
         edgeFade: 'groundFadeOffset',
         grassFade: 'grassFadeOffset',
         groundOffset: 'groundOffset',
-        pScale: 'painteryScale',
+        pSize: 'painterySize',
         pScreenBlend: 'painteryScreenBlend',
         pDrift: 'painteryDrift',
         pLayer2: 'painteryLayer2Scale',
@@ -149,7 +149,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Background: {
         mode: 'mode',
-        textureScale: 'textureScale',
+        textureSize: 'textureSize',
         textureContrast: 'textureContrast',
         textureLayer2: 'textureLayer2',
         starCellSize: 'starCellSize',
@@ -972,12 +972,12 @@ export default function Controls() {
             step: 0.001,
             onChange: setParam('borderParameters', 'groundOffset'),
         },
-        pScale: {
-            value: borderParameters.painteryScale,
-            min: 0.0005,
-            max: 0.03,
-            step: 0.0005,
-            onChange: setParam('borderParameters', 'painteryScale'),
+        pSize: {
+            value: borderParameters.painterySize,
+            min: 20,
+            max: 2000,
+            step: 1,
+            onChange: setParam('borderParameters', 'painterySize'),
         },
         pScreenBlend: {
             value: borderParameters.painteryScreenBlend,
@@ -1030,12 +1030,12 @@ export default function Controls() {
             options: ['Color', 'Texture', 'NightSky'],
             onChange: setParam('backgroundParameters', 'mode'),
         },
-        textureScale: {
-            value: backgroundParameters.textureScale,
-            min: 0.0005,
-            max: 0.03,
-            step: 0.0005,
-            onChange: setParam('backgroundParameters', 'textureScale'),
+        textureSize: {
+            value: backgroundParameters.textureSize,
+            min: 20,
+            max: 2000,
+            step: 1,
+            onChange: setParam('backgroundParameters', 'textureSize'),
         },
         textureContrast: {
             value: backgroundParameters.textureContrast,
@@ -1154,7 +1154,7 @@ export default function Controls() {
         radius: {
             value: painterlyPostParameters.radius,
             min: 1,
-            max: 8,
+            max: 24,
             step: 1,
             onChange: setParam('painterlyPostParameters', 'radius'),
         },
