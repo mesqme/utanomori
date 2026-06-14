@@ -69,7 +69,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
     const pool = useMemo(() => {
         const prototypes = buildPrototypes()
-        const material = createPropStylizedMaterial(painterlyTexture)
+        const material = createPropStylizedMaterial(painterlyTexture, { toneMapped: true })
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
         return created
@@ -91,6 +91,13 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             painterlyContrast: state.objectParameters.painterlyContrast,
             painterlyBrightness: state.objectParameters.painterlyBrightness,
             painterlyColorStrength: state.objectParameters.painterlyColorStrength,
+            paintery: {
+                scale: state.borderParameters.painteryScale,
+                screenBlend: state.borderParameters.painteryScreenBlend,
+                drift: state.borderParameters.painteryDrift,
+                layer2Scale: state.borderParameters.painteryLayer2Scale,
+                bleed: state.borderParameters.painteryBleed,
+            },
         })
     })
 

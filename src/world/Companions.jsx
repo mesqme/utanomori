@@ -12,7 +12,7 @@ import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
 import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
-import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
+import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
@@ -157,10 +157,9 @@ export default function Companions() {
         painterlyTexture.needsUpdate = true
     }, [painterlyTexture])
 
-    // Shared stylized material for every creature — same unlit + painterly look as the
-    // character and props, reading the merged geometry's per-vertex colours, and
-    // fading at the reveal-circle edge (so a far-off target stays hidden in the fog).
-    const creatureMaterial = useMemo(() => createPropStylizedMaterial(painterlyTexture, { vertexColors: true }), [painterlyTexture])
+    // Shared stylized material for every creature — sphere body with shader-drawn
+    // eyes, painterly stylization, and the reveal-circle / paintery fade.
+    const creatureMaterial = useMemo(() => createCompanionEyeMaterial(painterlyTexture), [painterlyTexture])
 
     const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 24), [])
     const shadowMaterial = useMemo(() => createGroundShadowMaterial({ color: soundJourneyPalette.loaderBackground, opacity: 0.3 }), [])
@@ -196,29 +195,33 @@ export default function Companions() {
         }
     }, [subscribeKeys])
 
-    useFrame(() => {
-        const state = useStore.getState()
-        updatePropStylizedMaterial(creatureMaterial, {
+    useFrame((rootState) => {
+        const store = useStore.getState()
+        updateCompanionEyeMaterial(creatureMaterial, {
+            time: rootState.clock.elapsedTime,
             circleCenterX: revealCircle.centerX,
             circleCenterZ: revealCircle.centerZ,
             radiusFactor: revealCircle.radiusFactor,
             chunkSize: revealCircle.chunkSize,
-            fadeOffset: state.objectParameters.fadeOffset,
-            backgroundColor: state.terrainParameters.backgroundColor,
-            fadeMode: state.borderParameters.fadeMode,
-            pixelSize: state.ditheringParameters.pixelSize,
-            painterlyEnabled: state.objectParameters.painterlyEnabled,
-            painterlyScale: state.objectParameters.painterlyScale,
-            painterlyContrast: state.objectParameters.painterlyContrast,
-            painterlyBrightness: state.objectParameters.painterlyBrightness,
-            painterlyColorStrength: state.objectParameters.painterlyColorStrength,
+            fadeOffset: store.objectParameters.fadeOffset,
+            backgroundColor: store.terrainParameters.backgroundColor,
+            fadeMode: store.borderParameters.fadeMode,
+            pixelSize: store.ditheringParameters.pixelSize,
+            painterlyEnabled: store.objectParameters.painterlyEnabled,
+            paintery: {
+                scale: store.borderParameters.painteryScale,
+                screenBlend: store.borderParameters.painteryScreenBlend,
+                drift: store.borderParameters.painteryDrift,
+                layer2Scale: store.borderParameters.painteryLayer2Scale,
+                bleed: store.borderParameters.painteryBleed,
+            },
         })
         updateGroundShadowMaterial(shadowMaterial)
 
         if (usePhases.getState().phase !== PHASES.start) return
 
         const companions = useCompanions.getState()
-        const player = state.ballPosition
+        const player = store.ballPosition
 
         if (!companions.target) {
             if (companions.found.length < MAX_PARTY) {

@@ -16,6 +16,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 
 import noiseTextureUrl from '../assets/textures/noiseTexture.png'
 import groundTextureUrl from '../assets/textures/ground.png'
+import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const START_CIRCLE_RADIUS = 0.07
 const START_RADIUS_DELAY = 1.1
@@ -60,16 +61,31 @@ export default function Terrain() {
         [groundTextureUrl]
     )
 
+    const painteryTexture = useTexture(
+        paintaryAlpha01Url,
+        (texture) => {
+            texture.wrapS = THREE.RepeatWrapping
+            texture.wrapT = THREE.RepeatWrapping
+            texture.minFilter = THREE.LinearFilter
+            texture.magFilter = THREE.LinearFilter
+            texture.colorSpace = THREE.NoColorSpace
+            return texture
+        },
+        [paintaryAlpha01Url]
+    )
+
     const terrainMaterial = useTerrainMaterial({
         chunkSize,
         initialCircleRadius: START_CIRCLE_RADIUS,
         noiseTexture,
         groundTexture,
+        painteryTexture,
     })
     const grassMaterial = useGrassMaterial({
         chunkSize,
         initialCircleRadius: START_CIRCLE_RADIUS,
         noiseTexture,
+        painteryTexture,
     })
 
     const setCircleRadius = (value) => {
@@ -87,8 +103,9 @@ export default function Terrain() {
             }
             noiseTexture.dispose()
             groundTexture.dispose()
+            painteryTexture.dispose()
         }
-    }, [noiseTexture, groundTexture])
+    }, [noiseTexture, groundTexture, painteryTexture])
 
     useEffect(() => {
         const wasStarted = prevPhaseRef.current === PHASES.start

@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
+import { fadeModeToInt } from './TerrainMaterial.jsx'
 
 // Characters paint a fading trail (see GrassTrail) that this material samples to
 // shorten / lean / lighten / dissolve blades they walk over. Tuned constants —
@@ -21,6 +22,7 @@ export default function useGrassMaterial({
     chunkSize,
     initialCircleRadius,
     noiseTexture,
+    painteryTexture,
 }) {
     const grassParameters = useStore((s) => s.grassParameters)
     const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
@@ -35,6 +37,7 @@ export default function useGrassMaterial({
     const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
     const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
+    const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
@@ -44,7 +47,13 @@ export default function useGrassMaterial({
                 uniforms: {
                     uPixelSize: { value: pixelSize },
                     uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
-                    uFadeMode: { value: borderFadeMode === 'Color' ? 1 : 0 },
+                    uFadeMode: { value: fadeModeToInt(borderFadeMode) },
+                    uPainteryTexture: { value: painteryTexture },
+                    uPainteryScale: { value: borderParameters.painteryScale },
+                    uPainteryScreenBlend: { value: borderParameters.painteryScreenBlend },
+                    uPainteryDrift: { value: borderParameters.painteryDrift },
+                    uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
+                    uPainteryBleed: { value: borderParameters.painteryBleed },
                     uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                     uTime: { value: 0 },
                     uGrassSegments: { value: grassParameters.segmentsCount },
@@ -107,7 +116,12 @@ export default function useGrassMaterial({
         const u = material.uniforms
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
-        u.uFadeMode.value = borderFadeMode === 'Color' ? 1 : 0
+        u.uFadeMode.value = fadeModeToInt(borderFadeMode)
+        u.uPainteryScale.value = borderParameters.painteryScale
+        u.uPainteryScreenBlend.value = borderParameters.painteryScreenBlend
+        u.uPainteryDrift.value = borderParameters.painteryDrift
+        u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
+        u.uPainteryBleed.value = borderParameters.painteryBleed
         u.uBackgroundColor.value.set(backgroundColor)
         u.uGrassSegments.value = grassParameters.segmentsCount
         u.uGrassChunkSize.value = chunkSize
@@ -165,6 +179,7 @@ export default function useGrassMaterial({
         borderGroundOffset,
         borderGroundFadeOffset,
         borderFadeMode,
+        borderParameters,
         pixelSize,
         ditherModeValue,
     ])

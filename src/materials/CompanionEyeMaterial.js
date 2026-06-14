@@ -1,32 +1,35 @@
 import * as THREE from 'three'
 
-import propVertexShader from '../shaders/prop/vertex.glsl'
-import propFragmentShader from '../shaders/prop/fragment.glsl'
+import companionVertexShader from '../shaders/companion/vertex.glsl'
+import companionFragmentShader from '../shaders/companion/fragment.glsl'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 
-// Stylized prop material — the character's unlit + triplanar-painterly look, but
-// extended with the BatchedMesh chunks so it batches with per-instance colour, plus
-// the reveal-circle fade. Compiles as GLSL3 (forced by three for ShaderMaterials),
-// which the batching chunks require.
-//
-// `vertexColors: true` makes it read a geometry colour attribute instead of the
-// batched colour — used for the (non-batched) companion creatures, which carry
-// per-vertex colours. The batching chunks are inert on a regular mesh.
-export function createPropStylizedMaterial(painterlyTexture, { vertexColors = false, toneMapped = false } = {}) {
-    const material = new THREE.ShaderMaterial({
-        name: 'prop_stylized',
-        vertexShader: propVertexShader,
-        fragmentShader: propFragmentShader,
+// Secondary-character material: a plain sphere whose body colour comes from the
+// geometry's vertex colour, with two big cute eyes drawn by a front projection
+// (white circles + animated black pupils that drift and blink). Same painterly
+// stylization + reveal fade as the rest of the world. Shared across all creatures;
+// per-creature variation (body colour, blink phase) rides on geometry attributes.
+export function createCompanionEyeMaterial(painterlyTexture) {
+    return new THREE.ShaderMaterial({
+        name: 'companion_eye',
+        vertexShader: companionVertexShader,
+        fragmentShader: companionFragmentShader,
+        vertexColors: true,
         uniforms: {
-            uBaseColor: { value: new THREE.Color('#ffffff') },
+            uTime: { value: 0 },
+            uEyeColor: { value: new THREE.Color('#fff8ff') },
+            uPupilColor: { value: new THREE.Color('#0d0a2a') },
+            uEyeRadius: { value: 0.5 },
+            uEyeSize: { value: 0.34 },
+            uPupilSize: { value: 0.18 },
+            uEyeSpacing: { value: 0.4 },
+            uEyeHeight: { value: 0.12 },
             uPainterlyEnabled: { value: 1 },
             uPainterlyTexture: { value: painterlyTexture },
-            uPainterlyScale: { value: 0.08 },
+            uPainterlyScale: { value: 0.6 },
             uPainterlyContrast: { value: 1.05 },
-            uPainterlyColor: { value: new THREE.Color('#ffffff') },
-            uPainterlyColorStrength: { value: 0 },
-            uPainterlyBrightnessVariation: { value: 0.5 },
+            uPainterlyBrightnessVariation: { value: 0.32 },
             uBackgroundColor: { value: new THREE.Color(soundJourneyPalette.background) },
             uPropFadeMode: { value: 1 },
             uPixelSize: { value: 1 },
@@ -40,16 +43,13 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPropChunkSize: { value: 9 },
             uPropFadeOffset: { value: 2.5 },
         },
-        toneMapped,
+        toneMapped: false,
     })
-
-    if (vertexColors) material.vertexColors = true
-
-    return material
 }
 
-export function updatePropStylizedMaterial(material, options) {
+export function updateCompanionEyeMaterial(material, options) {
     const u = material.uniforms
+    u.uTime.value = options.time
     u.uCircleCenter.value.set(options.circleCenterX, 0, options.circleCenterZ)
     u.uCircleRadiusFactor.value = options.radiusFactor
     u.uPropChunkSize.value = options.chunkSize
@@ -58,10 +58,6 @@ export function updatePropStylizedMaterial(material, options) {
     u.uPropFadeMode.value = fadeModeToInt(options.fadeMode)
     u.uPixelSize.value = options.pixelSize
     u.uPainterlyEnabled.value = options.painterlyEnabled ? 1 : 0
-    u.uPainterlyScale.value = options.painterlyScale
-    u.uPainterlyContrast.value = options.painterlyContrast
-    u.uPainterlyBrightnessVariation.value = options.painterlyBrightness
-    u.uPainterlyColorStrength.value = options.painterlyColorStrength
     if (options.paintery) {
         u.uPainteryScale.value = options.paintery.scale
         u.uPainteryScreenBlend.value = options.paintery.screenBlend

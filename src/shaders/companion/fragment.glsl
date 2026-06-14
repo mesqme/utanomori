@@ -1,13 +1,18 @@
-uniform vec3 uBaseColor;
+uniform float uTime;
+uniform vec3 uEyeColor;
+uniform vec3 uPupilColor;
+uniform float uEyeRadius;
+uniform float uEyeSize;
+uniform float uPupilSize;
+uniform float uEyeSpacing;
+uniform float uEyeHeight;
 uniform int uPainterlyEnabled;
 uniform sampler2D uPainterlyTexture;
 uniform float uPainterlyScale;
 uniform float uPainterlyContrast;
-uniform vec3 uPainterlyColor;
-uniform float uPainterlyColorStrength;
 uniform float uPainterlyBrightnessVariation;
 uniform vec3 uBackgroundColor;
-uniform int uPropFadeMode; // 0 = dither, 1 = colour, 2 = paintery
+uniform int uPropFadeMode;
 uniform float uPixelSize;
 uniform float uPainteryScale;
 uniform float uPainteryScreenBlend;
@@ -20,18 +25,16 @@ uniform float uPainteryBleed;
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
+varying float vSeed;
 varying float vPropMask;
 varying vec2 vWorldXZ;
 
-// Triplanar painterly sampling — identical to the character material.
-float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
+float samplePainterly(vec3 position, vec3 normalDirection) {
     vec3 blendWeights = pow(abs(normalDirection), vec3(4.0));
     blendWeights /= max(blendWeights.x + blendWeights.y + blendWeights.z, 0.0001);
-
     float xProjection = texture2D(uPainterlyTexture, position.yz).r;
     float yProjection = texture2D(uPainterlyTexture, position.xz).r;
     float zProjection = texture2D(uPainterlyTexture, position.xy).r;
-
     return xProjection * blendWeights.x + yProjection * blendWeights.y + zProjection * blendWeights.z;
 }
 
@@ -49,20 +52,40 @@ float bayerDither(vec2 fragCoord, float pixelSize) {
 }
 
 void main() {
-    // Per-instance batched colour is the base; painterly varies brightness on top.
-    vec3 finalColor = uBaseColor;
-    #if defined(USE_BATCHING_COLOR) || defined(USE_COLOR)
-        finalColor = vColor;
-    #endif
-
+    vec3 bodyColor = vColor;
     if (uPainterlyEnabled == 1) {
-        float painterlyValue = samplePainterlyTexture(vObjectPosition * uPainterlyScale, normalize(vObjectNormal));
+        float painterlyValue = samplePainterly(vObjectPosition * uPainterlyScale, normalize(vObjectNormal));
         painterlyValue = clamp((painterlyValue - 0.5) * uPainterlyContrast + 0.5, 0.0, 1.0);
-        float signedVariation = painterlyValue * 2.0 - 1.0;
-        finalColor *= 1.0 + signedVariation * uPainterlyBrightnessVariation;
-        float tintMask = smoothstep(0.55, 1.0, painterlyValue) * uPainterlyColorStrength;
-        finalColor = mix(finalColor, uPainterlyColor, tintMask);
+        bodyColor *= 1.0 + (painterlyValue * 2.0 - 1.0) * uPainterlyBrightnessVariation;
     }
+
+    vec3 finalColor = bodyColor;
+
+    // Eyes: front (+Z) projection, masked to the front hemisphere.
+    vec3 normalDir = normalize(vObjectNormal);
+    float frontMask = smoothstep(0.15, 0.55, normalDir.z);
+    vec2 faceUv = vObjectPosition.xy / uEyeRadius;
+
+    // Occasional blink (per-creature phase) + gentle pupil drift = cute.
+    float blinkPhase = fract(uTime * 0.2 + vSeed);
+    float blinkPulse = smoothstep(0.0, 0.03, blinkPhase) * (1.0 - smoothstep(0.03, 0.06, blinkPhase));
+    float blink = 1.0 - blinkPulse * 0.9;
+    vec2 drift = vec2(sin(uTime * 0.8 + vSeed * 6.2831), sin(uTime * 1.1 + vSeed * 3.1415)) * 0.06;
+
+    float eyeMask = 0.0;
+    float pupilMask = 0.0;
+    for (int side = -1; side <= 1; side += 2) {
+        vec2 eyeCenter = vec2(float(side) * uEyeSpacing, uEyeHeight);
+        vec2 d = faceUv - eyeCenter;
+        d.y /= max(blink, 0.08);
+        eyeMask = max(eyeMask, 1.0 - smoothstep(uEyeSize - 0.04, uEyeSize, length(d)));
+        vec2 pd = faceUv - (eyeCenter + drift);
+        pd.y /= max(blink, 0.08);
+        pupilMask = max(pupilMask, 1.0 - smoothstep(uPupilSize - 0.03, uPupilSize, length(pd)));
+    }
+
+    finalColor = mix(finalColor, uEyeColor, eyeMask * frontMask);
+    finalColor = mix(finalColor, uPupilColor, pupilMask * frontMask);
 
     // Reveal-circle fade — colour, dithered, or paintery, matching the world.
     float fade = 1.0 - vPropMask;
@@ -81,6 +104,5 @@ void main() {
 
     gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 
-    #include <tonemapping_fragment>
     #include <colorspace_fragment>
 }

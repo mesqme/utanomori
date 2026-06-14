@@ -5,11 +5,17 @@ import terrainVertexShader from '../shaders/terrain/vertex.glsl'
 import terrainFragmentShader from '../shaders/terrain/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
 
+// Edge fade modes shared across the world: 0 = Dither, 1 = Color, 2 = Paintery.
+export function fadeModeToInt(mode) {
+    return mode === 'Color' ? 1 : mode === 'Paintery' ? 2 : 0
+}
+
 export default function useTerrainMaterial({
     chunkSize,
     initialCircleRadius,
     noiseTexture,
     groundTexture,
+    painteryTexture,
 }) {
     const terrainColor = useStore((s) => s.terrainParameters.color)
     const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
@@ -24,6 +30,7 @@ export default function useTerrainMaterial({
     const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
     const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
+    const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
@@ -38,7 +45,13 @@ export default function useTerrainMaterial({
                 uCircleRadiusFactor: { value: initialCircleRadius },
                 uGroundOffset: { value: borderGroundOffset },
                 uGroundFadeOffset: { value: borderGroundFadeOffset },
-                uFadeMode: { value: borderFadeMode === 'Color' ? 1 : 0 },
+                uFadeMode: { value: fadeModeToInt(borderFadeMode) },
+                uPainteryTexture: { value: painteryTexture },
+                uPainteryScale: { value: borderParameters.painteryScale },
+                uPainteryScreenBlend: { value: borderParameters.painteryScreenBlend },
+                uPainteryDrift: { value: borderParameters.painteryDrift },
+                uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
+                uPainteryBleed: { value: borderParameters.painteryBleed },
                 uNoiseTexture: { value: noiseTexture },
                 uNoiseStrength: { value: borderNoiseStrength },
                 uNoiseScale: { value: borderNoiseScale },
@@ -76,7 +89,12 @@ export default function useTerrainMaterial({
         u.uPatchSize.value = chunkSize
         u.uGroundOffset.value = borderGroundOffset
         u.uGroundFadeOffset.value = borderGroundFadeOffset
-        u.uFadeMode.value = borderFadeMode === 'Color' ? 1 : 0
+        u.uFadeMode.value = fadeModeToInt(borderFadeMode)
+        u.uPainteryScale.value = borderParameters.painteryScale
+        u.uPainteryScreenBlend.value = borderParameters.painteryScreenBlend
+        u.uPainteryDrift.value = borderParameters.painteryDrift
+        u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
+        u.uPainteryBleed.value = borderParameters.painteryBleed
         u.uNoiseTexture.value = noiseTexture
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale
@@ -108,6 +126,7 @@ export default function useTerrainMaterial({
         borderGroundOffset,
         borderGroundFadeOffset,
         borderFadeMode,
+        borderParameters,
         noiseTexture,
         borderNoiseStrength,
         borderNoiseScale,

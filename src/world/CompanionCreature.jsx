@@ -1,63 +1,53 @@
 import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 /**
- * Placeholder secondary-character mesh — a rounded blob body with big readable
- * eyes and optional ears, matching the concept art. All sub-shapes are baked into
- * ONE merged geometry with vertex colours, so each creature is a single draw call.
- * Replace with a Blender GLB later (keyed by `definition.id`).
- *
- * The parent group owns position / rotation; this only describes the visual,
- * scaled by `definition.scale` and standing on the local ground plane.
+ * Placeholder secondary character — a single squashed sphere. The body colour and a
+ * per-creature blink seed are baked as geometry attributes; the eyes (white circles
+ * + animated black pupils) are drawn entirely in the material via a front projection
+ * (see CompanionEyeMaterial). No geometry but the sphere. Swap for a Blender GLB later.
  */
-function colored(geometry, hex) {
-    const color = new THREE.Color(hex)
+function hashToUnit(text) {
+    let hash = 2166136261
+    for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i)
+        hash = Math.imul(hash, 16777619)
+    }
+    return ((hash >>> 0) % 10000) / 10000
+}
+
+function buildCreatureGeometry(definition) {
+    const geometry = new THREE.SphereGeometry(0.5, 28, 20)
+    geometry.scale(1, 0.92, 1)
+
+    const color = new THREE.Color(definition.bodyColor)
+    const seed = hashToUnit(definition.id ?? 'companion')
     const count = geometry.attributes.position.count
     const colors = new Float32Array(count * 3)
+    const seeds = new Float32Array(count)
+
     for (let i = 0; i < count; i++) {
         colors[i * 3] = color.r
         colors[i * 3 + 1] = color.g
         colors[i * 3 + 2] = color.b
+        seeds[i] = seed
     }
+
     geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 1))
     return geometry
 }
 
-function buildCreatureGeometry({ bodyColor, accentColor, pupilColor, ears = 'none' }) {
-    const parts = []
-
-    // Body
-    parts.push(colored(new THREE.SphereGeometry(0.5, 18, 16).scale(1, 0.9, 1).translate(0, 0.45, 0), bodyColor))
-    // Belly highlight
-    parts.push(colored(new THREE.SphereGeometry(0.5, 14, 12).scale(0.6, 0.5, 0.4).translate(0, 0.33, 0.34), accentColor))
-
-    // Eyes (sclera + pupil) on both sides
-    for (const x of [-0.18, 0.18]) {
-        parts.push(colored(new THREE.SphereGeometry(0.13, 14, 12).translate(x, 0.55, 0.4), '#fff8ff'))
-        parts.push(colored(new THREE.SphereGeometry(0.06, 12, 10).translate(x, 0.55, 0.5), pupilColor))
-    }
-
-    // Ears
-    if (ears === 'round') {
-        for (const x of [-0.24, 0.24]) {
-            parts.push(colored(new THREE.SphereGeometry(0.17, 12, 10).scale(0.8, 1, 0.8).translate(x, 0.92, 0), bodyColor))
-        }
-    } else if (ears === 'cat') {
-        for (const x of [-0.24, 0.24]) {
-            parts.push(colored(new THREE.ConeGeometry(0.14, 0.32, 4).rotateZ(x > 0 ? -0.2 : 0.2).translate(x, 0.95, 0), bodyColor))
-        }
-    }
-
-    const merged = mergeGeometries(parts, false)
-    parts.forEach((part) => part.dispose())
-    return merged
-}
+// Sphere is 0.5 radius scaled to 0.92 on Y → 0.46 half-height. Lift the mesh by that
+// (× scale) so the blob sits on the ground instead of sinking into it. The geometry
+// stays centred at the origin so the front-projected eyes stay put.
+const BODY_HALF_HEIGHT = 0.46
 
 export default function CompanionCreature({ definition, material }) {
     const geometry = useMemo(() => buildCreatureGeometry(definition), [definition])
+    const scale = definition.scale ?? 0.5
 
     useEffect(() => () => geometry.dispose(), [geometry])
 
-    return <mesh geometry={geometry} material={material} scale={definition.scale ?? 0.5} />
+    return <mesh geometry={geometry} material={material} scale={scale} position-y={BODY_HALF_HEIGHT * scale} />
 }

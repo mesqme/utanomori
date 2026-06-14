@@ -20,9 +20,9 @@ export const objectLibrary = Object.freeze({
         footprintRadius: 0.7,
         parts: [
             { geometry: 'cylinder', args: [0.16, 0.24, 2.2, 6], offset: [0, 1.1, 0], color: soundJourneyPalette.trunkLight },
-            { geometry: 'icosahedron', args: [1.15, 0], offset: [0, 2.6, 0], scale: [1.05, 1.15, 1.05], color: soundJourneyPalette.leaves },
+            { geometry: 'sphere', args: [1.25, 18, 14], offset: [0, 2.75, 0], scale: [1.05, 1.0, 1.05], color: soundJourneyPalette.leaves },
         ],
-        sockets: [{ id: 'canopy', offset: [0, 2.6, 0], normal: [0, 1, 0], capacity: 1 }],
+        sockets: [{ id: 'canopy', offset: [0, 2.75, 0], normal: [0, 1, 0], capacity: 1 }],
     },
     stone: {
         footprintRadius: 0.62,

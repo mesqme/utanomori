@@ -12,6 +12,7 @@ const SCENE_STYLE_SECTIONS = new Set([
     'grassPatchParameters',
     'roadParameters',
     'objectParameters',
+    'backgroundParameters',
     'windParameters',
     'lanternGroundLightParameters',
     'borderParameters',
@@ -136,10 +137,28 @@ const LEVA_SECTION_PATHS = Object.freeze({
         edgeFade: 'groundFadeOffset',
         grassFade: 'grassFadeOffset',
         groundOffset: 'groundOffset',
+        pScale: 'painteryScale',
+        pScreenBlend: 'painteryScreenBlend',
+        pDrift: 'painteryDrift',
+        pLayer2: 'painteryLayer2Scale',
+        pBleed: 'painteryBleed',
     },
     'Dithering Params': {
         ditherMode: 'ditherMode',
         pixelSize: 'pixelSize',
+    },
+    Background: {
+        mode: 'mode',
+        textureScale: 'textureScale',
+        textureContrast: 'textureContrast',
+        textureLayer2: 'textureLayer2',
+        starCellSize: 'starCellSize',
+        starDensity: 'starDensity',
+        starSize: 'starSize',
+        starBrightness: 'starBrightness',
+        starTwinkle: 'starTwinkleSpeed',
+        starRays: 'starRays',
+        starColor: 'starColor',
     },
     'Painterly Postprocess': {
         enabled: 'enabled',
@@ -203,6 +222,7 @@ export default function Controls() {
     const grassPatchParameters = useStore((state) => state.grassPatchParameters)
     const roadParameters = useStore((state) => state.roadParameters)
     const objectParameters = useStore((state) => state.objectParameters)
+    const backgroundParameters = useStore((state) => state.backgroundParameters)
     const windParameters = useStore((state) => state.windParameters)
     const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
     const borderParameters = useStore((state) => state.borderParameters)
@@ -248,6 +268,7 @@ export default function Controls() {
             lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
             borderParameters: { ...preset.borderParameters },
             ditheringParameters: { ...preset.ditheringParameters },
+            backgroundParameters: { ...preset.backgroundParameters },
             painterlyPostParameters: { ...preset.painterlyPostParameters },
             characterParameters: { ...preset.characterParameters },
             characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
@@ -289,6 +310,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
         addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
+        addLevaSectionValues(values, 'Background', backgroundParameters, LEVA_SECTION_PATHS.Background)
         addLevaSectionValues(values, 'Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
         addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
         addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
@@ -905,7 +927,7 @@ export default function Controls() {
     useControls('Border', {
         fadeMode: {
             value: borderParameters.fadeMode,
-            options: ['Color', 'Dither'],
+            options: ['Color', 'Dither', 'Paintery'],
             onChange: setParam('borderParameters', 'fadeMode'),
         },
         nStrength: {
@@ -950,6 +972,41 @@ export default function Controls() {
             step: 0.001,
             onChange: setParam('borderParameters', 'groundOffset'),
         },
+        pScale: {
+            value: borderParameters.painteryScale,
+            min: 0.0005,
+            max: 0.03,
+            step: 0.0005,
+            onChange: setParam('borderParameters', 'painteryScale'),
+        },
+        pScreenBlend: {
+            value: borderParameters.painteryScreenBlend,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('borderParameters', 'painteryScreenBlend'),
+        },
+        pDrift: {
+            value: borderParameters.painteryDrift,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('borderParameters', 'painteryDrift'),
+        },
+        pLayer2: {
+            value: borderParameters.painteryLayer2Scale,
+            min: 0,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('borderParameters', 'painteryLayer2Scale'),
+        },
+        pBleed: {
+            value: borderParameters.painteryBleed,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('borderParameters', 'painteryBleed'),
+        },
     })
 
     useControls('Dithering Params', {
@@ -964,6 +1021,81 @@ export default function Controls() {
             max: 10,
             step: 1,
             onChange: setParam('ditheringParameters', 'pixelSize'),
+        },
+    })
+
+    useControls('Background', {
+        mode: {
+            value: backgroundParameters.mode,
+            options: ['Color', 'Texture', 'NightSky'],
+            onChange: setParam('backgroundParameters', 'mode'),
+        },
+        textureScale: {
+            value: backgroundParameters.textureScale,
+            min: 0.0005,
+            max: 0.03,
+            step: 0.0005,
+            onChange: setParam('backgroundParameters', 'textureScale'),
+        },
+        textureContrast: {
+            value: backgroundParameters.textureContrast,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'textureContrast'),
+        },
+        textureLayer2: {
+            value: backgroundParameters.textureLayer2,
+            min: 0,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('backgroundParameters', 'textureLayer2'),
+        },
+        starCellSize: {
+            value: backgroundParameters.starCellSize,
+            min: 8,
+            max: 120,
+            step: 1,
+            onChange: setParam('backgroundParameters', 'starCellSize'),
+        },
+        starDensity: {
+            value: backgroundParameters.starDensity,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'starDensity'),
+        },
+        starSize: {
+            value: backgroundParameters.starSize,
+            min: 0.01,
+            max: 0.3,
+            step: 0.005,
+            onChange: setParam('backgroundParameters', 'starSize'),
+        },
+        starBrightness: {
+            value: backgroundParameters.starBrightness,
+            min: 0,
+            max: 4,
+            step: 0.05,
+            onChange: setParam('backgroundParameters', 'starBrightness'),
+        },
+        starTwinkle: {
+            value: backgroundParameters.starTwinkleSpeed,
+            min: 0,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('backgroundParameters', 'starTwinkleSpeed'),
+        },
+        starRays: {
+            value: backgroundParameters.starRays,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'starRays'),
+        },
+        starColor: {
+            value: backgroundParameters.starColor,
+            onChange: setParam('backgroundParameters', 'starColor'),
         },
     })
 

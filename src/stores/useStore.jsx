@@ -3,7 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
-const GRASS_STYLE_VERSION = 12
+const GRASS_STYLE_VERSION = 16
 const CHARACTER_STYLIZED_VERSION = 2
 
 const createStore = () =>
@@ -61,6 +61,11 @@ const createStore = () =>
              * Dithering parameters
              */
             ditheringParameters: { ...defaultSceneStyle.ditheringParameters },
+
+            /**
+             * Background parameters
+             */
+            backgroundParameters: { ...defaultSceneStyle.backgroundParameters },
 
             /**
              * Global painterly postprocessing parameters
@@ -146,7 +151,11 @@ if (import.meta?.hot) {
     delete characterMaterialParameters.palettePreset
 
     useStore.setState({
-        sceneStylePreset: state.sceneStylePreset === 'flatStyle' ? defaultSceneStyleId : state.sceneStylePreset ?? defaultSceneStyleId,
+        sceneStylePreset: applyGrassStyleDefaults
+            ? defaultSceneStyleId
+            : state.sceneStylePreset === 'flatStyle'
+              ? defaultSceneStyleId
+              : state.sceneStylePreset ?? defaultSceneStyleId,
         grassStyleVersion: GRASS_STYLE_VERSION,
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         terrainParameters: {
@@ -180,6 +189,10 @@ if (import.meta?.hot) {
                   ...state.borderParameters,
               },
         ditheringParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.ditheringParameters } : state.ditheringParameters,
+        backgroundParameters: {
+            ...defaultSceneStyle.backgroundParameters,
+            ...state.backgroundParameters,
+        },
         painterlyPostParameters: {
             ...defaultSceneStyle.painterlyPostParameters,
             ...state.painterlyPostParameters,

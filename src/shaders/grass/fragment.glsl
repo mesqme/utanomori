@@ -18,6 +18,12 @@ uniform float uTrampleColorStrength;
 uniform float uTrampleFadeStart;
 uniform float uTrampleDissolveAlpha;
 uniform float uTrampleDissolveDither;
+uniform sampler2D uPainteryTexture;
+uniform float uPainteryScale;
+uniform float uPainteryScreenBlend;
+uniform float uPainteryDrift;
+uniform float uPainteryLayer2Scale;
+uniform float uPainteryBleed;
 
 varying vec3 vColor;
 varying vec4 vGrassData;
@@ -189,10 +195,20 @@ void main() {
       // Determine fade value (0 = opaque, 1 = transparent)
       // vGrassData.w goes from 1 (opaque) to 0 (transparent)
       float fade = borderFade;
-      
+
       if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
           discard;
       }
+  }
+
+  // Paintery edge — screen-space brush texture as the dissolve threshold (coherent
+  // across blades) with a gentle world drift. Matches the ground's portal edge.
+  if (uFadeMode == 2 && borderFade > 0.0) {
+      vec2 painteryUv = mix(vWorldPosition.xz * uPainteryDrift, gl_FragCoord.xy * uPainteryScale, uPainteryScreenBlend);
+      float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
+      painteryBrush = mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+      color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
+      if (borderFade > painteryBrush) discard;
   }
 
   gl_FragColor = vec4(color, grassAlpha);
