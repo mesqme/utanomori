@@ -110,16 +110,47 @@ const LEVA_SECTION_PATHS = Object.freeze({
         painterlyTint: 'painterlyColorStrength',
         fadeOffset: 'fadeOffset',
     },
-    'Grass Trample': {
+    'Grass Trail': {
         enabled: 'trampleEnabled',
-        heightScale: 'trampleHeightScale',
-        lean: 'trampleLean',
-        strength: 'trampleStrength',
-        threshold: 'trampleThreshold',
-        brighten: 'trampleBrighten',
-        dissolve: 'trampleFadeStart',
-        dissolveAlpha: 'trampleDissolveAlpha',
-        dissolveDither: 'trampleDissolveDither',
+        trailStrength: 'trailStrength',
+    },
+    'GT Dissolve': {
+        enabled: 'dissolveEnabled',
+        source: 'dissolveSource',
+        radius: 'dissolveRadius',
+        start: 'dissolveStart',
+        end: 'dissolveEnd',
+        rate: 'dissolveRate',
+        amount: 'dissolveAmount',
+        mode: 'dissolveMode',
+    },
+    'GT Lighten': {
+        enabled: 'lightenEnabled',
+        source: 'lightenSource',
+        radius: 'lightenRadius',
+        start: 'lightenStart',
+        end: 'lightenEnd',
+        rate: 'lightenRate',
+        amount: 'lightenAmount',
+        color: 'lightenColor',
+    },
+    'GT Scale': {
+        enabled: 'scaleEnabled',
+        source: 'scaleSource',
+        radius: 'scaleRadius',
+        start: 'scaleStart',
+        end: 'scaleEnd',
+        rate: 'scaleRate',
+        amount: 'scaleAmount',
+    },
+    'GT Lean': {
+        enabled: 'leanEnabled',
+        source: 'leanSource',
+        radius: 'leanRadius',
+        start: 'leanStart',
+        end: 'leanEnd',
+        rate: 'leanRate',
+        amount: 'leanAmount',
     },
     'Lantern Ground Light': {
         radius: 'radius',
@@ -306,7 +337,11 @@ export default function Controls() {
         addLevaSectionValues(values, 'Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
         addLevaSectionValues(values, 'Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
         addLevaSectionValues(values, 'Objects', objectParameters, LEVA_SECTION_PATHS.Objects)
-        addLevaSectionValues(values, 'Grass Trample', grassParameters, LEVA_SECTION_PATHS['Grass Trample'])
+        addLevaSectionValues(values, 'Grass Trail', grassParameters, LEVA_SECTION_PATHS['Grass Trail'])
+        addLevaSectionValues(values, 'GT Dissolve', grassParameters, LEVA_SECTION_PATHS['GT Dissolve'])
+        addLevaSectionValues(values, 'GT Lighten', grassParameters, LEVA_SECTION_PATHS['GT Lighten'])
+        addLevaSectionValues(values, 'GT Scale', grassParameters, LEVA_SECTION_PATHS['GT Scale'])
+        addLevaSectionValues(values, 'GT Lean', grassParameters, LEVA_SECTION_PATHS['GT Lean'])
         addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
         addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
@@ -816,68 +851,92 @@ export default function Controls() {
         },
     })
 
-    useControls('Grass Trample', {
+    const grassLayerControls = (prefix, extra = {}) => ({
+        enabled: {
+            value: grassParameters[`${prefix}Enabled`],
+            onChange: setParam('grassParameters', `${prefix}Enabled`),
+        },
+        source: {
+            value: grassParameters[`${prefix}Source`],
+            options: ['Trail', 'Radius'],
+            onChange: setParam('grassParameters', `${prefix}Source`),
+        },
+        radius: {
+            value: grassParameters[`${prefix}Radius`],
+            min: 0.2,
+            max: 12,
+            step: 0.05,
+            onChange: setParam('grassParameters', `${prefix}Radius`),
+        },
+        start: {
+            value: grassParameters[`${prefix}Start`],
+            min: 0,
+            max: 1,
+            step: 0.005,
+            onChange: setParam('grassParameters', `${prefix}Start`),
+        },
+        end: {
+            value: grassParameters[`${prefix}End`],
+            min: 0,
+            max: 1,
+            step: 0.005,
+            onChange: setParam('grassParameters', `${prefix}End`),
+        },
+        rate: {
+            value: grassParameters[`${prefix}Rate`],
+            min: 0.1,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('grassParameters', `${prefix}Rate`),
+        },
+        amount: {
+            value: grassParameters[`${prefix}Amount`],
+            min: -2,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('grassParameters', `${prefix}Amount`),
+        },
+        ...extra,
+    })
+
+    useControls('Grass Trail', {
         enabled: {
             value: grassParameters.trampleEnabled,
             onChange: setParam('grassParameters', 'trampleEnabled'),
         },
-        heightScale: {
-            value: grassParameters.trampleHeightScale,
-            min: 0,
-            max: 1,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleHeightScale'),
-        },
-        lean: {
-            value: grassParameters.trampleLean,
-            min: 0,
-            max: 3,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleLean'),
-        },
-        strength: {
-            value: grassParameters.trampleStrength,
-            min: 0,
-            max: 8,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleStrength'),
-        },
-        threshold: {
-            value: grassParameters.trampleThreshold,
-            min: 0,
-            max: 1,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleThreshold'),
-        },
-        brighten: {
-            value: grassParameters.trampleBrighten,
-            min: 0,
-            max: 2,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleBrighten'),
-        },
-        dissolve: {
-            value: grassParameters.trampleFadeStart,
-            min: 0,
-            max: 1,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleFadeStart'),
-        },
-        dissolveAlpha: {
-            value: grassParameters.trampleDissolveAlpha,
+        trailStrength: {
+            value: grassParameters.trailStrength,
             min: 0,
             max: 4,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleDissolveAlpha'),
-        },
-        dissolveDither: {
-            value: grassParameters.trampleDissolveDither,
-            min: 0,
-            max: 4,
-            step: 0.005,
-            onChange: setParam('grassParameters', 'trampleDissolveDither'),
+            step: 0.01,
+            onChange: setParam('grassParameters', 'trailStrength'),
         },
     })
+
+    useControls(
+        'GT Dissolve',
+        grassLayerControls('dissolve', {
+            mode: {
+                value: grassParameters.dissolveMode,
+                options: ['Alpha', 'Dither'],
+                onChange: setParam('grassParameters', 'dissolveMode'),
+            },
+        })
+    )
+
+    useControls(
+        'GT Lighten',
+        grassLayerControls('lighten', {
+            color: {
+                value: grassParameters.lightenColor,
+                onChange: setParam('grassParameters', 'lightenColor'),
+            },
+        })
+    )
+
+    useControls('GT Scale', grassLayerControls('scale'))
+
+    useControls('GT Lean', grassLayerControls('lean'))
 
     useControls('Lantern Ground Light', {
         radius: {

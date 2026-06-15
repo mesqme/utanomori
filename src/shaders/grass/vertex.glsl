@@ -20,10 +20,40 @@ uniform vec2 uTrailCenter;
 uniform float uTrailWorldSize;
 uniform float uTrailResolution;
 uniform float uTrampleEnabled;
-uniform float uTrampleStrength;
-uniform float uTrampleThreshold;
-uniform float uTrampleHeightScale;
-uniform float uTrampleLean;
+uniform float uTrailStrength;
+uniform vec4 uTramplers[8];
+uniform float uUseTrailSource;
+uniform float uUseRadiusSource;
+
+uniform float uScaleEnabled;
+uniform float uScaleSource;
+uniform float uScaleRadius;
+uniform float uScaleStart;
+uniform float uScaleEnd;
+uniform float uScaleRate;
+uniform float uScaleAmount;
+
+uniform float uLeanEnabled;
+uniform float uLeanSource;
+uniform float uLeanRadius;
+uniform float uLeanStart;
+uniform float uLeanEnd;
+uniform float uLeanRate;
+uniform float uLeanAmount;
+
+uniform float uDissolveEnabled;
+uniform float uDissolveSource;
+uniform float uDissolveRadius;
+uniform float uDissolveStart;
+uniform float uDissolveEnd;
+uniform float uDissolveRate;
+
+uniform float uLightenEnabled;
+uniform float uLightenSource;
+uniform float uLightenRadius;
+uniform float uLightenStart;
+uniform float uLightenEnd;
+uniform float uLightenRate;
 
 uniform sampler2D uNoiseTexture;
 uniform float uNoiseStrength;
@@ -44,9 +74,15 @@ varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
-varying float vTrample;
+varying float vTrampleDissolve;
+varying float vTrampleLighten;
 
 #include includes.glsl
+
+// Remap a raw [0,1] source value into a layer influence via start..end + a rate curve.
+float trampleRemap(float raw, float start, float end, float rate) {
+  return pow(clamp((raw - start) / max(end - start, 0.0001), 0.0, 1.0), rate);
+}
 
 void main() {
   int grassSegments = int(uGrassSegments);
@@ -66,29 +102,71 @@ void main() {
   grassHeightMask *= grassMask;
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
 
-  // Trail: sample the fading top-down trail canvas centred on the hero. Grass that
-  // characters have walked over shortens, leans away from the path and lightens.
-  // A threshold drops the faint tails so only the actual path reacts (no dribble),
-  // and the gradient is only taken where there's real signal (no black-area glitch).
-  float trampleInfluence = 0.0;
+  // Grass-trail reaction — four independent layers, each driven by either the fading
+  // trail canvas ('Trail') or a plain radius around the nearest character ('Radius').
+  // Scale + lean act here in the vertex; dissolve + lighten pass to the fragment.
   vec2 trampleLeanDir = vec2(0.0);
+  float trampleLeanStrength = 0.0;
+  vTrampleDissolve = 0.0;
+  vTrampleLighten = 0.0;
+
   if (uTrampleEnabled > 0.5) {
-    vec2 trailUv = (worldXZ - uTrailCenter) / uTrailWorldSize + 0.5;
-    if (trailUv.x > 0.0 && trailUv.x < 1.0 && trailUv.y > 0.0 && trailUv.y < 1.0) {
-      float rawTrail = texture2D(uTrailTexture, trailUv).r * uTrampleStrength;
-      trampleInfluence = smoothstep(uTrampleThreshold, 1.0, rawTrail);
-      if (trampleInfluence > 0.001) {
-        float texel = 1.0 / uTrailResolution;
-        float gradX = texture2D(uTrailTexture, trailUv + vec2(texel, 0.0)).r - texture2D(uTrailTexture, trailUv - vec2(texel, 0.0)).r;
-        float gradZ = texture2D(uTrailTexture, trailUv + vec2(0.0, texel)).r - texture2D(uTrailTexture, trailUv - vec2(0.0, texel)).r;
-        vec2 grad = vec2(-gradX, -gradZ);
-        float gradLen = length(grad);
-        trampleLeanDir = gradLen > 0.0001 ? grad / gradLen : vec2(0.0);
+    // --- Shared source samples ---
+    // Trail intensity + gradient direction (away from the path).
+    float trailRaw = 0.0;
+    vec2 trailDir = vec2(0.0);
+    if (uUseTrailSource > 0.5) {
+      vec2 trailUv = (worldXZ - uTrailCenter) / uTrailWorldSize + 0.5;
+      if (trailUv.x > 0.0 && trailUv.x < 1.0 && trailUv.y > 0.0 && trailUv.y < 1.0) {
+        trailRaw = clamp(texture2D(uTrailTexture, trailUv).r * uTrailStrength, 0.0, 1.0);
+        if (trailRaw > 0.001) {
+          float texel = 1.0 / uTrailResolution;
+          float gradX = texture2D(uTrailTexture, trailUv + vec2(texel, 0.0)).r - texture2D(uTrailTexture, trailUv - vec2(texel, 0.0)).r;
+          float gradZ = texture2D(uTrailTexture, trailUv + vec2(0.0, texel)).r - texture2D(uTrailTexture, trailUv - vec2(texel, 0.0)).r;
+          vec2 grad = vec2(-gradX, -gradZ);
+          float gradLen = length(grad);
+          trailDir = gradLen > 0.0001 ? grad / gradLen : vec2(0.0);
+        }
       }
     }
+    // Nearest active character (for the 'Radius' source) + direction away from it.
+    float nearestDist = 1e9;
+    vec2 nearestDir = vec2(0.0);
+    if (uUseRadiusSource > 0.5) {
+      for (int i = 0; i < 8; i++) {
+        if (uTramplers[i].w < 0.5) continue;
+        vec2 toBlade = worldXZ - uTramplers[i].xz;
+        float dist = length(toBlade);
+        if (dist < nearestDist) {
+          nearestDist = dist;
+          nearestDir = dist > 0.0001 ? toBlade / dist : vec2(0.0);
+        }
+      }
+    }
+
+    // --- Scale layer (shorten) ---
+    if (uScaleEnabled > 0.5) {
+      float raw = uScaleSource < 0.5 ? trailRaw : 1.0 - clamp(nearestDist / uScaleRadius, 0.0, 1.0);
+      float influence = trampleRemap(raw, uScaleStart, uScaleEnd, uScaleRate);
+      grassHeightMask *= 1.0 - influence * uScaleAmount;
+    }
+    // --- Lean layer ---
+    if (uLeanEnabled > 0.5) {
+      float raw = uLeanSource < 0.5 ? trailRaw : 1.0 - clamp(nearestDist / uLeanRadius, 0.0, 1.0);
+      trampleLeanDir = uLeanSource < 0.5 ? trailDir : nearestDir;
+      trampleLeanStrength = trampleRemap(raw, uLeanStart, uLeanEnd, uLeanRate) * uLeanAmount;
+    }
+    // --- Dissolve layer (handled in fragment) ---
+    if (uDissolveEnabled > 0.5) {
+      float raw = uDissolveSource < 0.5 ? trailRaw : 1.0 - clamp(nearestDist / uDissolveRadius, 0.0, 1.0);
+      vTrampleDissolve = trampleRemap(raw, uDissolveStart, uDissolveEnd, uDissolveRate);
+    }
+    // --- Lighten layer (handled in fragment) ---
+    if (uLightenEnabled > 0.5) {
+      float raw = uLightenSource < 0.5 ? trailRaw : 1.0 - clamp(nearestDist / uLightenRadius, 0.0, 1.0);
+      vTrampleLighten = trampleRemap(raw, uLightenStart, uLightenEnd, uLightenRate);
+    }
   }
-  grassHeightMask *= mix(1.0, uTrampleHeightScale, trampleInfluence);
-  vTrample = trampleInfluence;
 
   int vertFrontBackId = gl_VertexID % (grassVertices * 2);
   int vertId = vertFrontBackId % grassVertices;
@@ -120,7 +198,7 @@ void main() {
   vec2 windDirection = vec2(cos(uWindDirection), sin(uWindDirection));
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
-  vec2 trampleOffset = trampleLeanDir * uTrampleLean * trampleInfluence * height * bendProfile;
+  vec2 trampleOffset = trampleLeanDir * trampleLeanStrength * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
     widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x,
     heightPercent * height * verticalCompression,

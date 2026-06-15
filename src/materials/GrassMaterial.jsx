@@ -5,18 +5,27 @@ import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
+import { getTrampleData } from '../world/utils/trampleField.js'
 
-// Characters paint a fading trail (see GrassTrail) that this material samples to
-// shorten / lean / lighten / dissolve blades they walk over. Tuned constants —
-// promote to store/Leva later if they need tweaking.
-const TRAMPLE_STRENGTH = 0.7 // boosts sampled trail intensity
-const TRAMPLE_HEIGHT_SCALE = 0.32 // blades shrink toward this fraction under contact
-const TRAMPLE_LEAN = 0.24 // gentle outward lean along the trail gradient
-const TRAMPLE_COLOR = '#cdeebf' // light highlight where trampled
-const TRAMPLE_COLOR_STRENGTH = 0.16
-const TRAMPLE_FADE_START = 0.1 // trail intensity at which the dissolve begins (>=1 disables it)
-const TRAMPLE_DISSOLVE_ALPHA = 1.0 // how transparent trampled blades go
-const TRAMPLE_DISSOLVE_DITHER = 1.0 // extra dithered cut-out on top of the alpha fade
+// Characters react the grass via four independent layers (dissolve / lighten /
+// scale / lean), each reading the fading trail texture or a radius around the
+// characters (uTramplers). See GrassTrail + trampleField.
+const sourceToInt = (source) => (source === 'Radius' ? 1 : 0)
+
+// Whether any enabled layer uses the trail / radius source — lets the shader skip
+// the trail samples or the trampler loop entirely when unused.
+const computeSourceUsage = (p) => {
+    const layers = [
+        [p.dissolveEnabled, p.dissolveSource],
+        [p.lightenEnabled, p.lightenSource],
+        [p.scaleEnabled, p.scaleSource],
+        [p.leanEnabled, p.leanSource],
+    ]
+    return {
+        useTrail: layers.some(([enabled, source]) => enabled && source !== 'Radius') ? 1 : 0,
+        useRadius: layers.some(([enabled, source]) => enabled && source === 'Radius') ? 1 : 0,
+    }
+}
 
 export default function useGrassMaterial({
     chunkSize,
@@ -79,15 +88,44 @@ export default function useGrassMaterial({
                     uTrailWorldSize: { value: 28 },
                     uTrailResolution: { value: 256 },
                     uTrampleEnabled: { value: 1 },
-                    uTrampleStrength: { value: TRAMPLE_STRENGTH },
-                    uTrampleThreshold: { value: 0.22 },
-                    uTrampleHeightScale: { value: TRAMPLE_HEIGHT_SCALE },
-                    uTrampleLean: { value: TRAMPLE_LEAN },
-                    uTrampleColor: { value: new THREE.Color(TRAMPLE_COLOR) },
-                    uTrampleColorStrength: { value: TRAMPLE_COLOR_STRENGTH },
-                    uTrampleFadeStart: { value: TRAMPLE_FADE_START },
-                    uTrampleDissolveAlpha: { value: TRAMPLE_DISSOLVE_ALPHA },
-                    uTrampleDissolveDither: { value: TRAMPLE_DISSOLVE_DITHER },
+                    uTrailStrength: { value: grassParameters.trailStrength ?? 0.7 },
+                    uTramplers: { value: getTrampleData() },
+                    uUseTrailSource: { value: computeSourceUsage(grassParameters).useTrail },
+                    uUseRadiusSource: { value: computeSourceUsage(grassParameters).useRadius },
+
+                    uScaleEnabled: { value: grassParameters.scaleEnabled ? 1 : 0 },
+                    uScaleSource: { value: sourceToInt(grassParameters.scaleSource) },
+                    uScaleRadius: { value: grassParameters.scaleRadius ?? 2 },
+                    uScaleStart: { value: grassParameters.scaleStart ?? 0.2 },
+                    uScaleEnd: { value: grassParameters.scaleEnd ?? 1 },
+                    uScaleRate: { value: grassParameters.scaleRate ?? 1 },
+                    uScaleAmount: { value: grassParameters.scaleAmount ?? 0.68 },
+
+                    uLeanEnabled: { value: grassParameters.leanEnabled ? 1 : 0 },
+                    uLeanSource: { value: sourceToInt(grassParameters.leanSource) },
+                    uLeanRadius: { value: grassParameters.leanRadius ?? 2 },
+                    uLeanStart: { value: grassParameters.leanStart ?? 0.2 },
+                    uLeanEnd: { value: grassParameters.leanEnd ?? 1 },
+                    uLeanRate: { value: grassParameters.leanRate ?? 1 },
+                    uLeanAmount: { value: grassParameters.leanAmount ?? 0.24 },
+
+                    uDissolveEnabled: { value: grassParameters.dissolveEnabled ? 1 : 0 },
+                    uDissolveSource: { value: sourceToInt(grassParameters.dissolveSource) },
+                    uDissolveRadius: { value: grassParameters.dissolveRadius ?? 2 },
+                    uDissolveStart: { value: grassParameters.dissolveStart ?? 0.1 },
+                    uDissolveEnd: { value: grassParameters.dissolveEnd ?? 1 },
+                    uDissolveRate: { value: grassParameters.dissolveRate ?? 1 },
+                    uDissolveAmount: { value: grassParameters.dissolveAmount ?? 1 },
+                    uDissolveMode: { value: grassParameters.dissolveMode === 'Dither' ? 1 : 0 },
+
+                    uLightenEnabled: { value: grassParameters.lightenEnabled ? 1 : 0 },
+                    uLightenSource: { value: sourceToInt(grassParameters.lightenSource) },
+                    uLightenRadius: { value: grassParameters.lightenRadius ?? 2 },
+                    uLightenStart: { value: grassParameters.lightenStart ?? 0.2 },
+                    uLightenEnd: { value: grassParameters.lightenEnd ?? 1 },
+                    uLightenRate: { value: grassParameters.lightenRate ?? 1 },
+                    uLightenAmount: { value: grassParameters.lightenAmount ?? 0.16 },
+                    uLightenColor: { value: new THREE.Color(grassParameters.lightenColor ?? '#cdeebf') },
 
                     uNoiseTexture: { value: noiseTexture },
                     uNoiseStrength: { value: borderNoiseStrength },
@@ -154,14 +192,44 @@ export default function useGrassMaterial({
         u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
 
         u.uTrampleEnabled.value = (grassParameters.trampleEnabled ?? true) ? 1 : 0
-        u.uTrampleStrength.value = grassParameters.trampleStrength ?? TRAMPLE_STRENGTH
-        u.uTrampleThreshold.value = grassParameters.trampleThreshold ?? 0.22
-        u.uTrampleHeightScale.value = grassParameters.trampleHeightScale ?? TRAMPLE_HEIGHT_SCALE
-        u.uTrampleLean.value = grassParameters.trampleLean ?? TRAMPLE_LEAN
-        u.uTrampleColorStrength.value = grassParameters.trampleBrighten ?? TRAMPLE_COLOR_STRENGTH
-        u.uTrampleFadeStart.value = grassParameters.trampleFadeStart ?? TRAMPLE_FADE_START
-        u.uTrampleDissolveAlpha.value = grassParameters.trampleDissolveAlpha ?? TRAMPLE_DISSOLVE_ALPHA
-        u.uTrampleDissolveDither.value = grassParameters.trampleDissolveDither ?? TRAMPLE_DISSOLVE_DITHER
+        u.uTrailStrength.value = grassParameters.trailStrength ?? 0.7
+        const sourceUsage = computeSourceUsage(grassParameters)
+        u.uUseTrailSource.value = sourceUsage.useTrail
+        u.uUseRadiusSource.value = sourceUsage.useRadius
+
+        u.uScaleEnabled.value = grassParameters.scaleEnabled ? 1 : 0
+        u.uScaleSource.value = sourceToInt(grassParameters.scaleSource)
+        u.uScaleRadius.value = grassParameters.scaleRadius ?? 2
+        u.uScaleStart.value = grassParameters.scaleStart ?? 0.2
+        u.uScaleEnd.value = grassParameters.scaleEnd ?? 1
+        u.uScaleRate.value = grassParameters.scaleRate ?? 1
+        u.uScaleAmount.value = grassParameters.scaleAmount ?? 0.68
+
+        u.uLeanEnabled.value = grassParameters.leanEnabled ? 1 : 0
+        u.uLeanSource.value = sourceToInt(grassParameters.leanSource)
+        u.uLeanRadius.value = grassParameters.leanRadius ?? 2
+        u.uLeanStart.value = grassParameters.leanStart ?? 0.2
+        u.uLeanEnd.value = grassParameters.leanEnd ?? 1
+        u.uLeanRate.value = grassParameters.leanRate ?? 1
+        u.uLeanAmount.value = grassParameters.leanAmount ?? 0.24
+
+        u.uDissolveEnabled.value = grassParameters.dissolveEnabled ? 1 : 0
+        u.uDissolveSource.value = sourceToInt(grassParameters.dissolveSource)
+        u.uDissolveRadius.value = grassParameters.dissolveRadius ?? 2
+        u.uDissolveStart.value = grassParameters.dissolveStart ?? 0.1
+        u.uDissolveEnd.value = grassParameters.dissolveEnd ?? 1
+        u.uDissolveRate.value = grassParameters.dissolveRate ?? 1
+        u.uDissolveAmount.value = grassParameters.dissolveAmount ?? 1
+        u.uDissolveMode.value = grassParameters.dissolveMode === 'Dither' ? 1 : 0
+
+        u.uLightenEnabled.value = grassParameters.lightenEnabled ? 1 : 0
+        u.uLightenSource.value = sourceToInt(grassParameters.lightenSource)
+        u.uLightenRadius.value = grassParameters.lightenRadius ?? 2
+        u.uLightenStart.value = grassParameters.lightenStart ?? 0.2
+        u.uLightenEnd.value = grassParameters.lightenEnd ?? 1
+        u.uLightenRate.value = grassParameters.lightenRate ?? 1
+        u.uLightenAmount.value = grassParameters.lightenAmount ?? 0.16
+        u.uLightenColor.value.set(grassParameters.lightenColor ?? '#cdeebf')
     }, [
         material,
         grassParameters,

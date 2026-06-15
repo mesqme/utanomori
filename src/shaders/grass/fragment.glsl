@@ -13,11 +13,10 @@ uniform float uLanternLightNoiseScale;
 uniform float uLanternLightNoiseStrength;
 uniform float uLanternLightInnerBrightness;
 uniform float uLanternLightOuterDarkness;
-uniform vec3 uTrampleColor;
-uniform float uTrampleColorStrength;
-uniform float uTrampleFadeStart;
-uniform float uTrampleDissolveAlpha;
-uniform float uTrampleDissolveDither;
+uniform vec3 uLightenColor;
+uniform float uLightenAmount;
+uniform float uDissolveAmount;
+uniform float uDissolveMode; // 0 = alpha, 1 = dither
 uniform sampler2D uPainteryTexture;
 uniform float uPainterySize;
 uniform float uPainteryScreenBlend;
@@ -31,7 +30,8 @@ varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
-varying float vTrample;
+varying float vTrampleDissolve;
+varying float vTrampleLighten;
 
 // --- Dither Functions ---
 // 0. Diamond Dither
@@ -170,18 +170,18 @@ void main() {
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
-  // Lighten on contact, then dissolve trampled blades: they go semi-transparent
-  // (alpha) with an optional dithered cut-out, instead of leaving a hard bald patch.
-  color = mix(color, uTrampleColor, vTrample * uTrampleColorStrength);
+  // Lighten/darken layer — mix toward the layer colour by its influence × amount.
+  color = mix(color, uLightenColor, clamp(vTrampleLighten * uLightenAmount, 0.0, 1.0));
+
+  // Dissolve layer — semi-transparent (alpha) or dithered cut-out.
   float grassAlpha = 1.0;
-  if (uTrampleFadeStart < 0.999) {
-    float dissolveAmount = smoothstep(uTrampleFadeStart, 1.0, vTrample);
-    if (dissolveAmount > 0.0 && uTrampleDissolveDither > 0.0) {
-      if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolveAmount * uTrampleDissolveDither, uDitherMode)) {
-        discard;
-      }
+  float dissolve = clamp(vTrampleDissolve * uDissolveAmount, 0.0, 1.0);
+  if (dissolve > 0.0) {
+    if (uDissolveMode < 0.5) {
+      grassAlpha = 1.0 - dissolve;
+    } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve, uDitherMode)) {
+      discard;
     }
-    grassAlpha = 1.0 - dissolveAmount * uTrampleDissolveAlpha;
   }
 
   float borderFade = 1.0 - vGrassData.w;
