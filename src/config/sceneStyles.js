@@ -313,8 +313,8 @@ const painteryStyle = {
     label: 'Paintery',
     terrainParameters: {
         ...complexStyle.terrainParameters,
-        color: '#6d76f1',
-        backgroundColor: '#5838b6',
+        color: '#747dff',
+        backgroundColor: '#3d1f95',
         baseBrightness: 0.66,
         segments: 19,
         scale: 0.08,

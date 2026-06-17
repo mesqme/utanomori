@@ -14,6 +14,7 @@ export default function Loader() {
     const { active, progress } = useProgress()
     const phase = usePhases((s) => s.phase)
     const setPhase = usePhases((s) => s.setPhase)
+    const debugMode = usePhases((s) => s.debugMode)
 
     const [displayed, setDisplayed] = useState(0)
     const [isMouseInside, setIsMouseInside] = useState(false)
@@ -52,12 +53,12 @@ export default function Loader() {
         return raw
     }, [displayed])
 
-    // Transition from loading to warmup when complete
+    // When loading completes: debug → straight to gameplay, otherwise show GO (warmup).
     useEffect(() => {
         if (phase === PHASES.loading && !active && percent >= 100) {
-            setPhase(PHASES.warmup)
+            setPhase(debugMode ? PHASES.start : PHASES.warmup)
         }
-    }, [phase, active, percent, setPhase])
+    }, [phase, active, percent, setPhase, debugMode])
 
     const handleMouseEnter = () => {
         setIsMouseInside(true)
@@ -71,7 +72,7 @@ export default function Loader() {
 
     const handleClick = () => {
         if (phase === PHASES.warmup) {
-            setPhase(PHASES.start)
+            setPhase(PHASES.intro)
         }
     }
 
@@ -93,6 +94,7 @@ export default function Loader() {
                 <div
                     ref={centerRef}
                     className={`loader-center ${showStart ? 'loader-center--clickable' : ''} ${showStart && isHovered ? 'loader-center--hovered' : ''}`}
+                    style={{ background: soundJourneyPalette.hero }}
                     onMouseEnter={handleMouseEnter}
                     onMouseLeave={handleMouseLeave}
                     onClick={handleClick}

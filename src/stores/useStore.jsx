@@ -5,6 +5,13 @@ import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '
 
 const GRASS_STYLE_VERSION = 18
 const CHARACTER_STYLIZED_VERSION = 2
+const DEFAULT_CAMERA_PARAMETERS = {
+    debugOrbit: false,
+    debugOrbitAngle: 0,
+    debugOrbitDistance: 18.9,
+    debugOrbitHeight: 15.1,
+    debugTargetYOffset: 0.4,
+}
 
 const createStore = () =>
     create(
@@ -85,13 +92,7 @@ const createStore = () =>
             /**
              * Camera debug parameters
              */
-            cameraParameters: {
-                debugOrbit: false,
-                debugOrbitAngle: 0,
-                debugOrbitDistance: 12,
-                debugOrbitHeight: 8,
-                debugTargetYOffset: 0.4,
-            },
+            cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
 
             /**
              * Performance & Debug parameters
@@ -198,6 +199,7 @@ if (import.meta?.hot) {
             ...state.painterlyPostParameters,
         },
         characterMaterialParameters,
+        cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
     })
     import.meta.hot.data.store = useStore
 }

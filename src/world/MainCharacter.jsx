@@ -9,6 +9,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
+import { cameraRig } from '../game/cameraRig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
@@ -143,7 +144,7 @@ export default function MainCharacter() {
                 if (!value) return
                 const currentPhase = usePhases.getState().phase
                 if (currentPhase === PHASES.warmup) {
-                    setPhase(PHASES.start)
+                    setPhase(PHASES.intro)
                     return
                 }
                 if (currentPhase === PHASES.start) {
@@ -156,7 +157,8 @@ export default function MainCharacter() {
     }, [subscribeKeys, setPhase, handleReset])
 
     useEffect(() => {
-        if (phase !== PHASES.start) {
+        // Keep the hero where he is during credits (he runs on); reset for menu phases.
+        if (phase !== PHASES.start && phase !== PHASES.credits) {
             resetPosition()
         }
     }, [phase, resetPosition])
@@ -204,6 +206,12 @@ export default function MainCharacter() {
                 isGroundedRef.current = false
             }
             wasJumpPressedRef.current = jumpPressed
+        } else if (phase === PHASES.credits) {
+            // Credits: the hero runs forward on his own, party trailing behind.
+            moveInput.set(0, 0, -1).multiplyScalar(RUN_SPEED)
+            velocity.x = THREE.MathUtils.damp(velocity.x, moveInput.x, ACCELERATION, safeDelta)
+            velocity.z = THREE.MathUtils.damp(velocity.z, moveInput.z, ACCELERATION, safeDelta)
+            wasJumpPressedRef.current = false
         } else {
             velocity.set(0, 0, 0)
             wasJumpPressedRef.current = false
@@ -226,7 +234,7 @@ export default function MainCharacter() {
             isGroundedRef.current = true
         }
 
-        const movingNow = phase === PHASES.start && (Math.abs(velocity.x) > 0.05 || Math.abs(velocity.z) > 0.05)
+        const movingNow = (phase === PHASES.start || phase === PHASES.credits) && (Math.abs(velocity.x) > 0.05 || Math.abs(velocity.z) > 0.05)
         setIsMoving((current) => (current === movingNow ? current : movingNow))
 
         if (modelRef.current) {
@@ -240,6 +248,10 @@ export default function MainCharacter() {
             if (movingNow) {
                 const targetRotationY = Math.atan2(velocity.x, velocity.z) + characterParameters.rotationOffset
                 modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, targetRotationY, CHARACTER_TURN_SPEED, safeDelta)
+            } else if (phase !== PHASES.start) {
+                // Menu phases (loading / warmup / intro): face the forward run direction
+                // so the hat reads correctly from the top and the face is toward the camera.
+                modelRef.current.rotation.y = Math.atan2(0, -1) + characterParameters.rotationOffset
             }
         }
 
@@ -260,7 +272,7 @@ export default function MainCharacter() {
 
         setBallPosition(visualPosition)
 
-        if (phase === PHASES.start) {
+        if (phase === PHASES.start || phase === PHASES.credits) {
             recordTrail(visualPosition)
             setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, groundY, visualPosition.z)
         } else {
@@ -270,6 +282,7 @@ export default function MainCharacter() {
         const cameraPosition = cameraPositionRef.current
         const cameraTarget = cameraTargetRef.current
 
+        let cameraLerpSpeed = CAMERA_LERP_SPEED
         if (cameraParameters.debugOrbit) {
             cameraPosition.set(
                 visualPosition.x + Math.sin(cameraParameters.debugOrbitAngle) * cameraParameters.debugOrbitDistance,
@@ -278,15 +291,25 @@ export default function MainCharacter() {
             )
 
             cameraTarget.set(visualPosition.x, visualPosition.y + cameraParameters.debugTargetYOffset, visualPosition.z)
+        } else if (cameraRig.mode === 'orbit') {
+            // Game-cycle shot (loading top view / intro travel).
+            cameraPosition.set(
+                visualPosition.x + Math.sin(cameraRig.angle) * cameraRig.distance,
+                visualPosition.y + cameraRig.height,
+                visualPosition.z + Math.cos(cameraRig.angle) * cameraRig.distance
+            )
+            cameraTarget.set(visualPosition.x, visualPosition.y + cameraRig.targetYOffset, visualPosition.z)
+            cameraLerpSpeed = cameraRig.lerpSpeed
         } else {
             cameraPosition.copy(visualPosition)
             cameraPosition.add(CAMERA_POSITION_OFFSET)
 
             cameraTarget.copy(visualPosition)
             cameraTarget.add(CAMERA_TARGET_OFFSET)
+            cameraLerpSpeed = cameraRig.lerpSpeed
         }
 
-        const lerpFactor = Math.min(1, CAMERA_LERP_SPEED * safeDelta)
+        const lerpFactor = Math.min(1, cameraLerpSpeed * safeDelta)
         smoothedCameraPosition.lerp(cameraPosition, lerpFactor)
         smoothedCameraTarget.lerp(cameraTarget, lerpFactor)
         smoothedCircleCenter.lerp(visualPosition, lerpFactor)

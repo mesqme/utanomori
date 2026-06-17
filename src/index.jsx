@@ -8,6 +8,9 @@ import Loader from './loader/Loader.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
+import GameDirector from './game/GameDirector.jsx'
+import Dialogue from './game/Dialogue.jsx'
+import Credits from './game/Credits.jsx'
 import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 
 applySoundJourneyCssVariables()
@@ -43,7 +46,10 @@ root.render(
             <ControlsIcons />
             <InteractionPrompt />
         </KeyboardControls>
+        <GameDirector />
         <Loader />
+        <Dialogue />
+        <Credits />
         <Links />
     </>
 )

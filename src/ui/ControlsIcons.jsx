@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react'
 import { useKeyboardControls } from '@react-three/drei'
 import './ControlsIcons.css'
 import useStore from '../stores/useStore.jsx'
+import usePhases, { PHASES } from '../stores/usePhases.jsx'
 
 function ControlKey({ controlName, children, className = '' }) {
     const buttonRef = useRef()
@@ -54,6 +55,9 @@ function ControlKey({ controlName, children, className = '' }) {
 }
 
 export default function ControlsIcons() {
+    const phase = usePhases((state) => state.phase)
+    if (phase !== PHASES.start) return null
+
     return (
         <div className="controls-icons">
             <div className="controls-row">

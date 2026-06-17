@@ -173,8 +173,10 @@ export default function Companions() {
         }
     }, [shadowGeometry, shadowMaterial, creatureMaterial])
 
+    // Reset the party only on a fresh loop (warmup/loading) — keep it through the
+    // intro and credits so the followers can trail the auto-running hero.
     useEffect(() => {
-        if (phase !== PHASES.start) useCompanions.getState().reset()
+        if (phase === PHASES.warmup || phase === PHASES.loading) useCompanions.getState().reset()
     }, [phase])
 
     useEffect(() => {

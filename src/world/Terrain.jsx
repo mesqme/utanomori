@@ -112,37 +112,32 @@ export default function Terrain() {
     }, [noiseTexture, groundTexture, painteryTexture])
 
     useEffect(() => {
-        const wasStarted = prevPhaseRef.current === PHASES.start
-
-        if (phase === PHASES.start) {
-            if (!wasStarted) {
-                const targetRadius = borderCircleRadius
-                const startRadius = START_CIRCLE_RADIUS
-
-                if (radiusAnimationRef.current) {
-                    radiusAnimationRef.current.kill()
-                    radiusAnimationRef.current = null
-                }
-
-                setCircleRadius(startRadius)
-
-                const radiusObj = { value: startRadius }
-                radiusAnimationRef.current = gsap.to(radiusObj, {
-                    value: targetRadius,
-                    duration: 2.0,
-                    delay: START_RADIUS_DELAY,
-                    ease: 'power2.out',
-                    onUpdate: () => {
-                        setCircleRadius(radiusObj.value)
-                    },
-                    onComplete: () => {
-                        radiusAnimationRef.current = null
-                    },
-                })
-            } else if (!radiusAnimationRef.current) {
-                setCircleRadius(borderCircleRadius)
+        if (phase === PHASES.intro) {
+            // Reveal the world as the camera arcs from the top hat-view to the front.
+            if (radiusAnimationRef.current) {
+                radiusAnimationRef.current.kill()
             }
-        } else if (!radiusAnimationRef.current) {
+            setCircleRadius(START_CIRCLE_RADIUS)
+            const radiusObj = { value: START_CIRCLE_RADIUS }
+            radiusAnimationRef.current = gsap.to(radiusObj, {
+                value: borderCircleRadius,
+                duration: 2.2,
+                delay: 0.3,
+                ease: 'power2.out',
+                onUpdate: () => setCircleRadius(radiusObj.value),
+                onComplete: () => {
+                    radiusAnimationRef.current = null
+                },
+            })
+        } else if (phase === PHASES.start || phase === PHASES.credits) {
+            // Full circle during gameplay / credits (debug jumps straight here).
+            if (!radiusAnimationRef.current) setCircleRadius(borderCircleRadius)
+        } else {
+            // loading / warmup: tiny circle so the hat covers the small terrain from top.
+            if (radiusAnimationRef.current) {
+                radiusAnimationRef.current.kill()
+                radiusAnimationRef.current = null
+            }
             setCircleRadius(START_CIRCLE_RADIUS)
         }
 

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
+import usePhases from '../stores/usePhases.jsx'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
 import { painterlyPostDebugModes } from '../config/painterlyPostDefaults.js'
@@ -237,6 +238,13 @@ const LEVA_SECTION_PATHS = Object.freeze({
         pTint: 'painterlyColorStrength',
         pBrightness: 'painterlyBrightnessVariation',
     },
+    'Camera Debug': {
+        debugOrbit: 'debugOrbit',
+        debugOrbitAngle: 'debugOrbitAngle',
+        debugOrbitDistance: 'debugOrbitDistance',
+        debugOrbitHeight: 'debugOrbitHeight',
+        debugTargetYOffset: 'debugTargetYOffset',
+    },
 })
 
 function addLevaSectionValues(values, folder, section, paths) {
@@ -363,6 +371,18 @@ export default function Controls() {
         }
     }, [sceneStylePreset])
 
+    useEffect(() => {
+        const values = {}
+        addLevaSectionValues(values, 'Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
+
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [cameraParameters])
+
     useControls('General', {
         style: {
             value: sceneStylePreset,
@@ -381,6 +401,12 @@ export default function Controls() {
             value: backgroundWireframe,
             onChange: (value, _, context) => {
                 if (!context?.initial && !syncingLeva.current) useStore.getState().setBackgroundWireframe(value)
+            },
+        },
+        debugMode: {
+            value: usePhases.getState().debugMode,
+            onChange: (value, _, context) => {
+                if (!context?.initial) usePhases.getState().setDebugMode(value)
             },
         },
     })
