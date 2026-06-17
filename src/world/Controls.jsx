@@ -5,7 +5,6 @@ import usePhases from '../stores/usePhases.jsx'
 import { seeThrough } from './utils/seeThrough.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
-import { painterlyPostDebugModes } from '../config/painterlyPostDefaults.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
@@ -195,11 +194,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     'Painterly Postprocess': {
         enabled: 'enabled',
-        debug: 'debugMode',
-        renderScale: 'renderScale',
         noiseSeed: 'noiseSeed',
-        radius: 'radius',
-        filterStrength: 'filterStrength',
         sensorNoise: 'sensorNoiseEnabled',
         lumaNoise: 'luminanceNoise',
         chromaNoise: 'chromaNoise',
@@ -288,6 +283,7 @@ export default function Controls() {
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
+    const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
@@ -1305,38 +1301,12 @@ export default function Controls() {
             value: painterlyPostParameters.enabled,
             onChange: setParam('painterlyPostParameters', 'enabled'),
         },
-        debug: {
-            value: painterlyPostParameters.debugMode,
-            options: painterlyPostDebugModes,
-            onChange: setParam('painterlyPostParameters', 'debugMode'),
-        },
-        renderScale: {
-            value: painterlyPostParameters.renderScale,
-            min: 0.25,
-            max: 1,
-            step: 0.05,
-            onChange: setParam('painterlyPostParameters', 'renderScale'),
-        },
         noiseSeed: {
             value: painterlyPostParameters.noiseSeed,
             min: 0,
             max: 100,
             step: 1,
             onChange: setParam('painterlyPostParameters', 'noiseSeed'),
-        },
-        radius: {
-            value: painterlyPostParameters.radius,
-            min: 1,
-            max: 24,
-            step: 1,
-            onChange: setParam('painterlyPostParameters', 'radius'),
-        },
-        filterStrength: {
-            value: painterlyPostParameters.filterStrength,
-            min: 0,
-            max: 1,
-            step: 0.01,
-            onChange: setParam('painterlyPostParameters', 'filterStrength'),
         },
         sensorNoise: {
             value: painterlyPostParameters.sensorNoiseEnabled,
@@ -1405,6 +1375,48 @@ export default function Controls() {
             max: 1,
             step: 0.01,
             onChange: setParam('painterlyPostParameters', 'sharpenStrength'),
+        },
+    })
+
+    useControls('Paintery Texture', {
+        enabled: {
+            value: painteryTextureParameters.enabled,
+            onChange: setParam('painteryTextureParameters', 'enabled'),
+        },
+        blur: {
+            value: painteryTextureParameters.blur,
+            min: 0,
+            max: 6,
+            step: 0.1,
+            onChange: setParam('painteryTextureParameters', 'blur'),
+        },
+        levelsLow: {
+            value: painteryTextureParameters.levelsLow,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painteryTextureParameters', 'levelsLow'),
+        },
+        levelsHigh: {
+            value: painteryTextureParameters.levelsHigh,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('painteryTextureParameters', 'levelsHigh'),
+        },
+        contrast: {
+            value: painteryTextureParameters.contrast,
+            min: 0.2,
+            max: 4,
+            step: 0.05,
+            onChange: setParam('painteryTextureParameters', 'contrast'),
+        },
+        posterize: {
+            value: painteryTextureParameters.posterize,
+            min: 0,
+            max: 12,
+            step: 1,
+            onChange: setParam('painteryTextureParameters', 'posterize'),
         },
     })
 

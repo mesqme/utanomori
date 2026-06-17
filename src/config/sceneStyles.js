@@ -1,6 +1,6 @@
 import { mainCharacterMaterialPresets } from './mainCharacterMaterials.js'
 import { objectFieldDefaults } from './objectFieldDefaults.js'
-import { painterlyPostDebugModes, painterlyPostDefaults } from './painterlyPostDefaults.js'
+import { painterlyPostDefaults } from './painterlyPostDefaults.js'
 import { characterStylizedDefaults } from './stylizedMaterialDefaults.js'
 
 function cloneMaterials(materials) {
@@ -231,10 +231,10 @@ const complexPainteryStyle = {
     },
     seeThroughParameters: {
         enabled: true,
-        worldRadius: 2.5,
-        inner: 0.41,
-        coreOpacity: 0.33,
-        depthBias: 0.5,
+        worldRadius: 3.8,
+        inner: 0.0,
+        coreOpacity: 0.0,
+        depthBias: 0.0,
     },
 }
 
@@ -306,11 +306,7 @@ const magicGlowStyle = {
     painterlyPostParameters: {
         ...complexStyle.painterlyPostParameters,
         enabled: true,
-        debugMode: painterlyPostDebugModes.Original,
-        renderScale: 1,
         noiseSeed: 100,
-        radius: 8,
-        filterStrength: 1,
         sensorNoiseEnabled: false,
         luminanceNoise: 0.2,
         chromaNoise: 0.1,
@@ -397,11 +393,7 @@ const painteryStyle = {
     painterlyPostParameters: {
         ...complexStyle.painterlyPostParameters,
         enabled: true,
-        debugMode: painterlyPostDebugModes.Final,
-        renderScale: 1,
         noiseSeed: 0,
-        radius: 8,
-        filterStrength: 1.0,
         sensorNoiseEnabled: true,
         luminanceNoise: 0.02,
         chromaNoise: 0.02,
@@ -411,7 +403,7 @@ const painteryStyle = {
         bloomThreshold: 0.34,
         bloomSmoothing: 0.36,
         bloomRadius: 0.5,
-        sharpenEnabled: true,
+        sharpenEnabled: false,
         sharpenStrength: 0.28,
     },
     gameUiParameters: {
@@ -432,10 +424,10 @@ const painteryStyle = {
     },
     seeThroughParameters: {
         enabled: true,
-        worldRadius: 2.5,
-        inner: 0.41,
-        coreOpacity: 0.33,
-        depthBias: 0.5,
+        worldRadius: 3.5,
+        inner: 0.0,
+        coreOpacity: 0.0,
+        depthBias: 0.0,
     },
 }
 

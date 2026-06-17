@@ -1,33 +1,26 @@
 import { useEffect, useMemo } from 'react'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
+import { Bloom, EffectComposer, SMAA } from '@react-three/postprocessing'
 
 import useStore from '../stores/useStore.jsx'
-import PainterlyEdgePass from './PainterlyEdgePass.js'
 import SharpenPass from './SharpenPass.js'
 
+// Post chain: scene (no MSAA) → optional bloom → SMAA (final-image AA) → SharpenPass
+// (optional sharpen + the film grain, applied last). The painterly abstraction now
+// lives in the baked paintery texture, so there's no per-frame Kuwahara pass.
 export default function PainterlyPostProcessing() {
     const settings = useStore((state) => state.painterlyPostParameters)
-    const painterlyPass = useMemo(() => new PainterlyEdgePass(settings), [])
     const sharpenPass = useMemo(() => new SharpenPass(settings), [])
 
     useEffect(() => {
-        painterlyPass.update(settings)
         sharpenPass.update(settings)
-    }, [painterlyPass, settings, sharpenPass])
+    }, [settings, sharpenPass])
 
-    useEffect(
-        () => () => {
-            painterlyPass.dispose()
-            sharpenPass.dispose()
-        },
-        [painterlyPass, sharpenPass]
-    )
+    useEffect(() => () => sharpenPass.dispose(), [sharpenPass])
 
     if (!settings.enabled) return null
 
     return (
-        <EffectComposer multisampling={4}>
-            <primitive object={painterlyPass} dispose={null} />
+        <EffectComposer multisampling={0}>
             {settings.bloomEnabled && (
                 <Bloom
                     intensity={settings.bloomIntensity}
@@ -37,6 +30,7 @@ export default function PainterlyPostProcessing() {
                     mipmapBlur
                 />
             )}
+            <SMAA />
             <primitive object={sharpenPass} dispose={null} />
         </EffectComposer>
     )

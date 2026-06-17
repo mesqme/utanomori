@@ -13,6 +13,18 @@ const DEFAULT_CAMERA_PARAMETERS = {
     debugTargetYOffset: 0.4,
 }
 
+// One-time stylization baked into the paintery brush texture (blur + levels +
+// contrast + posterize) so its small details merge into larger painterly regions,
+// replacing the per-frame Kuwahara abstraction.
+const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
+    enabled: true,
+    blur: 2.0,
+    levelsLow: 0.0,
+    levelsHigh: 1.0,
+    contrast: 1.15,
+    posterize: 0,
+}
+
 // Stylized "blot" UI (speech bubble + buttons): a solid painted patch with an
 // organic brushy edge (feTurbulence displacement). No border.
 const GAME_UI_VERSION = 4
@@ -113,6 +125,11 @@ const createStore = () =>
              * Camera debug parameters
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+
+            /**
+             * Paintery brush texture stylization (baked once)
+             */
+            painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS },
 
             /**
              * Stylized game UI (speech bubble + buttons)
@@ -228,6 +245,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+        painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
     })
     import.meta.hot.data.store = useStore

@@ -9,6 +9,7 @@ import TerrainChunk from './TerrainChunk.jsx'
 import ScatteredObjects from './ScatteredObjects.jsx'
 import GrassTrail from './GrassTrail.jsx'
 import { revealCircle } from './utils/revealCircle.js'
+import { useBakedPainteryTexture } from './utils/useBakedPainteryTexture.js'
 import { getRefScale } from './utils/screenScale.js'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
 import useGrassMaterial from '../materials/GrassMaterial.jsx'
@@ -78,18 +79,23 @@ export default function Terrain() {
         [paintaryAlpha01Url]
     )
 
+    // Bake the smoothing/threshold into the brush texture once, then sample the
+    // stylized copy everywhere instead of running Kuwahara over the whole frame.
+    const painteryTextureParameters = useStore((s) => s.painteryTextureParameters)
+    const stylizedPainteryTexture = useBakedPainteryTexture(painteryTexture, painteryTextureParameters)
+
     const terrainMaterial = useTerrainMaterial({
         chunkSize,
         initialCircleRadius: START_CIRCLE_RADIUS,
         noiseTexture,
         groundTexture,
-        painteryTexture,
+        painteryTexture: stylizedPainteryTexture,
     })
     const grassMaterial = useGrassMaterial({
         chunkSize,
         initialCircleRadius: START_CIRCLE_RADIUS,
         noiseTexture,
-        painteryTexture,
+        painteryTexture: stylizedPainteryTexture,
     })
 
     const setCircleRadius = (value) => {
