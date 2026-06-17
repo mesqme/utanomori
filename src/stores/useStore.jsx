@@ -13,6 +13,26 @@ const DEFAULT_CAMERA_PARAMETERS = {
     debugTargetYOffset: 0.4,
 }
 
+// Stylized "blot" UI (speech bubble + buttons): a solid painted patch with an
+// organic brushy edge (feTurbulence displacement). No border.
+const GAME_UI_VERSION = 4
+const DEFAULT_GAME_UI_PARAMETERS = {
+    bubbleShape: 'Rect', // Rect | Ellipse | Circle
+    buttonShape: 'Rect',
+    roughness: 8.5, // edge displacement amount (px)
+    detail: 29, // turbulence frequency (x0.001)
+    cornerRadius: 55, // rect corner rounding (px)
+    bubbleWidth: 760, // bubble max width (px)
+    textSize: 24, // dialogue text size (px)
+    padding: 43, // bubble inner padding (px)
+    buttonWidth: 180, // shared button background width (px)
+    buttonHeight: 58, // shared button background height (px)
+    textureStrength: 1, // subtle painted fill variation
+    textureScale: 600, // painted texture tile size (px)
+    fillColor: '#fef4ef', // painted patch colour
+    textColor: '#26285a', // text colour
+}
+
 const createStore = () =>
     create(
         subscribeWithSelector((set, get) => ({
@@ -95,6 +115,12 @@ const createStore = () =>
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
 
             /**
+             * Stylized game UI (speech bubble + buttons)
+             */
+            gameUiVersion: GAME_UI_VERSION,
+            gameUiParameters: { ...DEFAULT_GAME_UI_PARAMETERS },
+
+            /**
              * Performance & Debug parameters
              */
             perfVisible: false,
@@ -133,6 +159,7 @@ if (import.meta?.hot) {
     const state = useStore.getState()
     const applyGrassStyleDefaults = state.grassStyleVersion !== GRASS_STYLE_VERSION
     const applyCharacterStylizedDefaults = state.characterStylizedVersion !== CHARACTER_STYLIZED_VERSION
+    const applyGameUiDefaults = state.gameUiVersion !== GAME_UI_VERSION
     const characterMaterialParameters = applyCharacterStylizedDefaults
         ? cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters)
         : {
@@ -159,6 +186,7 @@ if (import.meta?.hot) {
               : state.sceneStylePreset ?? defaultSceneStyleId,
         grassStyleVersion: GRASS_STYLE_VERSION,
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
+        gameUiVersion: GAME_UI_VERSION,
         terrainParameters: {
             ...defaultSceneStyle.terrainParameters,
             ...state.terrainParameters,
@@ -200,6 +228,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+        gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
     })
     import.meta.hot.data.store = useStore
 }

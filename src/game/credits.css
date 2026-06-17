@@ -47,24 +47,7 @@
 }
 
 .credits-button {
-    padding: 11px 30px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 12px;
-    background: var(--sj-ui-panel);
-    color: var(--sj-ui-primary);
-    font-family: inherit;
-    font-size: 17px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: background 0.12s, transform 0.12s;
-}
-
-.credits-button:hover {
-    background: var(--sj-ui-panel-hover);
-}
-
-.credits-button:active {
-    transform: scale(0.96);
+    font-size: 18px;
 }
 
 @keyframes credits-roll {

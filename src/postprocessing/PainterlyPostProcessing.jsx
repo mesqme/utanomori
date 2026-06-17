@@ -8,11 +8,11 @@ import SharpenPass from './SharpenPass.js'
 export default function PainterlyPostProcessing() {
     const settings = useStore((state) => state.painterlyPostParameters)
     const painterlyPass = useMemo(() => new PainterlyEdgePass(settings), [])
-    const sharpenPass = useMemo(() => new SharpenPass(settings.sharpenStrength), [])
+    const sharpenPass = useMemo(() => new SharpenPass(settings), [])
 
     useEffect(() => {
         painterlyPass.update(settings)
-        sharpenPass.update(settings.sharpenEnabled, settings.sharpenStrength)
+        sharpenPass.update(settings)
     }, [painterlyPass, settings, sharpenPass])
 
     useEffect(
@@ -26,7 +26,7 @@ export default function PainterlyPostProcessing() {
     if (!settings.enabled) return null
 
     return (
-        <EffectComposer multisampling={0}>
+        <EffectComposer multisampling={4}>
             <primitive object={painterlyPass} dispose={null} />
             {settings.bloomEnabled && (
                 <Bloom

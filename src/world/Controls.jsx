@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
+import { seeThrough } from './utils/seeThrough.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
 import { painterlyPostDebugModes } from '../config/painterlyPostDefaults.js'
@@ -196,17 +197,9 @@ const LEVA_SECTION_PATHS = Object.freeze({
         enabled: 'enabled',
         debug: 'debugMode',
         renderScale: 'renderScale',
-        largeNScale: 'largeNoiseScale',
-        largeNStrength: 'largeNoiseStrength',
-        fineNScale: 'fineNoiseScale',
-        fineNStrength: 'fineNoiseStrength',
         noiseSeed: 'noiseSeed',
         radius: 'radius',
-        anisotropy: 'anisotropy',
-        eccentricity: 'eccentricity',
         filterStrength: 'filterStrength',
-        edgeRestore: 'edgeRestoreStrength',
-        edgeThreshold: 'edgeRestoreThreshold',
         sensorNoise: 'sensorNoiseEnabled',
         lumaNoise: 'luminanceNoise',
         chromaNoise: 'chromaNoise',
@@ -245,12 +238,36 @@ const LEVA_SECTION_PATHS = Object.freeze({
         debugOrbitHeight: 'debugOrbitHeight',
         debugTargetYOffset: 'debugTargetYOffset',
     },
+    'Game UI': {
+        bubbleShape: 'bubbleShape',
+        buttonShape: 'buttonShape',
+        roughness: 'roughness',
+        detail: 'detail',
+        cornerRadius: 'cornerRadius',
+        bubbleWidth: 'bubbleWidth',
+        textSize: 'textSize',
+        padding: 'padding',
+        buttonWidth: 'buttonWidth',
+        buttonHeight: 'buttonHeight',
+        textureStrength: 'textureStrength',
+        textureScale: 'textureScale',
+        fillColor: 'fillColor',
+        textColor: 'textColor',
+    },
 })
 
 function addLevaSectionValues(values, folder, section, paths) {
     Object.entries(paths).forEach(([control, parameter]) => {
         values[`${folder}.${control}`] = section[parameter]
     })
+}
+
+function addSeeThroughValues(values) {
+    values['See-Through.enabled'] = seeThrough.enabled
+    values['See-Through.worldRadius'] = seeThrough.worldRadius
+    values['See-Through.inner'] = seeThrough.inner
+    values['See-Through.coreOpacity'] = seeThrough.coreOpacity
+    values['See-Through.depthBias'] = seeThrough.depthBias
 }
 
 export default function Controls() {
@@ -270,6 +287,7 @@ export default function Controls() {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const gameUiParameters = useStore((state) => state.gameUiParameters)
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
@@ -295,6 +313,10 @@ export default function Controls() {
             return
         }
 
+        if (preset.seeThroughParameters) {
+            Object.assign(seeThrough, preset.seeThroughParameters)
+        }
+
         useStore.setState({
             sceneStylePreset: presetId,
             ...(preset.generalParameters ?? {}),
@@ -311,7 +333,19 @@ export default function Controls() {
             painterlyPostParameters: { ...preset.painterlyPostParameters },
             characterParameters: { ...preset.characterParameters },
             characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
+            ...(preset.gameUiParameters ? { gameUiParameters: { ...preset.gameUiParameters } } : {}),
         })
+
+        if (preset.seeThroughParameters) {
+            const values = {}
+            addSeeThroughValues(values)
+            syncingLeva.current = true
+            try {
+                levaStore.set(values, false)
+            } finally {
+                syncingLeva.current = false
+            }
+        }
     }
 
     const setCharacterMaterialParam = (slotId, param) => (value, _, context) => {
@@ -383,6 +417,18 @@ export default function Controls() {
         }
     }, [cameraParameters])
 
+    useEffect(() => {
+        const values = {}
+        addLevaSectionValues(values, 'Game UI', gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
+
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [gameUiParameters])
+
     useControls('General', {
         style: {
             value: sceneStylePreset,
@@ -407,6 +453,76 @@ export default function Controls() {
             value: usePhases.getState().debugMode,
             onChange: (value, _, context) => {
                 if (!context?.initial) usePhases.getState().setDebugMode(value)
+            },
+        },
+    })
+
+    useControls('Game UI', {
+        bubbleShape: {
+            value: gameUiParameters.bubbleShape,
+            options: ['Rect', 'Ellipse', 'Circle'],
+            onChange: setParam('gameUiParameters', 'bubbleShape'),
+        },
+        buttonShape: {
+            value: gameUiParameters.buttonShape,
+            options: ['Rect', 'Ellipse', 'Circle'],
+            onChange: setParam('gameUiParameters', 'buttonShape'),
+        },
+        roughness: { value: gameUiParameters.roughness, min: 0, max: 24, step: 0.5, onChange: setParam('gameUiParameters', 'roughness') },
+        detail: { value: gameUiParameters.detail, min: 2, max: 60, step: 1, onChange: setParam('gameUiParameters', 'detail') },
+        cornerRadius: { value: gameUiParameters.cornerRadius, min: 0, max: 80, step: 1, onChange: setParam('gameUiParameters', 'cornerRadius') },
+        bubbleWidth: { value: gameUiParameters.bubbleWidth, min: 260, max: 760, step: 10, onChange: setParam('gameUiParameters', 'bubbleWidth') },
+        textSize: { value: gameUiParameters.textSize, min: 12, max: 34, step: 1, onChange: setParam('gameUiParameters', 'textSize') },
+        padding: { value: gameUiParameters.padding, min: 12, max: 60, step: 1, onChange: setParam('gameUiParameters', 'padding') },
+        buttonWidth: { value: gameUiParameters.buttonWidth, min: 80, max: 360, step: 5, onChange: setParam('gameUiParameters', 'buttonWidth') },
+        buttonHeight: { value: gameUiParameters.buttonHeight, min: 36, max: 120, step: 2, onChange: setParam('gameUiParameters', 'buttonHeight') },
+        textureStrength: { value: gameUiParameters.textureStrength, min: 0, max: 1, step: 0.01, onChange: setParam('gameUiParameters', 'textureStrength') },
+        textureScale: { value: gameUiParameters.textureScale, min: 20, max: 600, step: 5, onChange: setParam('gameUiParameters', 'textureScale') },
+        fillColor: { value: gameUiParameters.fillColor, onChange: setParam('gameUiParameters', 'fillColor') },
+        textColor: { value: gameUiParameters.textColor, onChange: setParam('gameUiParameters', 'textColor') },
+    })
+
+    useControls('See-Through', {
+        enabled: {
+            value: seeThrough.enabled,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.enabled = value
+            },
+        },
+        worldRadius: {
+            value: seeThrough.worldRadius,
+            min: 0.4,
+            max: 5,
+            step: 0.1,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.worldRadius = value
+            },
+        },
+        inner: {
+            value: seeThrough.inner,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.inner = value
+            },
+        },
+        coreOpacity: {
+            value: seeThrough.coreOpacity,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.coreOpacity = value
+            },
+        },
+        depthBias: {
+            value: seeThrough.depthBias,
+            min: 0,
+            max: 4,
+            step: 0.1,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.depthBias = value
             },
         },
     })
@@ -1201,34 +1317,6 @@ export default function Controls() {
             step: 0.05,
             onChange: setParam('painterlyPostParameters', 'renderScale'),
         },
-        largeNScale: {
-            value: painterlyPostParameters.largeNoiseScale,
-            min: 0.1,
-            max: 40,
-            step: 0.1,
-            onChange: setParam('painterlyPostParameters', 'largeNoiseScale'),
-        },
-        largeNStrength: {
-            value: painterlyPostParameters.largeNoiseStrength,
-            min: 0,
-            max: 8,
-            step: 0.05,
-            onChange: setParam('painterlyPostParameters', 'largeNoiseStrength'),
-        },
-        fineNScale: {
-            value: painterlyPostParameters.fineNoiseScale,
-            min: 1,
-            max: 400,
-            step: 1,
-            onChange: setParam('painterlyPostParameters', 'fineNoiseScale'),
-        },
-        fineNStrength: {
-            value: painterlyPostParameters.fineNoiseStrength,
-            min: 0,
-            max: 4,
-            step: 0.05,
-            onChange: setParam('painterlyPostParameters', 'fineNoiseStrength'),
-        },
         noiseSeed: {
             value: painterlyPostParameters.noiseSeed,
             min: 0,
@@ -1243,40 +1331,12 @@ export default function Controls() {
             step: 1,
             onChange: setParam('painterlyPostParameters', 'radius'),
         },
-        anisotropy: {
-            value: painterlyPostParameters.anisotropy,
-            min: 0,
-            max: 2,
-            step: 0.05,
-            onChange: setParam('painterlyPostParameters', 'anisotropy'),
-        },
-        eccentricity: {
-            value: painterlyPostParameters.eccentricity,
-            min: 0,
-            max: 4,
-            step: 0.05,
-            onChange: setParam('painterlyPostParameters', 'eccentricity'),
-        },
         filterStrength: {
             value: painterlyPostParameters.filterStrength,
             min: 0,
             max: 1,
             step: 0.01,
             onChange: setParam('painterlyPostParameters', 'filterStrength'),
-        },
-        edgeRestore: {
-            value: painterlyPostParameters.edgeRestoreStrength,
-            min: 0,
-            max: 4,
-            step: 0.01,
-            onChange: setParam('painterlyPostParameters', 'edgeRestoreStrength'),
-        },
-        edgeThreshold: {
-            value: painterlyPostParameters.edgeRestoreThreshold,
-            min: 0,
-            max: 1,
-            step: 0.01,
-            onChange: setParam('painterlyPostParameters', 'edgeRestoreThreshold'),
         },
         sensorNoise: {
             value: painterlyPostParameters.sensorNoiseEnabled,

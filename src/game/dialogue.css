@@ -1,84 +1,59 @@
-.dialogue-bubble {
+.dialogue-anchor {
     position: absolute;
     left: 50%;
-    bottom: 16%;
+    bottom: 12%;
     transform: translateX(-50%);
-    max-width: 440px;
-    min-width: 280px;
-    padding: 20px 24px 18px;
-    background: var(--sj-ui-panel);
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 18px;
-    color: var(--sj-ui-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
     z-index: 120;
-    backdrop-filter: blur(6px);
-    animation: dialogue-pop 0.25s ease-out;
+    pointer-events: none;
 }
 
-.dialogue-bubble::after {
-    content: '';
-    position: absolute;
-    bottom: -14px;
-    left: 50%;
-    transform: translateX(-50%) rotate(45deg);
-    width: 22px;
-    height: 22px;
-    background: var(--sj-ui-panel);
-    border-right: 2px solid var(--sj-ui-primary);
-    border-bottom: 2px solid var(--sj-ui-primary);
+.dialogue-anchor > * {
+    pointer-events: auto;
+}
+
+.dialogue-bubble {
+    max-width: var(--blot-bubble-width, 480px);
+    min-width: 300px;
+    animation: dialogue-pop 0.3s ease-out;
 }
 
 .dialogue-text {
     margin: 0;
-    font-size: 19px;
+    font-size: var(--blot-text-size, 20px);
     line-height: 1.5;
     letter-spacing: 0.02em;
+    text-align: center;
     cursor: pointer;
-    min-height: 3.2em;
+    min-height: 3em;
 }
 
 .dialogue-caret {
     display: inline-block;
-    width: 9px;
+    width: 8px;
     height: 1.05em;
     margin-left: 2px;
     vertical-align: text-bottom;
-    background: var(--sj-ui-primary);
+    background: currentColor;
     animation: dialogue-blink 0.7s steps(1) infinite;
 }
 
 .dialogue-start {
-    display: block;
-    margin: 14px auto 0;
-    padding: 9px 28px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 12px;
-    background: var(--sj-ui-panel-active);
-    color: var(--sj-ui-primary);
-    font-family: inherit;
-    font-size: 17px;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition: background 0.12s, transform 0.12s;
-    animation: dialogue-pop 0.2s ease-out;
-}
-
-.dialogue-start:hover {
-    background: var(--sj-ui-panel-hover);
-}
-
-.dialogue-start:active {
-    transform: scale(0.96);
+    font-size: 18px;
+    animation: dialogue-pop 0.25s ease-out;
 }
 
 @keyframes dialogue-pop {
     from {
         opacity: 0;
-        transform: translateX(-50%) translateY(10px);
+        transform: translateY(12px);
     }
     to {
         opacity: 1;
-        transform: translateX(-50%) translateY(0);
+        transform: translateY(0);
     }
 }
 

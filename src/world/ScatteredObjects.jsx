@@ -7,6 +7,7 @@ import useStore from '../stores/useStore.jsx'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { createBatchedMeshPool } from './utils/batchedMeshPool.js'
 import { revealCircle } from './utils/revealCircle.js'
+import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { objectLibrary, OBJECT_TYPES } from '../config/objectFieldDefaults.js'
@@ -100,6 +101,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 layer2Scale: state.borderParameters.painteryLayer2Scale,
                 bleed: state.borderParameters.painteryBleed,
             },
+            seeThrough,
         })
     })
 

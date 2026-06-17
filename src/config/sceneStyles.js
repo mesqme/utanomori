@@ -213,6 +213,29 @@ const complexPainteryStyle = {
         textureContrast: 0.26,
         textureLayer2: 0.3,
     },
+    gameUiParameters: {
+        bubbleShape: 'Rect',
+        buttonShape: 'Rect',
+        roughness: 8.5,
+        detail: 29,
+        cornerRadius: 55,
+        bubbleWidth: 760,
+        textSize: 24,
+        padding: 43,
+        buttonWidth: 180,
+        buttonHeight: 58,
+        textureStrength: 1,
+        textureScale: 600,
+        fillColor: '#fef4ef',
+        textColor: '#26285a',
+    },
+    seeThroughParameters: {
+        enabled: true,
+        worldRadius: 2.5,
+        inner: 0.41,
+        coreOpacity: 0.33,
+        depthBias: 0.5,
+    },
 }
 
 const flatColorsStyle = {
@@ -285,14 +308,8 @@ const magicGlowStyle = {
         enabled: true,
         debugMode: painterlyPostDebugModes.Original,
         renderScale: 1,
-        largeNoiseScale: 0.1,
-        largeNoiseStrength: 8,
-        fineNoiseScale: 400,
-        fineNoiseStrength: 0,
         noiseSeed: 100,
         radius: 8,
-        anisotropy: 2,
-        eccentricity: 4,
         filterStrength: 1,
         sensorNoiseEnabled: false,
         luminanceNoise: 0.2,
@@ -336,7 +353,7 @@ const painteryStyle = {
         lightenStart: 0.02,
         lightenEnd: 0.47,
         lightenRate: 0.6,
-        lightenAmount: 0.53,
+        lightenAmount: 0.3,
         lightenColor: '#ff00e6',
     },
     borderParameters: {
@@ -382,14 +399,8 @@ const painteryStyle = {
         enabled: true,
         debugMode: painterlyPostDebugModes.Final,
         renderScale: 1,
-        largeNoiseScale: 0.1,
-        largeNoiseStrength: 0,
-        fineNoiseScale: 1,
-        fineNoiseStrength: 0,
         noiseSeed: 0,
         radius: 8,
-        anisotropy: 0.7,
-        eccentricity: 0.0,
         filterStrength: 1.0,
         sensorNoiseEnabled: true,
         luminanceNoise: 0.02,
@@ -403,6 +414,29 @@ const painteryStyle = {
         sharpenEnabled: true,
         sharpenStrength: 0.28,
     },
+    gameUiParameters: {
+        bubbleShape: 'Rect',
+        buttonShape: 'Rect',
+        roughness: 8.5,
+        detail: 29,
+        cornerRadius: 55,
+        bubbleWidth: 760,
+        textSize: 24,
+        padding: 43,
+        buttonWidth: 180,
+        buttonHeight: 58,
+        textureStrength: 1,
+        textureScale: 600,
+        fillColor: '#fef4ef',
+        textColor: '#26285a',
+    },
+    seeThroughParameters: {
+        enabled: true,
+        worldRadius: 2.5,
+        inner: 0.41,
+        coreOpacity: 0.33,
+        depthBias: 0.5,
+    },
 }
 
 export const sceneStylePresets = Object.freeze({
@@ -413,7 +447,7 @@ export const sceneStylePresets = Object.freeze({
     paintery: painteryStyle,
 })
 
-export const defaultSceneStyleId = 'complexPaintery'
+export const defaultSceneStyleId = 'paintery'
 export const defaultSceneStyle = sceneStylePresets[defaultSceneStyleId]
 
 export function cloneSceneStyleSection(section) {

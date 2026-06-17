@@ -7,8 +7,10 @@ import { gsap } from 'gsap'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
+import { getNearestRoadPoint } from './utils/roadField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
+import { seeThrough } from './utils/seeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
@@ -40,6 +42,11 @@ const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
 const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04']
 const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url]
+
+const SEE_THROUGH_CENTER_Y = 0.85 // hole centred near the hero's mid-height
+const _stWorld = new THREE.Vector3()
+const _stEdge = new THREE.Vector3()
+const _stRight = new THREE.Vector3()
 
 function dampAngle(current, target, lambda, delta) {
     const angleDelta = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -91,8 +98,10 @@ export default function MainCharacter() {
     }, [])
 
     const resetPosition = useCallback(() => {
-        const x = CHARACTER_INITIAL_XZ.x
-        const z = CHARACTER_INITIAL_XZ.y
+        const roadParameters = useStore.getState().roadParameters
+        const roadSpawn = getNearestRoadPoint(CHARACTER_INITIAL_XZ.x, CHARACTER_INITIAL_XZ.y, roadParameters)
+        const x = roadSpawn?.x ?? CHARACTER_INITIAL_XZ.x
+        const z = roadSpawn?.z ?? CHARACTER_INITIAL_XZ.y
         const y = getGroundY(x, z) + CHARACTER_CENTER_HEIGHT
 
         positionRef.current.set(x, y, z)
@@ -316,6 +325,33 @@ export default function MainCharacter() {
 
         state.camera.position.copy(smoothedCameraPosition)
         state.camera.lookAt(smoothedCameraTarget)
+
+        // See-through hole: project the hero to framebuffer pixels so occluders in
+        // front of him can fade away. Refresh the camera matrices first - R3F only
+        // updates them at render time, i.e. after this callback.
+        state.camera.updateMatrixWorld()
+        state.camera.matrixWorldInverse.copy(state.camera.matrixWorld).invert()
+
+        const seeThroughDpr = state.viewport.dpr
+        const bufferW = state.size.width * seeThroughDpr
+        const bufferH = state.size.height * seeThroughDpr
+
+        _stWorld.set(visualPosition.x, visualPosition.y + SEE_THROUGH_CENTER_Y, visualPosition.z)
+        seeThrough.cameraDist = state.camera.position.distanceTo(_stWorld)
+        _stRight.setFromMatrixColumn(state.camera.matrixWorld, 0) // camera right (world)
+        _stEdge.copy(_stWorld).addScaledVector(_stRight, seeThrough.worldRadius)
+
+        _stWorld.project(state.camera)
+        _stEdge.project(state.camera)
+
+        const stCenterX = (_stWorld.x * 0.5 + 0.5) * bufferW
+        const stCenterY = (_stWorld.y * 0.5 + 0.5) * bufferH
+        seeThrough.centerX = stCenterX
+        seeThrough.centerY = stCenterY
+        seeThrough.radiusPx = Math.hypot((_stEdge.x * 0.5 + 0.5) * bufferW - stCenterX, (_stEdge.y * 0.5 + 0.5) * bufferH - stCenterY)
+        seeThrough.active =
+            seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits)
+
         setSmoothedCircleCenter(smoothedCircleCenter)
     })
 

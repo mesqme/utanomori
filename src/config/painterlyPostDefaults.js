@@ -1,27 +1,16 @@
 export const painterlyPostDebugModes = Object.freeze({
     Final: 0,
     Original: 1,
-    Displaced: 2,
-    Tensor: 3,
-    Kuwahara: 4,
-    'Kuwahara + Original Edges': 5,
+    Kuwahara: 2,
 })
 
 export const painterlyPostDefaults = Object.freeze({
     enabled: false,
     debugMode: painterlyPostDebugModes.Final,
     renderScale: 0.5,
-    largeNoiseScale: 6,
-    largeNoiseStrength: 1,
-    fineNoiseScale: 120,
-    fineNoiseStrength: 0.35,
     noiseSeed: 0,
     radius: 4,
-    anisotropy: 1,
-    eccentricity: 1,
     filterStrength: 1,
-    edgeRestoreStrength: 1,
-    edgeRestoreThreshold: 0,
     sensorNoiseEnabled: true,
     luminanceNoise: 0.012,
     chromaNoise: 0.004,

@@ -4,8 +4,10 @@ import { Pass } from 'postprocessing'
 import fullscreenVertexShader from '../shaders/postprocessing/fullscreen.vert'
 import sharpenFragmentShader from '../shaders/postprocessing/sharpen.frag'
 
+// Final pass of the painterly pipeline: an optional cheap sharpen, then the film
+// grain applied last so nothing (kuwahara, bloom, AA) filters the grain afterwards.
 export default class SharpenPass extends Pass {
-    constructor(strength = 0.35) {
+    constructor(settings) {
         super('PainterlySharpenPass')
         this.material = new THREE.ShaderMaterial({
             vertexShader: fullscreenVertexShader,
@@ -13,8 +15,14 @@ export default class SharpenPass extends Pass {
             uniforms: {
                 inputBuffer: { value: null },
                 texelSize: { value: new THREE.Vector2(1, 1) },
-                enabled: { value: 1 },
-                strength: { value: strength },
+                resolution: { value: new THREE.Vector2(1, 1) },
+                enabled: { value: settings.sharpenEnabled ? 1 : 0 },
+                strength: { value: settings.sharpenStrength },
+                sensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
+                luminanceNoise: { value: settings.luminanceNoise },
+                chromaNoise: { value: settings.chromaNoise },
+                sensorNoiseScale: { value: settings.sensorNoiseScale },
+                noiseSeed: { value: settings.noiseSeed },
             },
             depthTest: false,
             depthWrite: false,
@@ -24,9 +32,15 @@ export default class SharpenPass extends Pass {
         this.fullscreenMaterial = this.material
     }
 
-    update(enabled, strength) {
-        this.material.uniforms.enabled.value = enabled ? 1 : 0
-        this.material.uniforms.strength.value = strength
+    update(settings) {
+        const u = this.material.uniforms
+        u.enabled.value = settings.sharpenEnabled ? 1 : 0
+        u.strength.value = settings.sharpenStrength
+        u.sensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
+        u.luminanceNoise.value = settings.luminanceNoise
+        u.chromaNoise.value = settings.chromaNoise
+        u.sensorNoiseScale.value = settings.sensorNoiseScale
+        u.noiseSeed.value = settings.noiseSeed
     }
 
     render(renderer, inputBuffer, outputBuffer) {
@@ -36,7 +50,10 @@ export default class SharpenPass extends Pass {
     }
 
     setSize(width, height) {
-        this.material.uniforms.texelSize.value.set(1 / Math.max(width, 1), 1 / Math.max(height, 1))
+        const safeWidth = Math.max(width, 1)
+        const safeHeight = Math.max(height, 1)
+        this.material.uniforms.texelSize.value.set(1 / safeWidth, 1 / safeHeight)
+        this.material.uniforms.resolution.value.set(safeWidth, safeHeight)
     }
 
     dispose() {

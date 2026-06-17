@@ -117,6 +117,11 @@ vec3 hemiLight(vec3 normal, vec3 groundColour, vec3 skyColour) {
   return mix(groundColour, skyColour, 0.5 * normal.y + 0.5);
 }
 
+float samplePainteryBrush(vec2 worldXZ) {
+  vec2 painteryUv = mix(worldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+  float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
+  return mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+}
 
 void main() {
   float grassX = vGrassData.x;
@@ -204,9 +209,7 @@ void main() {
   // Paintery edge — screen-space brush texture as the dissolve threshold (coherent
   // across blades) with a gentle world drift. Matches the ground's portal edge.
   if (uFadeMode == 2 && borderFade > 0.0) {
-      vec2 painteryUv = mix(vWorldPosition.xz * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
-      float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
-      painteryBrush = mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+      float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
       color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
       if (borderFade > painteryBrush) discard;
   }

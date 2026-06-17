@@ -56,7 +56,8 @@ function ControlKey({ controlName, children, className = '' }) {
 
 export default function ControlsIcons() {
     const phase = usePhases((state) => state.phase)
-    if (phase !== PHASES.start) return null
+    const visible = phase === PHASES.start
+    if (!visible) return null
 
     return (
         <div className="controls-icons">

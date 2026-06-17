@@ -2,8 +2,6 @@ import * as THREE from 'three'
 import { Pass } from 'postprocessing'
 
 import fullscreenVertexShader from '../shaders/postprocessing/fullscreen.vert'
-import displacementFragmentShader from '../shaders/postprocessing/displacement.frag'
-import tensorFragmentShader from '../shaders/postprocessing/tensor.frag'
 import kuwaharaFragmentShader from '../shaders/postprocessing/kuwahara.frag'
 import compositeFragmentShader from '../shaders/postprocessing/composite.frag'
 
@@ -15,6 +13,12 @@ void main() {
     gl_FragColor = vec4(clamp(texture2D(inputBuffer, vUv).rgb, 0.0, 1.0), 1.0);
 }
 `
+
+const KUWAHARA_REFERENCE_PIXELS = 3840 * 2160
+
+function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value))
+}
 
 function createRenderTarget(name) {
     const target = new THREE.WebGLRenderTarget(1, 1, {
@@ -57,56 +61,32 @@ function createKuwaharaMaterial(radius, uniforms) {
     return material
 }
 
+// Painterly look: a single generalized-Kuwahara abstraction pass, optionally run at
+// a reduced render scale, composited back over the original by filterStrength. The
+// film grain now lives in the final SharpenPass so nothing filters it afterwards.
 export default class PainterlyEdgePass extends Pass {
     constructor(settings) {
         super('PainterlyEdgePass')
 
         this.renderScale = settings.renderScale
+        this.baseRadius = settings.radius
+        this.effectiveRadius = settings.radius
         this.fullResolution = new THREE.Vector2(1, 1)
         this.scaledResolution = new THREE.Vector2(1, 1)
         this.scaledTexelSize = new THREE.Vector2(1, 1)
 
-        this.displacedTarget = createRenderTarget('Painterly.Displaced')
-        this.tensorTarget = createRenderTarget('Painterly.Tensor')
         this.kuwaharaTarget = createRenderTarget('Painterly.Kuwahara')
 
-        this.displacementMaterial = createMaterial(displacementFragmentShader, {
-            inputBuffer: { value: null },
-            resolution: { value: this.fullResolution },
-            largeNoiseScale: { value: settings.largeNoiseScale },
-            largeNoiseStrength: { value: settings.largeNoiseStrength },
-            fineNoiseScale: { value: settings.fineNoiseScale },
-            fineNoiseStrength: { value: settings.fineNoiseStrength },
-            noiseSeed: { value: settings.noiseSeed },
-        })
-        this.tensorMaterial = createMaterial(tensorFragmentShader, {
-            inputBuffer: { value: this.displacedTarget.texture },
+        this.kuwaharaMaterial = createKuwaharaMaterial(this.effectiveRadius, {
+            colorBuffer: { value: null },
             texelSize: { value: this.scaledTexelSize },
-        })
-        this.kuwaharaMaterial = createKuwaharaMaterial(settings.radius, {
-            tensorBuffer: { value: this.tensorTarget.texture },
-            colorBuffer: { value: this.displacedTarget.texture },
-            texelSize: { value: this.scaledTexelSize },
-            radius: { value: settings.radius },
-            anisotropyStrength: { value: settings.anisotropy },
-            eccentricity: { value: settings.eccentricity },
+            radius: { value: this.effectiveRadius },
         })
         this.compositeMaterial = createMaterial(compositeFragmentShader, {
             originalBuffer: { value: null },
-            displacedBuffer: { value: this.displacedTarget.texture },
-            tensorBuffer: { value: this.tensorTarget.texture },
             kuwaharaBuffer: { value: this.kuwaharaTarget.texture },
             filterStrength: { value: settings.filterStrength },
-            edgeRestoreStrength: { value: settings.edgeRestoreStrength },
-            edgeRestoreThreshold: { value: settings.edgeRestoreThreshold },
             debugMode: { value: settings.debugMode },
-            sensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
-            luminanceNoise: { value: settings.luminanceNoise },
-            chromaNoise: { value: settings.chromaNoise },
-            sensorNoiseScale: { value: settings.sensorNoiseScale },
-            resolution: { value: this.fullResolution },
-            texelSize: { value: new THREE.Vector2(1, 1) },
-            noiseSeed: { value: settings.noiseSeed },
         })
         this.copyMaterial = createMaterial(copyFragmentShader, {
             inputBuffer: { value: null },
@@ -115,41 +95,39 @@ export default class PainterlyEdgePass extends Pass {
         this.fullscreenMaterial = this.compositeMaterial
     }
 
+    getEffectiveRadius(baseRadius = this.baseRadius) {
+        if (this.fullResolution.x <= 1 && this.fullResolution.y <= 1) {
+            return Math.round(clamp(baseRadius, 1, 24))
+        }
+
+        const pixelScale = (this.fullResolution.x * this.fullResolution.y) / KUWAHARA_REFERENCE_PIXELS
+        return Math.round(clamp(baseRadius * pixelScale, 1, 24))
+    }
+
+    setKuwaharaRadius(radius) {
+        const radiusBucket = getRadiusBucket(radius)
+        if (this.kuwaharaMaterial.userData.maxRadius !== radiusBucket) {
+            const previousMaterial = this.kuwaharaMaterial
+            this.kuwaharaMaterial = createKuwaharaMaterial(radius, previousMaterial.uniforms)
+            previousMaterial.dispose()
+        }
+        this.effectiveRadius = radius
+        this.kuwaharaMaterial.uniforms.radius.value = radius
+    }
+
     update(settings) {
+        this.baseRadius = settings.radius
+
         if (this.renderScale !== settings.renderScale) {
             this.renderScale = settings.renderScale
             this.setSize(this.fullResolution.x, this.fullResolution.y)
         }
 
-        const displacement = this.displacementMaterial.uniforms
-        displacement.largeNoiseScale.value = settings.largeNoiseScale
-        displacement.largeNoiseStrength.value = settings.largeNoiseStrength
-        displacement.fineNoiseScale.value = settings.fineNoiseScale
-        displacement.fineNoiseStrength.value = settings.fineNoiseStrength
-        displacement.noiseSeed.value = settings.noiseSeed
-
-        const radiusBucket = getRadiusBucket(settings.radius)
-        if (this.kuwaharaMaterial.userData.maxRadius !== radiusBucket) {
-            const previousMaterial = this.kuwaharaMaterial
-            this.kuwaharaMaterial = createKuwaharaMaterial(settings.radius, previousMaterial.uniforms)
-            previousMaterial.dispose()
-        }
-
-        const kuwahara = this.kuwaharaMaterial.uniforms
-        kuwahara.radius.value = settings.radius
-        kuwahara.anisotropyStrength.value = settings.anisotropy
-        kuwahara.eccentricity.value = settings.eccentricity
+        this.setKuwaharaRadius(this.getEffectiveRadius(settings.radius))
 
         const composite = this.compositeMaterial.uniforms
         composite.filterStrength.value = settings.filterStrength
-        composite.edgeRestoreStrength.value = settings.edgeRestoreStrength
-        composite.edgeRestoreThreshold.value = settings.edgeRestoreThreshold
         composite.debugMode.value = settings.debugMode
-        composite.sensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
-        composite.luminanceNoise.value = settings.luminanceNoise
-        composite.chromaNoise.value = settings.chromaNoise
-        composite.sensorNoiseScale.value = settings.sensorNoiseScale
-        composite.noiseSeed.value = settings.noiseSeed
     }
 
     renderMaterial(renderer, material, target) {
@@ -170,34 +148,11 @@ export default class PainterlyEdgePass extends Pass {
             return
         }
 
-        this.displacementMaterial.uniforms.inputBuffer.value = inputBuffer.texture
         this.compositeMaterial.uniforms.originalBuffer.value = inputBuffer.texture
-
-        const displacement = this.displacementMaterial.uniforms
-        const displacementEnabled =
-            displacement.largeNoiseStrength.value !== 0 || displacement.fineNoiseStrength.value !== 0
-        const displacedTexture = displacementEnabled ? this.displacedTarget.texture : inputBuffer.texture
-
-        if (displacementEnabled) {
-            this.renderMaterial(renderer, this.displacementMaterial, this.displacedTarget)
-        }
-        if (debugMode === 2) {
-            this.renderCopy(renderer, displacedTexture, outputBuffer)
-            return
-        }
-
-        this.tensorMaterial.uniforms.inputBuffer.value = displacedTexture
-        this.kuwaharaMaterial.uniforms.colorBuffer.value = displacedTexture
-        this.compositeMaterial.uniforms.displacedBuffer.value = displacedTexture
-
-        this.renderMaterial(renderer, this.tensorMaterial, this.tensorTarget)
-        if (debugMode === 3) {
-            this.renderCopy(renderer, this.tensorTarget.texture, outputBuffer)
-            return
-        }
+        this.kuwaharaMaterial.uniforms.colorBuffer.value = inputBuffer.texture
 
         this.renderMaterial(renderer, this.kuwaharaMaterial, this.kuwaharaTarget)
-        if (debugMode === 4) {
+        if (debugMode === 2) {
             this.renderCopy(renderer, this.kuwaharaTarget.texture, outputBuffer)
             return
         }
@@ -212,20 +167,14 @@ export default class PainterlyEdgePass extends Pass {
         const scaledHeight = Math.max(1, Math.round(safeHeight * this.renderScale))
 
         this.fullResolution.set(safeWidth, safeHeight)
-        this.compositeMaterial.uniforms.texelSize.value.set(1 / safeWidth, 1 / safeHeight)
         this.scaledResolution.set(scaledWidth, scaledHeight)
         this.scaledTexelSize.set(1 / scaledWidth, 1 / scaledHeight)
-        this.displacedTarget.setSize(scaledWidth, scaledHeight)
-        this.tensorTarget.setSize(scaledWidth, scaledHeight)
         this.kuwaharaTarget.setSize(scaledWidth, scaledHeight)
+        this.setKuwaharaRadius(this.getEffectiveRadius())
     }
 
     dispose() {
-        this.displacedTarget.dispose()
-        this.tensorTarget.dispose()
         this.kuwaharaTarget.dispose()
-        this.displacementMaterial.dispose()
-        this.tensorMaterial.dispose()
         this.kuwaharaMaterial.dispose()
         this.compositeMaterial.dispose()
         this.copyMaterial.dispose()

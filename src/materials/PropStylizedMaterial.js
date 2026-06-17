@@ -39,6 +39,13 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uCircleRadiusFactor: { value: 0.07 },
             uPropChunkSize: { value: 9 },
             uPropFadeOffset: { value: 2.5 },
+            uSeeThroughActive: { value: 0 },
+            uSeeThroughCenter: { value: new THREE.Vector2() },
+            uSeeThroughRadius: { value: 120 },
+            uSeeThroughDepth: { value: 20 },
+            uSeeThroughInner: { value: 0.35 },
+            uSeeThroughCoreOpacity: { value: 0.35 },
+            uSeeThroughDepthBias: { value: 0.5 },
         },
         toneMapped,
     })
@@ -69,5 +76,15 @@ export function updatePropStylizedMaterial(material, options) {
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale
         u.uPainteryBleed.value = options.paintery.bleed
+    }
+    if (options.seeThrough) {
+        const st = options.seeThrough
+        u.uSeeThroughActive.value = st.active ? 1 : 0
+        u.uSeeThroughCenter.value.set(st.centerX, st.centerY)
+        u.uSeeThroughRadius.value = st.radiusPx
+        u.uSeeThroughDepth.value = st.cameraDist
+        u.uSeeThroughInner.value = st.inner
+        u.uSeeThroughCoreOpacity.value = st.coreOpacity
+        u.uSeeThroughDepthBias.value = st.depthBias
     }
 }

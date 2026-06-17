@@ -14,6 +14,13 @@ uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
+uniform float uSeeThroughActive;
+uniform vec2 uSeeThroughCenter;
+uniform float uSeeThroughRadius;
+uniform float uSeeThroughDepth;
+uniform float uSeeThroughInner;
+uniform float uSeeThroughCoreOpacity;
+uniform float uSeeThroughDepthBias;
 
 #include <common>
 #include <color_pars_fragment>
@@ -22,6 +29,7 @@ varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying float vPropMask;
 varying vec2 vWorldXZ;
+varying vec3 vWorldPos;
 
 // Triplanar painterly sampling — identical to the character material.
 float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
@@ -48,7 +56,22 @@ float bayerDither(vec2 fragCoord, float pixelSize) {
     return m[index] / 16.0;
 }
 
+float samplePainteryBrush(vec2 worldXZ) {
+    vec2 painteryUv = mix(worldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+    float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
+    return mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+}
+
 void main() {
+    float seeThroughFade = 0.0;
+    if (uSeeThroughActive > 0.5) {
+        float camDist = length(vWorldPos - cameraPosition);
+        if (camDist < uSeeThroughDepth - uSeeThroughDepthBias) {
+            float sd = length(gl_FragCoord.xy - uSeeThroughCenter) / max(uSeeThroughRadius, 1.0);
+            seeThroughFade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
+        }
+    }
+
     // Per-instance batched colour is the base; painterly varies brightness on top.
     vec3 finalColor = uBaseColor;
     #if defined(USE_BATCHING_COLOR) || defined(USE_COLOR)
@@ -64,15 +87,20 @@ void main() {
         finalColor = mix(finalColor, uPainterlyColor, tintMask);
     }
 
+    float seeThroughCut = seeThroughFade * (1.0 - clamp(uSeeThroughCoreOpacity, 0.0, 1.0));
+    if (seeThroughCut > 0.0) {
+        float seeThroughBrush = samplePainteryBrush(vWorldXZ);
+        finalColor = mix(finalColor, uBackgroundColor, smoothstep(seeThroughBrush - uPainteryBleed, seeThroughBrush, seeThroughCut));
+        if (seeThroughCut > seeThroughBrush) discard;
+    }
+
     // Reveal-circle fade — colour, dithered, or paintery, matching the world.
     float fade = 1.0 - vPropMask;
     if (uPropFadeMode == 1) {
         if (vPropMask <= 0.001) discard;
         finalColor = mix(uBackgroundColor, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
-        vec2 painteryUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
-        float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
-        painteryBrush = mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+        float painteryBrush = samplePainteryBrush(vWorldXZ);
         finalColor = mix(finalColor, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));
         if (fade > painteryBrush) discard;
     } else {
