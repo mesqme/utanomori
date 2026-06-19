@@ -6,22 +6,23 @@ import { useEffect, useMemo, useRef } from 'react'
 import useStore from '../stores/useStore.jsx'
 import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials/BackgroundMaterial.js'
 import { getRefScale } from './utils/screenScale.js'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import watercolorBasicUrl from '../assets/textures/watercolorBasicLarge.png'
 
 export default function BackgroundSphere({ color }) {
     const meshRef = useRef()
+    const rotationAngle = useRef(0)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
-    const painteryTexture = useTexture(paintaryAlpha01Url)
+    const watercolorTexture = useTexture(watercolorBasicUrl)
     useMemo(() => {
-        painteryTexture.wrapS = THREE.RepeatWrapping
-        painteryTexture.wrapT = THREE.RepeatWrapping
-        painteryTexture.colorSpace = THREE.NoColorSpace
-        painteryTexture.needsUpdate = true
-    }, [painteryTexture])
+        watercolorTexture.wrapS = THREE.RepeatWrapping
+        watercolorTexture.wrapT = THREE.RepeatWrapping
+        watercolorTexture.colorSpace = THREE.NoColorSpace
+        watercolorTexture.needsUpdate = true
+    }, [watercolorTexture])
 
     const geometry = useMemo(() => new THREE.SphereGeometry(50, 32, 24), [])
-    const material = useMemo(() => createBackgroundMaterial(painteryTexture), [painteryTexture])
+    const material = useMemo(() => createBackgroundMaterial(watercolorTexture), [watercolorTexture])
     const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 'red', side: THREE.BackSide, wireframe: true }), [])
 
     useEffect(() => {
@@ -32,14 +33,20 @@ export default function BackgroundSphere({ color }) {
         }
     }, [geometry, material, wireframeMaterial])
 
-    useFrame((rootState) => {
+    useFrame((rootState, delta) => {
         const store = useStore.getState()
-        meshRef.current.position.copy(store.ballPosition)
+        const params = store.backgroundParameters
+        // Follow the same smoothed point as the terrain centre and camera target, so the
+        // sky stays locked to the ground instead of snapping to the raw character position.
+        meshRef.current.position.copy(store.smoothedCircleCenter)
+        // Optional slow spin around Y carries the stars across the sky.
+        if (params.rotationEnabled) rotationAngle.current += (params.rotationSpeed ?? 0) * delta
+        meshRef.current.rotation.y = rotationAngle.current
         updateBackgroundMaterial(material, {
             refScale: getRefScale(rootState),
             time: rootState.clock.elapsedTime,
             color,
-            ...store.backgroundParameters,
+            ...params,
         })
     })
 

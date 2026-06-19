@@ -184,10 +184,19 @@ const LEVA_SECTION_PATHS = Object.freeze({
         pixelSize: 'pixelSize',
     },
     Background: {
-        mode: 'mode',
+        colorHorizon: 'colorHorizon',
+        gradientHeight: 'gradientHeight',
+        gradientPower: 'gradientPower',
+        textureEnabled: 'textureEnabled',
+        colorMode: 'colorMode',
         textureSize: 'textureSize',
-        textureContrast: 'textureContrast',
         textureLayer2: 'textureLayer2',
+        textureContrast: 'textureContrast',
+        colorIntensity: 'colorIntensity',
+        colorMixColor: 'colorMixColor',
+        colorMixIntensity: 'colorMixIntensity',
+        starsEnabled: 'starsEnabled',
+        starStyle: 'starStyle',
         starCellSize: 'starCellSize',
         starDensity: 'starDensity',
         starSize: 'starSize',
@@ -195,6 +204,14 @@ const LEVA_SECTION_PATHS = Object.freeze({
         starTwinkle: 'starTwinkleSpeed',
         starRays: 'starRays',
         starColor: 'starColor',
+        starsFadeStart: 'starsFadeStart',
+        starsFadeWidth: 'starsFadeWidth',
+        constellations: 'constellationsEnabled',
+        constellationDensity: 'constellationDensity',
+        constellationBrightness: 'constellationBrightness',
+        constellationWidth: 'constellationWidth',
+        skyRotation: 'rotationEnabled',
+        skyRotationSpeed: 'rotationSpeed',
     },
     'Painterly Postprocess': {
         enabled: 'enabled',
@@ -1301,10 +1318,32 @@ export default function Controls() {
     })
 
     useControls('Background', {
-        mode: {
-            value: backgroundParameters.mode,
-            options: ['Color', 'Texture', 'NightSky'],
-            onChange: setParam('backgroundParameters', 'mode'),
+        colorHorizon: {
+            value: backgroundParameters.colorHorizon,
+            onChange: setParam('backgroundParameters', 'colorHorizon'),
+        },
+        gradientHeight: {
+            value: backgroundParameters.gradientHeight,
+            min: -1,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'gradientHeight'),
+        },
+        gradientPower: {
+            value: backgroundParameters.gradientPower,
+            min: 0.1,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('backgroundParameters', 'gradientPower'),
+        },
+        textureEnabled: {
+            value: backgroundParameters.textureEnabled,
+            onChange: setParam('backgroundParameters', 'textureEnabled'),
+        },
+        colorMode: {
+            value: backgroundParameters.colorMode,
+            options: ['Intensity', 'Color Mix', 'Both'],
+            onChange: setParam('backgroundParameters', 'colorMode'),
         },
         textureSize: {
             value: backgroundParameters.textureSize,
@@ -1313,19 +1352,46 @@ export default function Controls() {
             step: 1,
             onChange: setParam('backgroundParameters', 'textureSize'),
         },
-        textureContrast: {
-            value: backgroundParameters.textureContrast,
-            min: 0,
-            max: 2,
-            step: 0.01,
-            onChange: setParam('backgroundParameters', 'textureContrast'),
-        },
         textureLayer2: {
             value: backgroundParameters.textureLayer2,
             min: 0,
             max: 6,
             step: 0.05,
             onChange: setParam('backgroundParameters', 'textureLayer2'),
+        },
+        textureContrast: {
+            value: backgroundParameters.textureContrast,
+            min: 0,
+            max: 6,
+            step: 0.05,
+            onChange: setParam('backgroundParameters', 'textureContrast'),
+        },
+        colorIntensity: {
+            value: backgroundParameters.colorIntensity,
+            min: 0,
+            max: 4,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'colorIntensity'),
+        },
+        colorMixColor: {
+            value: backgroundParameters.colorMixColor,
+            onChange: setParam('backgroundParameters', 'colorMixColor'),
+        },
+        colorMixIntensity: {
+            value: backgroundParameters.colorMixIntensity,
+            min: 0,
+            max: 2,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'colorMixIntensity'),
+        },
+        starsEnabled: {
+            value: backgroundParameters.starsEnabled,
+            onChange: setParam('backgroundParameters', 'starsEnabled'),
+        },
+        starStyle: {
+            value: backgroundParameters.starStyle,
+            options: ['Stylized', 'Natural'],
+            onChange: setParam('backgroundParameters', 'starStyle'),
         },
         starCellSize: {
             value: backgroundParameters.starCellSize,
@@ -1372,6 +1438,56 @@ export default function Controls() {
         starColor: {
             value: backgroundParameters.starColor,
             onChange: setParam('backgroundParameters', 'starColor'),
+        },
+        starsFadeStart: {
+            value: backgroundParameters.starsFadeStart,
+            min: -1,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'starsFadeStart'),
+        },
+        starsFadeWidth: {
+            value: backgroundParameters.starsFadeWidth,
+            min: 0.01,
+            max: 1.5,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'starsFadeWidth'),
+        },
+        constellations: {
+            value: backgroundParameters.constellationsEnabled,
+            onChange: setParam('backgroundParameters', 'constellationsEnabled'),
+        },
+        constellationDensity: {
+            value: backgroundParameters.constellationDensity,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'constellationDensity'),
+        },
+        constellationBrightness: {
+            value: backgroundParameters.constellationBrightness,
+            min: 0,
+            max: 3,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'constellationBrightness'),
+        },
+        constellationWidth: {
+            value: backgroundParameters.constellationWidth,
+            min: 0.005,
+            max: 0.2,
+            step: 0.005,
+            onChange: setParam('backgroundParameters', 'constellationWidth'),
+        },
+        skyRotation: {
+            value: backgroundParameters.rotationEnabled,
+            onChange: setParam('backgroundParameters', 'rotationEnabled'),
+        },
+        skyRotationSpeed: {
+            value: backgroundParameters.rotationSpeed,
+            min: -0.1,
+            max: 0.1,
+            step: 0.001,
+            onChange: setParam('backgroundParameters', 'rotationSpeed'),
         },
     })
 
