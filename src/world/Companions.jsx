@@ -6,7 +6,9 @@ import * as THREE from 'three'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
+import useSongGame from '../stores/useSongGame.jsx'
 import CompanionCreature from './CompanionCreature.jsx'
+import CompanionNotes from './CompanionNotes.jsx'
 import TargetIndicator from './TargetIndicator.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
@@ -16,6 +18,7 @@ import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER 
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { startAmbient, stopAmbient, resumeAudio, playMelody } from '../game/songAudio.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const INTERACT_RADIUS = 2.3
@@ -23,6 +26,9 @@ const ABANDON_RADIUS = 30
 const FOLLOW_SPACING = 1.5
 const FOLLOW_DAMP = 10
 const HEADING_DAMP = 9
+const CELEBRATE_DURATION = 2.5 // happy hop before joining the party
+const FLEE_DURATION = 1.4 // running away before relocating after a failed song
+const FLEE_SPEED = 9
 
 function dampAngle(current, target, lambda, delta) {
     const difference = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -47,22 +53,62 @@ function CompanionShadow({ geometry, material, radius }) {
 function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMaterial }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
+    const fleeRef = useRef(0)
+    const inRange = useCompanions((state) => state.targetInRange)
+    const stage = useSongGame((state) => state.stage)
 
     useEffect(() => () => clearTrampler(TRAMPLE_SLOT_TARGET), [])
 
-    useFrame((state) => {
-        if (!groupRef.current) return
-        const groundY = getGroundY(target.x, target.z)
-        groupRef.current.position.set(target.x, groundY, target.z)
+    // Won the song → a happy hop, then join the party (and hum the tune once).
+    useEffect(() => {
+        if (stage !== 'success') return
+        const timer = setTimeout(() => {
+            playMelody(target.song)
+            useCompanions.getState().collectTarget()
+            useSongGame.getState().reset()
+        }, CELEBRATE_DURATION * 1000)
+        return () => clearTimeout(timer)
+    }, [stage, target])
 
+    // Failed the song → flee outward, then relocate so it must be found again.
+    useEffect(() => {
+        if (stage !== 'fail') return
+        const timer = setTimeout(() => {
+            const player = useStore.getState().ballPosition
+            const spawn = findHiddenSpawn(player)
+            useCompanions.getState().relocateTarget(spawn.x, spawn.z)
+            useSongGame.getState().reset()
+        }, FLEE_DURATION * 1000)
+        return () => clearTimeout(timer)
+    }, [stage])
+
+    useFrame((state, delta) => {
+        const group = groupRef.current
+        if (!group) return
         const player = useStore.getState().ballPosition
-        groupRef.current.rotation.y = Math.atan2(player.x - target.x, player.z - target.z)
 
-        if (creatureRef.current) {
-            creatureRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 2.5)) * 0.12
+        if (stage === 'fail') {
+            // Run directly away from the player.
+            fleeRef.current += Math.min(delta, 0.1)
+            const ax = target.x - player.x
+            const az = target.z - player.z
+            const len = Math.hypot(ax, az) || 1
+            const dist = fleeRef.current * FLEE_SPEED
+            const fx = target.x + (ax / len) * dist
+            const fz = target.z + (az / len) * dist
+            group.position.set(fx, getGroundY(fx, fz), fz)
+        } else {
+            fleeRef.current = 0
+            const groundY = getGroundY(target.x, target.z)
+            group.position.set(target.x, groundY, target.z)
+            group.rotation.y = Math.atan2(player.x - target.x, player.z - target.z)
+            setTrampler(TRAMPLE_SLOT_TARGET, target.x, groundY, target.z)
         }
 
-        setTrampler(TRAMPLE_SLOT_TARGET, target.x, groundY, target.z)
+        if (creatureRef.current) {
+            const t = state.clock.elapsedTime
+            creatureRef.current.position.y = stage === 'success' ? Math.abs(Math.sin(t * 9)) * 0.5 : Math.abs(Math.sin(t * 2.5)) * 0.12
+        }
     })
 
     return (
@@ -71,6 +117,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             <group ref={creatureRef}>
                 <CompanionCreature definition={target} material={creatureMaterial} />
             </group>
+            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} inRange={inRange} />
         </group>
     )
 }
@@ -149,6 +196,7 @@ export default function Companions() {
     const target = useCompanions((state) => state.target)
     const found = useCompanions((state) => state.found)
     const [subscribeKeys] = useKeyboardControls()
+    const ambientOnRef = useRef(false)
 
     const painterlyTexture = useTexture(paintaryAlpha01Url)
     useMemo(() => {
@@ -167,6 +215,7 @@ export default function Companions() {
 
     useEffect(() => {
         return () => {
+            stopAmbient()
             shadowGeometry.dispose()
             shadowMaterial.dispose()
             creatureMaterial.dispose()
@@ -183,7 +232,15 @@ export default function Companions() {
         const unsubscribeInteract = subscribeKeys(
             (state) => state.interact,
             (pressed) => {
-                if (pressed && usePhases.getState().phase === PHASES.start) useCompanions.getState().interact()
+                if (!pressed) return
+                if (usePhases.getState().phase !== PHASES.start) return
+                if (useSongGame.getState().active) return
+                const { target: current, targetInRange } = useCompanions.getState()
+                if (current && targetInRange) {
+                    resumeAudio()
+                    stopAmbient()
+                    useSongGame.getState().begin(current)
+                }
             }
         )
         const unsubscribeReset = subscribeKeys(
@@ -222,9 +279,30 @@ export default function Companions() {
         })
         updateGroundShadowMaterial(shadowMaterial)
 
-        if (usePhases.getState().phase !== PHASES.start) return
+        if (usePhases.getState().phase !== PHASES.start) {
+            if (ambientOnRef.current) {
+                stopAmbient()
+                ambientOnRef.current = false
+            }
+            return
+        }
 
         const companions = useCompanions.getState()
+        const gameActive = useSongGame.getState().active
+
+        // Quiet ambient melody while you are near a singing character (pre-game).
+        const wantAmbient = !gameActive && !!companions.target && companions.targetInRange
+        if (wantAmbient && !ambientOnRef.current) {
+            startAmbient(companions.target.song)
+            ambientOnRef.current = true
+        } else if (!wantAmbient && ambientOnRef.current) {
+            stopAmbient()
+            ambientOnRef.current = false
+        }
+
+        // While the song game runs, the target is pinned — skip spawn/abandon/range.
+        if (gameActive) return
+
         const player = store.ballPosition
 
         if (!companions.target) {

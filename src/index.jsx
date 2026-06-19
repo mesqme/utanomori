@@ -10,6 +10,7 @@ import ControlsIcons from './ui/ControlsIcons.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
 import GameDirector from './game/GameDirector.jsx'
 import Dialogue from './game/Dialogue.jsx'
+import SongGame from './game/SongGame.jsx'
 import Credits from './game/Credits.jsx'
 import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 
@@ -46,6 +47,7 @@ root.render(
             <Leva collapsed />
             <ControlsIcons />
             <InteractionPrompt />
+            <SongGame />
         </KeyboardControls>
         <GameDirector />
         <Loader />

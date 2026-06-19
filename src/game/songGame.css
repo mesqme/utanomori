@@ -1,0 +1,231 @@
+.song-game {
+    position: absolute;
+    inset: 0;
+    z-index: 110;
+    pointer-events: none; /* children re-enable where interactive */
+    font-family: inherit;
+    color: var(--sj-ui-primary);
+    user-select: none;
+}
+
+.song-round {
+    position: absolute;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 7px 16px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 20px;
+    background: var(--sj-ui-panel);
+    font-size: 14px;
+    letter-spacing: 0.14em;
+}
+
+/* "Are you ready?" prompt */
+.song-prompt {
+    position: absolute;
+    left: 50%;
+    bottom: 72px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 26px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 14px;
+    background: var(--sj-ui-panel);
+    pointer-events: auto;
+    animation: song-pop 0.18s ease-out;
+}
+
+.song-prompt-text {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: 0.04em;
+}
+
+.song-yes {
+    padding: 8px 28px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 10px;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-family: inherit;
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.12s;
+}
+
+.song-yes:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.song-yes:active {
+    background: var(--sj-ui-panel-active);
+    transform: scale(0.96);
+}
+
+/* Status banners (Listen / Nice / fail) */
+.song-banner {
+    position: absolute;
+    left: 50%;
+    bottom: 96px;
+    transform: translateX(-50%);
+    padding: 10px 22px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 12px;
+    background: var(--sj-ui-panel);
+    font-size: 18px;
+    letter-spacing: 0.08em;
+    animation: song-pop 0.18s ease-out;
+}
+
+.song-good {
+    border-color: #7be08a;
+    color: #d8ffdf;
+}
+
+.song-bad {
+    border-color: #e87b7b;
+    color: #ffd8d8;
+}
+
+/* The note wheel — 7 circular buttons around a centre */
+.song-wheel {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 300px;
+    height: 300px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    animation: song-fade 0.2s ease-out;
+}
+
+.song-note {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 50%;
+    color: #0d0a2a;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    pointer-events: auto;
+    box-shadow: 0 2px 12px rgba(9, 8, 34, 0.55);
+    transition: transform 0.12s, filter 0.12s;
+}
+
+.song-note:hover {
+    filter: brightness(1.12);
+}
+
+.song-note:active {
+    filter: brightness(0.92);
+}
+
+.song-wheel-center {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--sj-ui-ring-track);
+    border-radius: 50%;
+    background: var(--sj-ui-panel);
+    font-size: 18px;
+    letter-spacing: 0.08em;
+}
+
+/* Above-the-head placeholder notes (rendered through drei <Html> in CompanionNotes) */
+.song-note-bubble {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 50%;
+    color: #0d0a2a;
+    font-size: 16px;
+    font-weight: 700;
+    box-shadow: 0 2px 10px rgba(9, 8, 34, 0.5);
+    animation: song-note-rise 0.5s ease-out;
+}
+
+.song-ambient-notes {
+    display: flex;
+    gap: 6px;
+    font-size: 22px;
+    color: var(--sj-ui-primary);
+    text-shadow: 0 2px 8px rgba(9, 8, 34, 0.7);
+}
+
+.song-ambient-notes span {
+    animation: song-note-float 1.8s ease-in-out infinite;
+}
+
+.song-ambient-notes span:nth-child(2) {
+    animation-delay: 0.4s;
+}
+
+.song-ambient-notes span:nth-child(3) {
+    animation-delay: 0.9s;
+}
+
+@keyframes song-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes song-pop {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes song-note-rise {
+    from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.7);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes song-note-float {
+    0% {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    40% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+}
