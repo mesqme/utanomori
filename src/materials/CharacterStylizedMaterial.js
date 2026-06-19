@@ -15,7 +15,7 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
     const settings = getSettings(stylizedSettings)
     const fallbackColor = sourceMaterial?.color?.getStyle?.() ?? '#ffffff'
 
-    return new THREE.ShaderMaterial({
+    const material = new THREE.ShaderMaterial({
         name: `stylized_${sourceMaterial?.name || 'material'}`,
         vertexShader: characterVertexShader,
         fragmentShader: characterFragmentShader,
@@ -35,6 +35,8 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
         alphaTest: sourceMaterial?.alphaTest ?? 0,
         toneMapped: false,
     })
+
+    return material
 }
 
 export function updateCharacterStylizedMaterial(material, materialSettings, stylizedSettings, painterlyTexture) {

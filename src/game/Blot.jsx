@@ -66,6 +66,7 @@ export default function Blot({ as = 'div', variant = 'panel', className = '', st
               ? {
                     minWidth: `${ui.buttonWidth ?? 180}px`,
                     minHeight: `${ui.buttonHeight ?? 58}px`,
+                    '--blot-text-size': `${ui.textSize ?? 20}px`,
                 }
             : {}
 

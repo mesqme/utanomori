@@ -40,6 +40,7 @@ export default function Credits() {
                     <Blot as="button" variant="button" className="credits-button" onClick={() => setPhase(PHASES.start)}>
                         Continue
                     </Blot>
+                    <div className="credits-choice-title">{CREDITS_LINES[0]}</div>
                     <Blot as="button" variant="button" className="credits-button" onClick={() => setPhase(PHASES.warmup)}>
                         Restart
                     </Blot>

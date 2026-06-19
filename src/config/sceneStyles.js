@@ -169,6 +169,17 @@ const complexStyle = {
     painterlyPostParameters: {
         ...painterlyPostDefaults,
     },
+    // Stylized silhouette edge on the props (trees / rocks / mushrooms).
+    edgeParameters: {
+        enabled: true,
+        mode: 'Dither', // Dither (opaque, stippled) | Alpha (transparent blend)
+        color: '#2a2342',
+        tint: 0.63,
+        width: 6.0,
+        bias: 0.4,
+        softness: 0.23,
+        noiseScale: 0.44,
+    },
     characterParameters: {
         modelScale: 0.51,
         modelYOffset: 0.59,
@@ -233,8 +244,10 @@ const complexPainteryStyle = {
         enabled: true,
         worldRadius: 3.8,
         inner: 0.0,
-        coreOpacity: 0.0,
         depthBias: 0.0,
+        opacityIntensity: 0.7,
+        textureContrast: 1.0,
+        textureScale: 250,
     },
 }
 
@@ -424,10 +437,12 @@ const painteryStyle = {
     },
     seeThroughParameters: {
         enabled: true,
-        worldRadius: 3.5,
-        inner: 0.0,
-        coreOpacity: 0.0,
+        worldRadius: 1.8,
+        inner: 0.53,
         depthBias: 0.0,
+        opacityIntensity: 0.7,
+        textureContrast: 1.0,
+        textureScale: 250,
     },
 }
 

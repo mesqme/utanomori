@@ -1,0 +1,46 @@
+// Option A — soft brushy silhouette dissolve. The contour (where the surface turns
+// away from the camera) dissolves into the background through the brush noise, for a
+// thin painterly oil/pastel edge. Shared by the character and prop materials.
+uniform int uEdgeEnabled;
+uniform int uEdgeMode; // 0 = alpha blend, 1 = dither (alpha test)
+uniform vec3 uEdgeColor;
+uniform float uEdgeTint; // tint toward uEdgeColor near the contour
+uniform float uEdgeWidth; // extra rim extent (in N·V units, ×0.02)
+uniform float uEdgeBias; // base rim extent (N·V threshold)
+uniform float uEdgeSoftness; // alpha-mode dissolve softness
+uniform float uEdgeNoiseScale; // brush sampling scale on the rim
+
+#define EDGE_WIDTH_TO_NDV 0.02
+
+// 1 at the silhouette (surface edge-on to the camera), 0 in the interior. A pure N·V
+// band — no screen-space derivative — so it's resolution-independent AND temporally
+// stable: a tiny camera drift changes N·V smoothly instead of making fwidth jump, so
+// the dither edge no longer crawls while the camera lerp settles.
+float silhouetteRim(vec3 worldNormal, vec3 worldPosition) {
+    vec3 viewDir = normalize(cameraPosition - worldPosition);
+    float ndv = abs(dot(normalize(worldNormal), viewDir));
+    float w = uEdgeBias + uEdgeWidth * EDGE_WIDTH_TO_NDV;
+    return clamp(1.0 - smoothstep(0.0, w, ndv), 0.0, 1.0);
+}
+
+// Tints finalColor near the contour and returns the fragment alpha. In dither mode it
+// discards stippled fragments (opaque-safe). `brush` is the painterly noise [0..1].
+float paintedEdgeAlpha(inout vec3 finalColor, vec3 worldNormal, vec3 worldPosition, float brush) {
+    if (uEdgeEnabled == 0) return 1.0;
+
+    float rim = silhouetteRim(worldNormal, worldPosition);
+    if (rim <= 0.0) return 1.0;
+
+    // Darken/tint the contour before it dissolves.
+    finalColor = mix(finalColor, uEdgeColor, smoothstep(0.0, 1.0, rim) * uEdgeTint);
+
+    if (uEdgeMode == 1) {
+        // Dither: the brush is the threshold → a stippled, opaque-safe dissolve that
+        // lets the background show through the holes.
+        if (rim > brush) discard;
+        return 1.0;
+    }
+
+    // Alpha: brushy fade to transparent where the rim crosses the local brush value.
+    return 1.0 - smoothstep(brush - uEdgeSoftness, brush + uEdgeSoftness, rim);
+}

@@ -11,7 +11,7 @@ import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 // stylization + reveal fade as the rest of the world. Shared across all creatures;
 // per-creature variation (body colour, blink phase) rides on geometry attributes.
 export function createCompanionEyeMaterial(painterlyTexture) {
-    return new THREE.ShaderMaterial({
+    const material = new THREE.ShaderMaterial({
         name: 'companion_eye',
         vertexShader: companionVertexShader,
         fragmentShader: companionFragmentShader,
@@ -45,6 +45,8 @@ export function createCompanionEyeMaterial(painterlyTexture) {
         },
         toneMapped: false,
     })
+
+    return material
 }
 
 export function updateCompanionEyeMaterial(material, options) {

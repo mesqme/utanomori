@@ -35,19 +35,36 @@
     margin-bottom: 18px;
 }
 
+/* Choice screen: Continue / Restart as large blots flanking the centred title. */
 .credits-choice {
     position: absolute;
-    left: 50%;
-    bottom: 12%;
-    transform: translateX(-50%);
+    inset: 0;
     display: flex;
-    gap: 16px;
-    pointer-events: auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 0 9%;
+    pointer-events: none;
     animation: credits-fade-in 0.4s ease-out;
 }
 
+.credits-choice > * {
+    pointer-events: auto;
+}
+
+.credits-choice-title {
+    flex: 1;
+    text-align: center;
+    color: var(--sj-ui-primary);
+    font-size: 44px;
+    letter-spacing: 0.18em;
+    text-shadow: 0 2px 12px rgba(9, 8, 34, 0.85);
+    pointer-events: none;
+}
+
 .credits-button {
-    font-size: 18px;
+    font-size: 20px;
 }
 
 @keyframes credits-roll {

@@ -12,6 +12,7 @@ varying vec3 vObjectNormal;
 varying float vPropMask;
 varying vec2 vWorldXZ;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
 
 void main() {
     #include <color_vertex>
@@ -30,6 +31,12 @@ void main() {
     vec4 worldPosition = modelMatrix * batchedPosition;
     vWorldXZ = worldPosition.xz;
     vWorldPos = worldPosition.xyz;
+
+    vec3 batchedNormal = normal;
+    #ifdef USE_BATCHING
+        batchedNormal = mat3(batchingMatrix) * normal;
+    #endif
+    vWorldNormal = normalize(mat3(modelMatrix) * batchedNormal);
     float distanceToCenter = length(worldPosition.xz - uCircleCenter.xz);
     float radius = uPropChunkSize * uCircleRadiusFactor;
     vPropMask = 1.0 - smoothstep(radius - uPropFadeOffset, radius, distanceToCenter);

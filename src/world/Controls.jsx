@@ -1,8 +1,10 @@
 import { useEffect, useRef } from 'react'
+import { useThree } from '@react-three/fiber'
 import { levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
-import { seeThrough } from './utils/seeThrough.js'
+import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
+import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
@@ -21,6 +23,8 @@ const SCENE_STYLE_SECTIONS = new Set([
     'painterlyPostParameters',
     'characterParameters',
     'characterMaterialParameters',
+    'edgeParameters',
+    'gameUiParameters',
 ])
 
 const sceneStyleOptions = Object.freeze({
@@ -207,6 +211,16 @@ const LEVA_SECTION_PATHS = Object.freeze({
         sharpen: 'sharpenEnabled',
         sharpenStrength: 'sharpenStrength',
     },
+    Edge: {
+        enabled: 'enabled',
+        mode: 'mode',
+        color: 'color',
+        tint: 'tint',
+        width: 'width',
+        bias: 'bias',
+        softness: 'softness',
+        noiseScale: 'noiseScale',
+    },
     Character: {
         modelScale: 'modelScale',
         modelYOffset: 'modelYOffset',
@@ -261,8 +275,10 @@ function addSeeThroughValues(values) {
     values['See-Through.enabled'] = seeThrough.enabled
     values['See-Through.worldRadius'] = seeThrough.worldRadius
     values['See-Through.inner'] = seeThrough.inner
-    values['See-Through.coreOpacity'] = seeThrough.coreOpacity
     values['See-Through.depthBias'] = seeThrough.depthBias
+    values['See-Through.opacityIntensity'] = seeThrough.opacityIntensity
+    values['See-Through.textureContrast'] = seeThrough.textureContrast
+    values['See-Through.textureScale'] = seeThrough.textureScale
 }
 
 export default function Controls() {
@@ -284,6 +300,8 @@ export default function Controls() {
     const cameraParameters = useStore((state) => state.cameraParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
+    const edgeParameters = useStore((state) => state.edgeParameters)
+    const setDpr = useThree((state) => state.setDpr)
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
@@ -330,6 +348,7 @@ export default function Controls() {
             characterParameters: { ...preset.characterParameters },
             characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
             ...(preset.gameUiParameters ? { gameUiParameters: { ...preset.gameUiParameters } } : {}),
+            ...(preset.edgeParameters ? { edgeParameters: { ...preset.edgeParameters } } : {}),
         })
 
         if (preset.seeThroughParameters) {
@@ -385,6 +404,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
         addLevaSectionValues(values, 'Background', backgroundParameters, LEVA_SECTION_PATHS.Background)
         addLevaSectionValues(values, 'Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
+        addLevaSectionValues(values, 'Edge', edgeParameters, LEVA_SECTION_PATHS.Edge)
         addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
         addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
 
@@ -425,6 +445,27 @@ export default function Controls() {
         }
     }, [gameUiParameters])
 
+    useEffect(() => {
+        updateEdgeUniforms(edgeParameters)
+    }, [edgeParameters])
+
+    // Apply the active style's see-through config to the live module + Leva display
+    // (on mount and whenever the preset changes).
+    useEffect(() => {
+        const preset = sceneStylePresets[sceneStylePreset]
+        const params = preset?.seeThroughParameters
+        if (!params) return
+        applySeeThroughParameters(params)
+        const values = {}
+        addSeeThroughValues(values)
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [sceneStylePreset])
+
     useControls('General', {
         style: {
             value: sceneStylePreset,
@@ -449,6 +490,15 @@ export default function Controls() {
             value: usePhases.getState().debugMode,
             onChange: (value, _, context) => {
                 if (!context?.initial) usePhases.getState().setDebugMode(value)
+            },
+        },
+        dpr: {
+            value: 1.25,
+            min: 0.5,
+            max: 2,
+            step: 0.05,
+            onChange: (value, _, context) => {
+                if (!context?.initial) setDpr(value)
             },
         },
     })
@@ -503,15 +553,6 @@ export default function Controls() {
                 if (!context?.initial) seeThrough.inner = value
             },
         },
-        coreOpacity: {
-            value: seeThrough.coreOpacity,
-            min: 0,
-            max: 1,
-            step: 0.01,
-            onChange: (value, _, context) => {
-                if (!context?.initial) seeThrough.coreOpacity = value
-            },
-        },
         depthBias: {
             value: seeThrough.depthBias,
             min: 0,
@@ -521,6 +562,44 @@ export default function Controls() {
                 if (!context?.initial) seeThrough.depthBias = value
             },
         },
+        opacityIntensity: {
+            value: seeThrough.opacityIntensity,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.opacityIntensity = value
+            },
+        },
+        textureContrast: {
+            value: seeThrough.textureContrast,
+            min: 0.2,
+            max: 6,
+            step: 0.05,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.textureContrast = value
+            },
+        },
+        textureScale: {
+            value: seeThrough.textureScale,
+            min: 20,
+            max: 1200,
+            step: 5,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.textureScale = value
+            },
+        },
+    })
+
+    useControls('Edge', {
+        enabled: { value: edgeParameters.enabled, onChange: setParam('edgeParameters', 'enabled') },
+        mode: { value: edgeParameters.mode, options: ['Dither', 'Alpha'], onChange: setParam('edgeParameters', 'mode') },
+        color: { value: edgeParameters.color, onChange: setParam('edgeParameters', 'color') },
+        tint: { value: edgeParameters.tint, min: 0, max: 1, step: 0.01, onChange: setParam('edgeParameters', 'tint') },
+        width: { value: edgeParameters.width, min: 0, max: 40, step: 0.5, onChange: setParam('edgeParameters', 'width') },
+        bias: { value: edgeParameters.bias, min: 0, max: 2, step: 0.01, onChange: setParam('edgeParameters', 'bias') },
+        softness: { value: edgeParameters.softness, min: 0, max: 1, step: 0.01, onChange: setParam('edgeParameters', 'softness') },
+        noiseScale: { value: edgeParameters.noiseScale, min: 0.02, max: 4, step: 0.02, onChange: setParam('edgeParameters', 'noiseScale') },
     })
 
     useControls('Terrain', {

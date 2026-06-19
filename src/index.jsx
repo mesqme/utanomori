@@ -32,7 +32,7 @@ root.render(
             ]}
         >
             <Canvas
-                dpr={[1, 1.5]}
+                dpr={[1, 1.25]}
                 gl={{ antialias: false }}
                 camera={{
                     fov: 45,

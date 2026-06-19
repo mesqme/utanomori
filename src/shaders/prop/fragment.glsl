@@ -19,8 +19,10 @@ uniform vec2 uSeeThroughCenter;
 uniform float uSeeThroughRadius;
 uniform float uSeeThroughDepth;
 uniform float uSeeThroughInner;
-uniform float uSeeThroughCoreOpacity;
 uniform float uSeeThroughDepthBias;
+uniform float uSeeThroughOpacityIntensity;
+uniform float uSeeThroughTextureContrast;
+uniform float uSeeThroughTextureScale;
 
 #include <common>
 #include <color_pars_fragment>
@@ -30,6 +32,9 @@ varying vec3 vObjectNormal;
 varying float vPropMask;
 varying vec2 vWorldXZ;
 varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+
+#include ../lib/paintedEdge.glsl
 
 // Triplanar painterly sampling — identical to the character material.
 float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
@@ -63,12 +68,22 @@ float samplePainteryBrush(vec2 worldXZ) {
 }
 
 void main() {
-    float seeThroughFade = 0.0;
+    // See-through: where the hero is hidden behind this prop, dither it away through
+    // the brush so the hero shows through. The stipple density = the opacity intensity
+    // (× the texture), so the object becomes semitransparent rather than fully removed.
     if (uSeeThroughActive > 0.5) {
         float camDist = length(vWorldPos - cameraPosition);
         if (camDist < uSeeThroughDepth - uSeeThroughDepthBias) {
             float sd = length(gl_FragCoord.xy - uSeeThroughCenter) / max(uSeeThroughRadius, 1.0);
-            seeThroughFade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
+            float fade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
+            float amount = fade * uSeeThroughOpacityIntensity;
+            if (amount > 0.0) {
+                vec2 stUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy / uSeeThroughTextureScale, uPainteryScreenBlend);
+                float stBrush = texture2D(uPainterlyTexture, stUv).r;
+                stBrush = mix(stBrush, texture2D(uPainterlyTexture, stUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+                stBrush = clamp((stBrush - 0.5) * uSeeThroughTextureContrast + 0.5, 0.0, 1.0);
+                if (amount > stBrush) discard;
+            }
         }
     }
 
@@ -87,13 +102,6 @@ void main() {
         finalColor = mix(finalColor, uPainterlyColor, tintMask);
     }
 
-    float seeThroughCut = seeThroughFade * (1.0 - clamp(uSeeThroughCoreOpacity, 0.0, 1.0));
-    if (seeThroughCut > 0.0) {
-        float seeThroughBrush = samplePainteryBrush(vWorldXZ);
-        finalColor = mix(finalColor, uBackgroundColor, smoothstep(seeThroughBrush - uPainteryBleed, seeThroughBrush, seeThroughCut));
-        if (seeThroughCut > seeThroughBrush) discard;
-    }
-
     // Reveal-circle fade — colour, dithered, or paintery, matching the world.
     float fade = 1.0 - vPropMask;
     if (uPropFadeMode == 1) {
@@ -107,7 +115,10 @@ void main() {
         if (fade >= 0.999 || (fade > 0.0 && bayerDither(gl_FragCoord.xy, uPixelSize) < fade)) discard;
     }
 
-    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+    float edgeBrush = samplePainterlyTexture(vObjectPosition * uEdgeNoiseScale, normalize(vObjectNormal));
+    float edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush);
+
+    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), edgeAlpha);
 
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

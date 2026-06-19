@@ -14,7 +14,7 @@ export const PHASES = {
 
 const usePhases = create((set) => ({
     phase: PHASES.loading,
-    debugMode: true, // true = jump straight into gameplay; false = run the full cycle
+    debugMode: false, // true = jump straight into gameplay; false = run the full cycle
     creditsShown: false, // guards against re-rolling credits after "Continue"
     setPhase: (phase) => set({ phase }),
     setDebugMode: (debugMode) => set({ debugMode }),

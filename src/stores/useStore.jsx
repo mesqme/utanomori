@@ -25,6 +25,10 @@ const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
     posterize: 0,
 }
 
+// Stylized silhouette edge (option A): the contour dissolves into the background
+// through the brush noise for a thin painterly oil/pastel outline. Defined per scene
+// style (see edgeParameters in sceneStyles.js).
+
 // Stylized "blot" UI (speech bubble + buttons): a solid painted patch with an
 // organic brushy edge (feTurbulence displacement). No border.
 const GAME_UI_VERSION = 4
@@ -130,6 +134,11 @@ const createStore = () =>
              * Paintery brush texture stylization (baked once)
              */
             painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS },
+
+            /**
+             * Stylized silhouette edge (option A) — props only
+             */
+            edgeParameters: { ...defaultSceneStyle.edgeParameters },
 
             /**
              * Stylized game UI (speech bubble + buttons)
@@ -246,6 +255,7 @@ if (import.meta?.hot) {
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
+        edgeParameters: { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
     })
     import.meta.hot.data.store = useStore
