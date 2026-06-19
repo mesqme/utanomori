@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
 import { sharedNoise2D } from './utils/worldNoise.js'
@@ -16,9 +16,9 @@ import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 
+import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import noiseTextureUrl from '../assets/textures/noiseTexture.png'
 import groundTextureUrl from '../assets/textures/ground.png'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const START_CIRCLE_RADIUS = 0.07
 const START_RADIUS_DELAY = 1.1
@@ -66,22 +66,21 @@ export default function Terrain() {
         [groundTextureUrl]
     )
 
-    const painteryTexture = useTexture(
-        paintaryAlpha01Url,
-        (texture) => {
-            texture.wrapS = THREE.RepeatWrapping
-            texture.wrapT = THREE.RepeatWrapping
-            texture.minFilter = THREE.LinearFilter
-            texture.magFilter = THREE.LinearFilter
-            texture.colorSpace = THREE.NoColorSpace
-            return texture
-        },
-        [paintaryAlpha01Url]
-    )
+    // Selectable source texture for the bake (drei preloads all six so swapping is instant).
+    const painteryTextureParameters = useStore((s) => s.painteryTextureParameters)
+    const painteryTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
+    const painteryTexture = useMemo(() => {
+        const texture = painteryTextures[painteryTextureIndex(painteryTextureParameters.textureName)] ?? painteryTextures[0]
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.minFilter = THREE.LinearFilter
+        texture.magFilter = THREE.LinearFilter
+        texture.colorSpace = THREE.NoColorSpace
+        return texture
+    }, [painteryTextures, painteryTextureParameters.textureName])
 
     // Bake the smoothing/threshold into the brush texture once, then sample the
     // stylized copy everywhere instead of running Kuwahara over the whole frame.
-    const painteryTextureParameters = useStore((s) => s.painteryTextureParameters)
     const stylizedPainteryTexture = useBakedPainteryTexture(painteryTexture, painteryTextureParameters)
 
     const terrainMaterial = useTerrainMaterial({
@@ -113,9 +112,8 @@ export default function Terrain() {
             }
             noiseTexture.dispose()
             groundTexture.dispose()
-            painteryTexture.dispose()
         }
-    }, [noiseTexture, groundTexture, painteryTexture])
+    }, [noiseTexture, groundTexture])
 
     useEffect(() => {
         if (phase === PHASES.intro) {

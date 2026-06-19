@@ -56,6 +56,7 @@ export const objectArchetypes = Object.freeze([
 
 export const objectFieldDefaults = Object.freeze({
     enabled: true,
+    textureName: 'paintaryAlpha_01', // paintery texture used by the prop material
     worldSeed: 7777,
     cellSize: 7,
     groupJitter: 0.7,

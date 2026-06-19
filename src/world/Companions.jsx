@@ -9,7 +9,7 @@ import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import CompanionCreature from './CompanionCreature.jsx'
 import CompanionNotes from './CompanionNotes.jsx'
-import TargetIndicator from './TargetIndicator.jsx'
+import TargetArrow from './TargetArrow.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
 import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
@@ -339,7 +339,7 @@ export default function Companions() {
                     creatureMaterial={creatureMaterial}
                 />
             ))}
-            <TargetIndicator />
+            <TargetArrow />
         </>
     )
 }

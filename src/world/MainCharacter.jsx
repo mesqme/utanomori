@@ -17,6 +17,8 @@ import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
 import paintaryAlpha03Url from '../assets/textures/paintaryAlpha_03.png'
 import paintaryAlpha04Url from '../assets/textures/paintaryAlpha_04.png'
+import watercolorBasicUrl from '../assets/textures/watercolorBasic.png'
+import watercolorBasicLargeUrl from '../assets/textures/watercolorBasicLarge.png'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
@@ -40,8 +42,8 @@ const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
-const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04']
-const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url]
+const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04', 'watercolorBasic', 'watercolorBasicLarge']
+const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url, watercolorBasicUrl, watercolorBasicLargeUrl]
 
 const SEE_THROUGH_CENTER_Y = 0.85 // hole centred near the hero's mid-height
 const _stWorld = new THREE.Vector3()

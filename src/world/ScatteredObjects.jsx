@@ -11,7 +11,7 @@ import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { objectLibrary, OBJECT_TYPES } from '../config/objectFieldDefaults.js'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 
 // Every scattered object (trees, stones, mushrooms across all active chunks) is an
 // instance in ONE BatchedMesh (see createBatchedMeshPool) → ~1 draw call with
@@ -61,13 +61,15 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const terrainScale = useStore((s) => s.terrainParameters.scale)
     const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
 
-    const painterlyTexture = useTexture(paintaryAlpha01Url)
-    useMemo(() => {
-        painterlyTexture.wrapS = THREE.RepeatWrapping
-        painterlyTexture.wrapT = THREE.RepeatWrapping
-        painterlyTexture.colorSpace = THREE.NoColorSpace
-        painterlyTexture.needsUpdate = true
-    }, [painterlyTexture])
+    const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
+    const painterlyTexture = useMemo(() => {
+        const texture = painterlyTextures[painteryTextureIndex(objectParameters.textureName)] ?? painterlyTextures[0]
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.colorSpace = THREE.NoColorSpace
+        texture.needsUpdate = true
+        return texture
+    }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
         const prototypes = buildPrototypes()
@@ -75,7 +77,15 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
         return created
-    }, [painterlyTexture])
+        // Built once; the paintery texture is swapped in place below so the pool isn't rebuilt.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+
+    // Swap the prop paintery texture when the selection changes (no pool rebuild).
+    useEffect(() => {
+        const uniforms = pool?.mesh?.material?.uniforms
+        if (uniforms?.uPainterlyTexture) uniforms.uPainterlyTexture.value = painterlyTexture
+    }, [pool, painterlyTexture])
 
     useFrame((frameState) => {
         const state = useStore.getState()

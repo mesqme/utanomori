@@ -8,6 +8,7 @@ import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
+import { PAINTERY_TEXTURE_IDS } from '../config/painteryTextures.js'
 
 const SCENE_STYLE_SECTIONS = new Set([
     'terrainParameters',
@@ -101,6 +102,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Objects: {
         enabled: 'enabled',
+        textureName: 'textureName',
         worldSeed: 'worldSeed',
         cellSize: 'cellSize',
         groupJitter: 'groupJitter',
@@ -315,6 +317,7 @@ export default function Controls() {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const arrowParameters = useStore((state) => state.arrowParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
@@ -1048,6 +1051,11 @@ export default function Controls() {
             value: objectParameters.painterlyEnabled,
             onChange: setParam('objectParameters', 'painterlyEnabled'),
         },
+        painterlyTexture: {
+            value: objectParameters.textureName,
+            options: PAINTERY_TEXTURE_IDS,
+            onChange: setParam('objectParameters', 'textureName'),
+        },
         painterlyScale: {
             value: objectParameters.painterlyScale,
             min: 0,
@@ -1058,7 +1066,7 @@ export default function Controls() {
         painterlyContrast: {
             value: objectParameters.painterlyContrast,
             min: 0,
-            max: 4,
+            max: 10,
             step: 0.01,
             onChange: setParam('objectParameters', 'painterlyContrast'),
         },
@@ -1491,6 +1499,18 @@ export default function Controls() {
         },
     })
 
+    useControls('Target Arrow', {
+        width: { value: arrowParameters.width, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('arrowParameters', 'width') },
+        size: { value: arrowParameters.size, min: 0.3, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'size') },
+        distance: { value: arrowParameters.distance, min: 0.5, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'distance') },
+        yOffset: { value: arrowParameters.yOffset, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'yOffset') },
+        fadeNear: { value: arrowParameters.fadeNear, min: 0, max: 40, step: 0.5, onChange: setParam('arrowParameters', 'fadeNear') },
+        fadeFar: { value: arrowParameters.fadeFar, min: 1, max: 80, step: 0.5, onChange: setParam('arrowParameters', 'fadeFar') },
+        minOpacity: { value: arrowParameters.minOpacity, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'minOpacity') },
+        maxOpacity: { value: arrowParameters.maxOpacity, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'maxOpacity') },
+        color: { value: arrowParameters.color, onChange: setParam('arrowParameters', 'color') },
+    })
+
     useControls('Painterly Postprocess', {
         enabled: {
             value: painterlyPostParameters.enabled,
@@ -1577,6 +1597,11 @@ export default function Controls() {
         enabled: {
             value: painteryTextureParameters.enabled,
             onChange: setParam('painteryTextureParameters', 'enabled'),
+        },
+        texture: {
+            value: painteryTextureParameters.textureName,
+            options: PAINTERY_TEXTURE_IDS,
+            onChange: setParam('painteryTextureParameters', 'textureName'),
         },
         blur: {
             value: painteryTextureParameters.blur,

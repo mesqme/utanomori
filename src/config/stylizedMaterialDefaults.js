@@ -9,11 +9,13 @@ export const painterlyTextureOptions = Object.freeze({
     paintaryAlpha_02: 'paintaryAlpha_02',
     paintaryAlpha_03: 'paintaryAlpha_03',
     paintaryAlpha_04: 'paintaryAlpha_04',
+    watercolorBasic: 'watercolorBasic',
+    watercolorBasicLarge: 'watercolorBasicLarge',
 })
 
 export const characterStylizedDefaults = Object.freeze({
     debugMode: stylizedDebugModes.Final,
-    painterlyEnabled: true,
+    painterlyEnabled: false,
     painterlyTexture: painterlyTextureOptions.paintaryAlpha_01,
     painterlyScale: 0.05,
     painterlyContrast: 1.02,

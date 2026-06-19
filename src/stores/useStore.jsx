@@ -4,7 +4,7 @@ import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
 
 const GRASS_STYLE_VERSION = 18
-const CHARACTER_STYLIZED_VERSION = 2
+const CHARACTER_STYLIZED_VERSION = 3
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
     debugOrbitAngle: 0,
@@ -13,11 +13,25 @@ const DEFAULT_CAMERA_PARAMETERS = {
     debugTargetYOffset: 0.4,
 }
 
+// Flat ground arrow pointing from the hero toward the hidden companion (TargetArrow).
+const DEFAULT_ARROW_PARAMETERS = {
+    width: 0.12, // line thickness (world units)
+    size: 1.1, // arm length
+    distance: 3.0, // how far in front of the hero it sits (keep < terrain radius)
+    yOffset: 0.08, // lift above the ground
+    fadeNear: 6, // distance to the target where it is fully opaque
+    fadeFar: 26, // distance where it fades to minOpacity
+    minOpacity: 0.18,
+    maxOpacity: 0.95,
+    color: '#ffffff',
+}
+
 // One-time stylization baked into the paintery brush texture (blur + levels +
 // contrast + posterize) so its small details merge into larger painterly regions,
 // replacing the per-frame Kuwahara abstraction.
 const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
     enabled: true,
+    textureName: 'paintaryAlpha_01', // source paintery texture for the terrain bake (ground/grass/border)
     blur: 2.0,
     levelsLow: 0.0,
     levelsHigh: 1.0,
@@ -129,6 +143,7 @@ const createStore = () =>
              * Camera debug parameters
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+            arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
 
             /**
              * Paintery brush texture stylization (baked once)
@@ -254,6 +269,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+        arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         edgeParameters: { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
