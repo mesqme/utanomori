@@ -1,11 +1,14 @@
 // Calm Web Audio placeholder synth for the companion song mini-game. No deps; all
-// functions are safe no-ops when WebAudio is unavailable. Swap for real audio files
-// later by replacing playNote / startAmbient internals.
+// functions are safe no-ops when WebAudio is unavailable. Swap the oscillator internals
+// for real audio files later.
+//
+// Each singing companion gets a spatial "voice" (a stereo panner + gain) that loops its
+// melody; the scene updates pan (direction) + gain (distance) every frame so you can
+// hear where the song comes from and the lines layer as you collect companions.
 import { NOTE_FREQUENCIES, SONG_BEAT } from '../config/notes.js'
 
 let ctx = null
 let master = null
-let ambient = null // { stop() }
 
 function ensureContext() {
     if (typeof window === 'undefined') return null
@@ -35,10 +38,10 @@ export function resumeAudio() {
     if (c && c.state === 'suspended') c.resume()
 }
 
-// Play one note (a soft triangle through a lowpass + attack/release envelope).
-export function playNote(index, { when = 0, duration = 0.6, gain = 0.5 } = {}) {
+// One note (soft triangle through a lowpass + attack/release envelope) into a node.
+function playNoteInto(dest, index, { when = 0, duration = 0.6, gain = 0.5 } = {}) {
     const c = ensureContext()
-    if (!c) return
+    if (!c || !dest) return
     const freq = NOTE_FREQUENCIES[index] ?? 440
     const t0 = c.currentTime + Math.max(0, when)
 
@@ -57,18 +60,23 @@ export function playNote(index, { when = 0, duration = 0.6, gain = 0.5 } = {}) {
 
     osc.connect(lp)
     lp.connect(g)
-    g.connect(master)
+    g.connect(dest)
     osc.start(t0)
     osc.stop(t0 + duration + 0.05)
 }
 
-// Spacing for a note given its rhythm (beats), at the shared tempo.
+// Non-spatial note (centred) — used by the game UI (wheel clicks, listen playback).
+export function playNote(index, options) {
+    ensureContext()
+    playNoteInto(master, index, options)
+}
+
 function noteSpacing(beats, index) {
     const beat = beats ? beats[index % beats.length] ?? 1 : 1
     return beat * SONG_BEAT
 }
 
-// Play a whole song once (used as a little celebratory hum when a companion joins).
+// Play a whole song once, centred (a little celebratory hum when a companion joins).
 export function playMelody(notes, { beats = null, gain = 0.3, legato = 1.3 } = {}) {
     if (!notes || notes.length === 0) return
     let t = 0
@@ -79,30 +87,60 @@ export function playMelody(notes, { beats = null, gain = 0.3, legato = 1.3 } = {
     })
 }
 
-// Quiet looping melody while you are near a singing character (placeholder ambient).
-// Notes overlap (legato) so the line flows; the rhythm + tempo match the in-game playback.
-export function startAmbient(notes, { beats = null, gain = 0.16, legato = 1.4 } = {}) {
-    stopAmbient()
+// ----- Spatial looping voices (one per singing companion) -----
+
+export function createVoice() {
     const c = ensureContext()
-    if (!c || !notes || notes.length === 0) return
+    if (!c) return null
+    const gain = c.createGain()
+    gain.gain.value = 0.0001
+    gain.connect(master)
+    const panner = c.createStereoPanner ? c.createStereoPanner() : null
+    if (panner) panner.connect(gain)
+    return { c, gain, panner, dest: panner ?? gain, timer: null, stopped: true, legato: 1.4 }
+}
+
+// Loop the melody forever (free-running at the shared tempo + rhythm, notes overlapping).
+export function startVoice(voice, notes, beats, { legato = 1.4 } = {}) {
+    if (!voice || !notes || notes.length === 0) return
+    stopVoiceLoop(voice)
+    voice.stopped = false
+    voice.legato = legato
     let i = 0
-    let stopped = false
-    const handle = { timer: null, stop: () => { stopped = true; if (handle.timer) clearTimeout(handle.timer) } }
     const step = () => {
-        if (stopped) return
+        if (voice.stopped) return
         const idx = i % notes.length
         const spacing = noteSpacing(beats, idx)
-        playNote(notes[idx], { duration: spacing * legato, gain })
+        playNoteInto(voice.dest, notes[idx], { duration: spacing * voice.legato, gain: 0.7 })
         i++
-        handle.timer = setTimeout(step, spacing * 1000)
+        voice.timer = setTimeout(step, spacing * 1000)
     }
-    ambient = handle
     step()
 }
 
-export function stopAmbient() {
-    if (ambient) {
-        ambient.stop()
-        ambient = null
+// Update where the voice sits: pan ∈ [-1,1] (left→right) and final linear gain (distance).
+export function setVoiceSpatial(voice, { pan = 0, gain = 0.1 } = {}) {
+    if (!voice) return
+    if (voice.panner) voice.panner.pan.value = Math.max(-1, Math.min(1, pan))
+    voice.gain.gain.setTargetAtTime(Math.max(0.00001, gain), voice.c.currentTime, 0.06)
+}
+
+export function stopVoiceLoop(voice) {
+    if (!voice) return
+    voice.stopped = true
+    if (voice.timer) {
+        clearTimeout(voice.timer)
+        voice.timer = null
+    }
+}
+
+export function disposeVoice(voice) {
+    if (!voice) return
+    stopVoiceLoop(voice)
+    try {
+        voice.gain.disconnect()
+        if (voice.panner) voice.panner.disconnect()
+    } catch {
+        // already disconnected
     }
 }

@@ -1515,6 +1515,9 @@ export default function Controls() {
     useControls('Song Game', {
         wheelRadius: { value: songGameParameters.wheelRadius, min: 60, max: 320, step: 1, onChange: setParam('songGameParameters', 'wheelRadius') },
         buttonSize: { value: songGameParameters.buttonSize, min: 24, max: 140, step: 1, onChange: setParam('songGameParameters', 'buttonSize') },
+        songVolume: { value: songGameParameters.songVolume, min: 0, max: 0.5, step: 0.01, onChange: setParam('songGameParameters', 'songVolume') },
+        hearNear: { value: songGameParameters.hearNear, min: 0, max: 20, step: 0.5, onChange: setParam('songGameParameters', 'hearNear') },
+        hearFar: { value: songGameParameters.hearFar, min: 4, max: 80, step: 1, onChange: setParam('songGameParameters', 'hearFar') },
     })
 
     useControls('Painterly Postprocess', {

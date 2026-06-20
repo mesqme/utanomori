@@ -2,7 +2,7 @@ import './InteractionPrompt.css'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
-import { resumeAudio, stopAmbient } from '../game/songAudio.js'
+import { resumeAudio } from '../game/songAudio.js'
 
 export default function InteractionPrompt() {
     const phase = usePhases((state) => state.phase)
@@ -20,7 +20,6 @@ export default function InteractionPrompt() {
         const { target: current, targetInRange: inRange } = useCompanions.getState()
         if (!current || !inRange || useSongGame.getState().active) return
         resumeAudio()
-        stopAmbient()
         useSongGame.getState().begin(current)
     }
 

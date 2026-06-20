@@ -26,10 +26,13 @@ const DEFAULT_ARROW_PARAMETERS = {
     color: '#ffffff',
 }
 
-// Song mini-game UI (the note wheel, etc.).
+// Song mini-game UI (the note wheel) + the spatial singing voices.
 const DEFAULT_SONG_GAME_PARAMETERS = {
     wheelRadius: 150, // px from the wheel centre to each note button
     buttonSize: 64, // px diameter of each note button
+    songVolume: 0.12, // base loudness of a companion's looping song
+    hearNear: 4, // distance (world units) at which a song is at full volume
+    hearFar: 28, // distance at which it fades to silence
 }
 
 // One-time stylization baked into the paintery brush texture (blur + levels +
