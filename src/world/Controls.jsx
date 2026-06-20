@@ -1518,6 +1518,11 @@ export default function Controls() {
         songVolume: { value: songGameParameters.songVolume, min: 0, max: 0.5, step: 0.01, onChange: setParam('songGameParameters', 'songVolume') },
         hearNear: { value: songGameParameters.hearNear, min: 0, max: 20, step: 0.5, onChange: setParam('songGameParameters', 'hearNear') },
         hearFar: { value: songGameParameters.hearFar, min: 4, max: 80, step: 1, onChange: setParam('songGameParameters', 'hearFar') },
+        noteSize: { value: songGameParameters.noteSize, min: 16, max: 140, step: 1, onChange: setParam('songGameParameters', 'noteSize') },
+        noteRise: { value: songGameParameters.noteRise, min: 0, max: 260, step: 2, onChange: setParam('songGameParameters', 'noteRise') },
+        noteDuration: { value: songGameParameters.noteDuration, min: 0.4, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteDuration') },
+        noteGrow: { value: songGameParameters.noteGrow, min: 0.5, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteGrow') },
+        noteWobble: { value: songGameParameters.noteWobble, min: 0, max: 60, step: 1, onChange: setParam('songGameParameters', 'noteWobble') },
     })
 
     useControls('Painterly Postprocess', {

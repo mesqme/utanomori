@@ -33,6 +33,12 @@ const DEFAULT_SONG_GAME_PARAMETERS = {
     songVolume: 0.12, // base loudness of a companion's looping song
     hearNear: 4, // distance (world units) at which a song is at full volume
     hearFar: 28, // distance at which it fades to silence
+    // Floating notes above a singing head (and the in-game listen bubbles)
+    noteSize: 56, // px diameter of a note as it emerges
+    noteRise: 90, // px it floats upward over its life
+    noteDuration: 1.5, // seconds each note lives
+    noteGrow: 1.8, // final scale multiplier before it fades
+    noteWobble: 14, // px of side-to-side sine sway while rising
 }
 
 // One-time stylization baked into the paintery brush texture (blur + levels +

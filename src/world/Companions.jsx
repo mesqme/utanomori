@@ -18,7 +18,7 @@ import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER 
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
-import { createVoice, startVoice, setVoiceSpatial, disposeVoice, resumeAudio, playMelody } from '../game/songAudio.js'
+import { createVoice, setVoiceSpatial, disposeVoice, resumeAudio } from '../game/songAudio.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const INTERACT_RADIUS = 2.3
@@ -73,7 +73,6 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const fleeRef = useRef(0)
-    const inRange = useCompanions((state) => state.targetInRange)
     const stage = useSongGame((state) => state.stage)
     const voiceRef = useRef(null)
 
@@ -81,16 +80,15 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
 
     // The target loops its melody (spatialised) and falls silent while in the mini-game.
     useEffect(() => {
-        voiceRef.current = createVoice()
-        if (voiceRef.current) startVoice(voiceRef.current, target.song, target.beats)
+        voiceRef.current = createVoice(target.song, target.beats)
         return () => disposeVoice(voiceRef.current)
     }, [target.key, target.song, target.beats])
 
-    // Won the song → a happy hop, then join the party (and hum the tune once).
+    // Won the song → a happy hop, then join the party. Its melody simply joins the other
+    // looping voices (in sync, same volume) — no separate one-off flourish.
     useEffect(() => {
         if (stage !== 'success') return
         const timer = setTimeout(() => {
-            playMelody(target.song, { beats: target.beats })
             useCompanions.getState().collectTarget()
             useSongGame.getState().reset()
         }, CELEBRATE_DURATION * 1000)
@@ -153,7 +151,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             <group ref={creatureRef}>
                 <CompanionCreature definition={target} material={creatureMaterial} />
             </group>
-            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} inRange={inRange} />
+            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} voiceRef={voiceRef} isTarget />
         </group>
     )
 }
@@ -171,10 +169,10 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
 
     useEffect(() => () => clearTrampler(slot), [slot])
 
-    // Followers keep humming (spatialised) so the collected melodies layer into one.
+    // Followers keep humming (spatialised) so the collected melodies layer into one;
+    // they go silent during the mini-game so the played sequence is heard clearly.
     useEffect(() => {
-        voiceRef.current = createVoice()
-        if (voiceRef.current) startVoice(voiceRef.current, definition.song, definition.beats)
+        voiceRef.current = createVoice(definition.song, definition.beats)
         return () => disposeVoice(voiceRef.current)
     }, [definition.key, definition.song, definition.beats])
 
@@ -225,7 +223,11 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
         setTrampler(slot, position.x, groundY, position.z)
 
         if (voiceRef.current) {
-            setVoiceSpatial(voiceRef.current, voiceSpatial(state.camera, position.x, position.z, useStore.getState().songGameParameters))
+            if (useSongGame.getState().active) {
+                setVoiceSpatial(voiceRef.current, { gain: 0 })
+            } else {
+                setVoiceSpatial(voiceRef.current, voiceSpatial(state.camera, position.x, position.z, useStore.getState().songGameParameters))
+            }
         }
     })
 
@@ -235,6 +237,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
             <group ref={creatureRef}>
                 <CompanionCreature definition={definition} material={creatureMaterial} />
             </group>
+            <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} voiceRef={voiceRef} />
         </group>
     )
 }
