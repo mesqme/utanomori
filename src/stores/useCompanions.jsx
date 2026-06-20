@@ -27,8 +27,10 @@ const useCompanions = create((set, get) => ({
             return
         }
         const definition = companionPool[found.length % companionPool.length]
-        const song = definition.song ?? getCompanionSong(definition.id)
-        set({ target: { ...definition, key: `${definition.id}-${found.length}`, x, z, song }, targetInRange: false })
+        const generated = getCompanionSong(definition.id)
+        const song = definition.song ?? generated.notes
+        const beats = definition.beats ?? generated.beats
+        set({ target: { ...definition, key: `${definition.id}-${found.length}`, x, z, song, beats }, targetInRange: false })
     },
 
     // Relocate the active target (used when the player abandons it, or after a failed song).

@@ -26,6 +26,12 @@ const DEFAULT_ARROW_PARAMETERS = {
     color: '#ffffff',
 }
 
+// Song mini-game UI (the note wheel, etc.).
+const DEFAULT_SONG_GAME_PARAMETERS = {
+    wheelRadius: 150, // px from the wheel centre to each note button
+    buttonSize: 64, // px diameter of each note button
+}
+
 // One-time stylization baked into the paintery brush texture (blur + levels +
 // contrast + posterize) so its small details merge into larger painterly regions,
 // replacing the per-frame Kuwahara abstraction.
@@ -144,6 +150,7 @@ const createStore = () =>
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
             arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
+            songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
 
             /**
              * Paintery brush texture stylization (baked once)
@@ -270,6 +277,7 @@ if (import.meta?.hot) {
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
+        songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         edgeParameters: { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },

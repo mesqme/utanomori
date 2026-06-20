@@ -132,6 +132,48 @@
     filter: brightness(0.92);
 }
 
+/* Wheel shown but not yet accepting input (prompt over / listening). */
+.song-note-idle {
+    opacity: 0.5;
+    cursor: default;
+    box-shadow: 0 1px 6px rgba(9, 8, 34, 0.4);
+}
+
+.song-exit {
+    position: absolute;
+    top: 22px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 10px;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    pointer-events: auto;
+    transition: background 0.12s;
+}
+
+.song-exit:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.song-key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1px 6px;
+    border: 1px solid var(--sj-ui-primary);
+    border-radius: 5px;
+    font-size: 11px;
+    opacity: 0.85;
+}
+
 .song-wheel-center {
     position: absolute;
     left: 50%;

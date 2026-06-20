@@ -102,7 +102,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Objects: {
         enabled: 'enabled',
-        textureName: 'textureName',
+        painterlyTexture: 'textureName',
         worldSeed: 'worldSeed',
         cellSize: 'cellSize',
         groupJitter: 'groupJitter',
@@ -318,6 +318,7 @@ export default function Controls() {
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const arrowParameters = useStore((state) => state.arrowParameters)
+    const songGameParameters = useStore((state) => state.songGameParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
@@ -1511,6 +1512,11 @@ export default function Controls() {
         color: { value: arrowParameters.color, onChange: setParam('arrowParameters', 'color') },
     })
 
+    useControls('Song Game', {
+        wheelRadius: { value: songGameParameters.wheelRadius, min: 60, max: 320, step: 1, onChange: setParam('songGameParameters', 'wheelRadius') },
+        buttonSize: { value: songGameParameters.buttonSize, min: 24, max: 140, step: 1, onChange: setParam('songGameParameters', 'buttonSize') },
+    })
+
     useControls('Painterly Postprocess', {
         enabled: {
             value: painterlyPostParameters.enabled,
@@ -1627,7 +1633,7 @@ export default function Controls() {
         contrast: {
             value: painteryTextureParameters.contrast,
             min: 0.2,
-            max: 4,
+            max: 12,
             step: 0.05,
             onChange: setParam('painteryTextureParameters', 'contrast'),
         },
@@ -1717,7 +1723,7 @@ export default function Controls() {
         pContrast: {
             value: characterMaterialParameters.painterlyContrast,
             min: 0,
-            max: 4,
+            max: 10,
             step: 0.01,
             onChange: setParam('characterMaterialParameters', 'painterlyContrast'),
         },

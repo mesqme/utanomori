@@ -63,7 +63,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
     useEffect(() => {
         if (stage !== 'success') return
         const timer = setTimeout(() => {
-            playMelody(target.song)
+            playMelody(target.song, { beats: target.beats })
             useCompanions.getState().collectTarget()
             useSongGame.getState().reset()
         }, CELEBRATE_DURATION * 1000)
@@ -293,7 +293,7 @@ export default function Companions() {
         // Quiet ambient melody while you are near a singing character (pre-game).
         const wantAmbient = !gameActive && !!companions.target && companions.targetInRange
         if (wantAmbient && !ambientOnRef.current) {
-            startAmbient(companions.target.song)
+            startAmbient(companions.target.song, { beats: companions.target.beats })
             ambientOnRef.current = true
         } else if (!wantAmbient && ambientOnRef.current) {
             stopAmbient()

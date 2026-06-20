@@ -1,7 +1,7 @@
 // Calm Web Audio placeholder synth for the companion song mini-game. No deps; all
 // functions are safe no-ops when WebAudio is unavailable. Swap for real audio files
 // later by replacing playNote / startAmbient internals.
-import { NOTE_FREQUENCIES } from '../config/notes.js'
+import { NOTE_FREQUENCIES, SONG_BEAT } from '../config/notes.js'
 
 let ctx = null
 let master = null
@@ -62,25 +62,39 @@ export function playNote(index, { when = 0, duration = 0.6, gain = 0.5 } = {}) {
     osc.stop(t0 + duration + 0.05)
 }
 
+// Spacing for a note given its rhythm (beats), at the shared tempo.
+function noteSpacing(beats, index) {
+    const beat = beats ? beats[index % beats.length] ?? 1 : 1
+    return beat * SONG_BEAT
+}
+
 // Play a whole song once (used as a little celebratory hum when a companion joins).
-export function playMelody(song, { cadence = 0.42, duration = 0.5, gain = 0.3 } = {}) {
-    if (!song || song.length === 0) return
-    song.forEach((note, i) => playNote(note, { when: i * cadence, duration, gain }))
+export function playMelody(notes, { beats = null, gain = 0.3, legato = 1.3 } = {}) {
+    if (!notes || notes.length === 0) return
+    let t = 0
+    notes.forEach((note, i) => {
+        const spacing = noteSpacing(beats, i)
+        playNote(note, { when: t, duration: spacing * legato, gain })
+        t += spacing
+    })
 }
 
 // Quiet looping melody while you are near a singing character (placeholder ambient).
-export function startAmbient(song, { noteDuration = 0.9, gap = 0.5, gain = 0.16 } = {}) {
+// Notes overlap (legato) so the line flows; the rhythm + tempo match the in-game playback.
+export function startAmbient(notes, { beats = null, gain = 0.16, legato = 1.4 } = {}) {
     stopAmbient()
     const c = ensureContext()
-    if (!c || !song || song.length === 0) return
+    if (!c || !notes || notes.length === 0) return
     let i = 0
     let stopped = false
     const handle = { timer: null, stop: () => { stopped = true; if (handle.timer) clearTimeout(handle.timer) } }
     const step = () => {
         if (stopped) return
-        playNote(song[i % song.length], { duration: noteDuration, gain })
+        const idx = i % notes.length
+        const spacing = noteSpacing(beats, idx)
+        playNote(notes[idx], { duration: spacing * legato, gain })
         i++
-        handle.timer = setTimeout(step, (noteDuration + gap) * 1000)
+        handle.timer = setTimeout(step, spacing * 1000)
     }
     ambient = handle
     step()

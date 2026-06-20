@@ -6,6 +6,7 @@ import { gsap } from 'gsap'
 
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import useSongGame from '../stores/useSongGame.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import { getNearestRoadPoint } from './utils/roadField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
@@ -42,6 +43,7 @@ const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
+const EMPTY_INPUT = {} // stand-in for keys/controls while the hero is frozen (song game)
 const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04', 'watercolorBasic', 'watercolorBasicLarge']
 const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url, watercolorBasicUrl, watercolorBasicLargeUrl]
 
@@ -192,8 +194,10 @@ export default function MainCharacter() {
         const moveInput = moveInputRef.current
 
         if (phase === PHASES.start) {
-            const keys = getKeys()
-            const controls = useStore.getState().controls
+            // The song mini-game freezes the hero in place.
+            const frozen = useSongGame.getState().active
+            const keys = frozen ? EMPTY_INPUT : getKeys()
+            const controls = frozen ? EMPTY_INPUT : useStore.getState().controls
             const jumpPressed = Boolean(keys.jump || controls.jump)
             const maxSpeed = keys.run ? RUN_SPEED : WALK_SPEED
 

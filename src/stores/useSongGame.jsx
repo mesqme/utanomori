@@ -12,6 +12,7 @@ const initialState = {
     stage: 'idle',
     companion: null, // the target definition + its `song` (note indices)
     song: [],
+    beats: [], // per-note rhythm (beats), parallel to `song`
     round: 0, // 0..2  → ROUND_LENGTHS[round] notes
     activeNote: null, // note index currently "sung" above the head, or null
     input: [], // note indices the player has entered this round
@@ -23,7 +24,7 @@ const useSongGame = create((set, get) => ({
 
     // E / prompt → ask "are you ready?"
     begin: (companion) =>
-        set({ ...initialState, active: true, stage: 'prompt', companion, song: companion?.song ?? [] }),
+        set({ ...initialState, active: true, stage: 'prompt', companion, song: companion?.song ?? [], beats: companion?.beats ?? [] }),
 
     // Yes → play the round.
     confirmReady: () => set({ stage: 'playback', input: [], activeNote: null, wheelOpen: false }),

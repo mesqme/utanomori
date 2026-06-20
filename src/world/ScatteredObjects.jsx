@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useTexture } from '@react-three/drei'
+import { useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
@@ -12,12 +12,19 @@ import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { objectLibrary, OBJECT_TYPES } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
+import treeModelUrl from '../assets/models/tree_01.glb'
 
 // Every scattered object (trees, stones, mushrooms across all active chunks) is an
 // instance in ONE BatchedMesh (see createBatchedMeshPool) → ~1 draw call with
 // per-instance frustum culling. The material is the character's stylized look,
 // extended to batch + fade at the reveal-circle edge (see PropStylizedMaterial).
 const MAX_OBJECT_INSTANCES = 4096
+const TREE_MODEL_PARTS = Object.freeze([
+    { node: 'tree_01_bush_01', color: 'leaves' },
+    { node: 'tree_01_bush_02', color: 'leaves' },
+    { node: 'tree_01_bush_03', color: 'leaves' },
+    { node: 'tree_01_trunk', color: 'trunk' },
+])
 
 function createPartGeometry(part) {
     switch (part.geometry) {
@@ -35,11 +42,48 @@ function createPartGeometry(part) {
     }
 }
 
-// One prototype per (type, part), with the part's local offset/scale baked in so an
-// instance matrix is just the object transform.
-function buildPrototypes() {
+function getTreePartColor(part) {
+    return part.color === 'trunk' ? objectLibrary.tree.parts[0].color : objectLibrary.tree.parts[1].color
+}
+
+function createTreePrototypeGeometry(mesh, rootScene) {
+    rootScene.updateMatrixWorld(true)
+    mesh.updateMatrixWorld(true)
+
+    const geometry = mesh.geometry.clone()
+    geometry.applyMatrix4(mesh.matrixWorld)
+    return geometry
+}
+
+// One prototype per (type, part), with the part's local transform baked in so an
+// instance matrix is just the object transform. Trees use the authored GLB meshes;
+// the other object types remain lightweight procedural placeholders for now.
+function buildPrototypes(treeModel) {
     const prototypes = []
+    const prototypeIdsByType = {}
+
     for (const type of OBJECT_TYPES) {
+        prototypeIdsByType[type] = []
+
+        if (type === 'tree') {
+            const rootScene = treeModel.scene
+            TREE_MODEL_PARTS.forEach((part, partIndex) => {
+                const mesh = treeModel.nodes?.[part.node]
+                if (!mesh?.geometry) return
+
+                const id = `${type}:${partIndex}`
+                prototypes.push({
+                    id,
+                    type,
+                    partIndex,
+                    geometry: createTreePrototypeGeometry(mesh, rootScene),
+                    color: getTreePartColor(part),
+                })
+                prototypeIdsByType[type].push(id)
+            })
+            continue
+        }
+
         objectLibrary[type].parts.forEach((part, partIndex) => {
             const geometry = createPartGeometry(part)
             geometry.applyMatrix4(
@@ -49,10 +93,13 @@ function buildPrototypes() {
                     new THREE.Vector3(part.scale?.[0] ?? 1, part.scale?.[1] ?? 1, part.scale?.[2] ?? 1)
                 )
             )
-            prototypes.push({ id: `${type}:${partIndex}`, type, partIndex, geometry, color: part.color })
+            const id = `${type}:${partIndex}`
+            prototypes.push({ id, type, partIndex, geometry, color: part.color })
+            prototypeIdsByType[type].push(id)
         })
     }
-    return prototypes
+
+    return { prototypes, prototypeIdsByType }
 }
 
 export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
@@ -60,6 +107,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const roadParameters = useStore((s) => s.roadParameters)
     const terrainScale = useStore((s) => s.terrainParameters.scale)
     const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
+    const treeModel = useGLTF(treeModelUrl)
 
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
@@ -72,14 +120,13 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
-        const prototypes = buildPrototypes()
+        const { prototypes, prototypeIdsByType } = buildPrototypes(treeModel)
         const material = createPropStylizedMaterial(painterlyTexture, { toneMapped: true })
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
-        return created
-        // Built once; the paintery texture is swapped in place below so the pool isn't rebuilt.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [])
+        return { ...created, prototypeIdsByType }
+        // The paintery texture is swapped in place below so the pool isn't rebuilt for texture changes.
+    }, [treeModel])
 
     // Swap the prop paintery texture when the selection changes (no pool rebuild).
     useEffect(() => {
@@ -177,9 +224,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         dummy.scale.setScalar(instance.scale)
                         dummy.updateMatrix()
 
-                        const partCount = objectLibrary[instance.type].parts.length
-                        for (let part = 0; part < partCount; part++) {
-                            const prototypeId = `${instance.type}:${part}`
+                        const prototypeIds = pool.prototypeIdsByType[instance.type] ?? []
+                        for (const prototypeId of prototypeIds) {
                             color.copy(pool.prototypeColors[prototypeId]).multiplyScalar(instance.colorTone)
                             const instanceId = pool.addInstance(prototypeId, dummy.matrix, color)
                             if (instanceId !== -1) ids.push(instanceId)
@@ -195,3 +241,5 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
     return <primitive object={pool.mesh} />
 }
+
+useGLTF.preload(treeModelUrl)
