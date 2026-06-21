@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
-import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '../config/sceneStyles.js'
+import { cloneSceneStyleSection, defaultSceneStyle } from '../config/sceneStyles.js'
 
 const GRASS_STYLE_VERSION = 18
 const CHARACTER_STYLIZED_VERSION = 3
@@ -63,25 +63,8 @@ const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
 // through the brush noise for a thin painterly oil/pastel outline. Defined per scene
 // style (see edgeParameters in sceneStyles.js).
 
-// Stylized "blot" UI (speech bubble + buttons): a solid painted patch with an
-// organic brushy edge (feTurbulence displacement). No border.
 const GAME_UI_VERSION = 4
-const DEFAULT_GAME_UI_PARAMETERS = {
-    bubbleShape: 'Rect', // Rect | Ellipse | Circle
-    buttonShape: 'Rect',
-    roughness: 8.5, // edge displacement amount (px)
-    detail: 29, // turbulence frequency (x0.001)
-    cornerRadius: 55, // rect corner rounding (px)
-    bubbleWidth: 760, // bubble max width (px)
-    textSize: 24, // dialogue text size (px)
-    padding: 43, // bubble inner padding (px)
-    buttonWidth: 180, // shared button background width (px)
-    buttonHeight: 58, // shared button background height (px)
-    textureStrength: 1, // subtle painted fill variation
-    textureScale: 600, // painted texture tile size (px)
-    fillColor: '#fef4ef', // painted patch colour
-    textColor: '#26285a', // text colour
-}
+const DEFAULT_GAME_UI_PARAMETERS = defaultSceneStyle.gameUiParameters
 
 const createStore = () =>
     create(
@@ -101,7 +84,6 @@ const createStore = () =>
                 get().lanternPosition.copy(position)
             },
 
-            sceneStylePreset: defaultSceneStyleId,
             grassStyleVersion: GRASS_STYLE_VERSION,
             characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
             objectStyleVersion: OBJECT_STYLE_VERSION,
@@ -248,11 +230,6 @@ if (import.meta?.hot) {
     delete characterMaterialParameters.palettePreset
 
     useStore.setState({
-        sceneStylePreset: applyGrassStyleDefaults
-            ? defaultSceneStyleId
-            : state.sceneStylePreset === 'flatStyle'
-              ? defaultSceneStyleId
-              : state.sceneStylePreset ?? defaultSceneStyleId,
         grassStyleVersion: GRASS_STYLE_VERSION,
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         gameUiVersion: GAME_UI_VERSION,

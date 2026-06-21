@@ -6,33 +6,9 @@ import usePhases from '../stores/usePhases.jsx'
 import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
 import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
-import { cloneSceneStyleSection, sceneStylePresets } from '../config/sceneStyles.js'
+import { defaultSceneStyle } from '../config/sceneStyles.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 import { PAINTERY_TEXTURE_IDS } from '../config/painteryTextures.js'
-
-const SCENE_STYLE_SECTIONS = new Set([
-    'terrainParameters',
-    'grassParameters',
-    'grassPatchParameters',
-    'roadParameters',
-    'objectParameters',
-    'backgroundParameters',
-    'windParameters',
-    'lanternGroundLightParameters',
-    'borderParameters',
-    'ditheringParameters',
-    'painterlyPostParameters',
-    'characterParameters',
-    'characterMaterialParameters',
-    'edgeParameters',
-    'propRimParameters',
-    'gameUiParameters',
-])
-
-const sceneStyleOptions = Object.freeze({
-    ...Object.fromEntries(Object.entries(sceneStylePresets).map(([id, preset]) => [preset.label, id])),
-    Custom: 'custom',
-})
 
 const LEVA_SECTION_PATHS = Object.freeze({
     Terrain: {
@@ -318,7 +294,6 @@ function addSeeThroughValues(values) {
 
 export default function Controls() {
     const syncingLeva = useRef(false)
-    const sceneStylePreset = useStore((state) => state.sceneStylePreset)
     const terrainParameters = useStore((state) => state.terrainParameters)
     const grassParameters = useStore((state) => state.grassParameters)
     const grassPatchParameters = useStore((state) => state.grassPatchParameters)
@@ -347,7 +322,6 @@ export default function Controls() {
         if (syncingLeva.current || context?.initial) return
 
         useStore.setState((state) => ({
-            sceneStylePreset: SCENE_STYLE_SECTIONS.has(section) ? 'custom' : state.sceneStylePreset,
             [section]: {
                 ...state[section],
                 [param]: value,
@@ -355,58 +329,10 @@ export default function Controls() {
         }))
     }
 
-    const setSceneStylePreset = (presetId) => {
-        if (syncingLeva.current) return
-
-        const preset = sceneStylePresets[presetId]
-
-        if (!preset) {
-            useStore.setState({ sceneStylePreset: presetId })
-            return
-        }
-
-        if (preset.seeThroughParameters) {
-            Object.assign(seeThrough, preset.seeThroughParameters)
-        }
-
-        useStore.setState({
-            sceneStylePreset: presetId,
-            ...(preset.generalParameters ?? {}),
-            terrainParameters: { ...preset.terrainParameters },
-            grassParameters: { ...preset.grassParameters },
-            grassPatchParameters: { ...preset.grassPatchParameters },
-            roadParameters: { ...preset.roadParameters },
-            objectParameters: { ...preset.objectParameters },
-            windParameters: { ...preset.windParameters },
-            lanternGroundLightParameters: { ...preset.lanternGroundLightParameters },
-            borderParameters: { ...preset.borderParameters },
-            ditheringParameters: { ...preset.ditheringParameters },
-            backgroundParameters: { ...preset.backgroundParameters },
-            painterlyPostParameters: { ...preset.painterlyPostParameters },
-            characterParameters: { ...preset.characterParameters },
-            characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
-            ...(preset.gameUiParameters ? { gameUiParameters: { ...preset.gameUiParameters } } : {}),
-            ...(preset.edgeParameters ? { edgeParameters: { ...preset.edgeParameters } } : {}),
-            ...(preset.propRimParameters ? { propRimParameters: { ...preset.propRimParameters } } : {}),
-        })
-
-        if (preset.seeThroughParameters) {
-            const values = {}
-            addSeeThroughValues(values)
-            syncingLeva.current = true
-            try {
-                levaStore.set(values, false)
-            } finally {
-                syncingLeva.current = false
-            }
-        }
-    }
-
     const setCharacterMaterialParam = (slotId, param) => (value, _, context) => {
         if (syncingLeva.current || context?.initial) return
 
         useStore.setState((state) => ({
-            sceneStylePreset: 'custom',
             characterMaterialParameters: {
                 ...state.characterMaterialParameters,
                 materials: {
@@ -422,7 +348,6 @@ export default function Controls() {
 
     useEffect(() => {
         const values = {
-            'General.style': sceneStylePreset,
             'General.perfMonitor': perfVisible,
             'General.bgWireframe': backgroundWireframe,
         }
@@ -458,7 +383,7 @@ export default function Controls() {
         } finally {
             syncingLeva.current = false
         }
-    }, [sceneStylePreset])
+    }, [])
 
     useEffect(() => {
         const values = {}
@@ -500,11 +425,8 @@ export default function Controls() {
         }
     }, [propRimParameters])
 
-    // Apply the active style's see-through config to the live module + Leva display
-    // (on mount and whenever the preset changes).
     useEffect(() => {
-        const preset = sceneStylePresets[sceneStylePreset]
-        const params = preset?.seeThroughParameters
+        const params = defaultSceneStyle.seeThroughParameters
         if (!params) return
         applySeeThroughParameters(params)
         const values = {}
@@ -515,16 +437,9 @@ export default function Controls() {
         } finally {
             syncingLeva.current = false
         }
-    }, [sceneStylePreset])
+    }, [])
 
     useControls('General', {
-        style: {
-            value: sceneStylePreset,
-            options: sceneStyleOptions,
-            onChange: (value, _, context) => {
-                if (!context?.initial) setSceneStylePreset(value)
-            },
-        },
         perfMonitor: {
             value: perfVisible,
             onChange: (value, _, context) => {
