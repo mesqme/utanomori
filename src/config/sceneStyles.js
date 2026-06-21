@@ -133,11 +133,11 @@ const painteryStyle = {
     },
     lanternGroundLightParameters: {
         radius: 3,
-        edgeSoftness: 1.99,
+        edgeSoftness: 3.26,
         edgeNoiseScale: 0.39,
         edgeNoiseStrength: 0,
-        innerBrightness: 1.2,
-        outerDarkness: 0,
+        innerBrightness: 1.1,
+        outerDarkness: 0.3,
     },
     borderParameters: {
         fadeMode: 'Paintery',

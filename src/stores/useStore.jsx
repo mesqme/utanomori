@@ -3,7 +3,7 @@ import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle } from '../config/sceneStyles.js'
 
-const GRASS_STYLE_VERSION = 18
+const GRASS_STYLE_VERSION = 19
 const CHARACTER_STYLIZED_VERSION = 3
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
