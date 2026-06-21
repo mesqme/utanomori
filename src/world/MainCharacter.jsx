@@ -9,6 +9,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import { getNearestRoadPoint } from './utils/roadField.js'
+import { createObjectFieldSampler } from './utils/objectField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
 import { seeThrough } from './utils/seeThrough.js'
@@ -38,6 +39,7 @@ const DECELERATION = 18.0
 const JUMP_VELOCITY = 4.2
 const GRAVITY = 13.0
 const GROUND_EPSILON = 0.02
+const HERO_COLLISION_RADIUS = 0.35 // hero body radius for pushing out of solid stones
 const SHADOW_GROUND_OFFSET = 0.025
 const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
@@ -82,6 +84,7 @@ export default function MainCharacter() {
     const cameraTargetRef = useRef(new THREE.Vector3())
     const wasJumpPressedRef = useRef(false)
     const isGroundedRef = useRef(true)
+    const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const [isMoving, setIsMoving] = useState(false)
 
     const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 32), [])
@@ -234,6 +237,24 @@ export default function MainCharacter() {
 
         position.x += velocity.x * safeDelta
         position.z += velocity.z * safeDelta
+
+        // Solid stones: push the hero out of any stone he walked into (gameplay only).
+        if (phase === PHASES.start) {
+            const objState = useStore.getState()
+            if (objState.objectParameters.enabled) {
+                const collider = colliderRef.current
+                if (collider.objParams !== objState.objectParameters || collider.roadParams !== objState.roadParameters) {
+                    collider.objParams = objState.objectParameters
+                    collider.roadParams = objState.roadParameters
+                    collider.sampler = createObjectFieldSampler(objState.objectParameters, objState.roadParameters)
+                }
+                const corrected = collider.sampler.collideCircle(position.x, position.z, HERO_COLLISION_RADIUS)
+                if (corrected) {
+                    position.x = corrected.x
+                    position.z = corrected.z
+                }
+            }
+        }
 
         const groundY = getGroundY(position.x, position.z)
         const groundedY = groundY + CHARACTER_CENTER_HEIGHT

@@ -294,6 +294,31 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
             return { suppress, leanX, leanZ }
         },
 
+        // Push a moving circle (the hero) out of any solid stones it overlaps. Returns the
+        // corrected { x, z } or null if it was already clear. Only stones are solid.
+        collideCircle(worldX, worldZ, radius) {
+            if (!settings.enabled) return null
+
+            let pushX = 0
+            let pushZ = 0
+            forEachNeighborInstance(worldX, worldZ, (instance) => {
+                if (instance.type !== 'stone') return
+                const dx = worldX - instance.worldX
+                const dz = worldZ - instance.worldZ
+                const minDist = instance.footprintRadius + radius
+                const distSq = dx * dx + dz * dz
+                if (distSq < minDist * minDist && distSq > 1e-8) {
+                    const dist = Math.sqrt(distSq)
+                    const push = minDist - dist
+                    pushX += (dx / dist) * push
+                    pushZ += (dz / dist) * push
+                }
+            })
+
+            if (pushX === 0 && pushZ === 0) return null
+            return { x: worldX + pushX, z: worldZ + pushZ }
+        },
+
         // Nearest object + its group — for future character placement / collision.
         sampleNearestObject(worldX, worldZ) {
             if (!settings.enabled) return null
