@@ -1,95 +1,102 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import useSongGame from '../stores/useSongGame.jsx'
 import { getGroundY } from './utils/groundHeight.js'
+import arrowModelUrl from '../assets/models/arrow.glb'
 
-// A single chevron band lying flat on the ground (XZ plane), pointing +Z. It's stroked
-// as one mitered "V": the two arms meet at a sharp outer tip (ahead) and an inner tip
-// (behind), so the geometry never overlaps itself — the alpha no longer doubles up where
-// the two lines used to cross.
-function buildArrowGeometry(size, width) {
-    const angle = 0.62 // half-angle of the chevron
-    const half = width / 2
-    const c = Math.cos(angle)
-    const s = Math.sin(angle)
-    const sx = s * size
-    const sz = c * size
+const smoothstep = THREE.MathUtils.smoothstep
+const _frontEuler = new THREE.Euler()
+const _overheadEuler = new THREE.Euler()
+const _frontQuat = new THREE.Quaternion()
+const _overheadQuat = new THREE.Quaternion()
+const _frontPos = new THREE.Vector3()
+const _overheadPos = new THREE.Vector3()
 
-    const outerTip = [0, half / s] // sharp point ahead (+z)
-    const innerTip = [0, -half / s] // point behind the joint
-    const lOut = [-sx - c * half, -sz + s * half]
-    const lIn = [-sx + c * half, -sz - s * half]
-    const rOut = [sx - c * half, -sz - s * half]
-    const rIn = [sx + c * half, -sz + s * half]
-
-    const positions = []
-    const quad = (a, b, cc, d) => {
-        positions.push(a[0], 0, a[1], b[0], 0, b[1], cc[0], 0, cc[1])
-        positions.push(a[0], 0, a[1], cc[0], 0, cc[1], d[0], 0, d[1])
-    }
-    quad(lOut, outerTip, innerTip, lIn) // left arm
-    quad(outerTip, rOut, rIn, innerTip) // right arm
-
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
-    return geometry
-}
-
-// Ground pointer toward the current hidden companion: a flat 2-line white arrow that
-// sits just in front of the hero, aligned to the surface, fading with distance.
+// A single arrow (arrow.glb, forward = local -X, origin behind it). It floats in front of the
+// hero pointing at the hidden companion at ANY distance; once close it travels high above the
+// companion, points down and spins; when the mini-game starts it scales away.
 export default function TargetArrow() {
-    const meshRef = useRef(null)
+    const groupRef = useRef(null)
+    const interactScaleRef = useRef(1)
     const arrow = useStore((state) => state.arrowParameters)
 
-    const geometry = useMemo(() => buildArrowGeometry(arrow.size, arrow.width), [arrow.size, arrow.width])
+    const { nodes } = useGLTF(arrowModelUrl)
+    // Render last / on top: transparent pass + no depth test/write so the grass (also
+    // transparent, drawn after the opaque pass) never paints over the arrow.
     const material = useMemo(
-        () => new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, depthWrite: false, side: THREE.DoubleSide, toneMapped: false }),
+        () =>
+            new THREE.MeshBasicMaterial({
+                color: '#ffffff',
+                toneMapped: false,
+                side: THREE.DoubleSide,
+                transparent: true,
+                depthTest: false,
+                depthWrite: false,
+            }),
         []
     )
-
-    useEffect(() => () => geometry.dispose(), [geometry])
     useEffect(() => () => material.dispose(), [material])
 
-    useFrame(() => {
-        const mesh = meshRef.current
-        if (!mesh) return
+    useFrame((state, delta) => {
+        const group = groupRef.current
+        if (!group) return
 
-        const companions = useCompanions.getState()
-        const target = companions.target
-        const baseVisible = usePhases.getState().phase === PHASES.start && !!target && !companions.targetInRange
-        if (!baseVisible) {
-            mesh.visible = false
+        const target = useCompanions.getState().target
+        if (usePhases.getState().phase !== PHASES.start || !target) {
+            group.visible = false
+            interactScaleRef.current = 1
             return
         }
+        group.visible = true
 
         const hero = useStore.getState().ballPosition
         let dx = target.x - hero.x
         let dz = target.z - hero.z
         const distance = Math.hypot(dx, dz) || 1
-
-        // Only reveal the arrow once you are within range — far away you search yourself.
-        if (distance > arrow.revealDistance) {
-            mesh.visible = false
-            return
-        }
-        mesh.visible = true
-
         dx /= distance
         dz /= distance
 
-        const px = hero.x + dx * arrow.distance
-        const pz = hero.z + dz * arrow.distance
-        mesh.position.set(px, getGroundY(px, pz) + arrow.yOffset, pz)
-        mesh.rotation.y = Math.atan2(dx, dz) // local +Z faces the target
+        // Overhead blend: 0 = far (in front of the hero) → 1 = above the companion.
+        const closeInner = arrow.closeRadius - arrow.closeBand
+        const b = 1 - smoothstep(distance, closeInner, arrow.closeRadius)
 
-        const t = THREE.MathUtils.clamp((arrow.fadeFar - distance) / Math.max(arrow.fadeFar - arrow.fadeNear, 0.001), 0, 1)
-        material.opacity = THREE.MathUtils.lerp(arrow.minOpacity, arrow.maxOpacity, t)
+        // Far state: floating in front of the hero, flat, pointing at the target.
+        const fx = hero.x + dx * arrow.distance
+        const fz = hero.z + dz * arrow.distance
+        _frontPos.set(fx, getGroundY(fx, fz) + arrow.yOffset, fz)
+        _frontEuler.set(0, Math.atan2(dx, dz) + THREE.MathUtils.degToRad(arrow.modelYaw), 0)
+        _frontQuat.setFromEuler(_frontEuler)
+
+        // Overhead state: high above the companion, pointing straight down (-X → -Y), spinning.
+        _overheadPos.set(target.x, getGroundY(target.x, target.z) + arrow.overheadHeight, target.z)
+        _overheadEuler.set(0, state.clock.elapsedTime * arrow.spinSpeed, Math.PI / 2)
+        _overheadQuat.setFromEuler(_overheadEuler)
+
+        // Blend front → overhead + a bob (a touch more once overhead).
+        _frontPos.lerp(_overheadPos, b)
+        _frontPos.y += Math.sin(state.clock.elapsedTime * arrow.floatSpeed) * arrow.floatAmount * (0.35 + 0.65 * b)
+        group.position.copy(_frontPos)
+        group.quaternion.copy(_frontQuat.slerp(_overheadQuat, b))
+
+        // Scale away while the mini-game is active.
+        const active = useSongGame.getState().active
+        interactScaleRef.current = THREE.MathUtils.damp(interactScaleRef.current, active ? 0 : 1, 10, Math.min(delta, 0.1))
+        group.scale.setScalar(arrow.scale * interactScaleRef.current)
+
         material.color.set(arrow.color)
     })
 
-    return <mesh ref={meshRef} geometry={geometry} material={material} renderOrder={3} frustumCulled={false} />
+    return (
+        <group ref={groupRef}>
+            <mesh geometry={nodes.arrow?.geometry} material={material} renderOrder={1000} frustumCulled={false} />
+        </group>
+    )
 }
+
+useGLTF.preload(arrowModelUrl)

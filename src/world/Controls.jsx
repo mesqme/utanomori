@@ -1552,15 +1552,16 @@ export default function Controls() {
     })
 
     useControls('Target Arrow', {
-        width: { value: arrowParameters.width, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('arrowParameters', 'width') },
-        size: { value: arrowParameters.size, min: 0.3, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'size') },
         distance: { value: arrowParameters.distance, min: 0.5, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'distance') },
         yOffset: { value: arrowParameters.yOffset, min: 0, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'yOffset') },
-        revealDistance: { value: arrowParameters.revealDistance, min: 2, max: 60, step: 0.5, onChange: setParam('arrowParameters', 'revealDistance') },
-        fadeNear: { value: arrowParameters.fadeNear, min: 0, max: 40, step: 0.5, onChange: setParam('arrowParameters', 'fadeNear') },
-        fadeFar: { value: arrowParameters.fadeFar, min: 1, max: 80, step: 0.5, onChange: setParam('arrowParameters', 'fadeFar') },
-        minOpacity: { value: arrowParameters.minOpacity, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'minOpacity') },
-        maxOpacity: { value: arrowParameters.maxOpacity, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'maxOpacity') },
+        scale: { value: arrowParameters.scale, min: 0.05, max: 2, step: 0.01, onChange: setParam('arrowParameters', 'scale') },
+        modelYaw: { value: arrowParameters.modelYaw, min: 0, max: 360, step: 1, onChange: setParam('arrowParameters', 'modelYaw') },
+        closeRadius: { value: arrowParameters.closeRadius, min: 0, max: 20, step: 0.1, onChange: setParam('arrowParameters', 'closeRadius') },
+        closeBand: { value: arrowParameters.closeBand, min: 0.1, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'closeBand') },
+        overheadHeight: { value: arrowParameters.overheadHeight, min: 0, max: 8, step: 0.1, onChange: setParam('arrowParameters', 'overheadHeight') },
+        spinSpeed: { value: arrowParameters.spinSpeed, min: 0, max: 8, step: 0.05, onChange: setParam('arrowParameters', 'spinSpeed') },
+        floatAmount: { value: arrowParameters.floatAmount, min: 0, max: 2, step: 0.02, onChange: setParam('arrowParameters', 'floatAmount') },
+        floatSpeed: { value: arrowParameters.floatSpeed, min: 0, max: 8, step: 0.1, onChange: setParam('arrowParameters', 'floatSpeed') },
         color: { value: arrowParameters.color, onChange: setParam('arrowParameters', 'color') },
     })
 

@@ -30,17 +30,20 @@ const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     cssColorB: '#9d1111',
 }
 
-// Flat ground arrow pointing from the hero toward the hidden companion (TargetArrow).
+// A single arrow (arrow.glb, forward = local -X, origin behind it) floating in front of the
+// hero toward the hidden companion at ANY distance (TargetArrow). Once close it travels high
+// above the companion, points down and spins; when the mini-game starts it scales away.
 const DEFAULT_ARROW_PARAMETERS = {
-    width: 0.12, // line thickness (world units)
-    size: 1.1, // arm length
-    distance: 3.0, // how far in front of the hero it sits (keep < terrain radius)
-    yOffset: 1.4, // lift above the ground (above the grass)
-    revealDistance: 14, // arrow only appears once within this distance of the target
-    fadeNear: 4, // distance to the target where it is fully opaque
-    fadeFar: 13, // distance where it fades to minOpacity
-    minOpacity: 0.18,
-    maxOpacity: 0.95,
+    distance: 2.6, // how far in front of the hero the arrow floats (far state)
+    yOffset: 2.0, // float height above the ground (far state)
+    scale: 0.4, // arrow model scale
+    modelYaw: 90, // deg — aligns the model's -X "forward" with the target direction
+    closeRadius: 6, // distance at which the arrow starts travelling above the companion
+    closeBand: 3, // transition width (overhead complete at closeRadius - closeBand)
+    overheadHeight: 4, // how high above the companion the arrow hovers + spins
+    spinSpeed: 1.6, // overhead spin speed
+    floatAmount: 0.25, // bob amplitude
+    floatSpeed: 2.0, // bob speed
     color: '#ffffff',
 }
 
