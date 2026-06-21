@@ -10,13 +10,21 @@
     position: fixed;
     left: 50%;
     top: 50%;
-    width: 200px;
-    height: 200px;
+    width: var(--sj-loader-size, 200px);
+    height: var(--sj-loader-size, 200px);
     transform: translate(-50%, -50%);
     border-radius: 50%;
     background: conic-gradient(from -90deg, var(--sj-ui-primary) 360deg, var(--sj-ui-ring-track) 360deg);
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--sj-loader-ring-width, 12px)),
+        #000 calc(100% - var(--sj-loader-ring-edge, 11px))
+    );
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--sj-loader-ring-width, 12px)),
+        #000 calc(100% - var(--sj-loader-ring-edge, 11px))
+    );
 }
 
 .loader-debug-swatches {

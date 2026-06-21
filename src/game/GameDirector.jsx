@@ -3,6 +3,7 @@ import { gsap } from 'gsap'
 
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
+import useStore from '../stores/useStore.jsx'
 import { cameraRig } from './cameraRig.js'
 import {
     CAMERA_TOP_SHOT,
@@ -27,6 +28,7 @@ export default function GameDirector() {
     const debugMode = usePhases((state) => state.debugMode)
     const creditsShown = usePhases((state) => state.creditsShown)
     const found = useCompanions((state) => state.found)
+    const loaderCameraHeight = useStore((state) => state.loaderDebugParameters.cameraHeight)
     const setPhase = usePhases((state) => state.setPhase)
     const setCreditsShown = usePhases((state) => state.setCreditsShown)
     const introTweenRef = useRef(null)
@@ -42,11 +44,11 @@ export default function GameDirector() {
         if (phase === PHASES.loading || phase === PHASES.warmup) {
             cameraRig.mode = 'orbit'
             cameraRig.lerpSpeed = phase === PHASES.warmup ? 6 : 30
-            applyShot(CAMERA_TOP_SHOT)
+            applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
         } else if (phase === PHASES.intro) {
             cameraRig.mode = 'orbit'
             cameraRig.lerpSpeed = 9
-            applyShot(CAMERA_TOP_SHOT)
+            applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
             introTweenRef.current = gsap.to(cameraRig, {
                 angle: CAMERA_FRONT_SHOT.angle,
                 distance: CAMERA_FRONT_SHOT.distance,
@@ -94,7 +96,7 @@ export default function GameDirector() {
                 introTweenRef.current = null
             }
         }
-    }, [phase])
+    }, [phase, loaderCameraHeight])
 
     // Toggling debug mode mid-run jumps to the right place (once assets are loaded).
     useEffect(() => {

@@ -60,10 +60,15 @@ function getLoaderDebugTarget() {
     return { x: targetX, z: targetZ }
 }
 
+function getLoaderCameraHeight() {
+    return useStore.getState().loaderDebugParameters.cameraHeight ?? CAMERA_TOP_SHOT.height
+}
+
 function getTopCameraPosition(target, y = 0) {
+    const cameraHeight = getLoaderCameraHeight()
     return new THREE.Vector3(
         target.x + Math.sin(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance,
-        y + CAMERA_TOP_SHOT.height,
+        y + cameraHeight,
         target.z + Math.cos(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance
     )
 }
@@ -344,7 +349,7 @@ export default function MainCharacter() {
 
             cameraPosition.set(
                 targetX + Math.sin(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance,
-                visualPosition.y + CAMERA_TOP_SHOT.height,
+                visualPosition.y + loaderDebugParameters.cameraHeight,
                 targetZ + Math.cos(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance
             )
             cameraTarget.set(targetX, visualPosition.y + CAMERA_TOP_SHOT.targetYOffset, targetZ)

@@ -9,7 +9,7 @@ const CHARACTER_STYLIZED_VERSION = 3
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
 const OBJECT_STYLE_VERSION = 3
-const LOADER_DEBUG_VERSION = 3
+const LOADER_DEBUG_VERSION = 5
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
     debugOrbitAngle: 0,
@@ -20,9 +20,12 @@ const DEFAULT_CAMERA_PARAMETERS = {
 
 const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     enabled: false,
-    targetX: 5.714,
-    targetZ: -0.28,
+    targetX: 5.71,
+    targetZ: -0.2,
     nudgeStep: 0.02,
+    circleRadius: 101,
+    ringWidth: 12.5,
+    cameraHeight: 18,
     cssColorA: '#03021a',
     cssColorB: '#9d1111',
 }

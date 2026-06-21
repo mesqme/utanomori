@@ -7,6 +7,7 @@ import Controls from './Controls.jsx'
 import BackgroundSphere from './BackgroundSphere.jsx'
 import Companions from './Companions.jsx'
 import MusicStones from './MusicStones.jsx'
+import CameraProjection from './CameraProjection.jsx'
 import useStore from '../stores/useStore.jsx'
 import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.jsx'
 
@@ -20,6 +21,7 @@ export default function Experience() {
 
             {perfVisible && <Perf position="top-left" />}
 
+            <CameraProjection />
             <Lights />
             <Terrain />
             <MainCharacter />

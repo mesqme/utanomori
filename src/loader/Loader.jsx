@@ -5,6 +5,7 @@ import { gsap } from 'gsap'
 import usePhases, { PHASES } from '../stores/usePhases'
 import useStore from '../stores/useStore'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
@@ -17,6 +18,7 @@ export default function Loader() {
     const setPhase = usePhases((s) => s.setPhase)
     const debugMode = usePhases((s) => s.debugMode)
     const loaderDebugParameters = useStore((s) => s.loaderDebugParameters)
+    const fixedSizeStyle = useLoaderFixedSizeStyle(loaderDebugParameters)
 
     const [displayed, setDisplayed] = useState(0)
     const [isExiting, setIsExiting] = useState(false)
@@ -84,6 +86,7 @@ export default function Loader() {
         background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, ${RING_TRACK_COLOR} ${percent * 3.6}deg)`,
     }
     const loaderStyle = {
+        ...fixedSizeStyle,
         '--sj-loader-background': loaderDebugParameters.cssColorA,
         '--sj-loader-hero': loaderDebugParameters.cssColorB,
     }

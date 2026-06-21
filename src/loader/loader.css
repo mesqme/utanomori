@@ -21,15 +21,23 @@
 }
 
 .loader-ring {
-    width: 200px;
-    height: 200px;
+    width: var(--sj-loader-size, 200px);
+    height: var(--sj-loader-size, 200px);
     border-radius: 50%;
     box-sizing: border-box;
     position: relative;
     z-index: 2;
     pointer-events: none;
-    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
-    mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+    -webkit-mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--sj-loader-ring-width, 12px)),
+        #000 calc(100% - var(--sj-loader-ring-edge, 11px))
+    );
+    mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - var(--sj-loader-ring-width, 12px)),
+        #000 calc(100% - var(--sj-loader-ring-edge, 11px))
+    );
 }
 
 .loader-ring-inner {
@@ -40,8 +48,8 @@
     position: absolute;
     display: grid;
     place-items: center;
-    width: 200px;
-    height: 200px;
+    width: var(--sj-loader-size, 200px);
+    height: var(--sj-loader-size, 200px);
     border-radius: 50%;
     background-color: var(--sj-loader-hero);
     transition: opacity 0.18s ease;
@@ -57,7 +65,7 @@
 }
 
 .loader-percent {
-    font-size: 48px;
+    font-size: var(--sj-loader-percent-size, 48px);
     color: var(--sj-ui-primary);
     font-family: 'Bebas Neue', sans-serif;
     font-weight: 100;
@@ -67,7 +75,7 @@
 }
 
 .loader-go-button {
-    font-size: 52px;
+    font-size: var(--sj-loader-go-size, 52px);
     letter-spacing: 0.15em;
     color: var(--sj-ui-primary);
     font-family: 'Bebas Neue', sans-serif;

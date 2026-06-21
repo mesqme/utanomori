@@ -1,4 +1,5 @@
 import useStore from '../stores/useStore.jsx'
+import { useLoaderFixedSizeStyle } from '../loader/useLoaderFixedSizeStyle.js'
 import './LoaderDebugOverlay.css'
 
 function nudgeTarget(dx, dz) {
@@ -23,6 +24,7 @@ function nudgeTarget(dx, dz) {
 
 export default function LoaderDebugOverlay() {
     const params = useStore((state) => state.loaderDebugParameters)
+    const fixedSizeStyle = useLoaderFixedSizeStyle(params)
 
     if (!params.enabled) return null
 
@@ -31,7 +33,7 @@ export default function LoaderDebugOverlay() {
     const step = params.nudgeStep
 
     return (
-        <div className="loader-debug-overlay">
+        <div className="loader-debug-overlay" style={fixedSizeStyle}>
             <div className="loader-debug-ring" />
 
             <div className="loader-debug-swatches" aria-hidden="true">
@@ -44,6 +46,8 @@ export default function LoaderDebugOverlay() {
                 <div className="loader-debug-readout">
                     x {targetX.toFixed(3)}
                     <br />z {targetZ.toFixed(3)}
+                    <br />y {params.cameraHeight.toFixed(2)}
+                    <br />r {params.circleRadius.toFixed(1)} / w {params.ringWidth.toFixed(1)}
                 </div>
                 <div className="loader-debug-pad">
                     <button type="button" className="loader-debug-button loader-debug-button--up" onClick={() => nudgeTarget(0, -step)} aria-label="Nudge target up">

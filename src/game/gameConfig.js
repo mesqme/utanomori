@@ -6,6 +6,8 @@ export const CAMERA_FRONT_SHOT = { angle: Math.PI, distance: 8.2, height: 1.9, t
 // angle 2π keeps the intro's rotation going one continuous direction, then we hand
 // off to the real follow camera which lands on exactly this pose.
 export const CAMERA_FOLLOW_ORBIT = { angle: Math.PI * 2, distance: 12, height: 10, targetYOffset: 0.25 }
+export const CAMERA_BASE_FOV = 45
+export const CAMERA_REFERENCE_HEIGHT = 1080
 
 export const INTRO_TRAVEL_DURATION = 2.6 // seconds for the camera to arc top → front
 export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the side fly-around into gameplay
