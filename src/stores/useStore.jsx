@@ -9,12 +9,22 @@ const CHARACTER_STYLIZED_VERSION = 3
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
 const OBJECT_STYLE_VERSION = 3
+const LOADER_DEBUG_VERSION = 3
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
     debugOrbitAngle: 0,
     debugOrbitDistance: 18.9,
     debugOrbitHeight: 15.1,
     debugTargetYOffset: 0.4,
+}
+
+const DEFAULT_LOADER_DEBUG_PARAMETERS = {
+    enabled: false,
+    targetX: 5.714,
+    targetZ: -0.28,
+    nudgeStep: 0.02,
+    cssColorA: '#03021a',
+    cssColorB: '#9d1111',
 }
 
 // Flat ground arrow pointing from the hero toward the hidden companion (TargetArrow).
@@ -87,6 +97,7 @@ const createStore = () =>
             grassStyleVersion: GRASS_STYLE_VERSION,
             characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
             objectStyleVersion: OBJECT_STYLE_VERSION,
+            loaderDebugVersion: LOADER_DEBUG_VERSION,
 
             /**
              * Terrain parameters
@@ -146,6 +157,7 @@ const createStore = () =>
              * Camera debug parameters
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+            loaderDebugParameters: { ...DEFAULT_LOADER_DEBUG_PARAMETERS },
             arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
 
@@ -211,6 +223,7 @@ if (import.meta?.hot) {
     const applyCharacterStylizedDefaults = state.characterStylizedVersion !== CHARACTER_STYLIZED_VERSION
     const applyGameUiDefaults = state.gameUiVersion !== GAME_UI_VERSION
     const applyObjectStyleDefaults = state.objectStyleVersion !== OBJECT_STYLE_VERSION
+    const applyLoaderDebugDefaults = state.loaderDebugVersion !== LOADER_DEBUG_VERSION
     const characterMaterialParameters = applyCharacterStylizedDefaults
         ? cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters)
         : {
@@ -234,6 +247,7 @@ if (import.meta?.hot) {
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         gameUiVersion: GAME_UI_VERSION,
         objectStyleVersion: OBJECT_STYLE_VERSION,
+        loaderDebugVersion: LOADER_DEBUG_VERSION,
         terrainParameters: {
             ...defaultSceneStyle.terrainParameters,
             ...state.terrainParameters,
@@ -274,6 +288,9 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+        loaderDebugParameters: applyLoaderDebugDefaults
+            ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS }
+            : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },

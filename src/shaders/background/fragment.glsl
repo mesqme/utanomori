@@ -1,6 +1,8 @@
 // Layer 1 — base colour (vertical gradient)
-uniform vec3 uColor; // top / zenith colour (scene background colour)
-uniform vec3 uColorHorizon; // horizon / lower colour
+uniform vec3 uBackgroundColor; // flat pre-intro colour and final texture mix colour
+uniform vec3 uGradientTopColor; // top / zenith gradient colour
+uniform vec3 uHorizonColor; // horizon / lower gradient colour
+uniform float uGradientIntensity; // 0 = flat base colour, 1 = full vertical gradient
 uniform float uGradientHeight; // sky direction.y where the horizon colour sits
 uniform float uGradientPower; // gradient curve
 
@@ -11,9 +13,8 @@ uniform sampler2D uTexture;
 uniform float uTextureSize;
 uniform float uTextureLayer2;
 uniform float uTextureContrast; // contrast applied to the texture itself, before use
-uniform float uColorIntensity; // brightness variation
-uniform vec3 uColorMixColor; // secondary colour mixed in by the texture
-uniform float uColorMixIntensity; // secondary colour mix amount
+uniform float uTextureBrightness; // brightness variation
+uniform float uTextureMixIntensity; // background colour mix amount
 
 // Layer 3 — stars (direction space, so they stay fixed in the sky)
 uniform bool uStarsEnabled;
@@ -91,7 +92,8 @@ void main() {
     // ----- Layer 1: base vertical gradient -----
     float h = clamp((dir.y - uGradientHeight) / max(1.0 - uGradientHeight, 1e-3), 0.0, 1.0);
     h = pow(h, uGradientPower);
-    vec3 color = mix(uColorHorizon, uColor, h);
+    vec3 gradientColor = mix(uHorizonColor, uGradientTopColor, h);
+    vec3 color = mix(uBackgroundColor, gradientColor, clamp(uGradientIntensity, 0.0, 1.0));
 
     // ----- Layer 2: paintery texture colour variation (screen space) -----
     if (uTextureEnabled) {
@@ -100,10 +102,10 @@ void main() {
         brush = mix(brush, texture2D(uTexture, uv * uTextureLayer2 + vec2(0.37)).r, 0.5);
         brush = clamp((brush - 0.5) * uTextureContrast + 0.5, 0.0, 1.0); // contrast on the texture itself
         if (uColorMode != 1) {
-            color *= 1.0 + (brush - 0.5) * 2.0 * uColorIntensity;
+            color *= 1.0 + (brush - 0.5) * 2.0 * uTextureBrightness;
         }
         if (uColorMode != 0) {
-            color = mix(color, uColorMixColor, clamp(brush * uColorMixIntensity, 0.0, 1.0));
+            color = mix(color, uBackgroundColor, clamp(brush * uTextureMixIntensity, 0.0, 1.0));
         }
     }
 

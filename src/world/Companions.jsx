@@ -313,7 +313,7 @@ export default function Companions() {
             radiusFactor: revealCircle.radiusFactor,
             chunkSize: revealCircle.chunkSize,
             fadeOffset: store.objectParameters.fadeOffset,
-            backgroundColor: store.terrainParameters.backgroundColor,
+            backgroundColor: store.backgroundParameters.backgroundColor,
             fadeMode: store.borderParameters.fadeMode,
             pixelSize: store.ditheringParameters.pixelSize,
             painterlyEnabled: store.objectParameters.painterlyEnabled,

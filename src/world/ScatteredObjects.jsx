@@ -165,7 +165,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             radiusFactor: revealCircle.radiusFactor,
             chunkSize: revealCircle.chunkSize,
             fadeOffset: state.objectParameters.fadeOffset,
-            backgroundColor: state.terrainParameters.backgroundColor,
+            backgroundColor: state.backgroundParameters.backgroundColor,
             fadeMode: state.borderParameters.fadeMode,
             pixelSize: state.ditheringParameters.pixelSize,
             painterlyEnabled: state.objectParameters.painterlyEnabled,

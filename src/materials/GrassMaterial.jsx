@@ -34,7 +34,7 @@ export default function useGrassMaterial({
     painteryTexture,
 }) {
     const grassParameters = useStore((s) => s.grassParameters)
-    const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
+    const backgroundColor = useStore((s) => s.backgroundParameters.backgroundColor)
     const grassBaseBrightness = useStore((s) => s.grassParameters.baseBrightness)
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const windParameters = useStore((s) => s.windParameters)

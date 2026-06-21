@@ -1,0 +1,104 @@
+.loader-debug-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10001;
+    pointer-events: none;
+    font-family: 'Bebas Neue', sans-serif;
+}
+
+.loader-debug-ring {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    width: 200px;
+    height: 200px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: conic-gradient(from -90deg, var(--sj-ui-primary) 360deg, var(--sj-ui-ring-track) 360deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 12px), #000 calc(100% - 11px));
+}
+
+.loader-debug-swatches {
+    position: fixed;
+    left: 24px;
+    top: 24px;
+    display: flex;
+    gap: 10px;
+}
+
+.loader-debug-swatch {
+    width: 54px;
+    height: 54px;
+    border-radius: 4px;
+    box-shadow: 0 0 0 1px rgba(255, 248, 255, 0.5);
+}
+
+.loader-debug-panel {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: 168px;
+    padding: 12px;
+    border-radius: 6px;
+    background: rgba(7, 2, 42, 0.72);
+    color: var(--sj-ui-primary);
+    pointer-events: auto;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+.loader-debug-title {
+    margin-bottom: 8px;
+    font-size: 19px;
+    letter-spacing: 0.08em;
+}
+
+.loader-debug-readout {
+    margin-bottom: 10px;
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.45;
+}
+
+.loader-debug-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 42px);
+    grid-template-rows: repeat(3, 34px);
+    gap: 6px;
+    justify-content: center;
+}
+
+.loader-debug-button {
+    border: 1px solid rgba(255, 248, 255, 0.8);
+    border-radius: 4px;
+    background: rgba(255, 248, 255, 0.08);
+    color: var(--sj-ui-primary);
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.loader-debug-button:hover {
+    background: rgba(255, 248, 255, 0.2);
+}
+
+.loader-debug-button--up {
+    grid-column: 2;
+    grid-row: 1;
+}
+
+.loader-debug-button--left {
+    grid-column: 1;
+    grid-row: 2;
+}
+
+.loader-debug-button--right {
+    grid-column: 3;
+    grid-row: 2;
+}
+
+.loader-debug-button--down {
+    grid-column: 2;
+    grid-row: 3;
+}

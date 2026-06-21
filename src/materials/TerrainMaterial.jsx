@@ -18,7 +18,7 @@ export default function useTerrainMaterial({
     painteryTexture,
 }) {
     const terrainColor = useStore((s) => s.terrainParameters.color)
-    const backgroundColor = useStore((s) => s.terrainParameters.backgroundColor)
+    const backgroundColor = useStore((s) => s.backgroundParameters.backgroundColor)
     const terrainBaseBrightness = useStore((s) => s.terrainParameters.baseBrightness)
     const groundTextureEnabled = useStore((s) => s.terrainParameters.groundTextureEnabled)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)

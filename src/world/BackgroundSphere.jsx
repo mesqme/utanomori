@@ -4,16 +4,16 @@ import { useTexture } from '@react-three/drei'
 import { useEffect, useMemo, useRef } from 'react'
 
 import useStore from '../stores/useStore.jsx'
-import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import usePhases from '../stores/usePhases.jsx'
 import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials/BackgroundMaterial.js'
 import { getRefScale } from './utils/screenScale.js'
-import { GAMEPLAY_ENTRY_DURATION } from '../game/gameConfig.js'
+import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import watercolorBasicUrl from '../assets/textures/watercolorBasicLarge.png'
 
-export default function BackgroundSphere({ color }) {
+export default function BackgroundSphere() {
     const meshRef = useRef()
     const rotationAngle = useRef(0)
-    const colorFade = useRef(0) // texture colour-intensity ramps 0 → 1 once gameplay starts
+    const textureReveal = useRef(0)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
     const watercolorTexture = useTexture(watercolorBasicUrl)
@@ -39,26 +39,23 @@ export default function BackgroundSphere({ color }) {
     useFrame((rootState, delta) => {
         const store = useStore.getState()
         const params = store.backgroundParameters
-        // Follow the same smoothed point as the terrain centre and camera target, so the
-        // sky stays locked to the ground instead of snapping to the raw character position.
+
         meshRef.current.position.copy(store.smoothedCircleCenter)
-        // Optional slow spin around Y carries the stars across the sky.
         if (params.rotationEnabled) rotationAngle.current += (params.rotationSpeed ?? 0) * delta
         meshRef.current.rotation.y = rotationAngle.current
 
-        // Texture colour intensity starts at 0 (loading / warmup / intro dialogue) and
-        // fades up to its full value once the dialogue ends and the camera moves into the
-        // gameplay position; it then holds (incl. credits) until a fresh cycle resets it.
         const phase = usePhases.getState().phase
-        const beforeGameplay = phase === PHASES.loading || phase === PHASES.warmup || phase === PHASES.intro
-        colorFade.current = beforeGameplay ? 0 : Math.min(1, colorFade.current + delta / GAMEPLAY_ENTRY_DURATION)
+        textureReveal.current = updatePhaseTextureReveal(textureReveal.current, phase, delta)
+        const textureAmount = textureReveal.current
 
         updateBackgroundMaterial(material, {
             refScale: getRefScale(rootState),
             time: rootState.clock.elapsedTime,
-            color,
             ...params,
-            colorIntensity: (params.colorIntensity ?? 0.4) * colorFade.current,
+            gradientIntensity: (params.gradientIntensity ?? 1) * textureAmount,
+            textureBrightness: (params.textureBrightness ?? params.colorIntensity ?? 0.4) * textureAmount,
+            textureMixIntensity: params.textureMixIntensity ?? params.colorMixIntensity ?? 0.0,
+            starBrightness: (params.starBrightness ?? 1.2) * textureAmount,
         })
     })
 

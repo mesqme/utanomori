@@ -14,7 +14,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
     Terrain: {
         groundTexture: 'groundTextureEnabled',
         color: 'color',
-        backgroundColor: 'backgroundColor',
         baseBrightness: 'baseBrightness',
         segments: 'segments',
         scale: 'scale',
@@ -171,7 +170,10 @@ const LEVA_SECTION_PATHS = Object.freeze({
         pixelSize: 'pixelSize',
     },
     Background: {
-        colorHorizon: 'colorHorizon',
+        backgroundColor: 'backgroundColor',
+        gradientTop: 'gradientTopColor',
+        horizonColor: 'horizonColor',
+        gradientIntensity: 'gradientIntensity',
         gradientHeight: 'gradientHeight',
         gradientPower: 'gradientPower',
         textureEnabled: 'textureEnabled',
@@ -179,9 +181,8 @@ const LEVA_SECTION_PATHS = Object.freeze({
         textureSize: 'textureSize',
         textureLayer2: 'textureLayer2',
         textureContrast: 'textureContrast',
-        colorIntensity: 'colorIntensity',
-        colorMixColor: 'colorMixColor',
-        colorMixIntensity: 'colorMixIntensity',
+        textureBrightness: 'textureBrightness',
+        textureMix: 'textureMixIntensity',
         starsEnabled: 'starsEnabled',
         starStyle: 'starStyle',
         starCellSize: 'starCellSize',
@@ -258,6 +259,14 @@ const LEVA_SECTION_PATHS = Object.freeze({
         debugOrbitHeight: 'debugOrbitHeight',
         debugTargetYOffset: 'debugTargetYOffset',
     },
+    'Loader Debug': {
+        enabled: 'enabled',
+        targetX: 'targetX',
+        targetZ: 'targetZ',
+        step: 'nudgeStep',
+        cssA: 'cssColorA',
+        cssB: 'cssColorB',
+    },
     'Game UI': {
         bubbleShape: 'bubbleShape',
         buttonShape: 'buttonShape',
@@ -308,6 +317,7 @@ export default function Controls() {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const arrowParameters = useStore((state) => state.arrowParameters)
     const songGameParameters = useStore((state) => state.songGameParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
@@ -371,6 +381,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Leaves Edge', edgeParameters, LEVA_SECTION_PATHS['Leaves Edge'])
         addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
         addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
+        addLevaSectionValues(values, 'Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
 
         mainCharacterMaterialGroups.forEach((group) => {
             values[`Character Stylized.${group.label} Base`] =
@@ -396,6 +407,18 @@ export default function Controls() {
             syncingLeva.current = false
         }
     }, [cameraParameters])
+
+    useEffect(() => {
+        const values = {}
+        addLevaSectionValues(values, 'Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
+
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [loaderDebugParameters])
 
     useEffect(() => {
         const values = {}
@@ -586,10 +609,6 @@ export default function Controls() {
         color: {
             value: terrainParameters.color,
             onChange: setParam('terrainParameters', 'color'),
-        },
-        backgroundColor: {
-            value: terrainParameters.backgroundColor,
-            onChange: setParam('terrainParameters', 'backgroundColor'),
         },
         baseBrightness: {
             value: terrainParameters.baseBrightness,
@@ -1290,9 +1309,24 @@ export default function Controls() {
     })
 
     useControls('Background', {
-        colorHorizon: {
-            value: backgroundParameters.colorHorizon,
-            onChange: setParam('backgroundParameters', 'colorHorizon'),
+        backgroundColor: {
+            value: backgroundParameters.backgroundColor,
+            onChange: setParam('backgroundParameters', 'backgroundColor'),
+        },
+        gradientTop: {
+            value: backgroundParameters.gradientTopColor,
+            onChange: setParam('backgroundParameters', 'gradientTopColor'),
+        },
+        horizonColor: {
+            value: backgroundParameters.horizonColor,
+            onChange: setParam('backgroundParameters', 'horizonColor'),
+        },
+        gradientIntensity: {
+            value: backgroundParameters.gradientIntensity,
+            min: 0,
+            max: 1,
+            step: 0.01,
+            onChange: setParam('backgroundParameters', 'gradientIntensity'),
         },
         gradientHeight: {
             value: backgroundParameters.gradientHeight,
@@ -1338,23 +1372,19 @@ export default function Controls() {
             step: 0.05,
             onChange: setParam('backgroundParameters', 'textureContrast'),
         },
-        colorIntensity: {
-            value: backgroundParameters.colorIntensity,
+        textureBrightness: {
+            value: backgroundParameters.textureBrightness,
             min: 0,
             max: 4,
             step: 0.01,
-            onChange: setParam('backgroundParameters', 'colorIntensity'),
+            onChange: setParam('backgroundParameters', 'textureBrightness'),
         },
-        colorMixColor: {
-            value: backgroundParameters.colorMixColor,
-            onChange: setParam('backgroundParameters', 'colorMixColor'),
-        },
-        colorMixIntensity: {
-            value: backgroundParameters.colorMixIntensity,
+        textureMix: {
+            value: backgroundParameters.textureMixIntensity,
             min: 0,
             max: 2,
             step: 0.01,
-            onChange: setParam('backgroundParameters', 'colorMixIntensity'),
+            onChange: setParam('backgroundParameters', 'textureMixIntensity'),
         },
         starsEnabled: {
             value: backgroundParameters.starsEnabled,
@@ -1758,6 +1788,42 @@ export default function Controls() {
             max: 4,
             step: 0.01,
             onChange: setParam('cameraParameters', 'debugTargetYOffset'),
+        },
+    })
+
+    useControls('Loader Debug', {
+        enabled: {
+            value: loaderDebugParameters.enabled,
+            onChange: setParam('loaderDebugParameters', 'enabled'),
+        },
+        targetX: {
+            value: loaderDebugParameters.targetX,
+            min: -12,
+            max: 12,
+            step: 0.001,
+            onChange: setParam('loaderDebugParameters', 'targetX'),
+        },
+        targetZ: {
+            value: loaderDebugParameters.targetZ,
+            min: -12,
+            max: 12,
+            step: 0.001,
+            onChange: setParam('loaderDebugParameters', 'targetZ'),
+        },
+        step: {
+            value: loaderDebugParameters.nudgeStep,
+            min: 0.001,
+            max: 0.25,
+            step: 0.001,
+            onChange: setParam('loaderDebugParameters', 'nudgeStep'),
+        },
+        cssA: {
+            value: loaderDebugParameters.cssColorA,
+            onChange: setParam('loaderDebugParameters', 'cssColorA'),
+        },
+        cssB: {
+            value: loaderDebugParameters.cssColorB,
+            onChange: setParam('loaderDebugParameters', 'cssColorB'),
         },
     })
 

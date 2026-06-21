@@ -9,19 +9,20 @@ import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
 const RING_TRACK_COLOR = soundJourneyPalette.uiRingTrack
+const EXIT_HOLD_MS = 420
 
 export default function Loader() {
     const { active, progress } = useProgress()
     const phase = usePhases((s) => s.phase)
     const setPhase = usePhases((s) => s.setPhase)
     const debugMode = usePhases((s) => s.debugMode)
+    const loaderDebugParameters = useStore((s) => s.loaderDebugParameters)
 
     const [displayed, setDisplayed] = useState(0)
-    const [isMouseInside, setIsMouseInside] = useState(false)
+    const [isExiting, setIsExiting] = useState(false)
 
     const lastPctRef = useRef(0)
     const displayedRef = useRef({ value: 0 })
-    const centerRef = useRef(null)
 
     // Calculate target progress
     const target = useMemo(() => {
@@ -60,47 +61,45 @@ export default function Loader() {
         }
     }, [phase, active, percent, setPhase, debugMode])
 
-    const handleMouseEnter = () => {
-        setIsMouseInside(true)
-    }
-
-    const handleMouseLeave = () => {
-        setIsMouseInside(false)
-    }
-
-    const isHovered = phase === PHASES.warmup && isMouseInside
-
     const handleClick = () => {
         if (phase === PHASES.warmup) {
+            setIsExiting(true)
             setPhase(PHASES.intro)
         }
     }
 
+    useEffect(() => {
+        if (!isExiting) return undefined
+        const timeout = window.setTimeout(() => setIsExiting(false), EXIT_HOLD_MS)
+        return () => window.clearTimeout(timeout)
+    }, [isExiting])
+
     const showLoading = phase === PHASES.loading
     const showStart = phase === PHASES.warmup
+    const showExit = isExiting && phase === PHASES.intro
 
-    if (!showLoading && !showStart) return null
+    if (!showLoading && !showStart && !showExit) return null
 
     const ringStyle = {
         background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, ${RING_TRACK_COLOR} ${percent * 3.6}deg)`,
     }
+    const loaderStyle = {
+        '--sj-loader-background': loaderDebugParameters.cssColorA,
+        '--sj-loader-hero': loaderDebugParameters.cssColorB,
+    }
 
     return (
-        <div className="loader-wrapper">
+        <div className={`loader-wrapper ${showExit ? 'loader-wrapper--exit' : ''}`} style={loaderStyle}>
             <div className="loader-container">
                 <div className="loader-ring" style={ringStyle}>
                     <div className="loader-ring-inner" />
                 </div>
                 <div
-                    ref={centerRef}
-                    className={`loader-center ${showStart ? 'loader-center--clickable' : ''} ${showStart && isHovered ? 'loader-center--hovered' : ''}`}
-                    style={{ background: soundJourneyPalette.hero }}
-                    onMouseEnter={handleMouseEnter}
-                    onMouseLeave={handleMouseLeave}
+                    className={`loader-center ${showStart ? 'loader-center--clickable' : ''}`}
                     onClick={handleClick}
                 >
-                    {showLoading && <div className="loader-percent">{percent}%</div>}
-                    {showStart && <div className={`loader-go-button ${isHovered ? 'loader-go-button--hovered' : ''}`}>GO</div>}
+                    {showLoading && !showExit && <div className="loader-percent">{percent}%</div>}
+                    {showStart && !showExit && <div className="loader-go-button">GO</div>}
                 </div>
             </div>
         </div>

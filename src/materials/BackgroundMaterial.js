@@ -20,8 +20,10 @@ export function createBackgroundMaterial(painteryTexture) {
         side: THREE.BackSide,
         uniforms: {
             // Layer 1 — base colour gradient
-            uColor: { value: new THREE.Color('#44336c') },
-            uColorHorizon: { value: new THREE.Color('#3f6ea8') },
+            uBackgroundColor: { value: new THREE.Color('#2a2358') },
+            uGradientTopColor: { value: new THREE.Color('#44336c') },
+            uHorizonColor: { value: new THREE.Color('#3f6ea8') },
+            uGradientIntensity: { value: 1 },
             uGradientHeight: { value: 0.12 },
             uGradientPower: { value: 1.4 },
             // Layer 2 — paintery texture
@@ -31,9 +33,8 @@ export function createBackgroundMaterial(painteryTexture) {
             uTextureSize: { value: 250 },
             uTextureLayer2: { value: 2.3 },
             uTextureContrast: { value: 1.0 },
-            uColorIntensity: { value: 0.4 },
-            uColorMixColor: { value: new THREE.Color('#2a2358') },
-            uColorMixIntensity: { value: 0.0 },
+            uTextureBrightness: { value: 0.4 },
+            uTextureMixIntensity: { value: 0.0 },
             // Layer 3 — stars
             uStarsEnabled: { value: true },
             uStarStyle: { value: 0 },
@@ -61,8 +62,10 @@ export function updateBackgroundMaterial(material, options) {
     const refScale = options.refScale ?? 1
 
     // Layer 1 — base colour gradient (top colour comes from the scene background colour)
-    u.uColor.value.set(options.color ?? '#44336c')
-    u.uColorHorizon.value.set(options.colorHorizon ?? '#3f6ea8')
+    u.uBackgroundColor.value.set(options.backgroundColor ?? options.colorMixColor ?? '#2a2358')
+    u.uGradientTopColor.value.set(options.gradientTopColor ?? options.color ?? '#44336c')
+    u.uHorizonColor.value.set(options.horizonColor ?? options.colorHorizon ?? '#3f6ea8')
+    u.uGradientIntensity.value = options.gradientIntensity ?? 1
     u.uGradientHeight.value = options.gradientHeight ?? 0.12
     u.uGradientPower.value = options.gradientPower ?? 1.4
 
@@ -72,9 +75,8 @@ export function updateBackgroundMaterial(material, options) {
     u.uTextureSize.value = (options.textureSize ?? 250) * refScale
     u.uTextureLayer2.value = options.textureLayer2 ?? 2.3
     u.uTextureContrast.value = options.textureContrast ?? 1.0
-    u.uColorIntensity.value = options.colorIntensity ?? 0.4
-    u.uColorMixColor.value.set(options.colorMixColor ?? '#2a2358')
-    u.uColorMixIntensity.value = options.colorMixIntensity ?? 0.0
+    u.uTextureBrightness.value = options.textureBrightness ?? options.colorIntensity ?? 0.4
+    u.uTextureMixIntensity.value = options.textureMixIntensity ?? options.colorMixIntensity ?? 0.0
 
     // Layer 3 — stars (direction space → resolution independent, no refScale)
     u.uStarsEnabled.value = options.starsEnabled !== false

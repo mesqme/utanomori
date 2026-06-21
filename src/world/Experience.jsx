@@ -11,7 +11,7 @@ import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.j
 
 export default function Experience() {
     const perfVisible = useStore((state) => state.perfVisible)
-    const backgroundColor = useStore((state) => state.terrainParameters.backgroundColor)
+    const backgroundColor = useStore((state) => state.backgroundParameters.backgroundColor)
 
     return (
         <>
@@ -25,7 +25,7 @@ export default function Experience() {
             <Companions />
 
             <Controls />
-            <BackgroundSphere color={backgroundColor} />
+            <BackgroundSphere />
             <PainterlyPostProcessing />
         </>
     )

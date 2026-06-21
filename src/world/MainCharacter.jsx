@@ -14,6 +14,7 @@ import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
+import { CAMERA_TOP_SHOT } from '../game/gameConfig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
@@ -54,6 +55,23 @@ const _stWorld = new THREE.Vector3()
 const _stEdge = new THREE.Vector3()
 const _stRight = new THREE.Vector3()
 
+function getLoaderDebugTarget() {
+    const { targetX, targetZ } = useStore.getState().loaderDebugParameters
+    return { x: targetX, z: targetZ }
+}
+
+function getTopCameraPosition(target, y = 0) {
+    return new THREE.Vector3(
+        target.x + Math.sin(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance,
+        y + CAMERA_TOP_SHOT.height,
+        target.z + Math.cos(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance
+    )
+}
+
+function getTopCameraTarget(target, y = 0) {
+    return new THREE.Vector3(target.x, y + CAMERA_TOP_SHOT.targetYOffset, target.z)
+}
+
 function dampAngle(current, target, lambda, delta) {
     const angleDelta = Math.atan2(Math.sin(target - current), Math.cos(target - current))
     return current + angleDelta * (1 - Math.exp(-lambda * delta))
@@ -62,13 +80,14 @@ function dampAngle(current, target, lambda, delta) {
 export default function MainCharacter() {
     const characterParameters = useStore((state) => state.characterParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const setBallPosition = useStore((state) => state.setBallPosition)
     const setSmoothedCircleCenter = useStore((state) => state.setSmoothedCircleCenter)
     const phase = usePhases((state) => state.phase)
     const setPhase = usePhases((state) => state.setPhase)
 
-    const [smoothedCameraPosition] = useState(() => new THREE.Vector3(0, 14, 12))
-    const [smoothedCameraTarget] = useState(() => new THREE.Vector3(0, 0.25, 0))
+    const [smoothedCameraPosition] = useState(() => getTopCameraPosition(getLoaderDebugTarget()))
+    const [smoothedCameraTarget] = useState(() => getTopCameraTarget(getLoaderDebugTarget()))
     const [smoothedCircleCenter] = useState(() => new THREE.Vector3(0, 0, 0))
 
     const [subscribeKeys, getKeys] = useKeyboardControls()
@@ -308,7 +327,7 @@ export default function MainCharacter() {
 
         setBallPosition(visualPosition)
 
-        if (phase === PHASES.start || phase === PHASES.credits) {
+        if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits) {
             recordTrail(visualPosition)
             setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, groundY, visualPosition.z)
         } else {
@@ -319,7 +338,18 @@ export default function MainCharacter() {
         const cameraTarget = cameraTargetRef.current
 
         let cameraLerpSpeed = CAMERA_LERP_SPEED
-        if (cameraParameters.debugOrbit) {
+        if (loaderDebugParameters.enabled) {
+            const targetX = loaderDebugParameters.targetX
+            const targetZ = loaderDebugParameters.targetZ
+
+            cameraPosition.set(
+                targetX + Math.sin(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance,
+                visualPosition.y + CAMERA_TOP_SHOT.height,
+                targetZ + Math.cos(CAMERA_TOP_SHOT.angle) * CAMERA_TOP_SHOT.distance
+            )
+            cameraTarget.set(targetX, visualPosition.y + CAMERA_TOP_SHOT.targetYOffset, targetZ)
+            cameraLerpSpeed = 30
+        } else if (cameraParameters.debugOrbit) {
             cameraPosition.set(
                 visualPosition.x + Math.sin(cameraParameters.debugOrbitAngle) * cameraParameters.debugOrbitDistance,
                 visualPosition.y + cameraParameters.debugOrbitHeight,
@@ -329,12 +359,16 @@ export default function MainCharacter() {
             cameraTarget.set(visualPosition.x, visualPosition.y + cameraParameters.debugTargetYOffset, visualPosition.z)
         } else if (cameraRig.mode === 'orbit') {
             // Game-cycle shot (loading top view / intro travel).
+            const useLoaderTarget = phase === PHASES.loading || phase === PHASES.warmup || phase === PHASES.intro
+            const targetX = useLoaderTarget ? loaderDebugParameters.targetX : visualPosition.x
+            const targetZ = useLoaderTarget ? loaderDebugParameters.targetZ : visualPosition.z
+
             cameraPosition.set(
-                visualPosition.x + Math.sin(cameraRig.angle) * cameraRig.distance,
+                targetX + Math.sin(cameraRig.angle) * cameraRig.distance,
                 visualPosition.y + cameraRig.height,
-                visualPosition.z + Math.cos(cameraRig.angle) * cameraRig.distance
+                targetZ + Math.cos(cameraRig.angle) * cameraRig.distance
             )
-            cameraTarget.set(visualPosition.x, visualPosition.y + cameraRig.targetYOffset, visualPosition.z)
+            cameraTarget.set(targetX, visualPosition.y + cameraRig.targetYOffset, targetZ)
             cameraLerpSpeed = cameraRig.lerpSpeed
         } else {
             cameraPosition.copy(visualPosition)
