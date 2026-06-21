@@ -233,6 +233,32 @@ const LEVA_SECTION_PATHS = Object.freeze({
         strength: 'strength',
         power: 'power',
     },
+    'Music Stones': {
+        note1: 'color0',
+        note2: 'color1',
+        note3: 'color2',
+        note4: 'color3',
+        note5: 'color4',
+        note6: 'color5',
+        note7: 'color6',
+        radius: 'radius',
+        scale: 'scale',
+        yOffset: 'yOffset',
+        hoverHeight: 'hoverHeight',
+        bobAmount: 'bobAmount',
+        bobSpeed: 'bobSpeed',
+        flashBoost: 'flashBoost',
+        hoverBoost: 'hoverBoost',
+        flashDuration: 'flashDuration',
+        listenTempo: 'listenTempo',
+        staggerDelay: 'staggerDelay',
+        scaleInDuration: 'scaleInDuration',
+        scaleOutDuration: 'scaleOutDuration',
+        grassFade: 'grassFade',
+        cameraHeight: 'cameraHeight',
+        cameraDistance: 'cameraDistance',
+        cameraLerp: 'cameraLerp',
+    },
     Character: {
         modelScale: 'modelScale',
         modelYOffset: 'modelYOffset',
@@ -320,6 +346,7 @@ export default function Controls() {
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const arrowParameters = useStore((state) => state.arrowParameters)
     const songGameParameters = useStore((state) => state.songGameParameters)
+    const musicStoneParameters = useStore((state) => state.musicStoneParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
@@ -599,6 +626,34 @@ export default function Controls() {
         color: { value: propRimParameters.color, onChange: setParam('propRimParameters', 'color') },
         strength: { value: propRimParameters.strength, min: 0, max: 3, step: 0.01, onChange: setParam('propRimParameters', 'strength') },
         power: { value: propRimParameters.power, min: 0.2, max: 8, step: 0.1, onChange: setParam('propRimParameters', 'power') },
+    })
+
+    // The 7 song-mini-game stones (colours = the 7 notes) + their staging / camera tweaks.
+    useControls('Music Stones', {
+        note1: { value: musicStoneParameters.color0, onChange: setParam('musicStoneParameters', 'color0') },
+        note2: { value: musicStoneParameters.color1, onChange: setParam('musicStoneParameters', 'color1') },
+        note3: { value: musicStoneParameters.color2, onChange: setParam('musicStoneParameters', 'color2') },
+        note4: { value: musicStoneParameters.color3, onChange: setParam('musicStoneParameters', 'color3') },
+        note5: { value: musicStoneParameters.color4, onChange: setParam('musicStoneParameters', 'color4') },
+        note6: { value: musicStoneParameters.color5, onChange: setParam('musicStoneParameters', 'color5') },
+        note7: { value: musicStoneParameters.color6, onChange: setParam('musicStoneParameters', 'color6') },
+        radius: { value: musicStoneParameters.radius, min: 1, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'radius') },
+        scale: { value: musicStoneParameters.scale, min: 0.1, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'scale') },
+        yOffset: { value: musicStoneParameters.yOffset, min: -2, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'yOffset') },
+        hoverHeight: { value: musicStoneParameters.hoverHeight, min: 0, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'hoverHeight') },
+        bobAmount: { value: musicStoneParameters.bobAmount, min: 0, max: 1, step: 0.01, onChange: setParam('musicStoneParameters', 'bobAmount') },
+        bobSpeed: { value: musicStoneParameters.bobSpeed, min: 0, max: 5, step: 0.05, onChange: setParam('musicStoneParameters', 'bobSpeed') },
+        flashBoost: { value: musicStoneParameters.flashBoost, min: 0, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'flashBoost') },
+        hoverBoost: { value: musicStoneParameters.hoverBoost, min: 0, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'hoverBoost') },
+        flashDuration: { value: musicStoneParameters.flashDuration, min: 0.05, max: 2, step: 0.01, onChange: setParam('musicStoneParameters', 'flashDuration') },
+        listenTempo: { value: musicStoneParameters.listenTempo, min: 0.5, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'listenTempo') },
+        staggerDelay: { value: musicStoneParameters.staggerDelay, min: 0, max: 1, step: 0.01, onChange: setParam('musicStoneParameters', 'staggerDelay') },
+        scaleInDuration: { value: musicStoneParameters.scaleInDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'scaleInDuration') },
+        scaleOutDuration: { value: musicStoneParameters.scaleOutDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'scaleOutDuration') },
+        grassFade: { value: musicStoneParameters.grassFade, min: 0, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'grassFade') },
+        cameraHeight: { value: musicStoneParameters.cameraHeight, min: 3, max: 30, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraHeight') },
+        cameraDistance: { value: musicStoneParameters.cameraDistance, min: 0, max: 20, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraDistance') },
+        cameraLerp: { value: musicStoneParameters.cameraLerp, min: 0.5, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'cameraLerp') },
     })
 
     useControls('Terrain', {

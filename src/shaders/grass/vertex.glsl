@@ -70,6 +70,9 @@ attribute float aRoadMask;
 attribute float aObjectSuppress; // 1 = inside a stone/tree safe radius → no grass; fades to 0
 attribute vec2 aObjectLean; // direction × strength to lean away from the nearest stone/tree
 
+uniform vec4 uMusicStones[7]; // dynamic song-mini-game stones: xy = world XZ, z = radius, w = active
+uniform float uMusicStoneFade; // fade band width beyond each music stone's radius
+
 varying vec3 vColor;
 varying vec4 vGrassData;
 varying vec3 vNormal;
@@ -105,6 +108,19 @@ void main() {
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
   // Stones / trees: full kill inside their safe radius, fading across the band (baked CPU-side).
   grassHeightMask *= (1.0 - aObjectSuppress);
+
+  // Music stones (song mini-game): the same clear + lean, but DYNAMIC — the radius tracks
+  // each stone's animated scale, so the clearing grows/recovers as the stone rises/sinks.
+  vec2 musicLean = vec2(0.0);
+  for (int i = 0; i < 7; i++) {
+    if (uMusicStones[i].w < 0.5) continue;
+    float msR = uMusicStones[i].z;
+    float msD = distance(worldXZ, uMusicStones[i].xy);
+    float msS = 1.0 - smoothstep(msR, msR + uMusicStoneFade, msD);
+    grassHeightMask *= (1.0 - msS);
+    vec2 away = msD > 1e-4 ? (worldXZ - uMusicStones[i].xy) / msD : vec2(0.0);
+    musicLean += away * msS * 0.45;
+  }
 
   // Grass-trail reaction — four independent layers, each driven by either the fading
   // trail canvas ('Trail') or a plain radius around the nearest character ('Radius').
@@ -203,8 +219,9 @@ void main() {
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
   vec2 trampleOffset = trampleLeanDir * trampleLeanStrength * height * bendProfile;
-  // Lean away from nearby stones / trees (aObjectLean already carries direction × strength).
-  vec2 objectOffset = aObjectLean * height * bendProfile;
+  // Lean away from nearby stones / trees (aObjectLean already carries direction × strength;
+  // musicLean is the dynamic music-stone contribution).
+  vec2 objectOffset = (aObjectLean + musicLean) * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
     widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x + objectOffset.x,
     heightPercent * height * verticalCompression,

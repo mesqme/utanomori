@@ -123,7 +123,7 @@ const painteryStyle = {
         painterlyContrast: 0.35,
         painterlyBrightness: 0.52,
         painterlyColorStrength: 0.46,
-        fadeOffset: 5.8,
+        fadeOffset: 2.6,
     },
     windParameters: {
         direction: 0.65,
@@ -266,12 +266,12 @@ const painteryStyle = {
     },
     seeThroughParameters: {
         enabled: true,
-        worldRadius: 1.8,
-        inner: 0.53,
+        worldRadius: 2.2,
+        inner: 0.46,
         depthBias: 0,
-        opacityIntensity: 0.7,
-        textureContrast: 1,
-        textureScale: 250,
+        opacityIntensity: 1.0,
+        textureContrast: 0.7,
+        textureScale: 480,
     },
 }
 

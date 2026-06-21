@@ -30,6 +30,21 @@ export const STONE_VARIANTS = Object.freeze([
     { node: 'stone_07', diameter: 2.74 },
 ])
 
+/**
+ * The seven music-stone meshes from stones.glb, used only by the song mini-game (one per
+ * note). `diameter` is the measured safe diameter (world units) → safe radius = diameter/2,
+ * which drives the dynamic grass clearing around each rising stone (see MusicStones).
+ */
+export const MUSIC_STONE_VARIANTS = Object.freeze([
+    { node: 'musicStone_01', diameter: 3.27 },
+    { node: 'musicStone_02', diameter: 3.27 },
+    { node: 'musicStone_03', diameter: 3.11 },
+    { node: 'musicStone_04', diameter: 3.11 },
+    { node: 'musicStone_05', diameter: 3.11 },
+    { node: 'musicStone_06', diameter: 3.0 },
+    { node: 'musicStone_07', diameter: 3.25 },
+])
+
 // Procedural parts sit on the ground (origin at the base) so a per-type instance scale
 // (treeSize / stoneSize — see ScatteredObjects) resizes them while keeping them grounded.
 export const objectLibrary = Object.freeze({

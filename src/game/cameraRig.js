@@ -8,4 +8,8 @@ export const cameraRig = {
     height: 1.9,
     targetYOffset: 0.4,
     lerpSpeed: 5,
+    // Optional orbit center (world XZ). When set, the orbit shot frames this point instead
+    // of the hero — used by the music mini-game to look down on the companion's stones.
+    centerX: null,
+    centerZ: null,
 }

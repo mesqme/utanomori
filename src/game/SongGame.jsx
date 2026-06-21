@@ -1,13 +1,22 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
-import { NOTES, ROUND_LENGTHS, SONG_BEAT } from '../config/notes.js'
+import { ROUND_LENGTHS, SONG_BEAT } from '../config/notes.js'
 import { playNote, resumeAudio } from './songAudio.js'
 import './songGame.css'
 
 const ROUND_CLEAR_PAUSE = 1.1 // seconds before the next round plays
 
+// How long the 3D stones take to rise (must match MusicStones' scale-in) before playback.
+function setupDuration() {
+    const p = useStore.getState().musicStoneParameters
+    return (p?.scaleInDuration ?? 0.5) + 6 * (p?.staggerDelay ?? 0.12) + 0.2
+}
+
+// The mini-game is now presented in 3D (see MusicStones): the seven colour stones replace
+// the note wheel. This component is a thin HUD (prompt / banners / round) plus the playback
+// and round timers — the orchestration the 3D presentation reacts to.
 export default function SongGame() {
     const active = useSongGame((s) => s.active)
     const stage = useSongGame((s) => s.stage)
@@ -16,21 +25,34 @@ export default function SongGame() {
     const beats = useSongGame((s) => s.beats)
     const input = useSongGame((s) => s.input)
     const companion = useSongGame((s) => s.companion)
-    const ui = useStore((s) => s.songGameParameters)
+    const [stonesReady, setStonesReady] = useState(false)
 
-    // Playback: reveal each note above the head in turn (at the shared tempo + rhythm,
-    // with overlapping notes), then open the wheel for input.
+    // Setup: the stones rise + camera lifts; once they're up, show the "Start" button (the
+    // player presses it to begin the song — no auto-start).
+    useEffect(() => {
+        if (stage !== 'setup') {
+            setStonesReady(false)
+            return
+        }
+        setStonesReady(false)
+        const t = setTimeout(() => setStonesReady(true), setupDuration() * 1000)
+        return () => clearTimeout(t)
+    }, [stage])
+
+    // Playback: light each note's stone in turn (shared tempo + rhythm, slowed by listenTempo
+    // so the melody is easier to hear), then open input.
     useEffect(() => {
         if (stage !== 'playback') return
         const length = ROUND_LENGTHS[round]
         const sequence = song.slice(0, length)
         const sequenceBeats = sequence.map((_, i) => beats[i] ?? 1)
+        const tempo = useStore.getState().musicStoneParameters?.listenTempo ?? 1
         resumeAudio()
 
         const timers = []
         let t = 0
         sequence.forEach((note, i) => {
-            const spacing = sequenceBeats[i] * SONG_BEAT
+            const spacing = sequenceBeats[i] * SONG_BEAT * tempo
             const at = t
             timers.push(
                 setTimeout(() => {
@@ -66,14 +88,15 @@ export default function SongGame() {
     if (!active) return null
 
     const length = ROUND_LENGTHS[round]
-    const radius = ui.wheelRadius
-    const buttonSize = ui.buttonSize
-    const wheelBox = radius * 2 + buttonSize + 24
-    const canExit = stage === 'prompt' || stage === 'playback' || stage === 'input' || stage === 'roundClear'
+    const canExit = stage === 'prompt' || stage === 'setup' || stage === 'playback' || stage === 'input' || stage === 'roundClear'
+    const status =
+        stage === 'setup' ? 'Get ready…' : stage === 'playback' ? 'Listen' : stage === 'input' ? `${input.length} / ${length}` : ''
 
     return (
         <div className="song-game">
-            <div className="song-round">Round {round + 1} / 3</div>
+            <div className="song-round">
+                Round {round + 1} / 3{status ? ` · ${status}` : ''}
+            </div>
 
             {canExit && (
                 <button className="song-exit" onClick={() => useSongGame.getState().reset()} aria-label="Exit">
@@ -81,45 +104,9 @@ export default function SongGame() {
                 </button>
             )}
 
-            {/* The note wheel is visible for the whole game; only clickable while listening for input. */}
-            {stage !== 'prompt' && (
-                <div className="song-wheel" style={{ width: wheelBox, height: wheelBox }} role="group" aria-label="Repeat the song">
-                    {NOTES.map((note, i) => {
-                        const angle = (i / NOTES.length) * Math.PI * 2 - Math.PI / 2
-                        const x = Math.cos(angle) * radius
-                        const y = Math.sin(angle) * radius
-                        const clickable = stage === 'input'
-                        return (
-                            <button
-                                key={note.name}
-                                className={`song-note${clickable ? '' : ' song-note-idle'}`}
-                                style={{
-                                    background: note.color,
-                                    width: buttonSize,
-                                    height: buttonSize,
-                                    fontSize: Math.round(buttonSize * 0.36),
-                                    transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
-                                    pointerEvents: clickable ? 'auto' : 'none',
-                                }}
-                                onClick={() => {
-                                    if (!clickable) return
-                                    playNote(i, { duration: 0.5 })
-                                    useSongGame.getState().pressNote(i)
-                                }}
-                            >
-                                {i + 1}
-                            </button>
-                        )
-                    })}
-                    <div className="song-wheel-center" style={{ width: buttonSize * 1.6, height: buttonSize * 1.6 }}>
-                        {stage === 'input' ? `${input.length} / ${length}` : stage === 'playback' ? 'Listen' : ''}
-                    </div>
-                </div>
-            )}
-
             {stage === 'prompt' && (
                 <div className="song-prompt">
-                    <p className="song-prompt-text">Are you ready to repeat my song?</p>
+                    <p className="song-prompt-text">Hello, will you try my melody?</p>
                     <button
                         className="song-yes"
                         onClick={() => {
@@ -128,6 +115,14 @@ export default function SongGame() {
                         }}
                     >
                         Yes
+                    </button>
+                </div>
+            )}
+
+            {stage === 'setup' && stonesReady && (
+                <div className="song-start">
+                    <button className="song-yes song-start-button" onClick={() => useSongGame.getState().startPlayback()}>
+                        Start
                     </button>
                 </div>
             )}

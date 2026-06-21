@@ -56,6 +56,35 @@ const DEFAULT_SONG_GAME_PARAMETERS = {
     noteWobble: 14, // px of side-to-side sine sway while rising
 }
 
+// 3D music stones (song mini-game): seven coloured stones that rise around the companion,
+// flash on each played note, and are clicked to repeat the song. Colours default to NOTES.
+const DEFAULT_MUSIC_STONE_PARAMETERS = {
+    color0: '#e85c5c',
+    color1: '#ef9f43',
+    color2: '#f2d24b',
+    color3: '#5fc46a',
+    color4: '#46c2c9',
+    color5: '#5b8def',
+    color6: '#b072e6',
+    radius: 3.6, // rainbow radius (half-width + rise) above the companion's head
+    scale: 0.55, // normal stone scale (matches the ordinary stoneSize)
+    yOffset: 1.25, // base height offset (added on top of hoverHeight)
+    hoverHeight: 2.0, // height of the rainbow's low ends above the ground
+    bobAmount: 0.15, // gentle vertical bob amplitude
+    bobSpeed: 1.2, // bob speed
+    flashBoost: 1.4, // brightness multiplier when a note hits the stone (sing / click)
+    hoverBoost: 0.35, // slight brighten while a clickable stone is hovered
+    flashDuration: 0.32, // seconds the flash decays over
+    listenTempo: 1.6, // playback speed multiplier when hearing the song (>1 = slower)
+    staggerDelay: 0.12, // delay between each stone's scale-in (left→right)
+    scaleInDuration: 0.5, // seconds for one stone to rise
+    scaleOutDuration: 0.4, // seconds for the stones to sink on teardown
+    grassFade: 0.6, // grass fade band beyond each stone's radius (currently dormant)
+    cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
+    cameraDistance: 13, // distance back from the companion
+    cameraLerp: 3.6, // how smoothly the camera moves / returns
+}
+
 // One-time stylization baked into the paintery brush texture (blur + levels +
 // contrast + posterize) so its small details merge into larger painterly regions,
 // replacing the per-frame Kuwahara abstraction.
@@ -160,6 +189,7 @@ const createStore = () =>
             loaderDebugParameters: { ...DEFAULT_LOADER_DEBUG_PARAMETERS },
             arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
+            musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS },
 
             /**
              * Paintery brush texture stylization (baked once)
@@ -293,6 +323,7 @@ if (import.meta?.hot) {
             : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
+        musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         edgeParameters: applyObjectStyleDefaults
             ? { ...defaultSceneStyle.edgeParameters }

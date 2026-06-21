@@ -6,6 +6,7 @@ import Terrain from './Terrain.jsx'
 import Controls from './Controls.jsx'
 import BackgroundSphere from './BackgroundSphere.jsx'
 import Companions from './Companions.jsx'
+import MusicStones from './MusicStones.jsx'
 import useStore from '../stores/useStore.jsx'
 import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.jsx'
 
@@ -23,6 +24,7 @@ export default function Experience() {
             <Terrain />
             <MainCharacter />
             <Companions />
+            <MusicStones />
 
             <Controls />
             <BackgroundSphere />

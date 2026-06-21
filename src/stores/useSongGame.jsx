@@ -5,7 +5,8 @@ import { ROUND_LENGTHS } from '../config/notes.js'
  * Companion song mini-game state machine (pure state — timers live in SongGame.jsx
  * and the celebrate/flee handoff lives in Companions.jsx).
  *
- * stage: idle → prompt → playback → input → roundClear → (playback…) → success | fail
+ * stage: idle → prompt → setup → playback → input → roundClear → (playback…) → success | fail
+ * ('setup' is the one-time 3D staging: stones rise + camera lifts before the first playback.)
  */
 const initialState = {
     active: false,
@@ -26,8 +27,11 @@ const useSongGame = create((set, get) => ({
     begin: (companion) =>
         set({ ...initialState, active: true, stage: 'prompt', companion, song: companion?.song ?? [], beats: companion?.beats ?? [] }),
 
-    // Yes → play the round.
-    confirmReady: () => set({ stage: 'playback', input: [], activeNote: null, wheelOpen: false }),
+    // Yes → stage the stones (rise + camera), then SongGame advances to playback.
+    confirmReady: () => set({ stage: 'setup', input: [], activeNote: null, wheelOpen: false }),
+
+    // Setup finished (stones are up) → start the first playback.
+    startPlayback: () => set({ stage: 'playback' }),
 
     setActiveNote: (index) => set({ activeNote: index }),
 

@@ -360,8 +360,8 @@ export default function MainCharacter() {
         } else if (cameraRig.mode === 'orbit') {
             // Game-cycle shot (loading top view / intro travel).
             const useLoaderTarget = phase === PHASES.loading || phase === PHASES.warmup || phase === PHASES.intro
-            const targetX = useLoaderTarget ? loaderDebugParameters.targetX : visualPosition.x
-            const targetZ = useLoaderTarget ? loaderDebugParameters.targetZ : visualPosition.z
+            const targetX = useLoaderTarget ? loaderDebugParameters.targetX : cameraRig.centerX ?? visualPosition.x
+            const targetZ = useLoaderTarget ? loaderDebugParameters.targetZ : cameraRig.centerZ ?? visualPosition.z
 
             cameraPosition.set(
                 targetX + Math.sin(cameraRig.angle) * cameraRig.distance,

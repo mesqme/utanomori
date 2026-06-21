@@ -4,9 +4,11 @@ import { useRef, useState } from 'react'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
-import { NOTES } from '../config/notes.js'
 import { voiceCurrentNote } from '../game/songAudio.js'
 import '../game/songGame.css'
+
+// Light musical-note glyphs — just a subtle "is singing" cue (no vivid colour/number).
+const NOTE_GLYPHS = ['♪', '♫', '♩', '♬', '♪', '♫', '♩']
 
 /**
  * Coloured + numbered notes that rise above a singing companion's head, one per sung
@@ -65,10 +67,9 @@ export default function CompanionNotes({ headY = 1.05, voiceRef, isTarget = fals
                 {floats.map((note) => (
                     <div
                         key={note.id}
-                        className="song-float-note"
+                        className="song-float-note song-float-note-soft"
                         style={{
                             left: `${note.rx}px`,
-                            background: NOTES[note.index].color,
                             '--note-size': `${ui.noteSize}px`,
                             '--note-rise': `${ui.noteRise}px`,
                             '--note-dur': `${ui.noteDuration}s`,
@@ -76,7 +77,7 @@ export default function CompanionNotes({ headY = 1.05, voiceRef, isTarget = fals
                             '--note-wobble': `${ui.noteWobble}px`,
                         }}
                     >
-                        {note.index + 1}
+                        {NOTE_GLYPHS[note.index] ?? '♪'}
                     </div>
                 ))}
             </div>

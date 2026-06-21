@@ -67,6 +67,22 @@
     transform: scale(0.96);
 }
 
+/* Centered "Start" button, shown once the stones are up. */
+.song-start {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: auto;
+    animation: song-fade 0.2s ease-out;
+}
+
+.song-start-button {
+    font-size: 20px;
+    padding: 12px 44px;
+    letter-spacing: 0.16em;
+}
+
 /* Status banners (Listen / Nice / fail) */
 .song-banner {
     position: absolute;
@@ -217,6 +233,17 @@
     transform: translate(-50%, -50%) scale(0.3);
     will-change: transform, opacity;
     animation: song-float var(--note-dur, 1.5s) ease-out forwards;
+}
+
+/* Soft variant — a light note glyph, no vivid bubble; just signals the character is singing. */
+.song-float-note-soft {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: rgba(224, 229, 255, 0.72);
+    font-size: calc(var(--note-size, 48px) * 0.95);
+    font-weight: 400;
+    text-shadow: 0 1px 6px rgba(9, 8, 34, 0.5);
 }
 
 @keyframes song-fade {
