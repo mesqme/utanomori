@@ -53,6 +53,10 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         objectParameters.roadClearance,
         objectParameters.groupScale,
         objectParameters.minObjectSpacing,
+        objectParameters.treeSize,
+        objectParameters.stoneSize,
+        objectParameters.grassFadeDistance,
+        objectParameters.grassLean,
     ].join('|')
 
     const grassGeometry = useMemo(() => {
@@ -90,6 +94,8 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         const patchColors = new Float32Array(grassParameters.count * 3)
         const patchDebugColors = new Float32Array(grassParameters.count * 3)
         const roadMasks = new Float32Array(grassParameters.count)
+        const objectSuppress = new Float32Array(grassParameters.count)
+        const objectLean = new Float32Array(grassParameters.count * 2)
         const baseColor = new THREE.Color(grassParameters.colorBase)
         const patchPalette = [
             grassPatchParameters.tintColorCyan,
@@ -114,8 +120,10 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             const worldZ = z + chunkZ
             const y = noise2D ? noise2D(worldX * scale, worldZ * scale) * amplitude : 0
             patchSampler.sample(worldX, worldZ, patch)
-            const objectCoverage = objectSampler.sampleCoverage(worldX, worldZ)
-            const roadMask = Math.max(roadSampler.sampleMask(worldX, worldZ), objectCoverage)
+            // Stones / trees: hard no-grass within the safe radius, then a fade band where
+            // grass shortens (suppress) and leans away (lean). Roads keep their own mask.
+            const objectField = objectSampler.sampleObjectField(worldX, worldZ)
+            const roadMask = roadSampler.sampleMask(worldX, worldZ)
 
             positions[i * 3] = x
             positions[i * 3 + 1] = y
@@ -138,6 +146,9 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             patchDebugColors[i * 3 + 1] = debugColor.g
             patchDebugColors[i * 3 + 2] = debugColor.b
             roadMasks[i] = roadMask
+            objectSuppress[i] = objectField.suppress
+            objectLean[i * 2] = objectField.leanX
+            objectLean[i * 2 + 1] = objectField.leanZ
         }
 
         grassGeometry.setAttribute('aInstancePosition', new THREE.InstancedBufferAttribute(positions, 3))
@@ -146,6 +157,8 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         grassGeometry.setAttribute('aPatchColor', new THREE.InstancedBufferAttribute(patchColors, 3))
         grassGeometry.setAttribute('aPatchDebugColor', new THREE.InstancedBufferAttribute(patchDebugColors, 3))
         grassGeometry.setAttribute('aRoadMask', new THREE.InstancedBufferAttribute(roadMasks, 1))
+        grassGeometry.setAttribute('aObjectSuppress', new THREE.InstancedBufferAttribute(objectSuppress, 1))
+        grassGeometry.setAttribute('aObjectLean', new THREE.InstancedBufferAttribute(objectLean, 2))
 
         return grassGeometry
     }, [grassParameters.segmentsCount, grassParameters.count, grassParameters.colorBase, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude])

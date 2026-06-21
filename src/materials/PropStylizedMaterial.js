@@ -49,6 +49,10 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uSeeThroughOpacityIntensity: { value: 0.7 },
             uSeeThroughTextureContrast: { value: 1.0 },
             uSeeThroughTextureScale: { value: 250 },
+            uPropRimEnabled: { value: 1 },
+            uPropRimColor: { value: new THREE.Color('#cfc2ff') },
+            uPropRimStrength: { value: 0.7 },
+            uPropRimPower: { value: 2.5 },
             ...edgeUniforms,
         },
         toneMapped,
@@ -74,6 +78,13 @@ export function updatePropStylizedMaterial(material, options) {
     u.uPainterlyContrast.value = options.painterlyContrast
     u.uPainterlyBrightnessVariation.value = options.painterlyBrightness
     u.uPainterlyColorStrength.value = options.painterlyColorStrength
+    if (options.propRim) {
+        const r = options.propRim
+        u.uPropRimEnabled.value = r.enabled ? 1 : 0
+        u.uPropRimColor.value.set(r.color)
+        u.uPropRimStrength.value = r.strength
+        u.uPropRimPower.value = r.power
+    }
     if (options.paintery) {
         u.uPainterySize.value = options.paintery.size * refScale
         u.uPainteryScreenBlend.value = options.paintery.screenBlend

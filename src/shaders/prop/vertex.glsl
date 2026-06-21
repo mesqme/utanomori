@@ -7,12 +7,15 @@ uniform float uCircleRadiusFactor;
 uniform float uPropChunkSize;
 uniform float uPropFadeOffset;
 
+attribute float aFoliage; // 1 on tree-leaf vertices → painterly edge; 0 elsewhere → fresnel rim
+
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying float vPropMask;
 varying vec2 vWorldXZ;
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
+varying float vFoliage;
 
 void main() {
     #include <color_vertex>
@@ -21,6 +24,7 @@ void main() {
     // Object-space (per-prototype) position/normal feed the triplanar painterly look.
     vObjectPosition = position;
     vObjectNormal = normalize(normal);
+    vFoliage = aFoliage;
 
     // Apply the BatchedMesh per-instance matrix to reach world space.
     vec4 batchedPosition = vec4(position, 1.0);

@@ -1,6 +1,6 @@
 import { mulberry32 } from './randomUtils.js'
 import { sampleRoadDistance } from './roadField.js'
-import { objectArchetypes, objectFieldDefaults, objectLibrary } from '../../config/objectFieldDefaults.js'
+import { objectArchetypes, objectFieldDefaults, objectLibrary, STONE_VARIANTS } from '../../config/objectFieldDefaults.js'
 
 const UINT_MAX = 4294967296
 
@@ -38,6 +38,10 @@ function getSettings(parameters = {}, roadParameters = {}) {
         roadClearance: Math.max(0, parameters.roadClearance ?? objectFieldDefaults.roadClearance),
         groupScale: Math.max(0.1, parameters.groupScale ?? objectFieldDefaults.groupScale),
         minObjectSpacing: Math.max(0.05, parameters.minObjectSpacing ?? objectFieldDefaults.minObjectSpacing),
+        treeSize: Math.max(0.1, parameters.treeSize ?? objectFieldDefaults.treeSize),
+        stoneSize: Math.max(0.1, parameters.stoneSize ?? objectFieldDefaults.stoneSize),
+        grassFadeDistance: Math.max(0, parameters.grassFadeDistance ?? objectFieldDefaults.grassFadeDistance),
+        grassLean: Math.max(0, parameters.grassLean ?? objectFieldDefaults.grassLean),
         roadParameters,
     }
 }
@@ -59,6 +63,8 @@ function ensureCache(settings) {
         roadClearance: settings.roadClearance,
         groupScale: settings.groupScale,
         spacing: settings.minObjectSpacing,
+        treeSize: settings.treeSize,
+        stoneSize: settings.stoneSize,
         road: settings.roadParameters,
     })
 
@@ -124,8 +130,23 @@ function buildCellGroup(cellX, cellZ, settings) {
         const distance = Math.sqrt(rng()) * radius
         const localX = Math.cos(angle) * distance
         const localZ = Math.sin(angle) * distance
-        const scale = 0.82 + rng() * 0.5
-        const footprintRadius = library.footprintRadius * scale
+        // Stones stay close to their authored size (similar base size); trees / mushrooms vary more.
+        const scale = type === 'stone' ? 0.9 + rng() * 0.2 : 0.82 + rng() * 0.5
+        // Stones are real meshes: pick a variant and take its measured safe radius. Other
+        // types use the library footprint. Either way the footprint tracks the on-screen
+        // size (instance scale × per-type size) so spacing / grass suppression match it.
+        let variantIndex = -1
+        let baseFootprint
+        let sizeMul
+        if (type === 'stone') {
+            variantIndex = Math.floor(rng() * STONE_VARIANTS.length) % STONE_VARIANTS.length
+            baseFootprint = STONE_VARIANTS[variantIndex].diameter * 0.5
+            sizeMul = settings.stoneSize
+        } else {
+            baseFootprint = library.footprintRadius
+            sizeMul = type === 'tree' ? settings.treeSize : 1
+        }
+        const footprintRadius = baseFootprint * scale * sizeMul
 
         // Keep the object's footprint off the road surface (with a small margin).
         if (roadEnabled) {
@@ -146,7 +167,7 @@ function buildCellGroup(cellX, cellZ, settings) {
         if (!fits) continue
 
         const rotationY = rng() * Math.PI * 2
-        const tiltAmplitude = type === 'stone' ? 0.28 : type === 'mushroom' ? 0.12 : 0.06
+        const tiltAmplitude = type === 'mushroom' ? 0.12 : type === 'stone' ? 0.06 : 0.04
         const tiltX = (rng() - 0.5) * tiltAmplitude
         const tiltZ = (rng() - 0.5) * tiltAmplitude
         const colorTone = 0.85 + rng() * 0.3
@@ -165,7 +186,7 @@ function buildCellGroup(cellX, cellZ, settings) {
             normal: socket.normal ?? [0, 1, 0],
         }))
 
-        instances.push({ type, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, colorTone, sockets })
+        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, colorTone, sockets })
     }
 
     if (instances.length === 0) return null
@@ -241,20 +262,36 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
             return groups
         },
 
-        // 0..1 coverage under an object footprint — used to suppress grass.
-        sampleCoverage(worldX, worldZ) {
-            if (!settings.enabled) return 0
+        // Per-blade object reaction for the grass: hard no-grass within each object's safe
+        // radius (footprintRadius), then a fade band of width `grassFadeDistance` where the
+        // grass shortens and leans away from the object. Returns { suppress: 0..1, leanX,
+        // leanZ } with the lean already scaled by `grassLean` and weighted by suppression.
+        sampleObjectField(worldX, worldZ) {
+            if (!settings.enabled) return { suppress: 0, leanX: 0, leanZ: 0 }
 
-            let coverage = 0
+            const fade = settings.grassFadeDistance
+            let suppress = 0
+            let leanX = 0
+            let leanZ = 0
             forEachNeighborInstance(worldX, worldZ, (instance) => {
                 const dx = worldX - instance.worldX
                 const dz = worldZ - instance.worldZ
                 const dist = Math.sqrt(dx * dx + dz * dz)
-                const local = 1 - smoothstep(instance.footprintRadius * 0.6, instance.footprintRadius * 1.15, dist)
-                if (local > coverage) coverage = local
-                if (coverage >= 1) return false
+                const r = instance.footprintRadius
+                const s = 1 - smoothstep(r, r + fade, dist) // 1 inside r → 0 at r + fade
+                if (s > suppress) {
+                    suppress = s
+                    if (dist > 1e-4) {
+                        leanX = (dx / dist) * s * settings.grassLean
+                        leanZ = (dz / dist) * s * settings.grassLean
+                    } else {
+                        leanX = 0
+                        leanZ = 0
+                    }
+                }
+                if (suppress >= 0.999) return false
             })
-            return coverage
+            return { suppress, leanX, leanZ }
         },
 
         // Nearest object + its group — for future character placement / collision.

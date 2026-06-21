@@ -7,25 +7,33 @@ import useCompanions from '../stores/useCompanions.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { getGroundY } from './utils/groundHeight.js'
 
-// A thin quad (in the XZ plane, y = 0) from a→b with the given width.
-function pushQuad(arr, ax, az, bx, bz, width) {
-    const dx = bx - ax
-    const dz = bz - az
-    const len = Math.hypot(dx, dz) || 1
-    const px = (dz / len) * (width / 2)
-    const pz = (-dx / len) * (width / 2)
-    arr.push(ax + px, 0, az + pz, ax - px, 0, az - pz, bx - px, 0, bz - pz)
-    arr.push(ax + px, 0, az + pz, bx - px, 0, bz - pz, bx + px, 0, bz + pz)
-}
-
-// Two-line chevron lying flat on the ground, tip at the local origin pointing +Z.
+// A single chevron band lying flat on the ground (XZ plane), pointing +Z. It's stroked
+// as one mitered "V": the two arms meet at a sharp outer tip (ahead) and an inner tip
+// (behind), so the geometry never overlaps itself — the alpha no longer doubles up where
+// the two lines used to cross.
 function buildArrowGeometry(size, width) {
     const angle = 0.62 // half-angle of the chevron
-    const sx = Math.sin(angle) * size
-    const sz = Math.cos(angle) * size
+    const half = width / 2
+    const c = Math.cos(angle)
+    const s = Math.sin(angle)
+    const sx = s * size
+    const sz = c * size
+
+    const outerTip = [0, half / s] // sharp point ahead (+z)
+    const innerTip = [0, -half / s] // point behind the joint
+    const lOut = [-sx - c * half, -sz + s * half]
+    const lIn = [-sx + c * half, -sz - s * half]
+    const rOut = [sx - c * half, -sz - s * half]
+    const rIn = [sx + c * half, -sz + s * half]
+
     const positions = []
-    pushQuad(positions, 0, 0, -sx, -sz, width)
-    pushQuad(positions, 0, 0, sx, -sz, width)
+    const quad = (a, b, cc, d) => {
+        positions.push(a[0], 0, a[1], b[0], 0, b[1], cc[0], 0, cc[1])
+        positions.push(a[0], 0, a[1], cc[0], 0, cc[1], d[0], 0, d[1])
+    }
+    quad(lOut, outerTip, innerTip, lIn) // left arm
+    quad(outerTip, rOut, rIn, innerTip) // right arm
+
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
     return geometry
@@ -52,14 +60,24 @@ export default function TargetArrow() {
 
         const companions = useCompanions.getState()
         const target = companions.target
-        const visible = usePhases.getState().phase === PHASES.start && !!target && !companions.targetInRange
-        mesh.visible = visible
-        if (!visible) return
+        const baseVisible = usePhases.getState().phase === PHASES.start && !!target && !companions.targetInRange
+        if (!baseVisible) {
+            mesh.visible = false
+            return
+        }
 
         const hero = useStore.getState().ballPosition
         let dx = target.x - hero.x
         let dz = target.z - hero.z
         const distance = Math.hypot(dx, dz) || 1
+
+        // Only reveal the arrow once you are within range — far away you search yourself.
+        if (distance > arrow.revealDistance) {
+            mesh.visible = false
+            return
+        }
+        mesh.visible = true
+
         dx /= distance
         dz /= distance
 

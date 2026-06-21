@@ -13,6 +13,7 @@ export const edgeUniforms = {
     uEdgeBias: { value: 0.05 },
     uEdgeSoftness: { value: 0.12 },
     uEdgeNoiseScale: { value: 0.2 },
+    uEdgeSharpness: { value: 1.0 },
 }
 
 // Materials that carry the edge — tracked so we can flip `transparent` when the mode
@@ -47,5 +48,6 @@ export function updateEdgeUniforms(params) {
     edgeUniforms.uEdgeBias.value = params.bias
     edgeUniforms.uEdgeSoftness.value = params.softness
     edgeUniforms.uEdgeNoiseScale.value = params.noiseScale
+    edgeUniforms.uEdgeSharpness.value = params.sharpness ?? 1.0
     edgeMaterials.forEach(applyTransparency)
 }

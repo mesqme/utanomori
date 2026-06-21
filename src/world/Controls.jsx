@@ -25,6 +25,7 @@ const SCENE_STYLE_SECTIONS = new Set([
     'characterParameters',
     'characterMaterialParameters',
     'edgeParameters',
+    'propRimParameters',
     'gameUiParameters',
 ])
 
@@ -110,6 +111,14 @@ const LEVA_SECTION_PATHS = Object.freeze({
         roadClearance: 'roadClearance',
         groupScale: 'groupScale',
         minObjectSpacing: 'minObjectSpacing',
+        treeSize: 'treeSize',
+        treeYOffset: 'treeYOffset',
+        treeColor: 'treeColor',
+        stoneSize: 'stoneSize',
+        stoneYOffset: 'stoneYOffset',
+        stoneTint: 'stoneTint',
+        grassFadeDistance: 'grassFadeDistance',
+        grassLean: 'grassLean',
         painterly: 'painterlyEnabled',
         painterlyScale: 'painterlyScale',
         painterlyContrast: 'painterlyContrast',
@@ -230,7 +239,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
         sharpen: 'sharpenEnabled',
         sharpenStrength: 'sharpenStrength',
     },
-    Edge: {
+    'Leaves Edge': {
         enabled: 'enabled',
         mode: 'mode',
         color: 'color',
@@ -239,6 +248,13 @@ const LEVA_SECTION_PATHS = Object.freeze({
         bias: 'bias',
         softness: 'softness',
         noiseScale: 'noiseScale',
+        sharpness: 'sharpness',
+    },
+    'Props Edge': {
+        enabled: 'enabled',
+        color: 'color',
+        strength: 'strength',
+        power: 'power',
     },
     Character: {
         modelScale: 'modelScale',
@@ -322,6 +338,7 @@ export default function Controls() {
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
+    const propRimParameters = useStore((state) => state.propRimParameters)
     const setDpr = useThree((state) => state.setDpr)
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
@@ -370,6 +387,7 @@ export default function Controls() {
             characterMaterialParameters: cloneSceneStyleSection(preset.characterMaterialParameters),
             ...(preset.gameUiParameters ? { gameUiParameters: { ...preset.gameUiParameters } } : {}),
             ...(preset.edgeParameters ? { edgeParameters: { ...preset.edgeParameters } } : {}),
+            ...(preset.propRimParameters ? { propRimParameters: { ...preset.propRimParameters } } : {}),
         })
 
         if (preset.seeThroughParameters) {
@@ -425,7 +443,7 @@ export default function Controls() {
         addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
         addLevaSectionValues(values, 'Background', backgroundParameters, LEVA_SECTION_PATHS.Background)
         addLevaSectionValues(values, 'Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
-        addLevaSectionValues(values, 'Edge', edgeParameters, LEVA_SECTION_PATHS.Edge)
+        addLevaSectionValues(values, 'Leaves Edge', edgeParameters, LEVA_SECTION_PATHS['Leaves Edge'])
         addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
         addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
 
@@ -469,6 +487,18 @@ export default function Controls() {
     useEffect(() => {
         updateEdgeUniforms(edgeParameters)
     }, [edgeParameters])
+
+    useEffect(() => {
+        const values = {}
+        addLevaSectionValues(values, 'Props Edge', propRimParameters, LEVA_SECTION_PATHS['Props Edge'])
+
+        syncingLeva.current = true
+        try {
+            levaStore.set(values, false)
+        } finally {
+            syncingLeva.current = false
+        }
+    }, [propRimParameters])
 
     // Apply the active style's see-through config to the live module + Leva display
     // (on mount and whenever the preset changes).
@@ -612,7 +642,8 @@ export default function Controls() {
         },
     })
 
-    useControls('Edge', {
+    // Painterly silhouette edge — applied only to the tree leaves (canopy).
+    useControls('Leaves Edge', {
         enabled: { value: edgeParameters.enabled, onChange: setParam('edgeParameters', 'enabled') },
         mode: { value: edgeParameters.mode, options: ['Dither', 'Alpha'], onChange: setParam('edgeParameters', 'mode') },
         color: { value: edgeParameters.color, onChange: setParam('edgeParameters', 'color') },
@@ -621,6 +652,15 @@ export default function Controls() {
         bias: { value: edgeParameters.bias, min: 0, max: 2, step: 0.01, onChange: setParam('edgeParameters', 'bias') },
         softness: { value: edgeParameters.softness, min: 0, max: 1, step: 0.01, onChange: setParam('edgeParameters', 'softness') },
         noiseScale: { value: edgeParameters.noiseScale, min: 0.02, max: 4, step: 0.02, onChange: setParam('edgeParameters', 'noiseScale') },
+        sharpness: { value: edgeParameters.sharpness, min: 0.2, max: 8, step: 0.1, onChange: setParam('edgeParameters', 'sharpness') },
+    })
+
+    // Fresnel colour rim — applied to the hard-surface props (trunks / stones / mushrooms).
+    useControls('Props Edge', {
+        enabled: { value: propRimParameters.enabled, onChange: setParam('propRimParameters', 'enabled') },
+        color: { value: propRimParameters.color, onChange: setParam('propRimParameters', 'color') },
+        strength: { value: propRimParameters.strength, min: 0, max: 3, step: 0.01, onChange: setParam('propRimParameters', 'strength') },
+        power: { value: propRimParameters.power, min: 0.2, max: 8, step: 0.1, onChange: setParam('propRimParameters', 'power') },
     })
 
     useControls('Terrain', {
@@ -1048,6 +1088,14 @@ export default function Controls() {
             step: 0.05,
             onChange: setParam('objectParameters', 'minObjectSpacing'),
         },
+        treeSize: { value: objectParameters.treeSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'treeSize') },
+        treeYOffset: { value: objectParameters.treeYOffset, min: -1, max: 2, step: 0.05, onChange: setParam('objectParameters', 'treeYOffset') },
+        treeColor: { value: objectParameters.treeColor, onChange: setParam('objectParameters', 'treeColor') },
+        stoneSize: { value: objectParameters.stoneSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'stoneSize') },
+        stoneYOffset: { value: objectParameters.stoneYOffset, min: -1, max: 2, step: 0.05, onChange: setParam('objectParameters', 'stoneYOffset') },
+        stoneTint: { value: objectParameters.stoneTint, onChange: setParam('objectParameters', 'stoneTint') },
+        grassFadeDistance: { value: objectParameters.grassFadeDistance, min: 0, max: 5, step: 0.05, onChange: setParam('objectParameters', 'grassFadeDistance') },
+        grassLean: { value: objectParameters.grassLean, min: 0, max: 2, step: 0.05, onChange: setParam('objectParameters', 'grassLean') },
         painterly: {
             value: objectParameters.painterlyEnabled,
             onChange: setParam('objectParameters', 'painterlyEnabled'),
@@ -1504,7 +1552,8 @@ export default function Controls() {
         width: { value: arrowParameters.width, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('arrowParameters', 'width') },
         size: { value: arrowParameters.size, min: 0.3, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'size') },
         distance: { value: arrowParameters.distance, min: 0.5, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'distance') },
-        yOffset: { value: arrowParameters.yOffset, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'yOffset') },
+        yOffset: { value: arrowParameters.yOffset, min: 0, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'yOffset') },
+        revealDistance: { value: arrowParameters.revealDistance, min: 2, max: 60, step: 0.5, onChange: setParam('arrowParameters', 'revealDistance') },
         fadeNear: { value: arrowParameters.fadeNear, min: 0, max: 40, step: 0.5, onChange: setParam('arrowParameters', 'fadeNear') },
         fadeFar: { value: arrowParameters.fadeFar, min: 1, max: 80, step: 0.5, onChange: setParam('arrowParameters', 'fadeFar') },
         minOpacity: { value: arrowParameters.minOpacity, min: 0, max: 1, step: 0.01, onChange: setParam('arrowParameters', 'minOpacity') },

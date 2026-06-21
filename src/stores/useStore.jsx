@@ -5,6 +5,10 @@ import { cloneSceneStyleSection, defaultSceneStyle, defaultSceneStyleId } from '
 
 const GRASS_STYLE_VERSION = 18
 const CHARACTER_STYLIZED_VERSION = 3
+// Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
+// hot-reload force-applies them instead of keeping the preserved runtime values (which would
+// otherwise mask the new defaults).
+const OBJECT_STYLE_VERSION = 3
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
     debugOrbitAngle: 0,
@@ -18,9 +22,10 @@ const DEFAULT_ARROW_PARAMETERS = {
     width: 0.12, // line thickness (world units)
     size: 1.1, // arm length
     distance: 3.0, // how far in front of the hero it sits (keep < terrain radius)
-    yOffset: 0.08, // lift above the ground
-    fadeNear: 6, // distance to the target where it is fully opaque
-    fadeFar: 26, // distance where it fades to minOpacity
+    yOffset: 1.4, // lift above the ground (above the grass)
+    revealDistance: 14, // arrow only appears once within this distance of the target
+    fadeNear: 4, // distance to the target where it is fully opaque
+    fadeFar: 13, // distance where it fades to minOpacity
     minOpacity: 0.18,
     maxOpacity: 0.95,
     color: '#ffffff',
@@ -99,6 +104,7 @@ const createStore = () =>
             sceneStylePreset: defaultSceneStyleId,
             grassStyleVersion: GRASS_STYLE_VERSION,
             characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
+            objectStyleVersion: OBJECT_STYLE_VERSION,
 
             /**
              * Terrain parameters
@@ -167,9 +173,14 @@ const createStore = () =>
             painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS },
 
             /**
-             * Stylized silhouette edge (option A) — props only
+             * Stylized silhouette edge (option A) — tree leaves only
              */
             edgeParameters: { ...defaultSceneStyle.edgeParameters },
+
+            /**
+             * Fresnel colour rim — hard-surface props (trunks / stones / mushrooms)
+             */
+            propRimParameters: { ...defaultSceneStyle.propRimParameters },
 
             /**
              * Stylized game UI (speech bubble + buttons)
@@ -217,6 +228,7 @@ if (import.meta?.hot) {
     const applyGrassStyleDefaults = state.grassStyleVersion !== GRASS_STYLE_VERSION
     const applyCharacterStylizedDefaults = state.characterStylizedVersion !== CHARACTER_STYLIZED_VERSION
     const applyGameUiDefaults = state.gameUiVersion !== GAME_UI_VERSION
+    const applyObjectStyleDefaults = state.objectStyleVersion !== OBJECT_STYLE_VERSION
     const characterMaterialParameters = applyCharacterStylizedDefaults
         ? cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters)
         : {
@@ -244,6 +256,7 @@ if (import.meta?.hot) {
         grassStyleVersion: GRASS_STYLE_VERSION,
         characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
         gameUiVersion: GAME_UI_VERSION,
+        objectStyleVersion: OBJECT_STYLE_VERSION,
         terrainParameters: {
             ...defaultSceneStyle.terrainParameters,
             ...state.terrainParameters,
@@ -260,10 +273,9 @@ if (import.meta?.hot) {
             ...defaultSceneStyle.roadParameters,
             ...state.roadParameters,
         },
-        objectParameters: {
-            ...defaultSceneStyle.objectParameters,
-            ...state.objectParameters,
-        },
+        objectParameters: applyObjectStyleDefaults
+            ? { ...defaultSceneStyle.objectParameters }
+            : { ...defaultSceneStyle.objectParameters, ...state.objectParameters },
         windParameters: state.windParameters ?? { ...defaultSceneStyle.windParameters },
         lanternGroundLightParameters: applyGrassStyleDefaults
             ? { ...defaultSceneStyle.lanternGroundLightParameters }
@@ -288,7 +300,12 @@ if (import.meta?.hot) {
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
-        edgeParameters: { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
+        edgeParameters: applyObjectStyleDefaults
+            ? { ...defaultSceneStyle.edgeParameters }
+            : { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
+        propRimParameters: applyObjectStyleDefaults
+            ? { ...defaultSceneStyle.propRimParameters }
+            : { ...defaultSceneStyle.propRimParameters, ...state.propRimParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
     })
     import.meta.hot.data.store = useStore

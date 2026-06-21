@@ -115,11 +115,11 @@ const complexStyle = {
     objectParameters: {
         ...objectFieldDefaults,
         painterlyEnabled: true,
-        painterlyScale: 0.08,
-        painterlyContrast: 1.05,
-        painterlyBrightness: 0.5,
-        painterlyColorStrength: 0,
-        fadeOffset: 2.5,
+        painterlyScale: 0.13,
+        painterlyContrast: 0.35,
+        painterlyBrightness: 0.52,
+        painterlyColorStrength: 0.46,
+        fadeOffset: 5.8,
     },
     windParameters: {
         direction: 0.65,
@@ -191,16 +191,25 @@ const complexStyle = {
     painterlyPostParameters: {
         ...painterlyPostDefaults,
     },
-    // Stylized silhouette edge on the props (trees / rocks / mushrooms).
+    // Stylized silhouette edge on the props (bushes / stones / mushrooms).
+    // Painterly silhouette edge — applied only to the tree leaves (canopy).
     edgeParameters: {
         enabled: true,
         mode: 'Dither', // Dither (opaque, stippled) | Alpha (transparent blend)
-        color: '#2a2342',
-        tint: 0.63,
-        width: 6.0,
-        bias: 0.4,
-        softness: 0.23,
-        noiseScale: 0.44,
+        color: '#9b62d0',
+        tint: 1.0,
+        width: 40.0,
+        bias: 0.42,
+        softness: 0.18,
+        noiseScale: 0.5,
+        sharpness: 2.9, // higher = the edge pulls back to a thin line at the silhouette
+    },
+    // Fresnel colour rim — applied to the hard-surface props (trunks / stones / mushrooms).
+    propRimParameters: {
+        enabled: true,
+        color: '#84afff',
+        strength: 3.0,
+        power: 4.4, // higher = the rim tightens to the silhouette
     },
     characterParameters: {
         modelScale: 0.51,

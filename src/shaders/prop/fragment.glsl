@@ -24,6 +24,13 @@ uniform float uSeeThroughOpacityIntensity;
 uniform float uSeeThroughTextureContrast;
 uniform float uSeeThroughTextureScale;
 
+// Fresnel colour rim for the hard-surface props (trunks / stones / mushrooms). Tree
+// leaves use the painterly silhouette edge below instead.
+uniform int uPropRimEnabled;
+uniform vec3 uPropRimColor;
+uniform float uPropRimStrength;
+uniform float uPropRimPower;
+
 #include <common>
 #include <color_pars_fragment>
 
@@ -33,8 +40,18 @@ varying float vPropMask;
 varying vec2 vWorldXZ;
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
+varying float vFoliage;
 
 #include ../lib/paintedEdge.glsl
+
+// View-facing fresnel: tints the silhouette toward uPropRimColor, fully opaque.
+vec3 applyPropRim(vec3 color, vec3 worldNormal, vec3 worldPosition) {
+    if (uPropRimEnabled == 0) return color;
+    vec3 viewDir = normalize(cameraPosition - worldPosition);
+    float ndv = max(dot(normalize(worldNormal), viewDir), 0.0);
+    float fresnel = pow(1.0 - ndv, max(uPropRimPower, 0.001));
+    return mix(color, uPropRimColor, clamp(fresnel * uPropRimStrength, 0.0, 1.0));
+}
 
 // Triplanar painterly sampling — identical to the character material.
 float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
@@ -115,8 +132,15 @@ void main() {
         if (fade >= 0.999 || (fade > 0.0 && bayerDither(gl_FragCoord.xy, uPixelSize) < fade)) discard;
     }
 
-    float edgeBrush = samplePainterlyTexture(vObjectPosition * uEdgeNoiseScale, normalize(vObjectNormal));
-    float edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush);
+    float edgeAlpha = 1.0;
+    if (vFoliage > 0.5) {
+        // Tree leaves keep the painterly dither/alpha silhouette edge.
+        float edgeBrush = samplePainterlyTexture(vObjectPosition * uEdgeNoiseScale, normalize(vObjectNormal));
+        edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush);
+    } else {
+        // Trunks / stones / mushrooms get a fresnel colour rim instead (opaque).
+        finalColor = applyPropRim(finalColor, vWorldNormal, vWorldPos);
+    }
 
     gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), edgeAlpha);
 

@@ -67,6 +67,8 @@ attribute vec4 aPatchData;
 attribute vec3 aPatchColor;
 attribute vec3 aPatchDebugColor;
 attribute float aRoadMask;
+attribute float aObjectSuppress; // 1 = inside a stone/tree safe radius → no grass; fades to 0
+attribute vec2 aObjectLean; // direction × strength to lean away from the nearest stone/tree
 
 varying vec3 vColor;
 varying vec4 vGrassData;
@@ -101,6 +103,8 @@ void main() {
   float grassMask = 1.0 - smoothstep(grassRadius - uGrassFadeOffset, grassRadius, distToCircle);
   grassHeightMask *= grassMask;
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
+  // Stones / trees: full kill inside their safe radius, fading across the band (baked CPU-side).
+  grassHeightMask *= (1.0 - aObjectSuppress);
 
   // Grass-trail reaction — four independent layers, each driven by either the fading
   // trail canvas ('Trail') or a plain radius around the nearest character ('Radius').
@@ -199,10 +203,12 @@ void main() {
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
   vec2 trampleOffset = trampleLeanDir * trampleLeanStrength * height * bendProfile;
+  // Lean away from nearby stones / trees (aObjectLean already carries direction × strength).
+  vec2 objectOffset = aObjectLean * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
-    widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x,
+    widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x + objectOffset.x,
     heightPercent * height * verticalCompression,
-    widthDirection.y * x + radialOffset.y + windOffset.y + trampleOffset.y
+    widthDirection.y * x + radialOffset.y + windOffset.y + trampleOffset.y + objectOffset.y
   );
 
   vec4 mvPosition = modelViewMatrix * vec4(grassLocalPosition, 1.0);

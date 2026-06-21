@@ -9,18 +9,22 @@ uniform float uEdgeWidth; // extra rim extent (in N·V units, ×0.02)
 uniform float uEdgeBias; // base rim extent (N·V threshold)
 uniform float uEdgeSoftness; // alpha-mode dissolve softness
 uniform float uEdgeNoiseScale; // brush sampling scale on the rim
+uniform float uEdgeSharpness; // rim power: >1 concentrates the edge at the true silhouette
 
 #define EDGE_WIDTH_TO_NDV 0.02
 
 // 1 at the silhouette (surface edge-on to the camera), 0 in the interior. A pure N·V
 // band — no screen-space derivative — so it's resolution-independent AND temporally
 // stable: a tiny camera drift changes N·V smoothly instead of making fwidth jump, so
-// the dither edge no longer crawls while the camera lerp settles.
+// the dither edge no longer crawls while the camera lerp settles. On rounded surfaces
+// N·V changes slowly near the silhouette, so the raw band reads thick — `uEdgeSharpness`
+// powers the rim to pull the edge back to a thin line at the contour.
 float silhouetteRim(vec3 worldNormal, vec3 worldPosition) {
     vec3 viewDir = normalize(cameraPosition - worldPosition);
     float ndv = abs(dot(normalize(worldNormal), viewDir));
     float w = uEdgeBias + uEdgeWidth * EDGE_WIDTH_TO_NDV;
-    return clamp(1.0 - smoothstep(0.0, w, ndv), 0.0, 1.0);
+    float rim = clamp(1.0 - smoothstep(0.0, w, ndv), 0.0, 1.0);
+    return pow(rim, max(uEdgeSharpness, 0.001));
 }
 
 // Tints finalColor near the contour and returns the fragment alpha. In dither mode it
