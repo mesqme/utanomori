@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
 import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials/BackgroundMaterial.js'
-import { getRefScale } from './utils/screenScale.js'
+import { getWorldLockScale } from './utils/screenScale.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import watercolorBasicUrl from '../assets/textures/watercolorBasicLarge.png'
 
@@ -15,6 +15,14 @@ export default function BackgroundSphere() {
     const rotationAngle = useRef(0)
     const textureReveal = useRef(0)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
+
+    // Fake camera reaction for the screen-space cloud layer: the stars are sampled in sky
+    // direction (so they track the camera), but the cloud texture is screen-pinned. We pan
+    // the cloud UV by accumulated camera yaw + pitch so the supernova clouds drift in the
+    // same direction as the stars — a parallax-style lag, intentionally not a 1:1 lock.
+    const panState = useRef({ prevYaw: null, yawAccum: 0 })
+    const cameraForward = useMemo(() => new THREE.Vector3(), [])
+    const texturePan = useMemo(() => new THREE.Vector2(), [])
 
     const watercolorTexture = useTexture(watercolorBasicUrl)
     useMemo(() => {
@@ -48,8 +56,26 @@ export default function BackgroundSphere() {
         textureReveal.current = updatePhaseTextureReveal(textureReveal.current, phase, delta)
         const textureAmount = textureReveal.current
 
+        // Camera yaw/pitch → screen-space cloud drift (device px). Yaw is unwrapped so a
+        // full orbit never snaps at ±180°. textureParallax (px per radian, signed) is the
+        // tunable gain: flip its sign to reverse horizontal drift; clouds intentionally
+        // lag the stars (gain < the ~px-per-radian needed for a 1:1 lock) so it reads as depth.
+        const parallax = params.textureParallax ?? 0
+        rootState.camera.getWorldDirection(cameraForward)
+        const yaw = Math.atan2(cameraForward.x, cameraForward.z)
+        const pitch = Math.asin(Math.min(1, Math.max(-1, cameraForward.y)))
+        const ps = panState.current
+        if (ps.prevYaw === null) ps.prevYaw = yaw
+        let dYaw = yaw - ps.prevYaw
+        if (dYaw > Math.PI) dYaw -= Math.PI * 2
+        else if (dYaw < -Math.PI) dYaw += Math.PI * 2
+        ps.yawAccum += dYaw
+        ps.prevYaw = yaw
+        texturePan.set(-ps.yawAccum * parallax, pitch * parallax)
+
         updateBackgroundMaterial(material, {
-            refScale: getRefScale(rootState),
+            refScale: getWorldLockScale(rootState),
+            texturePan,
             time: rootState.clock.elapsedTime,
             ...params,
             gradientIntensity: (params.gradientIntensity ?? 1) * textureAmount,
