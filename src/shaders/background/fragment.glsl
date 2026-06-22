@@ -12,6 +12,7 @@ uniform int uColorMode; // 0 = intensity, 1 = colour mix, 2 = both
 uniform sampler2D uTexture;
 uniform float uTextureSize;
 uniform vec2 uTexturePan; // screen-space drift (device px) faked from camera yaw/pitch
+uniform vec2 uResolution; // drawing buffer size (px) — anchor the texture to the screen centre
 uniform float uTextureLayer2;
 uniform float uTextureContrast; // contrast applied to the texture itself, before use
 uniform float uTextureBrightness; // brightness variation
@@ -98,7 +99,7 @@ void main() {
 
     // ----- Layer 2: paintery texture colour variation (screen space) -----
     if (uTextureEnabled) {
-        vec2 uv = (gl_FragCoord.xy + uTexturePan) / uTextureSize;
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution + uTexturePan) / uTextureSize;
         float brush = texture2D(uTexture, uv).r;
         brush = mix(brush, texture2D(uTexture, uv * uTextureLayer2 + vec2(0.37)).r, 0.5);
         brush = clamp((brush - 0.5) * uTextureContrast + 0.5, 0.0, 1.0); // contrast on the texture itself

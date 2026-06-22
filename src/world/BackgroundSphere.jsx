@@ -23,6 +23,7 @@ export default function BackgroundSphere() {
     const panState = useRef({ prevYaw: null, yawAccum: 0 })
     const cameraForward = useMemo(() => new THREE.Vector3(), [])
     const texturePan = useMemo(() => new THREE.Vector2(), [])
+    const resolution = useMemo(() => new THREE.Vector2(), [])
 
     const watercolorTexture = useTexture(watercolorBasicUrl)
     useMemo(() => {
@@ -56,11 +57,15 @@ export default function BackgroundSphere() {
         textureReveal.current = updatePhaseTextureReveal(textureReveal.current, phase, delta)
         const textureAmount = textureReveal.current
 
-        // Camera yaw/pitch → screen-space cloud drift (device px). Yaw is unwrapped so a
-        // full orbit never snaps at ±180°. textureParallax (px per radian, signed) is the
-        // tunable gain: flip its sign to reverse horizontal drift; clouds intentionally
-        // lag the stars (gain < the ~px-per-radian needed for a 1:1 lock) so it reads as depth.
-        const parallax = params.textureParallax ?? 0
+        // Camera yaw/pitch → screen-space cloud drift. Yaw is unwrapped so a full orbit never
+        // snaps at ±180°. textureYawParallax / texturePitchParallax (signed) are the tunable
+        // gains: flip a sign to reverse that axis; values below the ~px-per-radian for a 1:1
+        // lock (~1375) make the clouds lag the stars so it reads as depth.
+        // Gains are CSS px/radian; ×dpr converts to device px (matching gl_FragCoord) so the
+        // drift is identical on every display instead of being weaker at higher dpr.
+        const dpr = rootState.viewport.dpr
+        const yawParallax = (params.textureYawParallax ?? 0) * dpr
+        const pitchParallax = (params.texturePitchParallax ?? 0) * dpr
         rootState.camera.getWorldDirection(cameraForward)
         const yaw = Math.atan2(cameraForward.x, cameraForward.z)
         const pitch = Math.asin(Math.min(1, Math.max(-1, cameraForward.y)))
@@ -71,11 +76,13 @@ export default function BackgroundSphere() {
         else if (dYaw < -Math.PI) dYaw += Math.PI * 2
         ps.yawAccum += dYaw
         ps.prevYaw = yaw
-        texturePan.set(-ps.yawAccum * parallax, pitch * parallax)
+        texturePan.set(-ps.yawAccum * yawParallax, pitch * pitchParallax)
+        rootState.gl.getDrawingBufferSize(resolution)
 
         updateBackgroundMaterial(material, {
             refScale: getWorldLockScale(rootState),
             texturePan,
+            resolution,
             time: rootState.clock.elapsedTime,
             ...params,
             gradientIntensity: (params.gradientIntensity ?? 1) * textureAmount,

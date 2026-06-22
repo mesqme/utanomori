@@ -188,7 +188,8 @@ const painteryStyle = {
         constellationWidth: 0.1,
         rotationEnabled: true,
         rotationSpeed: -0.003,
-        textureParallax: 400, // px/radian: cloud drift gain vs camera yaw/pitch (signed)
+        textureYawParallax: 1000, // CSS px/radian: horizontal cloud drift vs camera yaw (signed)
+        texturePitchParallax: 1000, // CSS px/radian: vertical cloud drift vs camera pitch (signed)
     },
     painterlyPostParameters: {
         enabled: true,

@@ -32,6 +32,7 @@ export function createBackgroundMaterial(painteryTexture) {
             uTexture: { value: painteryTexture },
             uTextureSize: { value: 250 },
             uTexturePan: { value: new THREE.Vector2(0, 0) },
+            uResolution: { value: new THREE.Vector2(1, 1) },
             uTextureLayer2: { value: 2.3 },
             uTextureContrast: { value: 1.0 },
             uTextureBrightness: { value: 0.4 },
@@ -75,6 +76,7 @@ export function updateBackgroundMaterial(material, options) {
     u.uColorMode.value = colorModeToInt(options.colorMode)
     u.uTextureSize.value = (options.textureSize ?? 250) * refScale
     if (options.texturePan) u.uTexturePan.value.copy(options.texturePan)
+    if (options.resolution) u.uResolution.value.copy(options.resolution)
     u.uTextureLayer2.value = options.textureLayer2 ?? 2.3
     u.uTextureContrast.value = options.textureContrast ?? 1.0
     u.uTextureBrightness.value = options.textureBrightness ?? options.colorIntensity ?? 0.4
