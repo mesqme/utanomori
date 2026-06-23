@@ -93,7 +93,8 @@ void main() {
         if (vPropMask <= 0.001) discard;
         finalColor = mix(uBackgroundColor, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
-        vec2 painteryUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+        // World-anchored reveal-edge brush (see grass/terrain) so it's stable on resize / zoom.
+        vec2 painteryUv = vWorldXZ * uPainteryDrift;
         float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
         painteryBrush = mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
         finalColor = mix(finalColor, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));

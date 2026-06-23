@@ -62,7 +62,7 @@ export function updateCompanionEyeMaterial(material, options) {
     u.uPixelSize.value = options.pixelSize * refScale
     u.uPainterlyEnabled.value = options.painterlyEnabled ? 1 : 0
     if (options.paintery) {
-        u.uPainterySize.value = options.paintery.size * refScale
+        u.uPainterySize.value = options.paintery.size // CSS-locked (dpr applied in the shader)
         u.uPainteryScreenBlend.value = options.paintery.screenBlend
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale

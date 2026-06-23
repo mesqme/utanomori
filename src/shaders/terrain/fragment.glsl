@@ -186,7 +186,11 @@ void main() {
   // sampled mostly in screen space (coherent on any geometry) with a gentle
   // world-space drift so the strokes regenerate as you move. A stylized portal edge.
   if (uFadeMode == 2 && t > 0.0) {
-      vec2 painteryUv = mix(worldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+      // World-anchored brush: the dissolve is a ground edge, so it must track the world or it
+      // swims when the camera zooms (a height resize keeps the vertical FOV, so the world edge
+      // slides across a screen-pinned brush). World-anchored = stable on resize, and the strokes
+      // regenerate as the reveal circle sweeps past. (Other layers stay screen-space.)
+      vec2 painteryUv = worldXZ * uPainteryDrift;
       float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
       painteryBrush = mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
       color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, t));

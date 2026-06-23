@@ -5,6 +5,7 @@ import propFragmentShader from '../shaders/prop/fragment.glsl'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { edgeUniforms, registerEdgeMaterial } from './edgeUniforms.js'
+import { screenPainteryUniforms } from '../world/utils/screenPaintery.js'
 
 // Stylized prop material — the character's unlit + triplanar-painterly look, but
 // extended with the BatchedMesh chunks so it batches with per-instance colour, plus
@@ -32,6 +33,7 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPropFadeMode: { value: 1 },
             uPixelSize: { value: 1 },
             uPainterySize: { value: 167 },
+            ...screenPainteryUniforms,
             uPainteryScreenBlend: { value: 0.85 },
             uPainteryDrift: { value: 0.12 },
             uPainteryLayer2Scale: { value: 2.2 },
@@ -86,7 +88,7 @@ export function updatePropStylizedMaterial(material, options) {
         u.uPropRimPower.value = r.power
     }
     if (options.paintery) {
-        u.uPainterySize.value = options.paintery.size * refScale
+        u.uPainterySize.value = options.paintery.size // CSS-locked (dpr applied in the shader)
         u.uPainteryScreenBlend.value = options.paintery.screenBlend
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale
@@ -102,6 +104,6 @@ export function updatePropStylizedMaterial(material, options) {
         u.uSeeThroughDepthBias.value = st.depthBias
         u.uSeeThroughOpacityIntensity.value = st.opacityIntensity
         u.uSeeThroughTextureContrast.value = st.textureContrast
-        u.uSeeThroughTextureScale.value = st.textureScale * refScale
+        u.uSeeThroughTextureScale.value = st.textureScale // CSS-locked (dpr applied in the shader)
     }
 }

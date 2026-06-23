@@ -10,6 +10,9 @@ uniform vec3 uBackgroundColor;
 uniform int uPropFadeMode; // 0 = dither, 1 = colour, 2 = paintery
 uniform float uPixelSize;
 uniform float uPainterySize;
+uniform vec2 uTexturePan; // shared camera-drift offset (device px)
+uniform vec2 uPainteryResolution; // drawing buffer size (px) — anchor to the screen centre
+uniform float uPainteryDpr; // device pixel ratio (CSS-locks the tile size)
 uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
@@ -79,7 +82,9 @@ float bayerDither(vec2 fragCoord, float pixelSize) {
 }
 
 float samplePainteryBrush(vec2 worldXZ) {
-    vec2 painteryUv = mix(worldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+    // World-anchored reveal-edge brush (see grass/terrain) so it's stable on resize / zoom.
+    // (The see-through below stays screen-space — it's a screen-fade, so no world mismatch.)
+    vec2 painteryUv = worldXZ * uPainteryDrift;
     float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
     return mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
 }
@@ -95,7 +100,8 @@ void main() {
             float fade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
             float amount = fade * uSeeThroughOpacityIntensity;
             if (amount > 0.0) {
-                vec2 stUv = mix(vWorldXZ * uPainteryDrift, gl_FragCoord.xy / uSeeThroughTextureScale, uPainteryScreenBlend);
+                vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);
+                vec2 stUv = mix(vWorldXZ * uPainteryDrift, stScreenUv, uPainteryScreenBlend);
                 float stBrush = texture2D(uPainterlyTexture, stUv).r;
                 stBrush = mix(stBrush, texture2D(uPainterlyTexture, stUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
                 stBrush = clamp((stBrush - 0.5) * uSeeThroughTextureContrast + 0.5, 0.0, 1.0);

@@ -118,7 +118,9 @@ vec3 hemiLight(vec3 normal, vec3 groundColour, vec3 skyColour) {
 }
 
 float samplePainteryBrush(vec2 worldXZ) {
-  vec2 painteryUv = mix(worldXZ * uPainteryDrift, gl_FragCoord.xy / uPainterySize, uPainteryScreenBlend);
+  // World-anchored: the dissolve is the reveal-circle edge (a world feature), so the brush
+  // tracks the world — stable on resize / camera zoom; strokes regenerate as the edge sweeps.
+  vec2 painteryUv = worldXZ * uPainteryDrift;
   float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
   return mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
 }
