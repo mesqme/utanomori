@@ -82,9 +82,13 @@ float bayerDither(vec2 fragCoord, float pixelSize) {
 }
 
 float samplePainteryBrush(vec2 worldXZ) {
-    // World-anchored reveal-edge brush (see grass/terrain) so it's stable on resize / zoom.
-    // (The see-through below stays screen-space — it's a screen-fade, so no world mismatch.)
-    vec2 painteryUv = worldXZ * uPainteryDrift;
+    // Screen-anchored, device-stable reveal-edge brush. On non-planar props (tree canopies) a
+    // world projection streaks the dither over the surface, so we sample screen-space instead —
+    // a flat "canvas". The /(uPainterySize * uPainteryDpr) CSS-locks the tile, so a window resize
+    // reveals MORE of the texture rather than rescaling it (device-stable). uPainteryScreenBlend
+    // (Border) blends world↔screen and is 1 for the paintery style → fully screen.
+    vec2 screenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uPainterySize * uPainteryDpr);
+    vec2 painteryUv = mix(worldXZ * uPainteryDrift, screenUv, uPainteryScreenBlend);
     float painteryBrush = texture2D(uPainterlyTexture, painteryUv).r;
     return mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
 }
