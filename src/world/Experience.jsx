@@ -2,6 +2,7 @@ import { Perf } from 'r3f-perf'
 
 import Lights from './Lights.jsx'
 import MainCharacter from './MainCharacter.jsx'
+import LanternGlow from './LanternGlow.jsx'
 import Terrain from './Terrain.jsx'
 import Controls from './Controls.jsx'
 import BackgroundSphere from './BackgroundSphere.jsx'
@@ -25,6 +26,7 @@ export default function Experience() {
             <Lights />
             <Terrain />
             <MainCharacter />
+            <LanternGlow />
             <Companions />
             <MusicStones />
 

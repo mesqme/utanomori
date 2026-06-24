@@ -24,6 +24,10 @@ uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
 
+uniform vec3 uLanternGrassColor;
+uniform float uLanternGrassAlpha;
+uniform float uLanternGrassColorAmount;
+
 varying vec3 vColor;
 varying vec4 vGrassData;
 varying vec3 vNormal;
@@ -32,6 +36,7 @@ varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
+varying float vLanternInfluence;
 
 // --- Dither Functions ---
 // 0. Diamond Dither
@@ -214,6 +219,12 @@ void main() {
       float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
       color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
       if (borderFade > painteryBrush) discard;
+  }
+
+  // Lantern grass interaction: tint + fade the grass near the lantern (scale handled in vertex).
+  if (vLanternInfluence > 0.0) {
+    color = mix(color, uLanternGrassColor, vLanternInfluence * uLanternGrassColorAmount);
+    grassAlpha *= 1.0 - vLanternInfluence * uLanternGrassAlpha;
   }
 
   gl_FragColor = vec4(color, grassAlpha);

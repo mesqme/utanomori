@@ -30,6 +30,48 @@ const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     cssColorB: '#9d1111',
 }
 
+// Lantern fire + glow: a flickering flame placed in the hollow middle of the lantern (whose
+// origin sits at the TOP) and a semi-transparent, paintery-edged glow circle around it. Both
+// follow the lantern's world position (state.lanternPosition). All offsets/sizes are tunable
+// since they depend on the exact lantern mesh dimensions.
+const DEFAULT_LANTERN_FIRE_PARAMETERS = {
+    enabled: true,
+    // Fire offsets are LOCAL to the lantern (attached to the bone, see MainCharacter), so the
+    // flame follows the lantern's position AND rotation. -Y drops it from the top origin.
+    fireOffsetX: 0,
+    fireOffsetY: -0.7,
+    fireOffsetZ: 0.05,
+    fireSize: 0.15,
+    fireColorCore: '#ffe6a8', // hot inner flame
+    fireColorEdge: '#ff6a16', // outer flame
+    flickerSpeed: 7.3,
+    flickerAmount: 0.18,
+    // Glow — a semi-transparent paintery-edged circle (sharp dithered edge like the ground
+    // border). Has its OWN local offset, independent of the fire, so the halo can sit apart.
+    glowOffsetX: 0,
+    glowOffsetY: -0.43,
+    glowOffsetZ: 0,
+    glowSize: 2.63,
+    glowColor: '#ff8f4d',
+    glowOpacity: 0.23,
+    glowRadius: 0.76, // circle radius within the plane (0..1)
+    glowBleed: 0.0, // softness of the paintery edge
+    glowTextureScale: 0.03, // paintery brush tiling
+    glowFront: 0.0, // push toward the camera so it draws over the lantern + stick
+}
+
+// Lantern grass interaction: a character-like reaction (scale + alpha + colour, NO lean) in the
+// grass around the lantern's world position — like a soft clearing under the held light.
+const DEFAULT_LANTERN_GRASS_PARAMETERS = {
+    enabled: true,
+    radius: 1.7, // world units around the lantern
+    softness: 1.8, // fade band toward the edge
+    scale: 0.69, // how much the grass shortens (0..1)
+    alpha: 1.0, // how much the grass fades out (0..1)
+    color: '#ffd9a0', // tint toward this colour
+    colorAmount: 0.81, // how strongly to tint (0..1)
+}
+
 // Intro camera travel (GameDirector): optional rise → descending 360° spiral down to the
 // hero. Fully tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
 const DEFAULT_INTRO_CAMERA_PARAMETERS = {
@@ -139,6 +181,17 @@ const createStore = () =>
                 get().lanternPosition.copy(position)
             },
 
+            // World positions of the flame and the glow halo (lantern bone origin + their own
+            // local offsets, see MainCharacter) — independent so they can sit apart.
+            lanternFirePosition: new THREE.Vector3(0, 0, 0),
+            setLanternFirePosition: (position) => {
+                get().lanternFirePosition.copy(position)
+            },
+            lanternGlowPosition: new THREE.Vector3(0, 0, 0),
+            setLanternGlowPosition: (position) => {
+                get().lanternGlowPosition.copy(position)
+            },
+
             grassStyleVersion: GRASS_STYLE_VERSION,
             characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
             objectStyleVersion: OBJECT_STYLE_VERSION,
@@ -203,6 +256,8 @@ const createStore = () =>
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
             loaderDebugParameters: { ...DEFAULT_LOADER_DEBUG_PARAMETERS },
+            lanternFireParameters: { ...DEFAULT_LANTERN_FIRE_PARAMETERS },
+            lanternGrassParameters: { ...DEFAULT_LANTERN_GRASS_PARAMETERS },
             introCameraParameters: { ...DEFAULT_INTRO_CAMERA_PARAMETERS },
             // Bump to replay the intro camera travel live (GameDirector watches this).
             introReplayNonce: 0,
@@ -314,13 +369,9 @@ if (import.meta?.hot) {
             ...defaultSceneStyle.roadParameters,
             ...state.roadParameters,
         },
-        objectParameters: applyObjectStyleDefaults
-            ? { ...defaultSceneStyle.objectParameters }
-            : { ...defaultSceneStyle.objectParameters, ...state.objectParameters },
+        objectParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.objectParameters } : { ...defaultSceneStyle.objectParameters, ...state.objectParameters },
         windParameters: state.windParameters ?? { ...defaultSceneStyle.windParameters },
-        lanternGroundLightParameters: applyGrassStyleDefaults
-            ? { ...defaultSceneStyle.lanternGroundLightParameters }
-            : state.lanternGroundLightParameters,
+        lanternGroundLightParameters: applyGrassStyleDefaults ? { ...defaultSceneStyle.lanternGroundLightParameters } : state.lanternGroundLightParameters,
         borderParameters: applyGrassStyleDefaults
             ? { ...defaultSceneStyle.borderParameters }
             : {
@@ -338,9 +389,9 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
-        loaderDebugParameters: applyLoaderDebugDefaults
-            ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS }
-            : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
+        loaderDebugParameters: applyLoaderDebugDefaults ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS } : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
+        lanternFireParameters: { ...DEFAULT_LANTERN_FIRE_PARAMETERS, ...state.lanternFireParameters },
+        lanternGrassParameters: { ...DEFAULT_LANTERN_GRASS_PARAMETERS, ...state.lanternGrassParameters },
         introCameraParameters: { ...DEFAULT_INTRO_CAMERA_PARAMETERS, ...state.introCameraParameters },
         // Re-inject the replay action/nonce on HMR (the preserved store keeps its old actions,
         // so a freshly-added action would otherwise be missing → the "redo" button no-ops).
@@ -350,12 +401,8 @@ if (import.meta?.hot) {
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
-        edgeParameters: applyObjectStyleDefaults
-            ? { ...defaultSceneStyle.edgeParameters }
-            : { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
-        propRimParameters: applyObjectStyleDefaults
-            ? { ...defaultSceneStyle.propRimParameters }
-            : { ...defaultSceneStyle.propRimParameters, ...state.propRimParameters },
+        edgeParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.edgeParameters } : { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
+        propRimParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.propRimParameters } : { ...defaultSceneStyle.propRimParameters, ...state.propRimParameters },
         gameUiParameters: applyGameUiDefaults ? { ...DEFAULT_GAME_UI_PARAMETERS } : { ...DEFAULT_GAME_UI_PARAMETERS, ...state.gameUiParameters },
     })
     import.meta.hot.data.store = useStore

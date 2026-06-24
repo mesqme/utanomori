@@ -40,6 +40,7 @@ export default function useGrassMaterial({
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const windParameters = useStore((s) => s.windParameters)
     const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
+    const lanternGrassParameters = useStore((s) => s.lanternGrassParameters)
     const roadParameters = useStore((s) => s.roadParameters)
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
@@ -145,6 +146,13 @@ export default function useGrassMaterial({
                     uLanternLightNoiseStrength: { value: lanternGroundLightParameters.edgeNoiseStrength },
                     uLanternLightInnerBrightness: { value: lanternGroundLightParameters.innerBrightness },
                     uLanternLightOuterDarkness: { value: lanternGroundLightParameters.outerDarkness },
+                    uLanternGrassEnabled: { value: lanternGrassParameters.enabled ? 1 : 0 },
+                    uLanternGrassRadius: { value: lanternGrassParameters.radius },
+                    uLanternGrassSoftness: { value: lanternGrassParameters.softness },
+                    uLanternGrassScale: { value: lanternGrassParameters.scale },
+                    uLanternGrassColor: { value: new THREE.Color(lanternGrassParameters.color) },
+                    uLanternGrassAlpha: { value: lanternGrassParameters.alpha },
+                    uLanternGrassColorAmount: { value: lanternGrassParameters.colorAmount },
                 },
                 vertexShader: grassVertexShader,
                 fragmentShader: grassFragmentShader,
@@ -196,6 +204,14 @@ export default function useGrassMaterial({
         u.uLanternLightInnerBrightness.value = lanternGroundLightParameters.innerBrightness
         u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
 
+        u.uLanternGrassEnabled.value = lanternGrassParameters.enabled ? 1 : 0
+        u.uLanternGrassRadius.value = lanternGrassParameters.radius
+        u.uLanternGrassSoftness.value = lanternGrassParameters.softness
+        u.uLanternGrassScale.value = lanternGrassParameters.scale
+        u.uLanternGrassColor.value.set(lanternGrassParameters.color)
+        u.uLanternGrassAlpha.value = lanternGrassParameters.alpha
+        u.uLanternGrassColorAmount.value = lanternGrassParameters.colorAmount
+
         u.uTrampleEnabled.value = (grassParameters.trampleEnabled ?? true) ? 1 : 0
         u.uTrailStrength.value = grassParameters.trailStrength ?? 0.7
         const sourceUsage = computeSourceUsage(grassParameters)
@@ -243,6 +259,7 @@ export default function useGrassMaterial({
         grassPatchParameters,
         windParameters,
         lanternGroundLightParameters,
+        lanternGrassParameters,
         roadParameters,
         chunkSize,
         noiseTexture,

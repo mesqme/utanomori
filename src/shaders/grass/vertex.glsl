@@ -73,6 +73,12 @@ attribute vec2 aObjectLean; // direction × strength to lean away from the neare
 uniform vec4 uMusicStones[7]; // dynamic song-mini-game stones: xy = world XZ, z = radius, w = active
 uniform float uMusicStoneFade; // fade band width beyond each music stone's radius
 
+uniform vec3 uLanternPosition; // lantern world position (shared with the fragment's ground light)
+uniform float uLanternGrassEnabled;
+uniform float uLanternGrassRadius;
+uniform float uLanternGrassSoftness;
+uniform float uLanternGrassScale; // how much the grass shortens near the lantern
+
 varying vec3 vColor;
 varying vec4 vGrassData;
 varying vec3 vNormal;
@@ -81,6 +87,7 @@ varying float vPatchBorderScale;
 varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
+varying float vLanternInfluence;
 
 #include includes.glsl
 
@@ -121,6 +128,16 @@ void main() {
     vec2 away = msD > 1e-4 ? (worldXZ - uMusicStones[i].xy) / msD : vec2(0.0);
     musicLean += away * msS * 0.45;
   }
+
+  // Lantern: a character-like grass interaction (scale here; alpha + colour in the fragment)
+  // around the lantern's world position. No lean.
+  float lanternInfluence = 0.0;
+  if (uLanternGrassEnabled > 0.5) {
+    float lanternDist = distance(worldXZ, uLanternPosition.xz);
+    lanternInfluence = 1.0 - smoothstep(uLanternGrassRadius - uLanternGrassSoftness, uLanternGrassRadius, lanternDist);
+    grassHeightMask *= 1.0 - lanternInfluence * uLanternGrassScale;
+  }
+  vLanternInfluence = lanternInfluence;
 
   // Grass-trail reaction — four independent layers, each driven by either the fading
   // trail canvas ('Trail') or a plain radius around the nearest character ('Radius').

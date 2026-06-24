@@ -435,6 +435,8 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const setLanternPosition = useStore((state) => state.setLanternPosition)
+    const setLanternFirePosition = useStore((state) => state.setLanternFirePosition)
+    const setLanternGlowPosition = useStore((state) => state.setLanternGlowPosition)
     const animationRootRef = useRef(null)
     const mixerRef = useRef(null)
     const actionsRef = useRef({ idle: null, run: null })
@@ -442,6 +444,8 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const movingRef = useRef(false)
     const runBlendRef = useRef(0)
     const lanternWorldPositionRef = useRef(new THREE.Vector3())
+    const lanternFireOffsetRef = useRef(new THREE.Vector3())
+    const lanternGlowOffsetRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
     const painterlyTextures = useTexture(PAINTERLY_TEXTURE_URLS)
     const painterlyTexturesById = useMemo(() => {
@@ -594,6 +598,15 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
         if (nodes.lantern_1) {
             nodes.lantern_1.getWorldPosition(lanternWorldPositionRef.current)
             setLanternPosition(lanternWorldPositionRef.current)
+            // Flame + glow: each a LOCAL offset on the lantern, transformed to world — so they
+            // stay attached to the bone (position + rotation) but can sit at independent offsets.
+            const fp = useStore.getState().lanternFireParameters
+            lanternFireOffsetRef.current.set(fp.fireOffsetX, fp.fireOffsetY, fp.fireOffsetZ)
+            nodes.lantern_1.localToWorld(lanternFireOffsetRef.current)
+            setLanternFirePosition(lanternFireOffsetRef.current)
+            lanternGlowOffsetRef.current.set(fp.glowOffsetX, fp.glowOffsetY, fp.glowOffsetZ)
+            nodes.lantern_1.localToWorld(lanternGlowOffsetRef.current)
+            setLanternGlowPosition(lanternGlowOffsetRef.current)
         }
     })
 
