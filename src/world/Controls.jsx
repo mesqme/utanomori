@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
 import { button, levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
-import usePhases from '../stores/usePhases.jsx'
+import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import useCompanions from '../stores/useCompanions.jsx'
 import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
 import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
@@ -499,6 +500,12 @@ export default function Controls() {
     }, [])
 
     useControls('General', {
+        toCredits: button(() => {
+            // Dev: gather the full party behind the hero and jump straight into the credits run.
+            useCompanions.getState().fillParty()
+            usePhases.getState().setCreditsShown(true) // don't auto-retrigger on Continue
+            usePhases.getState().setPhase(PHASES.credits)
+        }),
         perfMonitor: {
             value: perfVisible,
             onChange: (value, _, context) => {

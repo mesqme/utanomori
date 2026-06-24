@@ -52,6 +52,24 @@ const useCompanions = create((set, get) => ({
         set({ found: [...found, target], target: null, targetInRange: false })
     },
 
+    // Dev: instantly fill the party (used by the "toCredits" tweak to jump to the end run).
+    fillParty: () => {
+        const party = []
+        for (let i = 0; i < MAX_PARTY; i++) {
+            const definition = companionPool[i % companionPool.length]
+            const generated = getCompanionSong(definition.id)
+            party.push({
+                ...definition,
+                key: `${definition.id}-${i}`,
+                x: 0,
+                z: 0,
+                song: definition.song ?? generated.notes,
+                beats: definition.beats ?? generated.beats,
+            })
+        }
+        set({ found: party, target: null, targetInRange: false })
+    },
+
     reset: () => {
         useSongGame.getState().reset()
         set({ found: [], target: null, targetInRange: false })

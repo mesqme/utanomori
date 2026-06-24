@@ -8,7 +8,7 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
-import { getNearestRoadPoint } from './utils/roadField.js'
+import { getNearestRoadPoint, sampleRoadDirection } from './utils/roadField.js'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
@@ -41,6 +41,8 @@ const JUMP_VELOCITY = 4.2
 const GRAVITY = 13.0
 const GROUND_EPSILON = 0.02
 const HERO_COLLISION_RADIUS = 0.35 // hero body radius for pushing out of solid stones
+const CREDITS_TRACK_GAIN = 1.2 // how firmly the credits runner steers back onto the lane centre
+const CREDITS_SPEED_SCALE = 0.65 // credits run at half the normal walk/run speed
 const SHADOW_GROUND_OFFSET = 0.025
 const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
@@ -249,8 +251,26 @@ export default function MainCharacter() {
             }
             wasJumpPressedRef.current = jumpPressed
         } else if (phase === PHASES.credits) {
-            // Credits: the hero runs forward on his own, party trailing behind.
-            moveInput.set(0, 0, -1).multiplyScalar(RUN_SPEED)
+            // Credits: the hero heads to the nearest road and then runs ALONG it, party trailing.
+            // Follow the road's LOCAL tangent (the meander's exact derivative) so turns aren't
+            // cut, plus a steer back toward the lane centre to stay on it / approach it. Lanes
+            // run +Z; the hero runs -Z, so the forward tangent is negated.
+            const road = useStore.getState().roadParameters
+            let steered = false
+            if (road?.enabled) {
+                const onRoad = getNearestRoadPoint(position.x, position.z, road)
+                if (onRoad) {
+                    const dir = sampleRoadDirection(position.x, position.z, road) // tangent, +Z
+                    const error = onRoad.x - position.x // cross-track offset to the lane centre
+                    const mx = -dir.x + error * CREDITS_TRACK_GAIN
+                    const mz = -dir.z
+                    const len = Math.hypot(mx, mz) || 1
+                    const speed = (onRoad.distance > road.width * 0.6 ? WALK_SPEED : RUN_SPEED) * CREDITS_SPEED_SCALE
+                    moveInput.set((mx / len) * speed, 0, (mz / len) * speed)
+                    steered = true
+                }
+            }
+            if (!steered) moveInput.set(0, 0, -1).multiplyScalar(RUN_SPEED * CREDITS_SPEED_SCALE) // no road → straight on
             velocity.x = THREE.MathUtils.damp(velocity.x, moveInput.x, ACCELERATION, safeDelta)
             velocity.z = THREE.MathUtils.damp(velocity.z, moveInput.z, ACCELERATION, safeDelta)
             wasJumpPressedRef.current = false
@@ -417,8 +437,7 @@ export default function MainCharacter() {
         seeThrough.centerX = stCenterX
         seeThrough.centerY = stCenterY
         seeThrough.radiusPx = Math.hypot((_stEdge.x * 0.5 + 0.5) * bufferW - stCenterX, (_stEdge.y * 0.5 + 0.5) * bufferH - stCenterY)
-        seeThrough.active =
-            seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits)
+        seeThrough.active = seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits)
 
         setSmoothedCircleCenter(smoothedCircleCenter)
     })
@@ -461,8 +480,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             })
         )
     }, [painterlyTextures])
-    const selectedPainterlyTexture =
-        painterlyTexturesById[characterMaterialParameters.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
+    const selectedPainterlyTexture = painterlyTexturesById[characterMaterialParameters.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
     const materialSlotsByMeshName = useMemo(() => {
         return mainCharacterMaterialSlots.reduce((slots, slot) => {
             slots[slot.meshName] = slot
@@ -481,10 +499,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             const painterlyTexture = painterlyTexturesById[stylizedSettings.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
 
             if (!stylizedMaterialsRef.current.has(materialKey)) {
-                stylizedMaterialsRef.current.set(
-                    materialKey,
-                    createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture)
-                )
+                stylizedMaterialsRef.current.set(materialKey, createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture))
             }
 
             return stylizedMaterialsRef.current.get(materialKey)
