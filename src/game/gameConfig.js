@@ -1,17 +1,25 @@
-// Camera shots (debug-orbit style: angle / distance / height / targetYOffset around
-// the hero). Top-down for the loading "hat" view, low front to reveal the face.
+// Camera shots (debug-orbit style: angle / distance / height / targetYOffset around the
+// hero). Top-down for the loading "hat" view (angle 0, unchanged from the original). The
+// intro then sweeps a full 360° orbit (0 → 2π) descending to the dialogue shot. The dialogue
+// and gameplay shots share angle 2π (the orbit's landing) so the hand-off to gameplay is a
+// pure rise, no extra turn. The hero faces this side (see MainCharacter menu-facing) so the
+// orbit lands looking at its face.
 export const CAMERA_TOP_SHOT = { angle: 0, distance: 2, height: 15.1, targetYOffset: 0.4 }
-export const CAMERA_FRONT_SHOT = { angle: Math.PI, distance: 8.2, height: 1.9, targetYOffset: 0.4 }
-// Orbit equivalent of the gameplay follow shot (offset 0,10,12 / target y 0.25).
-// angle 2π keeps the intro's rotation going one continuous direction, then we hand
-// off to the real follow camera which lands on exactly this pose.
+export const CAMERA_FRONT_SHOT = { angle: Math.PI * 2, distance: 11.5, height: 2.3, targetYOffset: 0.4 }
+// Orbit equivalent of the gameplay follow shot (offset 0,10,12 / target y 0.25). Same angle
+// as the dialogue shot, so the hand-off to gameplay is just a rise, not a turn.
 export const CAMERA_FOLLOW_ORBIT = { angle: Math.PI * 2, distance: 12, height: 10, targetYOffset: 0.25 }
 export const CAMERA_BASE_FOV = 45
 export const CAMERA_REFERENCE_HEIGHT = 1080
 
-export const INTRO_TRAVEL_DURATION = 2.6 // seconds for the camera to arc top → front
-export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the side fly-around into gameplay
-export const INTRO_DIALOGUE_DELAY = 2.9 // when the speech bubble starts typing
+// Intro travel — rise → descending 360° spiral down to the hero (rotation + descent together).
+// The live, tweakable numbers (heights, durations, orbit radius, optional target spiral) live
+// in the store (introCameraParameters) so they can be tuned + replayed from the "Intro Camera"
+// Leva folder. These constants are just the default timing the dialogue/reveal pacing keys off.
+export const INTRO_TRAVEL_EASE = 'power1.inOut' // spiral-angle ease (gentle in/out)
+export const INTRO_TRAVEL_DURATION = 3.5 // default rise (0.7) + spiral (2.8)
+export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the rise into gameplay
+export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble starts as it settles
 export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 
 export const DIALOGUE_TEXT =

@@ -148,6 +148,23 @@ function buildCellGroup(cellX, cellZ, settings) {
         }
         const footprintRadius = baseFootprint * scale * sizeMul
 
+        // Footprint (above) drives spacing. Grass suppression + collision use a separate
+        // radius: trees clear/collide on the slim trunk only (canopy floats high), stones use
+        // their full footprint, mushrooms are passable (no collision) but still part grass.
+        let grassRadius
+        let solidRadius
+        if (type === 'tree') {
+            const trunkRadius = (library.trunkRadius ?? 0.22) * scale * sizeMul
+            grassRadius = trunkRadius
+            solidRadius = trunkRadius
+        } else if (type === 'stone') {
+            grassRadius = footprintRadius
+            solidRadius = footprintRadius
+        } else {
+            grassRadius = footprintRadius
+            solidRadius = 0 // mushrooms don't block the hero
+        }
+
         // Keep the object's footprint off the road surface (with a small margin).
         if (roadEnabled) {
             const roadDistance = sampleRoadDistance(anchorX + localX, anchorZ + localZ, settings.roadParameters)
@@ -186,7 +203,7 @@ function buildCellGroup(cellX, cellZ, settings) {
             normal: socket.normal ?? [0, 1, 0],
         }))
 
-        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, colorTone, sockets })
+        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, grassRadius, solidRadius, colorTone, sockets })
     }
 
     if (instances.length === 0) return null
@@ -277,7 +294,7 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
                 const dx = worldX - instance.worldX
                 const dz = worldZ - instance.worldZ
                 const dist = Math.sqrt(dx * dx + dz * dz)
-                const r = instance.footprintRadius
+                const r = instance.grassRadius // trees: trunk only; stones/mushrooms: footprint
                 const s = 1 - smoothstep(r, r + fade, dist) // 1 inside r → 0 at r + fade
                 if (s > suppress) {
                     suppress = s
@@ -294,18 +311,19 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
             return { suppress, leanX, leanZ }
         },
 
-        // Push a moving circle (the hero) out of any solid stones it overlaps. Returns the
-        // corrected { x, z } or null if it was already clear. Only stones are solid.
+        // Push a moving circle (the hero) out of any solid object it overlaps. Returns the
+        // corrected { x, z } or null if it was already clear. Stones use their footprint;
+        // trees use the slim trunk radius; mushrooms have solidRadius 0 (passable).
         collideCircle(worldX, worldZ, radius) {
             if (!settings.enabled) return null
 
             let pushX = 0
             let pushZ = 0
             forEachNeighborInstance(worldX, worldZ, (instance) => {
-                if (instance.type !== 'stone') return
+                if (instance.solidRadius <= 0) return
                 const dx = worldX - instance.worldX
                 const dz = worldZ - instance.worldZ
-                const minDist = instance.footprintRadius + radius
+                const minDist = instance.solidRadius + radius
                 const distSq = dx * dx + dz * dz
                 if (distSq < minDist * minDist && distSq > 1e-8) {
                     const dist = Math.sqrt(distSq)

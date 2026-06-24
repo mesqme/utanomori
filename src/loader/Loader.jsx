@@ -6,11 +6,12 @@ import usePhases, { PHASES } from '../stores/usePhases'
 import useStore from '../stores/useStore'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
+import { loaderInteraction } from './loaderInteraction.js'
 import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
 const RING_TRACK_COLOR = soundJourneyPalette.uiRingTrack
-const EXIT_HOLD_MS = 420
+const EXIT_HOLD_MS = 700 // covers the fade-out before the loader unmounts
 
 export default function Loader() {
     const { active, progress } = useProgress()
@@ -22,6 +23,7 @@ export default function Loader() {
 
     const [displayed, setDisplayed] = useState(0)
     const [isExiting, setIsExiting] = useState(false)
+    const [hovered, setHovered] = useState(false)
 
     const lastPctRef = useRef(0)
     const displayedRef = useRef({ value: 0 })
@@ -64,10 +66,10 @@ export default function Loader() {
     }, [phase, active, percent, setPhase, debugMode])
 
     const handleClick = () => {
-        if (phase === PHASES.warmup) {
-            setIsExiting(true)
-            setPhase(PHASES.intro)
-        }
+        if (phase !== PHASES.warmup) return
+        // The bar simply fades to transparent; the camera intro starts at the same time.
+        setIsExiting(true)
+        setPhase(PHASES.intro)
     }
 
     useEffect(() => {
@@ -80,10 +82,22 @@ export default function Loader() {
     const showStart = phase === PHASES.warmup
     const showExit = isExiting && phase === PHASES.intro
 
+    // Tell the 3D world when the GO circle is hovered (only meaningful in warmup), so the
+    // terrain reveal-circle grows to preview the scene. Reset whenever we leave warmup.
+    useEffect(() => {
+        loaderInteraction.hovered = showStart && hovered
+        return () => {
+            loaderInteraction.hovered = false
+        }
+    }, [showStart, hovered])
+
     if (!showLoading && !showStart && !showExit) return null
 
+    // The unfilled track is fully transparent in warmup/exit (no semi-transparent ring behind
+    // the GO — only the live 3D shows).
+    const ringTrack = showStart || showExit ? 'transparent' : RING_TRACK_COLOR
     const ringStyle = {
-        background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, ${RING_TRACK_COLOR} ${percent * 3.6}deg)`,
+        background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, ${ringTrack} ${percent * 3.6}deg)`,
     }
     const loaderStyle = {
         ...fixedSizeStyle,
@@ -92,7 +106,10 @@ export default function Loader() {
     }
 
     return (
-        <div className={`loader-wrapper ${showExit ? 'loader-wrapper--exit' : ''}`} style={loaderStyle}>
+        <div
+            className={`loader-wrapper ${showStart ? 'loader-wrapper--warmup' : ''} ${showExit ? 'loader-wrapper--exit' : ''}`}
+            style={loaderStyle}
+        >
             <div className="loader-container">
                 <div className="loader-ring" style={ringStyle}>
                     <div className="loader-ring-inner" />
@@ -100,6 +117,8 @@ export default function Loader() {
                 <div
                     className={`loader-center ${showStart ? 'loader-center--clickable' : ''}`}
                     onClick={handleClick}
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
                 >
                     {showLoading && !showExit && <div className="loader-percent">{percent}%</div>}
                     {showStart && !showExit && <div className="loader-go-button">GO</div>}

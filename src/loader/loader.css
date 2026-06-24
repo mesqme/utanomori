@@ -14,6 +14,16 @@
     pointer-events: none;
 }
 
+/* Warmup (GO): drop the flat 2D background and the red centre disc so the live 3D scene
+   shows through — the GO text then floats over the real top-down hero, framed by the ring. */
+.loader-wrapper--warmup {
+    background: transparent;
+}
+
+.loader-wrapper--warmup .loader-center {
+    background-color: transparent;
+}
+
 .loader-container {
     position: relative;
     display: grid;
@@ -28,6 +38,8 @@
     position: relative;
     z-index: 2;
     pointer-events: none;
+    opacity: 1;
+    transition: opacity 0.5s ease;
     -webkit-mask: radial-gradient(
         farthest-side,
         transparent calc(100% - var(--sj-loader-ring-width, 12px)),
@@ -57,6 +69,12 @@
 }
 
 .loader-wrapper--exit .loader-center {
+    opacity: 0;
+    background-color: transparent;
+}
+
+/* GO pressed: the whole bar simply fades to transparent (smooth, no scale/particles). */
+.loader-wrapper--exit .loader-ring {
     opacity: 0;
 }
 

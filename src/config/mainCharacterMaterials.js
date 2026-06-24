@@ -8,6 +8,7 @@ export const mainCharacterMaterialPresets = Object.freeze({
             blue: { baseColor: '#3661da', toonColor: '#15206a' },
             lightBrown: { baseColor: '#b5777d', toonColor: '#4d263c' },
             metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
+            lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
         },
     },
     tuned: {
@@ -19,6 +20,7 @@ export const mainCharacterMaterialPresets = Object.freeze({
             blue: { baseColor: '#5648a0', toonColor: '#34219a' },
             lightBrown: { baseColor: '#ad7278', toonColor: '#583972' },
             metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
+            lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
         },
     },
 })
@@ -30,6 +32,7 @@ export const mainCharacterMaterialGroups = Object.freeze([
     { id: 'blue', label: 'Blue', baseColor: '#5648a0', toonColor: '#34219a' },
     { id: 'lightBrown', label: 'Light Brown', baseColor: '#ad7278', toonColor: '#583972' },
     { id: 'metal', label: 'Metal', baseColor: '#91a2ff', toonColor: '#34419c' },
+    { id: 'lantern', label: 'Lantern', baseColor: '#e6a23a', toonColor: '#7a3d18' },
 ])
 
 export const mainCharacterMaterialSlots = Object.freeze([
@@ -39,7 +42,7 @@ export const mainCharacterMaterialSlots = Object.freeze([
     { meshName: 'Cylinder001_1', materialId: 'darkBrown' },
     { meshName: 'Cylinder008', materialId: 'black' },
     { meshName: 'Cylinder008_1', materialId: 'darkBrown' },
-    { meshName: 'lantern_1', materialId: 'red' },
+    { meshName: 'lantern_1', materialId: 'lantern' },
     { meshName: 'Cylinder010', materialId: 'blue' },
     { meshName: 'Cylinder010_1', materialId: 'darkBrown' },
     { meshName: 'Cylinder004', materialId: 'blue' },

@@ -52,6 +52,10 @@ export const objectLibrary = Object.freeze({
     // The canopy part carries `foliage: true` so it takes treeColor.
     tree: {
         footprintRadius: 0.9,
+        // Solid/grass radius for trees = the trunk (the canopy floats up high), so the hero
+        // collides with — and grass only clears around — the slim trunk, not the whole canopy.
+        // Matches the trunk cylinder's base radius (0.2) with a touch of margin.
+        trunkRadius: 0.22,
         parts: [
             { geometry: 'cylinder', args: [0.13, 0.2, 1.4, 6], offset: [0, 0.7, 0], color: soundJourneyPalette.trunkLight },
             { geometry: 'sphere', args: [1.0, 16, 12], offset: [0, 2.0, 0], color: soundJourneyPalette.leaves, foliage: true },

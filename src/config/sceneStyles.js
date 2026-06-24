@@ -248,6 +248,7 @@ const painteryStyle = {
             blue: { baseColor: '#3661da', toonColor: '#15206a' },
             lightBrown: { baseColor: '#b5777d', toonColor: '#4d263c' },
             metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
+            lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
         },
     },
     gameUiParameters: {

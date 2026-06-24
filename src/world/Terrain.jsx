@@ -15,12 +15,18 @@ import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
 import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import { loaderInteraction } from '../loader/loaderInteraction.js'
 
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import noiseTextureUrl from '../assets/textures/noiseTexture.png'
 import groundTextureUrl from '../assets/textures/ground.png'
 
 const START_CIRCLE_RADIUS = 0.07
+// Hovering the GO circle in warmup previews this much of the world (a partial reveal — well
+// past the red hat but not the full gameplay radius), then fades back when the pointer leaves.
+const WARMUP_HOVER_RADIUS = 0.45
+const WARMUP_HOVER_LERP = 6 // grow-in speed while hovering
+const WARMUP_FADE_LERP = 2.5 // slower fade-back when the pointer leaves
 const START_RADIUS_DELAY = 1.1
 const ACTIVE_CHUNK_RADIUS = 2
 
@@ -38,6 +44,7 @@ export default function Terrain() {
     const phase = usePhases((s) => s.phase)
     const chunkSize = useStore((s) => s.terrainParameters.chunkSize)
     const borderCircleRadius = useStore((s) => s.borderParameters.circleRadiusFactor)
+    const introReplayNonce = useStore((s) => s.introReplayNonce)
 
     const noise2D = sharedNoise2D
 
@@ -104,6 +111,25 @@ export default function Terrain() {
         revealCircle.radiusFactor = value
     }
 
+    // The intro reveal moves with the camera travel: the lit circle shrinks slightly while the
+    // camera rises, then opens out to full as it spirals down. Timed to the (tunable) intro
+    // durations so the two stay in sync; replayable via the "redo the animation" button.
+    const runIntroReveal = () => {
+        if (radiusAnimationRef.current) radiusAnimationRef.current.kill()
+        const intro = useStore.getState().introCameraParameters
+        const startValue = circleRadiusRef.current
+        const reduced = Math.max(START_CIRCLE_RADIUS, startValue - intro.revealReduce)
+        const obj = { value: startValue }
+        const tl = gsap.timeline({
+            onComplete: () => {
+                radiusAnimationRef.current = null
+            },
+        })
+        tl.to(obj, { value: reduced, duration: Math.max(0.001, intro.riseDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
+        tl.to(obj, { value: borderCircleRadius, duration: Math.max(0.001, intro.spiralDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
+        radiusAnimationRef.current = tl
+    }
+
     useEffect(() => {
         return () => {
             if (radiusAnimationRef.current) {
@@ -117,22 +143,8 @@ export default function Terrain() {
 
     useEffect(() => {
         if (phase === PHASES.intro) {
-            // Reveal the world as the camera arcs from the top hat-view to the front.
-            if (radiusAnimationRef.current) {
-                radiusAnimationRef.current.kill()
-            }
-            setCircleRadius(START_CIRCLE_RADIUS)
-            const radiusObj = { value: START_CIRCLE_RADIUS }
-            radiusAnimationRef.current = gsap.to(radiusObj, {
-                value: borderCircleRadius,
-                duration: 2.2,
-                delay: 0.3,
-                ease: 'power2.out',
-                onUpdate: () => setCircleRadius(radiusObj.value),
-                onComplete: () => {
-                    radiusAnimationRef.current = null
-                },
-            })
+            // Reveal flows with the camera travel: shrink slightly on the rise, open on the spiral.
+            runIntroReveal()
         } else if (phase === PHASES.start || phase === PHASES.credits) {
             // Full circle during gameplay / credits (debug jumps straight here).
             if (!radiusAnimationRef.current) setCircleRadius(borderCircleRadius)
@@ -148,8 +160,25 @@ export default function Terrain() {
         prevPhaseRef.current = phase
     }, [phase, borderCircleRadius])
 
-    useFrame((frameState) => {
+    // "Redo the animation" → replay the reveal alongside the camera travel.
+    useEffect(() => {
+        if (introReplayNonce === 0) return
+        runIntroReveal()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [introReplayNonce])
+
+    useFrame((frameState, delta) => {
         const state = useStore.getState()
+
+        // Warmup: hovering the GO circle previews more of the world (the reveal circle grows
+        // out from under the red hat), then fades back gently when the pointer leaves.
+        if (phase === PHASES.warmup && !radiusAnimationRef.current) {
+            const hovering = loaderInteraction.hovered
+            const target = hovering ? WARMUP_HOVER_RADIUS : START_CIRCLE_RADIUS
+            const rate = hovering ? WARMUP_HOVER_LERP : WARMUP_FADE_LERP
+            const t = Math.min(1, (delta || 0.016) * rate)
+            setCircleRadius(THREE.MathUtils.lerp(circleRadiusRef.current, target, t))
+        }
 
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         terrainMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)

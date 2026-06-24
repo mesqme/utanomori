@@ -3,7 +3,7 @@ import { companionPool } from '../config/companionPool.js'
 import { getCompanionSong } from '../config/notes.js'
 import useSongGame from './useSongGame.jsx'
 
-export const MAX_PARTY = 5
+export const MAX_PARTY = 3
 
 /**
  * Find-and-collect game state.

@@ -9,7 +9,7 @@ import {
     CAMERA_TOP_SHOT,
     CAMERA_FRONT_SHOT,
     CAMERA_FOLLOW_ORBIT,
-    INTRO_TRAVEL_DURATION,
+    INTRO_TRAVEL_EASE,
     GAMEPLAY_ENTRY_DURATION,
 } from './gameConfig.js'
 
@@ -20,15 +20,84 @@ const applyShot = (shot) => {
     cameraRig.targetYOffset = shot.targetYOffset
 }
 
-// Orchestrates the game cycle: drives the camera shot per phase, arcs the intro
-// camera top → front, and rolls credits once the party is complete. Pure logic
-// (no rendering) — it writes the shared cameraRig and the phase store.
+// The intro camera travel: from the top "hat" shot, RISE a touch, then a descending 360°
+// SPIRAL down to the dialogue framing (rotation + descent together). Fully driven by the
+// tunable store params so it can be replayed live ("redo the animation"). Optionally the
+// look-at point also spirals in XZ (out and back, Y unchanged).
+function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay }) {
+    if (introTweenRef.current) {
+        introTweenRef.current.kill()
+        introTweenRef.current = null
+    }
+    cameraRig.mode = 'orbit'
+    cameraRig.lerpSpeed = 9
+    applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
+
+    const startAngle = cameraRig.angle
+    const baseHeight = loaderCameraHeight
+    const spiralStart = params.riseDuration
+    const timeline = gsap.timeline({
+        onComplete: () => {
+            introTweenRef.current = null
+            // A replay restores whatever the current phase expects, so previewing doesn't leave
+            // the camera parked at the dialogue shot.
+            if (isReplay) {
+                const current = usePhases.getState().phase
+                if (current === PHASES.start) {
+                    cameraRig.mode = 'follow'
+                    cameraRig.lerpSpeed = 5
+                } else if (current === PHASES.warmup || current === PHASES.loading) {
+                    cameraRig.lerpSpeed = 6
+                    applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
+                }
+            }
+        },
+    })
+
+    // 1) Rise a touch first (anticipation / "go up").
+    timeline.to(
+        cameraRig,
+        { height: baseHeight + params.riseHeight, duration: params.riseDuration, ease: 'power2.out' },
+        0
+    )
+    // 2) Descending 360° spiral — angle sweeps a whole turn while the height drops to the
+    //    dialogue shot (rotation + descent together).
+    timeline.to(
+        cameraRig,
+        {
+            angle: startAngle + Math.PI * 2,
+            height: CAMERA_FRONT_SHOT.height,
+            targetYOffset: CAMERA_FRONT_SHOT.targetYOffset,
+            duration: params.spiralDuration,
+            ease: INTRO_TRAVEL_EASE,
+        },
+        spiralStart
+    )
+    // Radius swells outward, then pulls into the character.
+    timeline.to(
+        cameraRig,
+        { distance: params.orbitDistance, duration: params.spiralDuration * 0.5, ease: 'power1.out' },
+        spiralStart
+    )
+    timeline.to(
+        cameraRig,
+        { distance: CAMERA_FRONT_SHOT.distance, duration: params.spiralDuration * 0.5, ease: 'power2.inOut' },
+        spiralStart + params.spiralDuration * 0.5
+    )
+
+    introTweenRef.current = timeline
+}
+
+// Orchestrates the game cycle: drives the camera shot per phase, runs the intro travel, and
+// rolls credits once the party is complete. Pure logic (no rendering) — it writes the shared
+// cameraRig and the phase store.
 export default function GameDirector() {
     const phase = usePhases((state) => state.phase)
     const debugMode = usePhases((state) => state.debugMode)
     const creditsShown = usePhases((state) => state.creditsShown)
     const found = useCompanions((state) => state.found)
     const loaderCameraHeight = useStore((state) => state.loaderDebugParameters.cameraHeight)
+    const introReplayNonce = useStore((state) => state.introReplayNonce)
     const setPhase = usePhases((state) => state.setPhase)
     const setCreditsShown = usePhases((state) => state.setCreditsShown)
     const introTweenRef = useRef(null)
@@ -46,24 +115,18 @@ export default function GameDirector() {
             cameraRig.lerpSpeed = phase === PHASES.warmup ? 6 : 30
             applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
         } else if (phase === PHASES.intro) {
-            cameraRig.mode = 'orbit'
-            cameraRig.lerpSpeed = 9
-            applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
-            introTweenRef.current = gsap.to(cameraRig, {
-                angle: CAMERA_FRONT_SHOT.angle,
-                distance: CAMERA_FRONT_SHOT.distance,
-                height: CAMERA_FRONT_SHOT.height,
-                targetYOffset: CAMERA_FRONT_SHOT.targetYOffset,
-                duration: INTRO_TRAVEL_DURATION,
-                ease: 'power2.inOut',
-                onComplete: () => {
-                    introTweenRef.current = null
-                },
+            runIntroTravel({
+                introTweenRef,
+                loaderCameraHeight,
+                params: useStore.getState().introCameraParameters,
+                isReplay: false,
             })
         } else if (phase === PHASES.start) {
+            cameraRig.targetOffsetX = 0
+            cameraRig.targetOffsetZ = 0
             if (prevPhaseRef.current === PHASES.intro) {
-                // Smooth circular fly-around from the front-facing dialogue shot to the
-                // over-the-shoulder gameplay view (rather than lerping through the hero).
+                // Dialogue shot already shares the gameplay camera's side, so this is a calm
+                // rise/pull-back up to the over-the-shoulder view — no orbit around the hero.
                 cameraRig.mode = 'orbit'
                 cameraRig.lerpSpeed = 14
                 introTweenRef.current = gsap.to(cameraRig, {
@@ -97,6 +160,17 @@ export default function GameDirector() {
             }
         }
     }, [phase, loaderCameraHeight])
+
+    // "Redo the animation" (Leva) → replay the intro travel live from the current state.
+    useEffect(() => {
+        if (introReplayNonce === 0) return
+        runIntroTravel({
+            introTweenRef,
+            loaderCameraHeight: useStore.getState().loaderDebugParameters.cameraHeight,
+            params: useStore.getState().introCameraParameters,
+            isReplay: true,
+        })
+    }, [introReplayNonce])
 
     // Toggling debug mode mid-run jumps to the right place (once assets are loaded).
     useEffect(() => {

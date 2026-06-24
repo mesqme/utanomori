@@ -309,9 +309,11 @@ export default function MainCharacter() {
                 const targetRotationY = Math.atan2(velocity.x, velocity.z) + characterParameters.rotationOffset
                 modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, targetRotationY, CHARACTER_TURN_SPEED, safeDelta)
             } else if (phase !== PHASES.start) {
-                // Menu phases (loading / warmup / intro): face the forward run direction
-                // so the hat reads correctly from the top and the face is toward the camera.
-                modelRef.current.rotation.y = Math.atan2(0, -1) + characterParameters.rotationOffset
+                // Fixed orientation for the WHOLE menu + intro, turned 180° to face +Z (toward
+                // the camera / orbit landing). It's the SAME value in warmup and intro, so it
+                // never flips at GO — no offset of the off-centre model. The 360° orbit lands
+                // face-on at the dialogue.
+                modelRef.current.rotation.y = Math.atan2(0, 1) + characterParameters.rotationOffset
             }
         }
 

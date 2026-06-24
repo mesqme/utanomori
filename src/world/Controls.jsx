@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
-import { levaStore, useControls } from 'leva'
+import { button, levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
 import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
@@ -349,6 +349,8 @@ export default function Controls() {
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
+    const introCameraParameters = useStore((state) => state.introCameraParameters)
+    const replayIntro = useStore((state) => state.replayIntro)
     const arrowParameters = useStore((state) => state.arrowParameters)
     const songGameParameters = useStore((state) => state.songGameParameters)
     const musicStoneParameters = useStore((state) => state.musicStoneParameters)
@@ -1920,6 +1922,45 @@ export default function Controls() {
         cssB: {
             value: loaderDebugParameters.cssColorB,
             onChange: setParam('loaderDebugParameters', 'cssColorB'),
+        },
+    })
+
+    useControls('Intro Camera', {
+        'redo the animation': button(() => replayIntro()),
+        riseHeight: {
+            value: introCameraParameters.riseHeight,
+            min: 0,
+            max: 20,
+            step: 0.1,
+            onChange: setParam('introCameraParameters', 'riseHeight'),
+        },
+        riseDuration: {
+            value: introCameraParameters.riseDuration,
+            min: 0,
+            max: 3,
+            step: 0.05,
+            onChange: setParam('introCameraParameters', 'riseDuration'),
+        },
+        spiralDuration: {
+            value: introCameraParameters.spiralDuration,
+            min: 0.3,
+            max: 8,
+            step: 0.05,
+            onChange: setParam('introCameraParameters', 'spiralDuration'),
+        },
+        orbitDistance: {
+            value: introCameraParameters.orbitDistance,
+            min: 3,
+            max: 40,
+            step: 0.5,
+            onChange: setParam('introCameraParameters', 'orbitDistance'),
+        },
+        revealReduce: {
+            value: introCameraParameters.revealReduce,
+            min: 0,
+            max: 0.3,
+            step: 0.005,
+            onChange: setParam('introCameraParameters', 'revealReduce'),
         },
     })
 

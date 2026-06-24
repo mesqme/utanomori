@@ -4,12 +4,12 @@ import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle } from '../config/sceneStyles.js'
 
 const GRASS_STYLE_VERSION = 19
-const CHARACTER_STYLIZED_VERSION = 3
+const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
 const OBJECT_STYLE_VERSION = 3
-const LOADER_DEBUG_VERSION = 5
+const LOADER_DEBUG_VERSION = 6
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
     debugOrbitAngle: 0,
@@ -21,13 +21,23 @@ const DEFAULT_CAMERA_PARAMETERS = {
 const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     enabled: false,
     targetX: 5.71,
-    targetZ: -0.2,
+    targetZ: 0.04,
     nudgeStep: 0.02,
-    circleRadius: 101,
-    ringWidth: 12.5,
+    circleRadius: 106,
+    ringWidth: 15.5,
     cameraHeight: 18,
     cssColorA: '#03021a',
     cssColorB: '#9d1111',
+}
+
+// Intro camera travel (GameDirector): optional rise → descending 360° spiral down to the
+// hero. Fully tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
+const DEFAULT_INTRO_CAMERA_PARAMETERS = {
+    riseHeight: 0, // 0 = no initial rise; the spiral starts immediately
+    riseDuration: 0, // seconds of that initial rise (0 = skip straight to the spiral)
+    spiralDuration: 4.55, // seconds of the descending 360° spiral down to the hero
+    orbitDistance: 14, // peak camera radius mid-spiral (swells out, then pulls in)
+    revealReduce: 0.04, // how much the terrain/grass reveal shrinks during the rise
 }
 
 // A single arrow (arrow.glb, forward = local -X, origin behind it) floating in front of the
@@ -193,6 +203,10 @@ const createStore = () =>
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
             loaderDebugParameters: { ...DEFAULT_LOADER_DEBUG_PARAMETERS },
+            introCameraParameters: { ...DEFAULT_INTRO_CAMERA_PARAMETERS },
+            // Bump to replay the intro camera travel live (GameDirector watches this).
+            introReplayNonce: 0,
+            replayIntro: () => set((s) => ({ introReplayNonce: s.introReplayNonce + 1 })),
             arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
             musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS },
@@ -327,6 +341,11 @@ if (import.meta?.hot) {
         loaderDebugParameters: applyLoaderDebugDefaults
             ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS }
             : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
+        introCameraParameters: { ...DEFAULT_INTRO_CAMERA_PARAMETERS, ...state.introCameraParameters },
+        // Re-inject the replay action/nonce on HMR (the preserved store keeps its old actions,
+        // so a freshly-added action would otherwise be missing → the "redo" button no-ops).
+        introReplayNonce: state.introReplayNonce ?? 0,
+        replayIntro: () => useStore.setState((s) => ({ introReplayNonce: (s.introReplayNonce ?? 0) + 1 })),
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
