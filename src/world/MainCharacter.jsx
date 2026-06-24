@@ -562,7 +562,9 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
 
         return () => {
             mixer.stopAllAction()
-            mixer.uncacheRoot(animationRootRef.current)
+            // animationRootRef may already be detached (null) on unmount — uncacheRoot(null)
+            // would read null.uuid and throw, so guard it.
+            if (animationRootRef.current) mixer.uncacheRoot(animationRootRef.current)
             mixerRef.current = null
             actionsRef.current = { idle: null, run: null }
         }

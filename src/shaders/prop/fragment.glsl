@@ -26,6 +26,11 @@ uniform float uSeeThroughDepthBias;
 uniform float uSeeThroughOpacityIntensity;
 uniform float uSeeThroughTextureContrast;
 uniform float uSeeThroughTextureScale;
+// Extra see-through subjects: the bottom music stones. xy = screen centre px, z = radius px,
+// w = camera depth. Props fade where ANY of these (or the hero) sits behind them.
+#define MAX_STONE_ST 4
+uniform vec4 uStoneSeeThrough[MAX_STONE_ST];
+uniform int uStoneSeeThroughCount;
 
 // Fresnel colour rim for the hard-surface props (trunks / stones / mushrooms). Tree
 // leaves use the painterly silhouette edge below instead.
@@ -93,25 +98,33 @@ float samplePainteryBrush(vec2 worldXZ) {
     return mix(painteryBrush, texture2D(uPainterlyTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
 }
 
+// See-through amount for one subject (hero / stone): how much to fade this prop where the
+// subject sits behind it on screen and the prop is in front of it.
+float seeThroughAmount(vec2 center, float radiusPx, float depth) {
+    if (length(vWorldPos - cameraPosition) >= depth - uSeeThroughDepthBias) return 0.0;
+    float sd = length(gl_FragCoord.xy - center) / max(radiusPx, 1.0);
+    float fade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
+    return fade * uSeeThroughOpacityIntensity;
+}
+
 void main() {
-    // See-through: where the hero is hidden behind this prop, dither it away through
-    // the brush so the hero shows through. The stipple density = the opacity intensity
-    // (× the texture), so the object becomes semitransparent rather than fully removed.
-    if (uSeeThroughActive > 0.5) {
-        float camDist = length(vWorldPos - cameraPosition);
-        if (camDist < uSeeThroughDepth - uSeeThroughDepthBias) {
-            float sd = length(gl_FragCoord.xy - uSeeThroughCenter) / max(uSeeThroughRadius, 1.0);
-            float fade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
-            float amount = fade * uSeeThroughOpacityIntensity;
-            if (amount > 0.0) {
-                vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);
-                vec2 stUv = mix(vWorldXZ * uPainteryDrift, stScreenUv, uPainteryScreenBlend);
-                float stBrush = texture2D(uPainterlyTexture, stUv).r;
-                stBrush = mix(stBrush, texture2D(uPainterlyTexture, stUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
-                stBrush = clamp((stBrush - 0.5) * uSeeThroughTextureContrast + 0.5, 0.0, 1.0);
-                if (amount > stBrush) discard;
-            }
-        }
+    // See-through: where the hero OR a bottom music stone is hidden behind this prop, dither it
+    // away through the brush so it shows through (semitransparent, not fully removed). Multiple
+    // subjects → take the strongest amount.
+    float stAmount = 0.0;
+    if (uSeeThroughActive > 0.5) stAmount = max(stAmount, seeThroughAmount(uSeeThroughCenter, uSeeThroughRadius, uSeeThroughDepth));
+    for (int i = 0; i < MAX_STONE_ST; i++) {
+        if (i >= uStoneSeeThroughCount) break;
+        vec4 s = uStoneSeeThrough[i];
+        stAmount = max(stAmount, seeThroughAmount(s.xy, s.z, s.w));
+    }
+    if (stAmount > 0.0) {
+        vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);
+        vec2 stUv = mix(vWorldXZ * uPainteryDrift, stScreenUv, uPainteryScreenBlend);
+        float stBrush = texture2D(uPainterlyTexture, stUv).r;
+        stBrush = mix(stBrush, texture2D(uPainterlyTexture, stUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+        stBrush = clamp((stBrush - 0.5) * uSeeThroughTextureContrast + 0.5, 0.0, 1.0);
+        if (stAmount > stBrush) discard;
     }
 
     // Per-instance batched colour is the base; painterly varies brightness on top.

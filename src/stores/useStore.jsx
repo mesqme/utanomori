@@ -141,6 +141,19 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
     cameraDistance: 13, // distance back from the companion
     cameraLerp: 3.6, // how smoothly the camera moves / returns
+    // Pointer: a downward indicator that hops to the singing note (playback) then the pressed
+    // note (input), so the player can follow / confirm which stone is active.
+    pointerColor: '#ffffff',
+    // Size is taken from the walking target arrow (arrowParameters.scale) — it's the same arrow.
+    pointerRadius: 1.75, // arrow distance from the rainbow centre (the half-circle's centre)
+    pointerStiffness: 86, // spring → how fast the arrow orbits round to the note
+    pointerDamping: 14, // spring → lower = more overshoot/wobble (inertia from the travel speed)
+    pointerPulseAmount: 0.5, // radius dip on a same-note replay / a press (a poke toward the centre)
+    pointerPulseDuration: 0.3, // seconds the poke lasts
+    // See-through: during the game, the bottom side stones act like the hero — trees in front of
+    // them fade away so the stones stay readable. This is the world radius of each stone's hole.
+    seeThroughEnabled: true,
+    seeThroughRadius: 2.8,
 }
 
 // One-time stylization baked into the paintery brush texture (blur + levels +

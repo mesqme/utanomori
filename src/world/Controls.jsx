@@ -663,6 +663,14 @@ export default function Controls() {
         cameraHeight: { value: musicStoneParameters.cameraHeight, min: 3, max: 30, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraHeight') },
         cameraDistance: { value: musicStoneParameters.cameraDistance, min: 0, max: 20, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraDistance') },
         cameraLerp: { value: musicStoneParameters.cameraLerp, min: 0.5, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'cameraLerp') },
+        pointerColor: { value: musicStoneParameters.pointerColor, onChange: setParam('musicStoneParameters', 'pointerColor') },
+        pointerRadius: { value: musicStoneParameters.pointerRadius, min: 0, max: 6, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerRadius') },
+        pointerStiffness: { value: musicStoneParameters.pointerStiffness, min: 5, max: 400, step: 1, onChange: setParam('musicStoneParameters', 'pointerStiffness') },
+        pointerDamping: { value: musicStoneParameters.pointerDamping, min: 1, max: 40, step: 0.5, onChange: setParam('musicStoneParameters', 'pointerDamping') },
+        pointerPulseAmount: { value: musicStoneParameters.pointerPulseAmount, min: 0, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseAmount') },
+        pointerPulseDuration: { value: musicStoneParameters.pointerPulseDuration, min: 0.05, max: 1.5, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseDuration') },
+        seeThroughEnabled: { value: musicStoneParameters.seeThroughEnabled, onChange: setParam('musicStoneParameters', 'seeThroughEnabled') },
+        seeThroughRadius: { value: musicStoneParameters.seeThroughRadius, min: 1, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'seeThroughRadius') },
     })
 
     useControls('Terrain', {

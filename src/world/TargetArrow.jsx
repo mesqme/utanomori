@@ -6,8 +6,8 @@ import * as THREE from 'three'
 import useStore from '../stores/useStore.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
-import useSongGame from '../stores/useSongGame.jsx'
 import { getGroundY } from './utils/groundHeight.js'
+import { musicStonePointer } from './utils/musicStonePointer.js'
 import arrowModelUrl from '../assets/models/arrow.glb'
 
 const smoothstep = THREE.MathUtils.smoothstep
@@ -26,8 +26,9 @@ export default function TargetArrow() {
     const groupRef = useRef(null)
     const spinRef = useRef(null)
     const spinAngleRef = useRef(0)
-    const presenceRef = useRef(0) // 0..1 fade weight (drives scale) for spawn / collect / relocate / mini-game
+    const presenceRef = useRef(0) // 0..1 fade weight (drives scale) for spawn / collect / relocate
     const displayRef = useRef(null) // { key, x, z } the arrow currently points at; only swapped while faded out
+    const gameWeightRef = useRef(0) // 0 = gameplay aim, 1 = Simon-game orbit pose (smooth blend)
     const arrow = useStore((state) => state.arrowParameters)
 
     const { nodes } = useGLTF(arrowModelUrl)
@@ -58,10 +59,15 @@ export default function TargetArrow() {
 
         const dt = Math.min(delta, 0.1)
 
-        // Which companion (if any) the arrow should be guiding to right now. A lost target,
-        // the mini-game, or leaving the gameplay phase all mean "fade away".
+        // Blend weight toward the Simon-game orbit pose — the SAME arrow flies from the gameplay
+        // aim to the stones and back, never popping/disappearing.
+        gameWeightRef.current = THREE.MathUtils.damp(gameWeightRef.current, musicStonePointer.active ? 1 : 0, 8, dt)
+        const gw = gameWeightRef.current
+
+        // Which companion (if any) the arrow should be guiding to right now. It stays live during
+        // the mini-game too (the companion is still the target) — the game weight handles the pose.
         const target = useCompanions.getState().target
-        const live = usePhases.getState().phase === PHASES.start && !!target && !useSongGame.getState().active
+        const live = usePhases.getState().phase === PHASES.start && !!target
         const desired = live ? target : null
 
         // Crossfade, not pop/teleport: only adopt a new target (spawn / relocate / collect) once
@@ -79,64 +85,65 @@ export default function TargetArrow() {
         }
         presenceRef.current = THREE.MathUtils.damp(presenceRef.current, presenceTo, 10, dt)
 
-        // No companion to point at (faded fully out / between targets) — hide and reset.
+        // Visible if there's a gameplay target OR the Simon pose is active / still blending.
+        const presence = Math.max(presenceRef.current, gw)
         const display = displayRef.current
-        if (!display) {
+        if (!display && gw < 0.02) {
             group.visible = false
             spinAngleRef.current = 0 // reset the roll so the next companion's arrow appears level
             return
         }
         group.visible = true
 
-        const hero = useStore.getState().ballPosition
-        let dx = display.x - hero.x
-        let dz = display.z - hero.z
-        const distance = Math.hypot(dx, dz) || 1
-        dx /= distance
-        dz /= distance
+        if (display) {
+            const hero = useStore.getState().ballPosition
+            let dx = display.x - hero.x
+            let dz = display.z - hero.z
+            const distance = Math.hypot(dx, dz) || 1
+            dx /= distance
+            dz /= distance
 
-        // Overhead blend: 0 = far (in front of the hero) → 1 = above the companion.
-        const closeInner = arrow.closeRadius - arrow.closeBand
-        const b = 1 - smoothstep(distance, closeInner, arrow.closeRadius)
+            // Overhead blend: 0 = far (in front of the hero) → 1 = above the companion.
+            const closeInner = arrow.closeRadius - arrow.closeBand
+            const b = 1 - smoothstep(distance, closeInner, arrow.closeRadius)
+            const heading = Math.atan2(dx, dz) + THREE.MathUtils.degToRad(arrow.modelYaw)
 
-        const heading = Math.atan2(dx, dz) + THREE.MathUtils.degToRad(arrow.modelYaw)
+            // Far state: floating in front of the hero, flat, pointing at the target.
+            const fx = hero.x + dx * arrow.distance
+            const fz = hero.z + dz * arrow.distance
+            _frontPos.set(fx, getGroundY(fx, fz) + arrow.yOffset, fz)
+            _frontEuler.set(0, heading, 0)
+            _frontQuat.setFromEuler(_frontEuler)
 
-        // Far state: floating in front of the hero, flat, pointing at the target.
-        const fx = hero.x + dx * arrow.distance
-        const fz = hero.z + dz * arrow.distance
-        _frontPos.set(fx, getGroundY(fx, fz) + arrow.yOffset, fz)
-        _frontEuler.set(0, heading, 0)
-        _frontQuat.setFromEuler(_frontEuler)
+            // Overhead state: high above the companion, tipped to point straight down (-X → -Y).
+            _overheadPos.set(display.x, getGroundY(display.x, display.z) + arrow.overheadHeight, display.z)
+            _overheadEuler.set(0, heading, Math.PI / 2)
+            _overheadQuat.setFromEuler(_overheadEuler)
 
-        // Overhead state: high above the companion, tipped to point straight down (-X → -Y).
-        // The spin is NOT baked in here — it's a separate child rotation about the arrow's own
-        // long axis (below). Keeping the same heading yaw makes the front→overhead blend a pure
-        // tilt, so the off-origin geometry doesn't swing around the origin during the transition.
-        _overheadPos.set(display.x, getGroundY(display.x, display.z) + arrow.overheadHeight, display.z)
-        _overheadEuler.set(0, heading, Math.PI / 2)
-        _overheadQuat.setFromEuler(_overheadEuler)
+            // Blend front → overhead aim + position + a bob (a touch more once overhead).
+            _frontPos.lerp(_overheadPos, b)
+            _frontPos.y += Math.sin(state.clock.elapsedTime * arrow.floatSpeed) * arrow.floatAmount * (0.35 + 0.65 * b)
+            _frontQuat.slerp(_overheadQuat, b)
 
-        // Blend front → overhead aim + position + a bob (a touch more once overhead).
-        _frontPos.lerp(_overheadPos, b)
-        _frontPos.y += Math.sin(state.clock.elapsedTime * arrow.floatSpeed) * arrow.floatAmount * (0.35 + 0.65 * b)
-        group.position.copy(_frontPos)
-        group.quaternion.copy(_frontQuat.slerp(_overheadQuat, b))
+            // Spin about the arrow's own long axis — ramps with the overhead blend `b` AND fades
+            // out as we move into the game (gw), settling level there.
+            spinAngleRef.current += dt * arrow.spinSpeed * b * (1 - gw)
+            const level = Math.round(spinAngleRef.current / (Math.PI * 2)) * (Math.PI * 2)
+            spinAngleRef.current = THREE.MathUtils.damp(spinAngleRef.current, level, 6 * (1 - b) + 8 * gw, dt)
+            spin.rotation.x = spinAngleRef.current
 
-        // Spin about the arrow's own long axis (local X — the shaft the geometry is modelled
-        // along), on the inner group so the off-origin geometry spins IN PLACE at every tilt,
-        // not only when fully overhead. Ramp the rate in with the overhead blend `b` so it
-        // starts slow on approach and reaches full speed above the companion. Decoupling the
-        // spin from the aim quaternion also kills the once-per-revolution slerp flip.
-        spinAngleRef.current += dt * arrow.spinSpeed * b
-        // Back in the far/flat state the spin releases: ease the roll to the nearest full turn
-        // (settles by ≤ half a turn instead of unwinding) so the arrow lands level — roll 0,
-        // parallel to the ground. The settle fades out toward overhead so it never fights the spin.
-        const level = Math.round(spinAngleRef.current / (Math.PI * 2)) * (Math.PI * 2)
-        spinAngleRef.current = THREE.MathUtils.damp(spinAngleRef.current, level, 6 * (1 - b), dt)
-        spin.rotation.x = spinAngleRef.current
+            // Blend the gameplay pose → the Simon-game orbit pose by the game weight.
+            group.position.copy(_frontPos).lerp(musicStonePointer.position, gw)
+            group.quaternion.copy(_frontQuat).slerp(musicStonePointer.quaternion, gw)
+        } else {
+            // No gameplay target but the Simon pose is active (or decaying back) — use it directly.
+            group.position.copy(musicStonePointer.position)
+            group.quaternion.copy(musicStonePointer.quaternion)
+            spin.rotation.x = 0
+        }
 
-        // Fade weight drives scale (spawn / collect / relocate / mini-game all faded above).
-        group.scale.setScalar(arrow.scale * presenceRef.current)
+        // Fade weight drives scale (full during gameplay target or the game).
+        group.scale.setScalar(arrow.scale * presence)
     })
 
     return (

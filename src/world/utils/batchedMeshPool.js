@@ -53,6 +53,9 @@ export function createBatchedMeshPool({ prototypes, material, maxInstances = 102
     }
 
     let activeCount = 0
+    // Track which instance ids are currently alive so a stale / double removal is skipped
+    // instead of throwing from BatchedMesh.deleteInstance (which would crash the render loop).
+    const liveInstanceIds = new Set()
 
     return {
         mesh,
@@ -73,6 +76,7 @@ export function createBatchedMeshPool({ prototypes, material, maxInstances = 102
             const instanceId = mesh.addInstance(geometryId)
             if (matrix) mesh.setMatrixAt(instanceId, matrix)
             if (color) mesh.setColorAt(instanceId, color)
+            liveInstanceIds.add(instanceId)
             activeCount++
             return instanceId
         },
@@ -86,6 +90,10 @@ export function createBatchedMeshPool({ prototypes, material, maxInstances = 102
         },
 
         removeInstance(instanceId) {
+            // Skip stale / already-removed ids (e.g. a chunk released twice) instead of letting
+            // BatchedMesh.deleteInstance throw and crash the render loop.
+            if (!liveInstanceIds.has(instanceId)) return
+            liveInstanceIds.delete(instanceId)
             mesh.deleteInstance(instanceId)
             activeCount = Math.max(0, activeCount - 1)
         },

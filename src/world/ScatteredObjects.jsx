@@ -6,6 +6,7 @@ import * as THREE from 'three'
 import useStore from '../stores/useStore.jsx'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { createBatchedMeshPool } from './utils/batchedMeshPool.js'
+import { musicStoneSeeThrough } from './utils/musicStoneSeeThrough.js'
 import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
@@ -147,6 +148,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 bleed: state.borderParameters.painteryBleed,
             },
             seeThrough,
+            stoneSeeThrough: musicStoneSeeThrough,
         })
     })
 

@@ -13,6 +13,8 @@ import { revealCircle } from './utils/revealCircle.js'
 import { getRefScale } from './utils/screenScale.js'
 import { getGroundY } from './utils/groundHeight.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './utils/musicStoneSeeThrough.js'
+import { musicStonePointer } from './utils/musicStonePointer.js'
 import { clearAllMusicStones } from './utils/musicStoneField.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { playNote } from '../game/songAudio.js'
@@ -65,6 +67,8 @@ export default function MusicStones() {
             s.material.dispose()
         })
         clearAllMusicStones()
+        clearMusicStoneSeeThrough()
+        musicStonePointer.active = false
     }, [stones])
 
     const meshRefs = useRef([])
@@ -77,6 +81,30 @@ export default function MusicStones() {
     const rotations = useMemo(() => Array.from({ length: COUNT }, () => Math.random() * Math.PI * 2), [])
     const baseColor = useMemo(() => new THREE.Color(), [])
     const tmpColor = useMemo(() => new THREE.Color(), [])
+
+    // Pointer pose: MusicStones computes the Simon-game pose (orbit angle spring + radius poke +
+    // screen-plane orientation) and writes it to the shared musicStonePointer; the SINGLE arrow in
+    // TargetArrow renders + blends it with the gameplay aim (so it's the same arrow, never popping).
+    const pointerWasVisibleRef = useRef(false)
+    const pointerAngleRef = useRef(0) // current orbit angle (spring)
+    const pointerAngVelRef = useRef(0) // angular velocity (spring)
+    const pointerTargetRef = useRef(-1) // persisted target note (last singing/hovered)
+    const pointerPulseRef = useRef(0) // remaining time of a radius "poke" (same-note / press)
+    const pointerTargetPos = useMemo(() => new THREE.Vector3(), [])
+    // Temps for orienting the arrow in the screen plane.
+    const ptrRadial = useMemo(() => new THREE.Vector3(), [])
+    const ptrForward = useMemo(() => new THREE.Vector3(), [])
+    const ptrInPlane = useMemo(() => new THREE.Vector3(), [])
+    const ptrX = useMemo(() => new THREE.Vector3(), [])
+    const ptrY = useMemo(() => new THREE.Vector3(), [])
+    const ptrZ = useMemo(() => new THREE.Vector3(), [])
+    const ptrBasis = useMemo(() => new THREE.Matrix4(), [])
+
+    // Temps for projecting the bottom stones to see-through holes (framebuffer px).
+    const stCenter = useMemo(() => new THREE.Vector3(), [])
+    const stEdge = useMemo(() => new THREE.Vector3(), [])
+    const stRight = useMemo(() => new THREE.Vector3(), [])
+    const stBuffer = useMemo(() => new THREE.Vector2(), [])
 
     useFrame((state, delta) => {
         const dt = Math.min(delta, 0.05)
@@ -112,13 +140,19 @@ export default function MusicStones() {
 
         // Flash the matching stone when a new note plays.
         if (game.activeNote !== prevNoteRef.current) {
-            if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < COUNT) flashRef.current[game.activeNote] = 1
+            if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < COUNT) {
+                flashRef.current[game.activeNote] = 1
+                // Same note replayed: the arrow won't rotate, so poke its radius to show the hit.
+                if (game.activeNote === pointerTargetRef.current) pointerPulseRef.current = p.pointerPulseDuration
+            }
             prevNoteRef.current = game.activeNote
         }
 
         // No layout (idle): everything sunk → hide, clear the grass discs, leave the camera.
         if (!layout) {
             clearAllMusicStones()
+            clearMusicStoneSeeThrough()
+            musicStonePointer.active = false
             for (let i = 0; i < COUNT; i++) {
                 const m = meshRefs.current[i]
                 if (m) m.visible = false
@@ -183,6 +217,99 @@ export default function MusicStones() {
             stones[i].material.uniforms.uBaseColor.value.copy(tmpColor)
         }
 
+        // Pointer: the arrow ORBITS the rainbow centre to the singing note (playback) or the
+        // just-pressed note (input), via a damped spring on the orbit angle. A far hop builds more
+        // speed → more overshoot/wobble before it settles (inertia); a neighbour hop barely
+        // wobbles. It persists between notes (doesn't vanish), so each move is a circular slide.
+        let instTarget = -1
+        if (game.stage === 'playback' && game.activeNote != null && game.activeNote >= 0 && game.activeNote < COUNT) {
+            instTarget = game.activeNote // the singing note
+        } else if (game.stage === 'input') {
+            for (let i = 0; i < COUNT; i++) {
+                if (hoverRef.current[i]) {
+                    instTarget = i // the stone the player is hovering
+                    break
+                }
+            }
+        }
+        if (!staged) pointerTargetRef.current = -1
+        else if (instTarget >= 0) pointerTargetRef.current = instTarget
+        const target = pointerTargetRef.current
+
+        {
+            const targetMesh = target >= 0 ? meshRefs.current[target] : null
+            const show = staged && !!targetMesh && targetMesh.visible
+            musicStonePointer.active = show
+            if (show) {
+                const targetAngle = Math.PI * (1 - target / (COUNT - 1))
+                if (pointerWasVisibleRef.current) {
+                    // Damped spring on the orbit angle (semi-implicit Euler) → inertia + wobble.
+                    const accel = (targetAngle - pointerAngleRef.current) * p.pointerStiffness - pointerAngVelRef.current * p.pointerDamping
+                    pointerAngVelRef.current += accel * dt
+                    pointerAngleRef.current += pointerAngVelRef.current * dt
+                } else {
+                    pointerAngleRef.current = targetAngle // snap on first appearance
+                    pointerAngVelRef.current = 0
+                }
+                // Outward radial in the rainbow plane at the CURRENT (springing) angle.
+                const ang = pointerAngleRef.current
+                ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
+                // Radius "poke" (same-note replay during playback, or a press during input): dip
+                // the radius toward the centre, then return — a small move that registers the hit.
+                let radiusNow = p.pointerRadius
+                if (pointerPulseRef.current > 0) {
+                    const prog = 1 - pointerPulseRef.current / Math.max(0.01, p.pointerPulseDuration)
+                    radiusNow -= Math.sin(prog * Math.PI) * p.pointerPulseAmount
+                    pointerPulseRef.current = Math.max(0, pointerPulseRef.current - dt)
+                }
+                // Position at the radius from the rainbow centre (the half-circle's centre).
+                pointerTargetPos.set(
+                    layout.cx + ptrRadial.x * radiusNow,
+                    groundY + p.yOffset + p.hoverHeight + ptrRadial.y * radiusNow,
+                    layout.cz + ptrRadial.z * radiusNow
+                )
+                musicStonePointer.position.copy(pointerTargetPos)
+                // Orient perpendicular to the camera (flat face toward it), arrow forward (-X)
+                // pointing OUTWARD along the current radial → at the note.
+                state.camera.getWorldDirection(ptrForward)
+                ptrInPlane.copy(ptrRadial).addScaledVector(ptrForward, -ptrRadial.dot(ptrForward)).normalize()
+                ptrY.copy(ptrForward).negate() // flat-face normal toward the camera
+                ptrX.copy(ptrInPlane).negate() // local +X → -radial, so -X (forward) → radial
+                ptrZ.crossVectors(ptrX, ptrY)
+                ptrBasis.makeBasis(ptrX, ptrY, ptrZ)
+                musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
+            }
+            pointerWasVisibleRef.current = show
+        }
+
+        // See-through subjects: the BOTTOM side stones act like the hero — trees in front of
+        // them fade so the stones stay visible (the top stones are clear of trees). Project each
+        // participating stone to a screen disc + camera depth (mirrors MainCharacter's hero hole).
+        clearMusicStoneSeeThrough()
+        if (seeThrough.enabled && p.seeThroughEnabled && staged) {
+            state.gl.getDrawingBufferSize(stBuffer)
+            stRight.setFromMatrixColumn(state.camera.matrixWorld, 0) // camera right (world)
+            for (let i = 0; i < COUNT && musicStoneSeeThrough.count < MAX_STONE_SEE_THROUGH; i++) {
+                const mesh = meshRefs.current[i]
+                if (!mesh || !mesh.visible) continue
+                if (Math.sin(Math.PI * (1 - i / (COUNT - 1))) > 0.6) continue // only the lower stones
+                stCenter.copy(mesh.position)
+                const camDist = state.camera.position.distanceTo(stCenter)
+                stEdge.copy(stCenter).addScaledVector(stRight, p.seeThroughRadius)
+                stCenter.project(state.camera)
+                stEdge.project(state.camera)
+                if (stCenter.z <= -1 || stCenter.z >= 1) continue
+                const cx = (stCenter.x * 0.5 + 0.5) * stBuffer.x
+                const cy = (stCenter.y * 0.5 + 0.5) * stBuffer.y
+                const o = musicStoneSeeThrough.count * 4
+                musicStoneSeeThrough.data[o] = cx
+                musicStoneSeeThrough.data[o + 1] = cy
+                musicStoneSeeThrough.data[o + 2] = Math.hypot((stEdge.x * 0.5 + 0.5) * stBuffer.x - cx, (stEdge.y * 0.5 + 0.5) * stBuffer.y - cy)
+                musicStoneSeeThrough.data[o + 3] = camDist
+                musicStoneSeeThrough.count++
+            }
+        }
+
         // Drop the layout once everything has fully sunk (lets the camera restore + grass recover).
         if (!staged && allDown) layoutRef.current = null
 
@@ -239,6 +366,7 @@ export default function MusicStones() {
                         if (useSongGame.getState().stage !== 'input') return
                         event.stopPropagation()
                         flashRef.current[i] = 1 // same brightness as when the companion sings
+                        pointerPulseRef.current = useStore.getState().musicStoneParameters.pointerPulseDuration // poke the arrow
                         playNote(i, { duration: 0.5 })
                         useSongGame.getState().pressNote(i)
                     }}

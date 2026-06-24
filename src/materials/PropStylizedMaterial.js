@@ -51,6 +51,9 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uSeeThroughOpacityIntensity: { value: 0.7 },
             uSeeThroughTextureContrast: { value: 1.0 },
             uSeeThroughTextureScale: { value: 250 },
+            // Extra see-through subjects: the bottom music stones (see musicStoneSeeThrough).
+            uStoneSeeThrough: { value: new Float32Array(4 * 4) },
+            uStoneSeeThroughCount: { value: 0 },
             uPropRimEnabled: { value: 1 },
             uPropRimColor: { value: new THREE.Color('#cfc2ff') },
             uPropRimStrength: { value: 0.7 },
@@ -105,5 +108,12 @@ export function updatePropStylizedMaterial(material, options) {
         u.uSeeThroughOpacityIntensity.value = st.opacityIntensity
         u.uSeeThroughTextureContrast.value = st.textureContrast
         u.uSeeThroughTextureScale.value = st.textureScale // CSS-locked (dpr applied in the shader)
+    }
+    // Extra music-stone see-through subjects (trees fade where a bottom stone is behind them).
+    if (options.stoneSeeThrough) {
+        u.uStoneSeeThrough.value = options.stoneSeeThrough.data
+        u.uStoneSeeThroughCount.value = options.stoneSeeThrough.count
+    } else {
+        u.uStoneSeeThroughCount.value = 0
     }
 }
