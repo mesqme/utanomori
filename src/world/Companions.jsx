@@ -18,7 +18,7 @@ import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER 
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
-import { createVoice, setVoiceSpatial, disposeVoice, resumeAudio } from '../game/songAudio.js'
+import { resumeAudio } from '../game/songAudio.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const INTERACT_RADIUS = 2.3
@@ -29,25 +29,6 @@ const HEADING_DAMP = 9
 const CELEBRATE_DURATION = 2.5 // happy hop before joining the party
 const FLEE_DURATION = 1.4 // running away before relocating after a failed song
 const FLEE_SPEED = 9
-
-const _toVoice = new THREE.Vector3()
-const _voiceRight = new THREE.Vector3()
-
-// Pan (left→right relative to the camera view) + linear gain (by distance) for a song
-// source at world (x, z), so you can hear which way it is and how near.
-function voiceSpatial(camera, x, z, params) {
-    _toVoice.set(x - camera.position.x, 0, z - camera.position.z)
-    const distance = _toVoice.length() || 0.0001
-    _toVoice.divideScalar(distance)
-    _voiceRight.setFromMatrixColumn(camera.matrixWorld, 0)
-    _voiceRight.y = 0
-    _voiceRight.normalize()
-    const pan = THREE.MathUtils.clamp(_toVoice.dot(_voiceRight), -1, 1)
-    const near = params.hearNear ?? 4
-    const far = params.hearFar ?? 28
-    const t = THREE.MathUtils.clamp((far - distance) / Math.max(far - near, 0.001), 0, 1)
-    return { pan, gain: (params.songVolume ?? 0.12) * t }
-}
 
 function dampAngle(current, target, lambda, delta) {
     const difference = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -74,18 +55,11 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
     const creatureRef = useRef(null)
     const fleeRef = useRef(0)
     const stage = useSongGame((state) => state.stage)
-    const voiceRef = useRef(null)
 
     useEffect(() => () => clearTrampler(TRAMPLE_SLOT_TARGET), [])
 
-    // The target loops its melody (spatialised) and falls silent while in the mini-game.
-    useEffect(() => {
-        voiceRef.current = createVoice(target.song, target.beats)
-        return () => disposeVoice(voiceRef.current)
-    }, [target.key, target.song, target.beats])
-
-    // Won the song → a happy hop, then join the party. Its melody simply joins the other
-    // looping voices (in sync, same volume) — no separate one-off flourish.
+    // Won the song → a happy hop, then join the party. Its backing track keeps playing softly
+    // behind the hero (handled by the MusicController) once collected.
     useEffect(() => {
         if (stage !== 'success') return
         const timer = setTimeout(() => {
@@ -134,15 +108,6 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             const t = state.clock.elapsedTime
             creatureRef.current.position.y = stage === 'success' ? Math.abs(Math.sin(t * 9)) * 0.5 : Math.abs(Math.sin(t * 2.5)) * 0.12
         }
-
-        const voice = voiceRef.current
-        if (voice) {
-            if (useSongGame.getState().active) {
-                setVoiceSpatial(voice, { gain: 0 })
-            } else {
-                setVoiceSpatial(voice, voiceSpatial(state.camera, target.x, target.z, useStore.getState().songGameParameters))
-            }
-        }
     })
 
     return (
@@ -151,7 +116,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             <group ref={creatureRef}>
                 <CompanionCreature definition={target} material={creatureMaterial} />
             </group>
-            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} voiceRef={voiceRef} isTarget />
+            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} isTarget />
         </group>
     )
 }
@@ -165,16 +130,8 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
     const initializedRef = useRef(false)
     const sample = useMemo(() => ({}), [])
     const slot = TRAMPLE_SLOT_FOLLOWER + index
-    const voiceRef = useRef(null)
 
     useEffect(() => () => clearTrampler(slot), [slot])
-
-    // Followers keep humming (spatialised) so the collected melodies layer into one;
-    // they go silent during the mini-game so the played sequence is heard clearly.
-    useEffect(() => {
-        voiceRef.current = createVoice(definition.song, definition.beats)
-        return () => disposeVoice(voiceRef.current)
-    }, [definition.key, definition.song, definition.beats])
 
     useFrame((state, delta) => {
         const group = groupRef.current
@@ -221,14 +178,6 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
         group.rotation.y = headingRef.current
 
         setTrampler(slot, position.x, groundY, position.z)
-
-        if (voiceRef.current) {
-            if (useSongGame.getState().active) {
-                setVoiceSpatial(voiceRef.current, { gain: 0 })
-            } else {
-                setVoiceSpatial(voiceRef.current, voiceSpatial(state.camera, position.x, position.z, useStore.getState().songGameParameters))
-            }
-        }
     })
 
     return (
@@ -237,7 +186,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
             <group ref={creatureRef}>
                 <CompanionCreature definition={definition} material={creatureMaterial} />
             </group>
-            <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} voiceRef={voiceRef} />
+            <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} />
         </group>
     )
 }

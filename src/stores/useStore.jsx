@@ -132,8 +132,13 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     bobSpeed: 1.2, // bob speed
     flashBoost: 1.4, // brightness multiplier when a note hits the stone (sing / click)
     hoverBoost: 0.35, // slight brighten while a clickable stone is hovered
+    hoverScale: 0.18, // extra scale-up while a clickable stone is hovered (on top of brighten)
     flashDuration: 0.32, // seconds the flash decays over
     listenTempo: 1.6, // playback speed multiplier when hearing the song (>1 = slower)
+    soundSpacing: 0.7, // base seconds between melody sounds during playback (× listenTempo)
+    roundClearPause: 1.1, // seconds the "Nice!" banner holds before the next round's countdown
+    countdownFrom: 3, // 3·2·1 — how many counts before each round's playback
+    countdownStep: 0.7, // seconds per countdown tick
     staggerDelay: 0.12, // delay between each stone's scale-in (left→right)
     scaleInDuration: 0.5, // seconds for one stone to rise
     scaleOutDuration: 0.4, // seconds for the stones to sink on teardown
@@ -154,6 +159,20 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     // them fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,
     seeThroughRadius: 2.8,
+}
+
+// The three synched backing tracks (one per music companion). All start (looping, muted) on GO;
+// the MusicController only fades each track's volume. The current TARGET's track is heard by
+// distance to the hero; a COLLECTED companion's track plays softly behind the party; everything
+// is muted during a conversation / mini-game.
+const DEFAULT_MUSIC_PARAMETERS = {
+    hearNear: 0, // distance (hero→target) at/under which the target track reaches nearVolume
+    hearFar: 10, // distance beyond which it fades down to farVolume
+    nearVolume: 0.1, // target track volume when right next to the companion (only full once collected)
+    farVolume: 0.0, // target track volume when far (a faint hint of where to head)
+    distanceFalloff: 1.0, // >1 = stays much quieter at range, only swells up close (ease-in on distance)
+    collectedVolume: 0.3, // a collected companion's track plays behind the hero
+    volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
 // One-time stylization baked into the paintery brush texture (blur + levels +
@@ -278,6 +297,7 @@ const createStore = () =>
             arrowParameters: { ...DEFAULT_ARROW_PARAMETERS },
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
             musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS },
+            musicParameters: { ...DEFAULT_MUSIC_PARAMETERS },
 
             /**
              * Paintery brush texture stylization (baked once)
@@ -413,6 +433,7 @@ if (import.meta?.hot) {
         arrowParameters: { ...DEFAULT_ARROW_PARAMETERS, ...state.arrowParameters },
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
+        musicParameters: { ...DEFAULT_MUSIC_PARAMETERS, ...state.musicParameters },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         edgeParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.edgeParameters } : { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
         propRimParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.propRimParameters } : { ...defaultSceneStyle.propRimParameters, ...state.propRimParameters },

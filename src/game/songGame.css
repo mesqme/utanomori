@@ -83,6 +83,43 @@
     letter-spacing: 0.16em;
 }
 
+/* 3·2·1 countdown before each round's playback. */
+.song-countdown {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 96px;
+    height: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--sj-ui-primary);
+    border-radius: 50%;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 2px 14px rgba(9, 8, 34, 0.6);
+    animation: song-count-pop var(--count-step, 0.7s) ease-out forwards;
+}
+
+@keyframes song-count-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(1.45);
+    }
+    24% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.85);
+    }
+}
+
 /* Status banners (Listen / Nice / fail) */
 .song-banner {
     position: absolute;

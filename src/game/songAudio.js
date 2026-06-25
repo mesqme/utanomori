@@ -43,6 +43,11 @@ export function resumeAudio() {
     if (c && c.state === 'suspended') c.resume()
 }
 
+// Shared AudioContext for the real-sound modules (gameSounds) so everything stays on one clock.
+export function getAudioContext() {
+    return ensureContext()
+}
+
 // One note (soft triangle through a lowpass + attack/release envelope) into a node.
 function playNoteInto(dest, index, { when = 0, at = null, duration = 0.6, gain = 0.5 } = {}) {
     const c = ensureContext()

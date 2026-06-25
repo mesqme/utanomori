@@ -7,6 +7,9 @@ import useStore from '../stores/useStore'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
+import { startMusicTracks } from '../game/musicTracks.js'
+import { preloadGameSounds } from '../game/gameSounds.js'
+import { resumeAudio } from '../game/songAudio.js'
 import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
@@ -67,6 +70,11 @@ export default function Loader() {
 
     const handleClick = () => {
         if (phase !== PHASES.warmup) return
+        // GO is the user gesture audio needs: kick off the three synched backing tracks (muted,
+        // looping) and decode the mini-game one-shots so they're ready when a companion sings.
+        resumeAudio()
+        startMusicTracks()
+        preloadGameSounds()
         // The bar simply fades to transparent; the camera intro starts at the same time.
         setIsExiting(true)
         setPhase(PHASES.intro)
