@@ -330,7 +330,6 @@ function addSeeThroughValues(values) {
     values['See-Through.depthBias'] = seeThrough.depthBias
     values['See-Through.opacityIntensity'] = seeThrough.opacityIntensity
     values['See-Through.textureContrast'] = seeThrough.textureContrast
-    values['See-Through.textureScale'] = seeThrough.textureScale
 }
 
 export default function Controls() {
@@ -684,6 +683,7 @@ export default function Controls() {
         pointerDamping: { value: musicStoneParameters.pointerDamping, min: 1, max: 40, step: 0.5, onChange: setParam('musicStoneParameters', 'pointerDamping') },
         pointerPulseAmount: { value: musicStoneParameters.pointerPulseAmount, min: 0, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseAmount') },
         pointerPulseDuration: { value: musicStoneParameters.pointerPulseDuration, min: 0.05, max: 1.5, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseDuration') },
+        pointerAppearTime: { value: musicStoneParameters.pointerAppearTime, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('musicStoneParameters', 'pointerAppearTime') },
         seeThroughEnabled: { value: musicStoneParameters.seeThroughEnabled, onChange: setParam('musicStoneParameters', 'seeThroughEnabled') },
         seeThroughRadius: { value: musicStoneParameters.seeThroughRadius, min: 1, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'seeThroughRadius') },
     })

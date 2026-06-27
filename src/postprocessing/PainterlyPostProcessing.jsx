@@ -4,7 +4,7 @@ import { Bloom, EffectComposer, SMAA } from '@react-three/postprocessing'
 
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
-import { updatePhaseTextureReveal } from '../game/visualReveal.js'
+import { updateNoiseReveal } from '../game/visualReveal.js'
 import SharpenPass from './SharpenPass.js'
 
 // Post chain: scene (no MSAA) → optional bloom → SMAA (final-image AA) → SharpenPass
@@ -23,7 +23,7 @@ export default function PainterlyPostProcessing() {
 
     useFrame((_, delta) => {
         const phase = usePhases.getState().phase
-        textureReveal.current = updatePhaseTextureReveal(textureReveal.current, phase, delta)
+        textureReveal.current = updateNoiseReveal(textureReveal.current, phase, delta)
         const reveal = textureReveal.current
 
         sharpenPass.update({

@@ -1,14 +1,13 @@
 .party-counter {
     position: absolute;
-    top: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    top: 20px;
+    left: 20px;
     padding: 7px 16px;
     border: 2px solid var(--sj-ui-primary);
     border-radius: 20px;
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
-    font-size: 14px;
+    font-size: 18px;
     letter-spacing: 0.14em;
     z-index: 100;
     pointer-events: none;

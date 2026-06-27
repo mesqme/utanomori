@@ -84,8 +84,9 @@ export default function MusicStones() {
     // Pointer pose: written to the shared musicStonePointer, rendered by the single arrow (TargetArrow).
     const pointerWasVisibleRef = useRef(false)
     const pointerAngleRef = useRef(0)
-    const pointerAngVelRef = useRef(0)
     const pointerTargetRef = useRef(-1)
+    const pointerPrevTargetRef = useRef(-1)
+    const pointerAppearRef = useRef(0)
     const pointerPulseRef = useRef(0)
     const pointerTargetPos = useMemo(() => new THREE.Vector3(), [])
     const ptrRadial = useMemo(() => new THREE.Vector3(), [])
@@ -234,14 +235,13 @@ export default function MusicStones() {
             musicStonePointer.active = show
             if (show) {
                 const targetAngle = Math.PI * (1 - target / span)
-                if (pointerWasVisibleRef.current) {
-                    const accel = (targetAngle - pointerAngleRef.current) * p.pointerStiffness - pointerAngVelRef.current * p.pointerDamping
-                    pointerAngVelRef.current += accel * dt
-                    pointerAngleRef.current += pointerAngVelRef.current * dt
-                } else {
-                    pointerAngleRef.current = targetAngle
-                    pointerAngVelRef.current = 0
-                }
+                // Snap straight to the note — no orbiting between notes (the travel distracted the
+                // player). On a note change the arrow re-"appears" via a quick fade (pointerAppear).
+                if (target !== pointerPrevTargetRef.current || !pointerWasVisibleRef.current) pointerAppearRef.current = 0
+                pointerAngleRef.current = targetAngle
+                pointerPrevTargetRef.current = target
+                pointerAppearRef.current = Math.min(1, pointerAppearRef.current + dt / Math.max(0.02, p.pointerAppearTime))
+                musicStonePointer.appear = pointerAppearRef.current
                 const ang = pointerAngleRef.current
                 ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
                 let radiusNow = p.pointerRadius

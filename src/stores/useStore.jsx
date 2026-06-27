@@ -155,6 +155,7 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     pointerDamping: 14, // spring → lower = more overshoot/wobble (inertia from the travel speed)
     pointerPulseAmount: 0.5, // radius dip on a same-note replay / a press (a poke toward the centre)
     pointerPulseDuration: 0.3, // seconds the poke lasts
+    pointerAppearTime: 0.12, // seconds the arrow fades back in after snapping to a new note
     // See-through: during the game, the bottom side stones act like the hero — trees in front of
     // them fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,

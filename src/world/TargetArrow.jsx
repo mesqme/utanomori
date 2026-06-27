@@ -5,6 +5,7 @@ import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
+import useSongGame from '../stores/useSongGame.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { getGroundY } from './utils/groundHeight.js'
 import { musicStonePointer } from './utils/musicStonePointer.js'
@@ -67,7 +68,10 @@ export default function TargetArrow() {
         // Which companion (if any) the arrow should be guiding to right now. It stays live during
         // the mini-game too (the companion is still the target) — the game weight handles the pose.
         const target = useCompanions.getState().target
-        const live = usePhases.getState().phase === PHASES.start && !!target
+        // Hide the arrow once a song dialogue/mini-game has begun but before the stones start
+        // singing (the pointer pose isn't active yet) — it reappears pointing at the notes.
+        const inDialogue = useSongGame.getState().active && !musicStonePointer.active
+        const live = usePhases.getState().phase === PHASES.start && !!target && !inDialogue
         const desired = live ? target : null
 
         // Crossfade, not pop/teleport: only adopt a new target (spawn / relocate / collect) once
@@ -142,8 +146,10 @@ export default function TargetArrow() {
             spin.rotation.x = 0
         }
 
-        // Fade weight drives scale (full during gameplay target or the game).
-        group.scale.setScalar(arrow.scale * presence)
+        // Fade weight drives scale (full during gameplay target or the game). During the game the
+        // appear-fade makes it pop in at each new note instead of sliding there.
+        const appear = THREE.MathUtils.lerp(1, musicStonePointer.appear ?? 1, gw)
+        group.scale.setScalar(arrow.scale * presence * appear)
     })
 
     return (

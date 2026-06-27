@@ -25,7 +25,7 @@ export default function InteractionPrompt() {
 
     return (
         <>
-            <div className="party-counter">{complete ? 'PARTY COMPLETE' : `FRIENDS ${found.length} / ${MAX_PARTY}`}</div>
+            <div className="party-counter">{complete ? 'ALL MELODIES FOUND' : `MELODIES ${found.length} / ${MAX_PARTY}`}</div>
 
             {showPrompt && (
                 <button className="interaction-prompt" onClick={startSong}>

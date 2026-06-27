@@ -41,7 +41,11 @@ export function createBatchedMeshPool({ prototypes, material, maxInstances = 102
 
     const mesh = new THREE.BatchedMesh(maxInstances, totalVertices, totalIndices, material)
     mesh.frustumCulled = false
-    mesh.perObjectFrustumCulled = true
+    // Per-instance frustum culling was dropping on-screen instances during the fast credits
+    // camera move (props popping out mid-screen, nowhere near the reveal-fade edge). The whole
+    // batch is one multi-draw call and the instance count is bounded (maxInstances), so the cost
+    // of always drawing them is negligible — correctness wins here.
+    mesh.perObjectFrustumCulled = false
     mesh.sortObjects = false
 
     const geometryIds = {}
