@@ -12,6 +12,9 @@ import { musicStonePointer } from './utils/musicStonePointer.js'
 import arrowModelUrl from '../assets/models/arrow.glb'
 
 const smoothstep = THREE.MathUtils.smoothstep
+const FLASH_GREEN = new THREE.Color('#46e06a')
+const FLASH_RED = new THREE.Color('#ff4d4d')
+const PRESS_FLASH_TIME = 0.6 // seconds the arrow holds its green/red press tint
 const _frontEuler = new THREE.Euler()
 const _overheadEuler = new THREE.Euler()
 const _frontQuat = new THREE.Quaternion()
@@ -30,6 +33,10 @@ export default function TargetArrow() {
     const presenceRef = useRef(0) // 0..1 fade weight (drives scale) for spawn / collect / relocate
     const displayRef = useRef(null) // { key, x, z } the arrow currently points at; only swapped while faded out
     const gameWeightRef = useRef(0) // 0 = gameplay aim, 1 = Simon-game orbit pose (smooth blend)
+    const prevPressNonceRef = useRef(0)
+    const pressFlashRef = useRef(0) // 0..1 green/red tint weight after a press
+    const flashColorRef = useMemo(() => new THREE.Color(), [])
+    const baseColorRef = useMemo(() => new THREE.Color('#ffffff'), [])
     const arrow = useStore((state) => state.arrowParameters)
 
     const { nodes } = useGLTF(arrowModelUrl)
@@ -49,9 +56,11 @@ export default function TargetArrow() {
     )
     useEffect(() => () => material.dispose(), [material])
     // Colour is static (and Leva-tunable) — set it on change instead of re-parsing every frame.
+    // The frame loop tints it green/red briefly on a press, then back to this base.
     useEffect(() => {
+        baseColorRef.set(arrow.color)
         material.color.set(arrow.color)
-    }, [material, arrow.color])
+    }, [material, arrow.color, baseColorRef])
 
     useFrame((state, delta) => {
         const group = groupRef.current
@@ -144,6 +153,20 @@ export default function TargetArrow() {
             group.position.copy(musicStonePointer.position)
             group.quaternion.copy(musicStonePointer.quaternion)
             spin.rotation.x = 0
+        }
+
+        // Press feedback: tint the arrow green (correct) / red (incorrect), fading back to base.
+        const press = useSongGame.getState().lastPress
+        if (press && press.nonce !== prevPressNonceRef.current) {
+            prevPressNonceRef.current = press.nonce
+            flashColorRef.copy(press.correct ? FLASH_GREEN : FLASH_RED)
+            pressFlashRef.current = 1
+        }
+        if (pressFlashRef.current > 0) {
+            pressFlashRef.current = Math.max(0, pressFlashRef.current - dt / PRESS_FLASH_TIME)
+            material.color.copy(baseColorRef).lerp(flashColorRef, pressFlashRef.current)
+        } else {
+            material.color.copy(baseColorRef)
         }
 
         // Fade weight drives scale (full during gameplay target or the game). During the game the

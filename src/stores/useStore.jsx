@@ -146,6 +146,11 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
     cameraDistance: 13, // distance back from the companion
     cameraLerp: 3.6, // how smoothly the camera moves / returns
+    // "Dialogue camera": a closer framing on the music character used for any interaction speech
+    // (the prompt + the fail speech). Shares the stones azimuth so prompt↔stones is a clean pull.
+    dialogueCameraHeight: 2.6, // camera height for the close-up speech framing
+    dialogueCameraDistance: 7, // distance back from the character during speech
+    dialogueTargetY: 1.2, // look-at height (the character's head) during speech
     // Pointer: a downward indicator that hops to the singing note (playback) then the pressed
     // note (input), so the player can follow / confirm which stone is active.
     pointerColor: '#ffffff',
@@ -160,6 +165,12 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     // them fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,
     seeThroughRadius: 2.8,
+    // Feedback torus ring around a pressed stone (green = correct, red = wrong), see [[#31]].
+    ringRadius: 1.15, // ring radius (world units, scales with the stone's rise)
+    ringFlashDuration: 0.6, // seconds the ring flash fades over
+    ringOpacity: 0.95, // peak ring opacity
+    ringColorCorrect: '#46e06a',
+    ringColorWrong: '#ff4d4d',
 }
 
 // The three synched backing tracks (one per music companion). All start (looping, muted) on GO;

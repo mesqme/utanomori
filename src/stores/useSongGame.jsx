@@ -1,12 +1,15 @@
 import { create } from 'zustand'
 import { getMusicCharacter } from '../config/musicCharacters.js'
+import { FAIL_LINES } from '../game/gameConfig.js'
 
 /**
  * Companion song mini-game state machine (pure state — timers live in SongGame.jsx and the
  * celebrate/flee handoff lives in Companions.jsx).
  *
- * stage: idle → prompt → setup → countdown → playback → input → roundClear → (countdown…) → success | fail
- * (a 3·2·1 countdown precedes every round's playback)
+ * stage: idle → prompt → setup → countdown → playback → input → roundClear → (countdown…) → success
+ *                                                                        ↘ fail → failSpeech → flee
+ * (a 3·2·1 countdown precedes every round's playback; a miss shows an exclamation, then the
+ *  character's "not satisfied" speech, then it flees)
  *
  * The mini-game now uses each character's real one-shot SOUNDS. There is ONE stone per UNIQUE
  * sound (random assignment each game); the melody is a sequence of those sounds (with repeats —
@@ -24,6 +27,9 @@ const initialState = {
     activeNote: null, // the STONE index currently "sung" (or null)
     input: [], // stone indices entered this round
     wheelOpen: false,
+    lastPress: null, // { stone, correct, nonce } — last clicked stone result (drives feedback FX)
+    pressNonce: 0, // bumped each press so repeats re-trigger the same-result flash
+    failLine: null, // the funny-angry line the character says when you miss
 }
 
 // Fisher–Yates shuffle of [0..n-1].
@@ -80,25 +86,45 @@ const useSongGame = create((set, get) => ({
 
     openWheel: () => set({ stage: 'input', wheelOpen: true, activeNote: null }),
 
-    // Validate a clicked stone against the expected stone sequence for this round.
+    // Validate a clicked stone against the expected stone sequence for this round. Each press
+    // publishes `lastPress` (with a bumping nonce) so the torus rings / arrow / character emote
+    // can flash green (correct) or red (incorrect).
     pressNote: (stoneIndex) => {
-        const { stage, song, round, input, rounds } = get()
+        const { stage, song, round, input, rounds, pressNonce } = get()
         if (stage !== 'input') return
         const length = rounds[round] ?? song.length
-        if (stoneIndex !== song[input.length]) {
-            set({ stage: 'fail', wheelOpen: false, activeNote: null })
+        const correct = stoneIndex === song[input.length]
+        const nonce = pressNonce + 1
+        const lastPress = { stone: stoneIndex, correct, nonce }
+
+        if (!correct) {
+            set({
+                stage: 'fail',
+                wheelOpen: false,
+                activeNote: null,
+                lastPress,
+                pressNonce: nonce,
+                failLine: FAIL_LINES[Math.floor(Math.random() * FAIL_LINES.length)],
+            })
             return
         }
+
         const nextInput = [...input, stoneIndex]
+        const base = { input: nextInput, lastPress, pressNonce: nonce }
         if (nextInput.length >= length) {
             const lastRound = round >= rounds.length - 1
-            set({ input: nextInput, wheelOpen: false, stage: lastRound ? 'success' : 'roundClear' })
+            set({ ...base, wheelOpen: false, stage: lastRound ? 'success' : 'roundClear' })
         } else {
-            set({ input: nextInput })
+            set(base)
         }
     },
 
     nextRound: () => set((s) => ({ round: s.round + 1, stage: 'countdown', input: [], activeNote: null, wheelOpen: false })),
+
+    // Fail flow: 'fail' (exclamation moment, stones still up) → 'failSpeech' (stones gone, the
+    // character delivers its grumpy line up close) → 'flee' (it bolts; Companions relocates + resets).
+    failSpeech: () => set({ stage: 'failSpeech' }),
+    confirmFail: () => set({ stage: 'flee' }),
 
     reset: () => set({ ...initialState }),
 }))

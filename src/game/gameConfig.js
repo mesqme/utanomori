@@ -25,6 +25,17 @@ export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 export const DIALOGUE_TEXT =
     'Well met, wandering soul. My song has slipped away into this old whispering wood... wouldst thou help me find my lost melody?'
 
+// Funny-angry one-liners a music character blurts out when you play the wrong note, just before
+// it storms off to a new hiding place. One is picked at random per failure.
+export const FAIL_LINES = [
+    'Oh, my ears! I cannot withstand such an insult!',
+    'That note was a CRIME against music!',
+    'Augh! My poor delicate ears may never recover!',
+    'No, no, NO — even the crows sing truer than that!',
+    'You call THAT my melody? I shall hide where you cannot ruin it!',
+    'Sacrilege! I must flee before you play another!',
+]
+
 export const CREDITS_LINES = [
     'SOUND JOURNEY',
     '\u00a0',

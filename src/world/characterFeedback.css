@@ -1,0 +1,91 @@
+.char-feedback-anchor {
+    position: relative;
+    width: 0;
+    height: 0;
+    user-select: none;
+}
+
+/* Per-press ♥ / ❗ that pops up and drifts away above the head. */
+.char-emote {
+    position: absolute;
+    left: 0;
+    top: 0;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    opacity: 0;
+    will-change: transform, opacity;
+    text-shadow: 0 2px 8px rgba(9, 8, 34, 0.6);
+    animation: char-emote-pop 1.4s ease-out forwards;
+}
+
+.char-emote--love {
+    color: #ff7aa8;
+}
+
+/* Emphasised exclamation "shout" shown on a miss: a big ! ringed by radiating strokes. */
+.char-exclaim {
+    position: absolute;
+    left: 0;
+    top: 0;
+    transform: translate(-50%, -120%);
+    width: 92px;
+    height: 92px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: char-exclaim-pop 0.3s ease-out;
+}
+
+.char-exclaim-burst {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.char-exclaim-burst line {
+    stroke: #ffd34d;
+    stroke-width: 5;
+    stroke-linecap: round;
+}
+
+.char-exclaim-mark {
+    position: relative;
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1;
+    color: #ff5a5a;
+    text-shadow: 0 2px 8px rgba(9, 8, 34, 0.6);
+}
+
+@keyframes char-exclaim-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -110%) scale(0.4);
+    }
+    60% {
+        opacity: 1;
+        transform: translate(-50%, -120%) scale(1.15);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -120%) scale(1);
+    }
+}
+
+@keyframes char-emote-pop {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -30%) scale(0.4);
+    }
+    20% {
+        opacity: 1;
+        transform: translate(-50%, -65%) scale(1.1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -170%) scale(1.2);
+    }
+}

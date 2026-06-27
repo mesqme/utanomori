@@ -9,6 +9,7 @@ import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import CompanionCreature from './CompanionCreature.jsx'
 import CompanionNotes from './CompanionNotes.jsx'
+import CharacterFeedback from './CharacterFeedback.jsx'
 import TargetArrow from './TargetArrow.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
@@ -69,9 +70,10 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
         return () => clearTimeout(timer)
     }, [stage, target])
 
-    // Failed the song → flee outward, then relocate so it must be found again.
+    // Failed the song → it stands its ground through the ❗ moment + its grumpy speech, and only
+    // bolts once you click OK (stage 'flee'); then it relocates so you must find it again.
     useEffect(() => {
-        if (stage !== 'fail') return
+        if (stage !== 'flee') return
         const timer = setTimeout(() => {
             const player = useStore.getState().ballPosition
             const spawn = findHiddenSpawn(player)
@@ -86,8 +88,8 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
         if (!group) return
         const player = useStore.getState().ballPosition
 
-        if (stage === 'fail') {
-            // Run directly away from the player.
+        if (stage === 'flee') {
+            // Bolt directly away from the player.
             fleeRef.current += Math.min(delta, 0.1)
             const ax = target.x - player.x
             const az = target.z - player.z
@@ -97,6 +99,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             const fz = target.z + (az / len) * dist
             group.position.set(fx, getGroundY(fx, fz), fz)
         } else {
+            // Stay put facing the player (gameplay, prompt, the game, and the fail ❗ / speech).
             fleeRef.current = 0
             const groundY = getGroundY(target.x, target.z)
             group.position.set(target.x, groundY, target.z)
@@ -117,6 +120,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
                 <CompanionCreature definition={target} material={creatureMaterial} />
             </group>
             <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} isTarget />
+            <CharacterFeedback headY={(target.scale ?? 0.5) + 1.1} />
         </group>
     )
 }

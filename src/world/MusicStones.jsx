@@ -59,17 +59,36 @@ export default function MusicStones() {
         })
     }, [stones, painterlyTexture])
 
+    // Feedback torus: one ring per stone, hidden until a press flashes it green (correct) or red
+    // (incorrect). Unit-radius geometry (scaled per frame); each ring has its own basic material
+    // so it can carry its own colour/opacity. (Later: swap in a custom torus per stone.)
+    const ringGeometry = useMemo(() => new THREE.TorusGeometry(1, 0.085, 14, 56), [])
+    const ringMaterials = useMemo(
+        () =>
+            Array.from(
+                { length: COUNT_MAX },
+                () => new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, toneMapped: false, depthTest: false, depthWrite: false })
+            ),
+        []
+    )
+
     useEffect(() => () => {
         stones.forEach((s) => {
             s.geometry.dispose()
             s.material.dispose()
         })
+        ringGeometry.dispose()
+        ringMaterials.forEach((m) => m.dispose())
         clearAllMusicStones()
         clearMusicStoneSeeThrough()
         musicStonePointer.active = false
-    }, [stones])
+    }, [stones, ringGeometry, ringMaterials])
 
     const meshRefs = useRef([])
+    const ringRefs = useRef([])
+    const ringFlashRef = useRef(new Array(COUNT_MAX).fill(0)) // ring flash decay 0..1
+    const ringCorrectRef = useRef(new Array(COUNT_MAX).fill(true)) // last flash was correct?
+    const prevPressNonceRef = useRef(0)
     const scaleRef = useRef(new Array(COUNT_MAX).fill(0)) // animated rise progress 0..1
     const flashRef = useRef(new Array(COUNT_MAX).fill(0)) // flash decay 0..1
     const hoverRef = useRef(new Array(COUNT_MAX).fill(false)) // pointer is over a clickable stone
@@ -115,8 +134,21 @@ export default function MusicStones() {
             stageStartRef.current = state.clock.elapsedTime
         }
 
+        // Camera: the shared "dialogue camera" (a close framing on the music character) for any
+        // interaction speech (prompt / fail speech); the wider stones framing while they're up;
+        // otherwise hand back to the follow camera.
         const layout = layoutRef.current
-        if (layout) {
+        const speechStage = (game.stage === 'prompt' || game.stage === 'failSpeech') && !!game.companion
+        if (speechStage) {
+            cameraRig.mode = 'orbit'
+            cameraRig.centerX = game.companion.x
+            cameraRig.centerZ = game.companion.z
+            cameraRig.angle = 0
+            cameraRig.height = p.dialogueCameraHeight
+            cameraRig.distance = p.dialogueCameraDistance
+            cameraRig.targetYOffset = p.dialogueTargetY
+            cameraRig.lerpSpeed = p.cameraLerp
+        } else if (layout) {
             cameraRig.mode = 'orbit'
             cameraRig.centerX = layout.cx
             cameraRig.centerZ = layout.cz
@@ -141,14 +173,24 @@ export default function MusicStones() {
             prevNoteRef.current = game.activeNote
         }
 
+        // Press feedback: flash the pressed stone's ring green (correct) or red (incorrect).
+        if (game.lastPress && game.lastPress.nonce !== prevPressNonceRef.current) {
+            prevPressNonceRef.current = game.lastPress.nonce
+            const st = game.lastPress.stone
+            if (st != null && st >= 0 && st < COUNT_MAX) {
+                ringFlashRef.current[st] = 1
+                ringCorrectRef.current[st] = game.lastPress.correct
+            }
+        }
+
         // No layout (idle): everything sunk → hide, clear state, leave the camera.
         if (!layout) {
             clearAllMusicStones()
             clearMusicStoneSeeThrough()
             musicStonePointer.active = false
             for (let i = 0; i < COUNT_MAX; i++) {
-                const m = meshRefs.current[i]
-                if (m) m.visible = false
+                if (meshRefs.current[i]) meshRefs.current[i].visible = false
+                if (ringRefs.current[i]) ringRefs.current[i].visible = false
             }
             return
         }
@@ -171,7 +213,9 @@ export default function MusicStones() {
                 // Not part of this character's set.
                 scaleRef.current[i] = 0
                 hoverScaleRef.current[i] = 0
+                ringFlashRef.current[i] = 0
                 mesh.visible = false
+                if (ringRefs.current[i]) ringRefs.current[i].visible = false
                 continue
             }
 
@@ -210,6 +254,23 @@ export default function MusicStones() {
             const hoverAmount = hovered ? p.hoverBoost : 0
             tmpColor.copy(baseColor).multiplyScalar(1 + flashRef.current[i] * p.flashBoost + hoverAmount)
             stones[i].material.uniforms.uBaseColor.value.copy(tmpColor)
+
+            // Feedback ring: billboarded torus around the stone, fading after a press.
+            const ring = ringRefs.current[i]
+            if (ring) {
+                ringFlashRef.current[i] = Math.max(0, ringFlashRef.current[i] - dt / Math.max(0.05, p.ringFlashDuration))
+                const rf = ringFlashRef.current[i]
+                if (rf > 0 && mesh.visible) {
+                    ring.visible = true
+                    ring.position.copy(mesh.position)
+                    ring.quaternion.copy(state.camera.quaternion)
+                    ring.scale.setScalar(p.ringRadius * appear)
+                    ringMaterials[i].color.set(ringCorrectRef.current[i] ? p.ringColorCorrect : p.ringColorWrong)
+                    ringMaterials[i].opacity = rf * (p.ringOpacity ?? 0.95)
+                } else {
+                    ring.visible = false
+                }
+            }
         }
 
         // Pointer: orbits the rainbow centre to the singing note (playback) or the hovered stone
@@ -352,6 +413,17 @@ export default function MusicStones() {
                         playSound(g.track, g.stoneSounds[i]) // this stone's unique sound
                         g.pressNote(i)
                     }}
+                />
+            ))}
+            {ringMaterials.map((material, i) => (
+                <mesh
+                    key={`ring${i}`}
+                    ref={(el) => (ringRefs.current[i] = el)}
+                    geometry={ringGeometry}
+                    material={material}
+                    frustumCulled={false}
+                    visible={false}
+                    renderOrder={999}
                 />
             ))}
         </group>

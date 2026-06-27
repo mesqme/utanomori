@@ -677,6 +677,9 @@ export default function Controls() {
         cameraHeight: { value: musicStoneParameters.cameraHeight, min: 3, max: 30, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraHeight') },
         cameraDistance: { value: musicStoneParameters.cameraDistance, min: 0, max: 20, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraDistance') },
         cameraLerp: { value: musicStoneParameters.cameraLerp, min: 0.5, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'cameraLerp') },
+        dialogueCameraHeight: { value: musicStoneParameters.dialogueCameraHeight, min: 0.5, max: 12, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueCameraHeight') },
+        dialogueCameraDistance: { value: musicStoneParameters.dialogueCameraDistance, min: 2, max: 18, step: 0.5, onChange: setParam('musicStoneParameters', 'dialogueCameraDistance') },
+        dialogueTargetY: { value: musicStoneParameters.dialogueTargetY, min: 0, max: 4, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueTargetY') },
         pointerColor: { value: musicStoneParameters.pointerColor, onChange: setParam('musicStoneParameters', 'pointerColor') },
         pointerRadius: { value: musicStoneParameters.pointerRadius, min: 0, max: 6, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerRadius') },
         pointerStiffness: { value: musicStoneParameters.pointerStiffness, min: 5, max: 400, step: 1, onChange: setParam('musicStoneParameters', 'pointerStiffness') },
@@ -686,6 +689,11 @@ export default function Controls() {
         pointerAppearTime: { value: musicStoneParameters.pointerAppearTime, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('musicStoneParameters', 'pointerAppearTime') },
         seeThroughEnabled: { value: musicStoneParameters.seeThroughEnabled, onChange: setParam('musicStoneParameters', 'seeThroughEnabled') },
         seeThroughRadius: { value: musicStoneParameters.seeThroughRadius, min: 1, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'seeThroughRadius') },
+        ringRadius: { value: musicStoneParameters.ringRadius, min: 0.3, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'ringRadius') },
+        ringFlashDuration: { value: musicStoneParameters.ringFlashDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'ringFlashDuration') },
+        ringOpacity: { value: musicStoneParameters.ringOpacity, min: 0, max: 1, step: 0.05, onChange: setParam('musicStoneParameters', 'ringOpacity') },
+        ringColorCorrect: { value: musicStoneParameters.ringColorCorrect, onChange: setParam('musicStoneParameters', 'ringColorCorrect') },
+        ringColorWrong: { value: musicStoneParameters.ringColorWrong, onChange: setParam('musicStoneParameters', 'ringColorWrong') },
     })
 
     useControls('Music', {

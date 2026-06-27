@@ -2,9 +2,12 @@ import { useEffect, useState } from 'react'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
+import SpeechBubble from './SpeechBubble.jsx'
 import { playSound } from './gameSounds.js'
 import { resumeAudio } from './songAudio.js'
 import './songGame.css'
+
+const FAIL_EXCLAIM_TIME = 1.1 // seconds the ❗ burst shows (stones still up) before the speech
 
 // All mini-game timings are tweakable in the "Music Stones" Leva folder (musicStoneParameters):
 // soundSpacing, listenTempo, roundClearPause, countdownFrom, countdownStep, scaleInDuration…
@@ -24,6 +27,7 @@ export default function SongGame() {
     const rounds = useSongGame((s) => s.rounds)
     const input = useSongGame((s) => s.input)
     const companion = useSongGame((s) => s.companion)
+    const failLine = useSongGame((s) => s.failLine)
     const [stonesReady, setStonesReady] = useState(false)
     const [count, setCount] = useState(0)
 
@@ -96,6 +100,13 @@ export default function SongGame() {
         return () => clearTimeout(t)
     }, [stage])
 
+    // Miss → hold the ❗ burst (stones still up) for a beat, then drop into the close-up speech.
+    useEffect(() => {
+        if (stage !== 'fail') return
+        const t = setTimeout(() => useSongGame.getState().failSpeech(), FAIL_EXCLAIM_TIME * 1000)
+        return () => clearTimeout(t)
+    }, [stage])
+
     // ESC leaves the mini-game (the target stays so you can try again).
     useEffect(() => {
         if (!active) return
@@ -135,18 +146,18 @@ export default function SongGame() {
             )}
 
             {stage === 'prompt' && (
-                <div className="song-prompt">
-                    <p className="song-prompt-text">Hello, will you try my melody?</p>
-                    <button
-                        className="song-yes"
-                        onClick={() => {
-                            resumeAudio()
-                            useSongGame.getState().confirmReady()
-                        }}
-                    >
-                        Yes
-                    </button>
-                </div>
+                <SpeechBubble
+                    text="Hello, will you try my melody?"
+                    confirmLabel="Yes"
+                    onConfirm={() => {
+                        resumeAudio()
+                        useSongGame.getState().confirmReady()
+                    }}
+                />
+            )}
+
+            {stage === 'failSpeech' && (
+                <SpeechBubble text={failLine ?? 'Hmph! That was not my melody.'} confirmLabel="OK" onConfirm={() => useSongGame.getState().confirmFail()} />
             )}
 
             {stage === 'setup' && stonesReady && (
@@ -165,7 +176,6 @@ export default function SongGame() {
 
             {stage === 'roundClear' && <div className="song-banner song-good">Nice!</div>}
             {stage === 'success' && <div className="song-banner song-good">{companion?.label ?? 'Friend'} is happy!</div>}
-            {stage === 'fail' && <div className="song-banner song-bad">Oops! It ran away…</div>}
         </div>
     )
 }
