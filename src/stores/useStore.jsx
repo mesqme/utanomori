@@ -20,7 +20,7 @@ const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
-const OBJECT_STYLE_VERSION = 3
+const OBJECT_STYLE_VERSION = 4
 const LOADER_DEBUG_VERSION = 6
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,

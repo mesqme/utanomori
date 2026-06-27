@@ -3,13 +3,13 @@ import { soundJourneyPalette } from './soundJourneyPalette.js'
 /**
  * Placeholder object library.
  *
- * Trees and mushrooms are still lightweight procedural placeholders (data-driven
- * `parts`, each a primitive with a local offset / scale / colour). Stones are now
- * real authored meshes loaded from `stones.glb` (see STONE_VARIANTS + ScatteredObjects):
- * one of the seven variants is chosen per instance.
+ * Trees are still lightweight procedural placeholders (data-driven `parts`, each a
+ * primitive with a local offset / scale / colour). Stones AND mushrooms are now real
+ * authored meshes loaded from glb (see STONE_VARIANTS / MUSHROOM_VARIANTS +
+ * ScatteredObjects): one variant is chosen per instance.
  *
- * `footprintRadius` drives grass suppression + spacing around the object. For stones it
- * is derived per-variant from the measured safe diameter (STONE_VARIANTS) instead.
+ * `footprintRadius` drives grass suppression + spacing around the object. For stones /
+ * mushrooms it is derived per-variant from the measured safe diameter instead.
  * `sockets` are local attachment points where secondary characters can later be placed.
  */
 export const OBJECT_TYPES = Object.freeze(['tree', 'stone', 'mushroom'])
@@ -45,8 +45,25 @@ export const MUSIC_STONE_VARIANTS = Object.freeze([
     { node: 'musicStone_07', diameter: 3.25 },
 ])
 
+/**
+ * Mushroom variants from mushrooms.glb. Each mushroom is two meshes so the cap and the
+ * leg can take different materials: `cap` + `leg` are the GLB mesh names, baked together
+ * (shared recentre/ground offset) so the cap keeps sitting on its leg (see
+ * createMushroomGeometries). `diameter` is the measured safe diameter (world units) →
+ * safe radius = diameter/2, the no-grass / no-overlap radius (scales with the per-instance
+ * + mushroomSize scale), exactly like STONE_VARIANTS.
+ */
+export const MUSHROOM_VARIANTS = Object.freeze([
+    { cap: 'mushroom_01', leg: 'mushroom_01_leg', diameter: 1.38 },
+    { cap: 'mushroom_02', leg: 'mushroom_02_leg', diameter: 0.94 },
+    { cap: 'mushroom_03', leg: 'mushroom_03_leg', diameter: 1.42 },
+    { cap: 'mushroom_04', leg: 'mushroom_04_leg', diameter: 1.02 },
+    { cap: 'mushroom_05', leg: 'mushroom_05_leg', diameter: 1.17 },
+    { cap: 'mushroom_06', leg: 'mushroom_06_leg', diameter: 0.82 },
+])
+
 // Procedural parts sit on the ground (origin at the base) so a per-type instance scale
-// (treeSize / stoneSize — see ScatteredObjects) resizes them while keeping them grounded.
+// (treeSize — see ScatteredObjects) resizes them while keeping them grounded.
 export const objectLibrary = Object.freeze({
     // A simple stylized tree placeholder: a tapered trunk + a round sphere canopy.
     // The canopy part carries `foliage: true` so it takes treeColor.
@@ -69,12 +86,12 @@ export const objectLibrary = Object.freeze({
         parts: [],
         sockets: [{ id: 'top', offset: [0, 1.0, 0], normal: [0, 1, 0], capacity: 1 }],
     },
+    // Authored mushroom — cap + leg geometry comes from mushrooms.glb (MUSHROOM_VARIANTS),
+    // baked together so the cap sits on the leg. footprintRadius here is a fallback; the real
+    // radius is per-variant.
     mushroom: {
-        footprintRadius: 0.26,
-        parts: [
-            { geometry: 'cylinder', args: [0.07, 0.1, 0.5, 6], offset: [0, 0.25, 0], color: soundJourneyPalette.trunkLight },
-            { geometry: 'sphere', args: [0.28, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2], offset: [0, 0.5, 0], scale: [1, 0.72, 1], color: soundJourneyPalette.hero },
-        ],
+        footprintRadius: 0.7,
+        parts: [],
         sockets: [],
     },
 })
@@ -108,6 +125,10 @@ export const objectFieldDefaults = Object.freeze({
     stoneSize: 0.55, // global stone scale (the GLB models are authored near final size)
     stoneYOffset: -0.3, // lift/sink stones relative to the ground
     stoneTint: '#58a4fc', // multiplies the GLB stone colour (white = as authored)
+    mushroomSize: 1.0, // global mushroom scale (the GLB models are authored near final size)
+    mushroomYOffset: 0, // lift/sink mushrooms relative to the ground (geometry grounded at the leg base)
+    mushroomCapColor: '#c4452f', // cap (head) base colour
+    mushroomLegColor: '#ecdcc4', // leg (stem) base colour
     grassFadeDistance: 0.0, // grass fade band beyond a stone/tree's safe radius
     grassLean: 0.45, // how far the grass leans away from a stone/tree in the fade band
     debugAnchors: false,

@@ -11,10 +11,11 @@ import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
-import { objectLibrary, OBJECT_TYPES, STONE_VARIANTS } from '../config/objectFieldDefaults.js'
+import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
-import { createStoneGeometry, toCanonicalGeometry } from './utils/stoneGeometry.js'
+import { createMushroomGeometries, createStoneGeometry, toCanonicalGeometry } from './utils/stoneGeometry.js'
 import stonesModelUrl from '../assets/models/stones.glb'
+import mushroomsModelUrl from '../assets/models/mushrooms.glb'
 
 // Every scattered object (trees, stones, mushrooms across all active chunks) is an
 // instance in ONE BatchedMesh (see createBatchedMeshPool) → ~1 draw call with
@@ -38,10 +39,11 @@ function createPartGeometry(part) {
     }
 }
 
-// One prototype per (type, part); stones expand to one prototype per GLB variant (a single
-// variant is chosen per instance at placement). `prototypeMeta` carries the foliage flag so
-// the placement loop can recolour the tree canopy.
-function buildPrototypes(stoneNodes) {
+// One prototype per (type, part). Stones expand to one prototype per GLB variant (a single id
+// chosen per instance at placement). Mushrooms expand to TWO prototypes per GLB variant — a
+// [capId, legId] pair rendered together (cap + leg take different colours). `prototypeMeta`
+// carries the foliage flag (tree canopy) and, for mushrooms, the `part` ('cap' | 'leg').
+function buildPrototypes(stoneNodes, mushroomNodes) {
     const prototypes = []
     const prototypeIdsByType = {}
     const prototypeMeta = {}
@@ -61,6 +63,23 @@ function buildPrototypes(stoneNodes) {
                 prototypes.push({ id, type, geometry, color })
                 prototypeIdsByType[type].push(id)
                 prototypeMeta[id] = { type, foliage: false }
+            })
+            continue
+        }
+
+        if (type === 'mushroom') {
+            MUSHROOM_VARIANTS.forEach((variant, variantIndex) => {
+                const capNode = mushroomNodes[variant.cap]
+                const legNode = mushroomNodes[variant.leg]
+                if (!capNode || !legNode) return
+                const { cap, leg } = createMushroomGeometries(capNode, legNode)
+                const capId = `mushroom:${variantIndex}:cap`
+                const legId = `mushroom:${variantIndex}:leg`
+                prototypes.push({ id: capId, type, geometry: cap, color: WHITE })
+                prototypes.push({ id: legId, type, geometry: leg, color: WHITE })
+                prototypeIdsByType[type].push([capId, legId]) // variant-indexed pair
+                prototypeMeta[capId] = { type, foliage: false, part: 'cap' }
+                prototypeMeta[legId] = { type, foliage: false, part: 'leg' }
             })
             continue
         }
@@ -94,6 +113,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
 
     const { nodes: stoneNodes } = useGLTF(stonesModelUrl)
+    const { nodes: mushroomNodes } = useGLTF(mushroomsModelUrl)
 
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
@@ -106,15 +126,15 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
-        const { prototypes, prototypeIdsByType, prototypeMeta } = buildPrototypes(stoneNodes)
+        const { prototypes, prototypeIdsByType, prototypeMeta } = buildPrototypes(stoneNodes, mushroomNodes)
         const material = createPropStylizedMaterial(painterlyTexture, { toneMapped: true })
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
         return { ...created, prototypeIdsByType, prototypeMeta }
-        // Built once the GLB is ready; texture is swapped in place, and size/shape go through
+        // Built once the GLBs are ready; texture is swapped in place, and size/shape go through
         // per-instance scale below.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [stoneNodes])
+    }, [stoneNodes, mushroomNodes])
 
     // Swap the prop paintery texture when the selection changes (no pool rebuild).
     useEffect(() => {
@@ -170,6 +190,10 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.stoneSize,
         objectParameters.stoneYOffset,
         objectParameters.stoneTint,
+        objectParameters.mushroomSize,
+        objectParameters.mushroomYOffset,
+        objectParameters.mushroomCapColor,
+        objectParameters.mushroomLegColor,
     ].join('|')
     const roadGenerationKey = [
         roadParameters.enabled,
@@ -211,8 +235,12 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             const treeYOffset = objectParameters.treeYOffset ?? 0
             const stoneSize = objectParameters.stoneSize ?? 1.0
             const stoneYOffset = objectParameters.stoneYOffset ?? 0
+            const mushroomSize = objectParameters.mushroomSize ?? 1.0
+            const mushroomYOffset = objectParameters.mushroomYOffset ?? 0
             const treeColorObj = new THREE.Color(objectParameters.treeColor ?? '#6f8f4a')
             const stoneTintObj = new THREE.Color(objectParameters.stoneTint ?? '#ffffff')
+            const mushroomCapObj = new THREE.Color(objectParameters.mushroomCapColor ?? '#c4452f')
+            const mushroomLegObj = new THREE.Color(objectParameters.mushroomLegColor ?? '#ecdcc4')
 
             for (const chunk of activeChunks) {
                 if (chunkInstances.has(chunk.key)) continue
@@ -223,20 +251,26 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         const y = noise2D ? noise2D(instance.worldX * terrainScale, instance.worldZ * terrainScale) * terrainAmplitude : 0
                         const isStone = instance.type === 'stone'
                         const isTree = instance.type === 'tree'
-                        const sizeMul = isStone ? stoneSize : isTree ? treeSize : 1
-                        const yOffset = isStone ? stoneYOffset : isTree ? treeYOffset : 0
+                        const isMushroom = instance.type === 'mushroom'
+                        const sizeMul = isStone ? stoneSize : isTree ? treeSize : isMushroom ? mushroomSize : 1
+                        const yOffset = isStone ? stoneYOffset : isTree ? treeYOffset : isMushroom ? mushroomYOffset : 0
 
                         dummy.position.set(instance.worldX, y + yOffset, instance.worldZ)
                         dummy.rotation.set(instance.tiltX, instance.rotationY, instance.tiltZ)
                         dummy.scale.setScalar(instance.scale * sizeMul)
                         dummy.updateMatrix()
 
-                        // Stones render ONE chosen variant; trees / mushrooms render all parts.
+                        // Stones render ONE chosen variant; mushrooms render the chosen variant's
+                        // [cap, leg] pair; trees render all parts.
                         let prototypeIds
                         if (isStone) {
                             const variants = pool.prototypeIdsByType.stone ?? []
                             const chosen = variants.length ? variants[(instance.variantIndex ?? 0) % variants.length] : null
                             prototypeIds = chosen ? [chosen] : []
+                        } else if (isMushroom) {
+                            const variants = pool.prototypeIdsByType.mushroom ?? []
+                            const chosen = variants.length ? variants[(instance.variantIndex ?? 0) % variants.length] : null
+                            prototypeIds = chosen ?? [] // [capId, legId]
                         } else {
                             prototypeIds = pool.prototypeIdsByType[instance.type] ?? []
                         }
@@ -245,6 +279,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             const meta = pool.prototypeMeta[prototypeId]
                             if (isStone) {
                                 color.copy(pool.prototypeColors[prototypeId] ?? WHITE).multiply(stoneTintObj)
+                            } else if (isMushroom) {
+                                color.copy(meta?.part === 'cap' ? mushroomCapObj : mushroomLegObj)
                             } else if (meta?.foliage) {
                                 color.copy(treeColorObj)
                             } else {
@@ -267,3 +303,4 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 }
 
 useGLTF.preload(stonesModelUrl)
+useGLTF.preload(mushroomsModelUrl)

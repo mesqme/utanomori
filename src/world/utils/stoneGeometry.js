@@ -37,3 +37,36 @@ export function createStoneGeometry(node) {
     geometry.dispose()
     return canonical
 }
+
+// Bake a mushroom's cap + leg into two grounded prototypes that stay ASSEMBLED. Unlike
+// createStoneGeometry (which grounds each mesh independently to y = 0), the cap and leg
+// share ONE recentre/ground offset computed from their COMBINED bounding box — XZ centred
+// on the pair, dropped so the leg's base sits at y = 0 — so the cap keeps its height above
+// the leg. Returns { cap, leg } canonical geometries.
+export function createMushroomGeometries(capNode, legNode) {
+    const cap = capNode.geometry.clone()
+    capNode.updateWorldMatrix(true, false)
+    cap.applyMatrix4(capNode.matrixWorld)
+    const leg = legNode.geometry.clone()
+    legNode.updateWorldMatrix(true, false)
+    leg.applyMatrix4(legNode.matrixWorld)
+
+    cap.computeBoundingBox()
+    leg.computeBoundingBox()
+    const minX = Math.min(cap.boundingBox.min.x, leg.boundingBox.min.x)
+    const maxX = Math.max(cap.boundingBox.max.x, leg.boundingBox.max.x)
+    const minY = Math.min(cap.boundingBox.min.y, leg.boundingBox.min.y)
+    const minZ = Math.min(cap.boundingBox.min.z, leg.boundingBox.min.z)
+    const maxZ = Math.max(cap.boundingBox.max.z, leg.boundingBox.max.z)
+    const ox = -(minX + maxX) * 0.5
+    const oy = -minY
+    const oz = -(minZ + maxZ) * 0.5
+    cap.translate(ox, oy, oz)
+    leg.translate(ox, oy, oz)
+
+    const capCanonical = toCanonicalGeometry(cap, false)
+    const legCanonical = toCanonicalGeometry(leg, false)
+    cap.dispose()
+    leg.dispose()
+    return { cap: capCanonical, leg: legCanonical }
+}

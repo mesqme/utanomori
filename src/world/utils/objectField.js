@@ -1,6 +1,6 @@
 import { mulberry32 } from './randomUtils.js'
 import { sampleRoadDistance } from './roadField.js'
-import { objectArchetypes, objectFieldDefaults, objectLibrary, STONE_VARIANTS } from '../../config/objectFieldDefaults.js'
+import { MUSHROOM_VARIANTS, objectArchetypes, objectFieldDefaults, objectLibrary, STONE_VARIANTS } from '../../config/objectFieldDefaults.js'
 
 const UINT_MAX = 4294967296
 
@@ -40,6 +40,7 @@ function getSettings(parameters = {}, roadParameters = {}) {
         minObjectSpacing: Math.max(0.05, parameters.minObjectSpacing ?? objectFieldDefaults.minObjectSpacing),
         treeSize: Math.max(0.1, parameters.treeSize ?? objectFieldDefaults.treeSize),
         stoneSize: Math.max(0.1, parameters.stoneSize ?? objectFieldDefaults.stoneSize),
+        mushroomSize: Math.max(0.1, parameters.mushroomSize ?? objectFieldDefaults.mushroomSize),
         grassFadeDistance: Math.max(0, parameters.grassFadeDistance ?? objectFieldDefaults.grassFadeDistance),
         grassLean: Math.max(0, parameters.grassLean ?? objectFieldDefaults.grassLean),
         roadParameters,
@@ -65,6 +66,7 @@ function ensureCache(settings) {
         spacing: settings.minObjectSpacing,
         treeSize: settings.treeSize,
         stoneSize: settings.stoneSize,
+        mushroomSize: settings.mushroomSize,
         road: settings.roadParameters,
     })
 
@@ -132,8 +134,8 @@ function buildCellGroup(cellX, cellZ, settings) {
         const localZ = Math.sin(angle) * distance
         // Stones stay close to their authored size (similar base size); trees / mushrooms vary more.
         const scale = type === 'stone' ? 0.9 + rng() * 0.2 : 0.82 + rng() * 0.5
-        // Stones are real meshes: pick a variant and take its measured safe radius. Other
-        // types use the library footprint. Either way the footprint tracks the on-screen
+        // Stones and mushrooms are real meshes: pick a variant and take its measured safe
+        // radius. Trees use the library footprint. Either way the footprint tracks the on-screen
         // size (instance scale × per-type size) so spacing / grass suppression match it.
         let variantIndex = -1
         let baseFootprint
@@ -142,6 +144,10 @@ function buildCellGroup(cellX, cellZ, settings) {
             variantIndex = Math.floor(rng() * STONE_VARIANTS.length) % STONE_VARIANTS.length
             baseFootprint = STONE_VARIANTS[variantIndex].diameter * 0.5
             sizeMul = settings.stoneSize
+        } else if (type === 'mushroom') {
+            variantIndex = Math.floor(rng() * MUSHROOM_VARIANTS.length) % MUSHROOM_VARIANTS.length
+            baseFootprint = MUSHROOM_VARIANTS[variantIndex].diameter * 0.5
+            sizeMul = settings.mushroomSize
         } else {
             baseFootprint = library.footprintRadius
             sizeMul = type === 'tree' ? settings.treeSize : 1
