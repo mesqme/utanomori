@@ -192,7 +192,7 @@ const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
 // through the brush noise for a thin painterly oil/pastel outline. Defined per scene
 // style (see edgeParameters in sceneStyles.js).
 
-const GAME_UI_VERSION = 4
+const GAME_UI_VERSION = 5
 const DEFAULT_GAME_UI_PARAMETERS = defaultSceneStyle.gameUiParameters
 
 const createStore = () =>

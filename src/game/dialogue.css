@@ -15,35 +15,87 @@
     pointer-events: auto;
 }
 
+/* Same look as the in-world character dialogue (.song-prompt / .song-yes): dark translucent
+   panel, near-white text, 2px primary border — no texture or brushy edge. The full line is
+   laid out underneath the reveal so the box never grows. */
 .dialogue-bubble {
-    max-width: var(--blot-bubble-width, 480px);
-    min-width: 300px;
+    box-sizing: border-box;
+    max-width: var(--dlg-width, 460px);
+    padding: 18px 26px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 14px;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
     animation: dialogue-pop 0.3s ease-out;
 }
 
 .dialogue-text {
+    /* font-family intentionally inherits — pick the dialogue font here later. */
     margin: 0;
-    font-size: var(--blot-text-size, 20px);
+    font-size: 18px;
     line-height: 1.5;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-align: center;
     cursor: pointer;
-    min-height: 3em;
 }
 
-.dialogue-caret {
+/* Each word fades + rises into place on a stagger (delay/duration set inline per word).
+   fill-mode: both → a word stays invisible until its delay elapses, so nothing reflows. */
+.dialogue-word {
     display: inline-block;
-    width: 8px;
-    height: 1.05em;
-    margin-left: 2px;
-    vertical-align: text-bottom;
-    background: currentColor;
-    animation: dialogue-blink 0.7s steps(1) infinite;
+    opacity: 0;
+    will-change: opacity, transform;
+    animation-name: dialogue-word-in;
+    animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+    animation-fill-mode: both;
 }
 
+/* Click-to-skip: show the whole line at once. */
+.dialogue-text--instant .dialogue-word {
+    animation: none;
+    opacity: 1;
+    transform: none;
+}
+
+/* Matches the in-world "Yes" button (.song-yes). */
 .dialogue-start {
-    font-size: 18px;
-    animation: dialogue-pop 0.25s ease-out;
+    /* font-family inherits — same as the bubble text. */
+    padding: 8px 28px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 10px;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-size: 16px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: opacity 0.25s ease-out, background 0.12s, transform 0.12s;
+}
+
+/* Reserved but not yet revealed: it still occupies its slot (so the bubble never moves),
+   it just fades in once the line finishes. */
+.dialogue-start.dialogue-start--pending {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.dialogue-start:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.dialogue-start:active {
+    background: var(--sj-ui-panel-active);
+    transform: scale(0.96);
+}
+
+@keyframes dialogue-word-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.35em);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes dialogue-pop {
@@ -54,11 +106,5 @@
     to {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-
-@keyframes dialogue-blink {
-    50% {
-        opacity: 0;
     }
 }

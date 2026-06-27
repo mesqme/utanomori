@@ -136,8 +136,8 @@ const painteryStyle = {
         edgeSoftness: 3.26,
         edgeNoiseScale: 0.39,
         edgeNoiseStrength: 0,
-        innerBrightness: 1.1,
-        outerDarkness: 0.3,
+        innerBrightness: 0.47,
+        outerDarkness: 0.44,
     },
     borderParameters: {
         fadeMode: 'Paintery',
@@ -266,6 +266,9 @@ const painteryStyle = {
         textureScale: 600,
         fillColor: '#fef4ef',
         textColor: '#26285a',
+        // Dialogue word-by-word reveal (the clean DOM bubble — no Blot texture/edge).
+        wordStagger: 90, // ms between each word fading in
+        wordFade: 420, // ms each word takes to fade + rise into place
     },
     seeThroughParameters: {
         enabled: true,

@@ -559,6 +559,8 @@ export default function Controls() {
         textureScale: { value: gameUiParameters.textureScale, min: 20, max: 600, step: 5, onChange: setParam('gameUiParameters', 'textureScale') },
         fillColor: { value: gameUiParameters.fillColor, onChange: setParam('gameUiParameters', 'fillColor') },
         textColor: { value: gameUiParameters.textColor, onChange: setParam('gameUiParameters', 'textColor') },
+        wordStagger: { value: gameUiParameters.wordStagger, min: 0, max: 300, step: 5, onChange: setParam('gameUiParameters', 'wordStagger') },
+        wordFade: { value: gameUiParameters.wordFade, min: 80, max: 1200, step: 10, onChange: setParam('gameUiParameters', 'wordFade') },
     })
 
     useControls('See-Through', {

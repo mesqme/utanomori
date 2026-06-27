@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
-import Blot from './Blot.jsx'
 import { CREDITS_LINES, CREDITS_SCROLL_DURATION } from './gameConfig.js'
 import './credits.css'
 
@@ -37,13 +36,13 @@ export default function Credits() {
 
             {done && (
                 <div className="credits-choice">
-                    <Blot as="button" variant="button" className="credits-button" onClick={() => setPhase(PHASES.start)}>
+                    <button className="credits-button" onClick={() => setPhase(PHASES.start)}>
                         Continue
-                    </Blot>
+                    </button>
                     <div className="credits-choice-title">{CREDITS_LINES[0]}</div>
-                    <Blot as="button" variant="button" className="credits-button" onClick={() => setPhase(PHASES.warmup)}>
+                    <button className="credits-button" onClick={() => setPhase(PHASES.warmup)}>
                         Restart
-                    </Blot>
+                    </button>
                 </div>
             )}
         </div>

@@ -63,8 +63,27 @@
     pointer-events: none;
 }
 
+/* Same theme button as Start / the in-world "Yes" (.song-yes), sized up for the end screen. */
 .credits-button {
+    /* font-family inherits. */
+    padding: 12px 40px;
+    border: 2px solid var(--sj-ui-primary);
+    border-radius: 12px;
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
     font-size: 20px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.12s;
+}
+
+.credits-button:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.credits-button:active {
+    background: var(--sj-ui-panel-active);
+    transform: scale(0.96);
 }
 
 @keyframes credits-roll {
