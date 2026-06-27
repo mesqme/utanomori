@@ -6,6 +6,24 @@
     overflow: hidden;
 }
 
+/* Restart pressed → the credits + buttons fade away as the cinematic teardown begins. */
+.credits-overlay--restarting {
+    animation: credits-fade-out 0.5s ease-out forwards;
+}
+
+.credits-overlay--restarting .credits-choice > * {
+    pointer-events: none;
+}
+
+@keyframes credits-fade-out {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 .credits-scroll {
     position: absolute;
     left: 0;

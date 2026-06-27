@@ -199,8 +199,15 @@ export default function MainCharacter() {
     }, [subscribeKeys, setPhase, handleReset])
 
     useEffect(() => {
-        // Keep the hero where he is during credits (he runs on); reset for menu phases.
-        if (phase !== PHASES.start && phase !== PHASES.credits) {
+        // Keep the hero where he is during credits (he runs on) AND through the restart teardown +
+        // curtain (he glides to a stop in place; the snap to origin happens at warmup, hidden behind
+        // the loading cover); reset only for the true menu phases.
+        if (
+            phase !== PHASES.start &&
+            phase !== PHASES.credits &&
+            phase !== PHASES.restarting &&
+            phase !== PHASES.resettling
+        ) {
             resetPosition()
         }
     }, [phase, resetPosition])
@@ -274,6 +281,11 @@ export default function MainCharacter() {
             velocity.x = THREE.MathUtils.damp(velocity.x, moveInput.x, ACCELERATION, safeDelta)
             velocity.z = THREE.MathUtils.damp(velocity.z, moveInput.z, ACCELERATION, safeDelta)
             wasJumpPressedRef.current = false
+        } else if (phase === PHASES.restarting) {
+            // Cinematic restart: glide to a stop in place as the camera lifts away.
+            velocity.x = THREE.MathUtils.damp(velocity.x, 0, DECELERATION, safeDelta)
+            velocity.z = THREE.MathUtils.damp(velocity.z, 0, DECELERATION, safeDelta)
+            wasJumpPressedRef.current = false
         } else {
             velocity.set(0, 0, 0)
             wasJumpPressedRef.current = false
@@ -328,6 +340,10 @@ export default function MainCharacter() {
             if (movingNow) {
                 const targetRotationY = Math.atan2(velocity.x, velocity.z) + characterParameters.rotationOffset
                 modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, targetRotationY, CHARACTER_TURN_SPEED, safeDelta)
+            } else if (phase === PHASES.restarting) {
+                // Smoothly turn back to the initial menu facing as he settles.
+                const menuFacing = Math.atan2(0, 1) + characterParameters.rotationOffset
+                modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, menuFacing, CHARACTER_TURN_SPEED, safeDelta)
             } else if (phase !== PHASES.start) {
                 // Fixed orientation for the WHOLE menu + intro, turned 180° to face +Z (toward
                 // the camera / orbit landing). It's the SAME value in warmup and intro, so it

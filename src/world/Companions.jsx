@@ -30,6 +30,7 @@ const HEADING_DAMP = 9
 const CELEBRATE_DURATION = 2.5 // happy hop before joining the party
 const FLEE_DURATION = 1.4 // running away before relocating after a failed song
 const FLEE_SPEED = 9
+const RESTART_FLEE_SPEED = 6.5 // companions scatter off-terrain during the cinematic restart (gentle)
 
 function dampAngle(current, target, lambda, delta) {
     const difference = Math.atan2(Math.sin(target - current), Math.cos(target - current))
@@ -134,6 +135,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
     const initializedRef = useRef(false)
     const sample = useMemo(() => ({}), [])
     const slot = TRAMPLE_SLOT_FOLLOWER + index
+    const fleeStateRef = useRef(null)
 
     useEffect(() => () => clearTrampler(slot), [slot])
 
@@ -142,6 +144,39 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
         if (!group) return
 
         const safeDelta = Math.min(delta, 0.1)
+
+        // Cinematic restart: scatter outward (each in its own fanned direction) off the terrain.
+        // Keep fleeing through the brief 'resettling' curtain so they don't snap back to the trail.
+        const phaseNow = usePhases.getState().phase
+        if (phaseNow === PHASES.restarting || phaseNow === PHASES.resettling) {
+            group.visible = true
+            let flee = fleeStateRef.current
+            if (!flee) {
+                const start = positionRef.current
+                const hero = useStore.getState().ballPosition
+                let dx = start.x - hero.x
+                let dz = start.z - hero.z
+                let len = Math.hypot(dx, dz)
+                if (len < 0.001) {
+                    dx = 0
+                    dz = -1
+                    len = 1
+                }
+                const angle = Math.atan2(dx / len, dz / len) + (index - (MAX_PARTY - 1) / 2) * 0.9
+                flee = { x: start.x, z: start.z, dx: Math.sin(angle), dz: Math.cos(angle), t: 0 }
+                fleeStateRef.current = flee
+            }
+            flee.t += safeDelta
+            const dist = flee.t * RESTART_FLEE_SPEED
+            const fx = flee.x + flee.dx * dist
+            const fz = flee.z + flee.dz * dist
+            group.position.set(fx, getGroundY(fx, fz), fz)
+            group.rotation.y = Math.atan2(flee.dx, flee.dz)
+            if (creatureRef.current) creatureRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9 + index)) * 0.18
+            return
+        }
+        fleeStateRef.current = null
+
         const result = sampleTrail(FOLLOW_SPACING * (index + 1), sample)
         if (!result) {
             group.visible = false

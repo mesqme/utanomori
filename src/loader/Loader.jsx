@@ -1,6 +1,5 @@
 import { useProgress } from '@react-three/drei'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { gsap } from 'gsap'
 
 import usePhases, { PHASES } from '../stores/usePhases'
 import useStore from '../stores/useStore'
@@ -15,6 +14,8 @@ import './loader.css'
 const RING_COLOR = soundJourneyPalette.uiPrimary
 const RING_TRACK_COLOR = soundJourneyPalette.uiRingTrack
 const EXIT_HOLD_MS = 700 // covers the fade-out before the loader unmounts
+const CURTAIN_IN_MS = 600 // restart: let the loading cover fade fully in before snapping to origin
+const MIN_LOAD_TIME = 3 // seconds — the loader always fills smoothly for at least this long
 
 export default function Loader() {
     const { active, progress } = useProgress()
@@ -29,29 +30,36 @@ export default function Loader() {
     const [hovered, setHovered] = useState(false)
 
     const lastPctRef = useRef(0)
-    const displayedRef = useRef({ value: 0 })
+    const progressRef = useRef(0)
+    const activeRef = useRef(true)
+    progressRef.current = progress
+    activeRef.current = active
 
-    // Calculate target progress
-    const target = useMemo(() => {
-        const clamped = Math.min(100, Math.max(0, progress))
-        return active ? Math.max(1, clamped) : clamped
-    }, [active, progress])
-
-    // Animate displayed value toward target using GSAP
+    // Fill the loader SMOOTHLY: paced so it always plays for at least MIN_LOAD_TIME (even when the
+    // assets are already cached), never runs ahead of the real progress, and eases between values
+    // instead of snapping straight to each new number.
     useEffect(() => {
-        displayedRef.current.value = displayed
-
-        const animation = gsap.to(displayedRef.current, {
-            value: target,
-            duration: 0.3,
-            ease: 'power1.out',
-            onUpdate: () => {
-                setDisplayed(displayedRef.current.value)
-            },
-        })
-
-        return () => animation.kill()
-    }, [target]) // eslint-disable-line react-hooks/exhaustive-deps
+        if (phase !== PHASES.loading) return undefined
+        let raf = 0
+        let shown = 0
+        const start = performance.now()
+        let last = start
+        const tick = (now) => {
+            const dt = Math.min(0.05, (now - last) / 1000)
+            last = now
+            const elapsed = (now - start) / 1000
+            const timePace = Math.min(100, (elapsed / MIN_LOAD_TIME) * 100)
+            const realRaw = Math.min(100, Math.max(0, progressRef.current))
+            const real = activeRef.current ? Math.max(1, realRaw) : realRaw
+            const target = Math.min(timePace, real) // honest (≤ real) and never faster than the pace
+            shown += (target - shown) * (1 - Math.exp(-7 * dt)) // ease, no instant jumps
+            if (target >= 100 && shown > 99.5) shown = 100
+            setDisplayed(shown)
+            if (shown < 100) raf = requestAnimationFrame(tick)
+        }
+        raf = requestAnimationFrame(tick)
+        return () => cancelAnimationFrame(raf)
+    }, [phase])
 
     // Calculate percent (monotonic, never decreases)
     const percent = useMemo(() => {
@@ -86,9 +94,18 @@ export default function Loader() {
         return () => window.clearTimeout(timeout)
     }, [isExiting])
 
+    // Restart curtain: once the loading cover has faded in, advance to warmup — the scene snaps
+    // to its origin behind the cover, then the cover lifts and GO fades in.
+    useEffect(() => {
+        if (phase !== PHASES.resettling) return undefined
+        const timeout = window.setTimeout(() => setPhase(PHASES.warmup), CURTAIN_IN_MS)
+        return () => window.clearTimeout(timeout)
+    }, [phase, setPhase])
+
     const showLoading = phase === PHASES.loading
     const showStart = phase === PHASES.warmup
     const showExit = isExiting && phase === PHASES.intro
+    const showSettle = phase === PHASES.resettling // the restart "loading circle" cover
 
     // Tell the 3D world when the GO circle is hovered (only meaningful in warmup), so the
     // terrain reveal-circle grows to preview the scene. Reset whenever we leave warmup.
@@ -99,7 +116,7 @@ export default function Loader() {
         }
     }, [showStart, hovered])
 
-    if (!showLoading && !showStart && !showExit) return null
+    if (!showLoading && !showStart && !showExit && !showSettle) return null
 
     // The unfilled track is fully transparent in warmup/exit (no semi-transparent ring behind
     // the GO — only the live 3D shows).
@@ -115,7 +132,9 @@ export default function Loader() {
 
     return (
         <div
-            className={`loader-wrapper ${showStart ? 'loader-wrapper--warmup' : ''} ${showExit ? 'loader-wrapper--exit' : ''}`}
+            className={`loader-wrapper ${showStart ? 'loader-wrapper--warmup' : ''} ${showExit ? 'loader-wrapper--exit' : ''} ${
+                showSettle ? 'loader-wrapper--settle' : ''
+            }`}
             style={loaderStyle}
         >
             <div className="loader-container">

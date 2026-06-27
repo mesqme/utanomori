@@ -16,6 +16,7 @@ import useGrassMaterial from '../materials/GrassMaterial.jsx'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { loaderInteraction } from '../loader/loaderInteraction.js'
+import { RESTART_DURATION } from '../game/gameConfig.js'
 
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import noiseTextureUrl from '../assets/textures/noiseTexture.png'
@@ -130,6 +131,22 @@ export default function Terrain() {
         radiusAnimationRef.current = tl
     }
 
+    // Cinematic restart: shrink the lit circle back to the tiny pre-start radius as the camera
+    // lifts away (the reverse of runIntroReveal).
+    const runRestartReveal = () => {
+        if (radiusAnimationRef.current) radiusAnimationRef.current.kill()
+        const obj = { value: circleRadiusRef.current }
+        radiusAnimationRef.current = gsap.to(obj, {
+            value: START_CIRCLE_RADIUS,
+            duration: RESTART_DURATION,
+            ease: 'power2.inOut',
+            onUpdate: () => setCircleRadius(obj.value),
+            onComplete: () => {
+                radiusAnimationRef.current = null
+            },
+        })
+    }
+
     useEffect(() => {
         return () => {
             if (radiusAnimationRef.current) {
@@ -145,6 +162,9 @@ export default function Terrain() {
         if (phase === PHASES.intro) {
             // Reveal flows with the camera travel: shrink slightly on the rise, open on the spiral.
             runIntroReveal()
+        } else if (phase === PHASES.restarting) {
+            // Reverse: shrink the lit circle back down as the camera lifts to the top shot.
+            runRestartReveal()
         } else if (phase === PHASES.start || phase === PHASES.credits) {
             // Full circle during gameplay / credits (debug jumps straight here).
             if (!radiusAnimationRef.current) setCircleRadius(borderCircleRadius)

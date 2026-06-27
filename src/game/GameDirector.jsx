@@ -11,6 +11,7 @@ import {
     CAMERA_FOLLOW_ORBIT,
     INTRO_TRAVEL_EASE,
     GAMEPLAY_ENTRY_DURATION,
+    RESTART_DURATION,
 } from './gameConfig.js'
 
 const applyShot = (shot) => {
@@ -88,6 +89,33 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
     introTweenRef.current = timeline
 }
 
+// Cinematic restart: the reverse of the intro travel. Starting from the gameplay/credits follow
+// pose, the camera un-spirals a full turn back UP to the top "hat" shot, orbiting the hero's
+// current position (centre null) so it lifts straight off him. Lands in warmup when done.
+function runRestartTravel({ introTweenRef, loaderCameraHeight }) {
+    if (introTweenRef.current) {
+        introTweenRef.current.kill()
+        introTweenRef.current = null
+    }
+    cameraRig.mode = 'orbit'
+    cameraRig.centerX = null
+    cameraRig.centerZ = null
+    cameraRig.lerpSpeed = 9
+    applyShot(CAMERA_FOLLOW_ORBIT) // start matching the follow view, then lift away
+
+    introTweenRef.current = gsap.to(cameraRig, {
+        angle: CAMERA_FOLLOW_ORBIT.angle - Math.PI * 2, // un-spin 360° (reverse of the intro)
+        distance: CAMERA_TOP_SHOT.distance,
+        height: loaderCameraHeight,
+        targetYOffset: CAMERA_TOP_SHOT.targetYOffset,
+        duration: RESTART_DURATION,
+        ease: INTRO_TRAVEL_EASE,
+        onComplete: () => {
+            introTweenRef.current = null
+        },
+    })
+}
+
 // Orchestrates the game cycle: drives the camera shot per phase, runs the intro travel, and
 // rolls credits once the party is complete. Pure logic (no rendering) — it writes the shared
 // cameraRig and the phase store.
@@ -101,6 +129,7 @@ export default function GameDirector() {
     const setPhase = usePhases((state) => state.setPhase)
     const setCreditsShown = usePhases((state) => state.setCreditsShown)
     const introTweenRef = useRef(null)
+    const restartTimerRef = useRef(null)
     const prevPhaseRef = useRef(PHASES.loading)
 
     // Camera choreography per phase.
@@ -109,10 +138,16 @@ export default function GameDirector() {
             introTweenRef.current.kill()
             introTweenRef.current = null
         }
+        clearTimeout(restartTimerRef.current)
 
         if (phase === PHASES.loading || phase === PHASES.warmup) {
             cameraRig.mode = 'orbit'
-            cameraRig.lerpSpeed = phase === PHASES.warmup ? 6 : 30
+            // Coming out of the restart curtain ('resettling'), snap instantly to the origin
+            // top-shot — the move is hidden behind the loading cover, so no slow lerp/fly-across.
+            const snapFromRestart = phase === PHASES.warmup && prevPhaseRef.current === PHASES.resettling
+            cameraRig.lerpSpeed = snapFromRestart ? 100 : phase === PHASES.warmup ? 6 : 30
+            cameraRig.centerX = null
+            cameraRig.centerZ = null
             applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
         } else if (phase === PHASES.intro) {
             runIntroTravel({
@@ -149,7 +184,14 @@ export default function GameDirector() {
         } else if (phase === PHASES.credits) {
             cameraRig.mode = 'follow'
             cameraRig.lerpSpeed = 2.5
+        } else if (phase === PHASES.restarting) {
+            // Cinematic teardown (camera up + fades), then raise the loading curtain ('resettling')
+            // which masks the instant snap back to origin before warmup.
+            runRestartTravel({ introTweenRef, loaderCameraHeight })
+            restartTimerRef.current = setTimeout(() => setPhase(PHASES.resettling), RESTART_DURATION * 1000)
         }
+        // 'resettling' leaves the camera parked at the top shot over the hero; the Loader curtain
+        // fades in, then advances to warmup (which snaps everything to the origin behind it).
 
         prevPhaseRef.current = phase
 
@@ -158,8 +200,9 @@ export default function GameDirector() {
                 introTweenRef.current.kill()
                 introTweenRef.current = null
             }
+            clearTimeout(restartTimerRef.current)
         }
-    }, [phase, loaderCameraHeight])
+    }, [phase, loaderCameraHeight, setPhase])
 
     // "Redo the animation" (Leva) → replay the intro travel live from the current state.
     useEffect(() => {

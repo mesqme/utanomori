@@ -53,3 +53,7 @@ export const CREDITS_LINES = [
 ]
 
 export const CREDITS_SCROLL_DURATION = 18 // seconds for the credits to scroll past
+
+// Cinematic restart: the reverse of the intro. Companions flee, the camera un-spirals up to the
+// top "hat" shot, the reveal shrinks, and the background/stars fade — then we land back in warmup.
+export const RESTART_DURATION = 3.2
