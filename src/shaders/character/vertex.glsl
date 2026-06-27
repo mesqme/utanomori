@@ -1,5 +1,6 @@
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
+varying vec3 vInstanceTint;
 
 #include <common>
 #include <uv_pars_vertex>
@@ -20,6 +21,7 @@ void main() {
     #include <skinning_vertex>
 
     vObjectPosition = transformed;
+    vInstanceTint = vec3(1.0); // skinned meshes carry no per-instance tint
 
     #include <project_vertex>
 }

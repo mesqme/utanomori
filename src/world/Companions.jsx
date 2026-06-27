@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useKeyboardControls, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
@@ -7,7 +7,7 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
-import CompanionCreature from './CompanionCreature.jsx'
+import SheepCreature from './SheepCreature.jsx'
 import CompanionNotes from './CompanionNotes.jsx'
 import CharacterFeedback from './CharacterFeedback.jsx'
 import TargetArrow from './TargetArrow.jsx'
@@ -24,12 +24,12 @@ import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
-const FOLLOW_SPACING = 1.5
 const FOLLOW_DAMP = 10
 const HEADING_DAMP = 9
 const CELEBRATE_DURATION = 2.5 // happy hop before joining the party
 const FLEE_DURATION = 1.4 // running away before relocating after a failed song
 const FLEE_SPEED = 9
+const MOVE_THRESHOLD = 0.5 // follower speed (u/s) above which the sheep plays its run animation
 const RESTART_FLEE_SPEED = 6.5 // companions scatter off-terrain during the cinematic restart (gentle)
 
 function dampAngle(current, target, lambda, delta) {
@@ -41,8 +41,9 @@ function dampAngle(current, target, lambda, delta) {
 // sitting next to the one you just collected — you follow the arrow out to find it.
 function findHiddenSpawn(player) {
     const revealRadius = getRevealRadius()
-    const minDistance = Math.max(10, revealRadius * 1.35)
-    const maxDistance = Math.max(minDistance + 5, revealRadius * 2.1)
+    // 50% farther than the original 10 / ×1.35 / ×2.1 — a longer walk to each music character.
+    const minDistance = Math.max(15, revealRadius * 2.025)
+    const maxDistance = Math.max(minDistance + 7.5, revealRadius * 3.15)
     const angle = Math.random() * Math.PI * 2
     const distance = minDistance + Math.random() * (maxDistance - minDistance)
     return { x: player.x + Math.cos(angle) * distance, z: player.z + Math.sin(angle) * distance }
@@ -118,7 +119,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
         <group ref={groupRef}>
             <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(target.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
-                <CompanionCreature definition={target} material={creatureMaterial} />
+                <SheepCreature definition={target} moving={stage === 'flee'} />
             </group>
             <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} isTarget />
             <CharacterFeedback headY={(target.scale ?? 0.5) + 1.1} />
@@ -136,6 +137,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
     const sample = useMemo(() => ({}), [])
     const slot = TRAMPLE_SLOT_FOLLOWER + index
     const fleeStateRef = useRef(null)
+    const [moving, setMoving] = useState(false)
 
     useEffect(() => () => clearTrampler(slot), [slot])
 
@@ -173,13 +175,18 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
             group.position.set(fx, getGroundY(fx, fz), fz)
             group.rotation.y = Math.atan2(flee.dx, flee.dz)
             if (creatureRef.current) creatureRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9 + index)) * 0.18
+            setMoving((current) => (current ? current : true))
             return
         }
         fleeStateRef.current = null
 
-        const result = sampleTrail(FOLLOW_SPACING * (index + 1), sample)
+        // Follow line: the first companion trails the hero by `followLead`, each next one by an
+        // extra `followGap` (both tunable in the Sheep Leva folder).
+        const follow = useStore.getState().sheepParameters
+        const result = sampleTrail(follow.followLead + index * follow.followGap, sample)
         if (!result) {
             group.visible = false
+            setMoving((current) => (current ? false : current))
             return
         }
         group.visible = true
@@ -198,6 +205,8 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
 
         const speed = position.distanceTo(previousRef.current) / safeDelta
         previousRef.current.copy(position)
+        const movingNow = speed > MOVE_THRESHOLD
+        setMoving((current) => (current === movingNow ? current : movingNow))
 
         // Group sits on the ground; jump arc + bob live on the inner creature so the
         // shadow stays planted and the trampler reports the ground position.
@@ -223,7 +232,7 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
         <group ref={groupRef}>
             <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(definition.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
-                <CompanionCreature definition={definition} material={creatureMaterial} />
+                <SheepCreature definition={definition} moving={moving} />
             </group>
             <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} />
         </group>

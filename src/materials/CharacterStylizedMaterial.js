@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import characterVertexShader from '../shaders/character/vertex.glsl'
+import characterInstancedVertexShader from '../shaders/character/instancedVertex.glsl'
 import characterFragmentShader from '../shaders/character/fragment.glsl'
 import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
 
@@ -11,13 +12,16 @@ function getSettings(settings) {
     }
 }
 
-export function createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture) {
+// options: { instanced } → use the InstancedMesh vertex (the sheep scales); { transparent } →
+// honour the per-frame uFade reveal-edge fade (companions). The hero passes neither, so it keeps
+// the skinned vertex, stays opaque, and leaves uFade = 0 (the fade is a no-op).
+export function createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture, options = {}) {
     const settings = getSettings(stylizedSettings)
     const fallbackColor = sourceMaterial?.color?.getStyle?.() ?? '#ffffff'
 
     const material = new THREE.ShaderMaterial({
         name: `stylized_${sourceMaterial?.name || 'material'}`,
-        vertexShader: characterVertexShader,
+        vertexShader: options.instanced ? characterInstancedVertexShader : characterVertexShader,
         fragmentShader: characterFragmentShader,
         uniforms: {
             uBaseColor: { value: new THREE.Color(materialSettings?.baseColor ?? fallbackColor) },
@@ -29,8 +33,12 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
             uPainterlyColor: { value: new THREE.Color(settings.painterlyColor) },
             uPainterlyColorStrength: { value: settings.painterlyColorStrength },
             uPainterlyBrightnessVariation: { value: settings.painterlyBrightnessVariation },
+            uFade: { value: 0 },
+            uBackgroundColor: { value: new THREE.Color(options.backgroundColor ?? '#000000') },
         },
-        transparent: sourceMaterial?.transparent ?? false,
+        transparent: options.transparent ?? sourceMaterial?.transparent ?? false,
+        // The companion is opaque-looking until it fades; keep depth writes so its own parts sort.
+        depthWrite: options.transparent ? true : undefined,
         opacity: sourceMaterial?.opacity ?? 1,
         alphaTest: sourceMaterial?.alphaTest ?? 0,
         toneMapped: false,

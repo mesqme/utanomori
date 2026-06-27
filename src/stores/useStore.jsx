@@ -2,6 +2,18 @@ import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import * as THREE from 'three'
 import { cloneSceneStyleSection, defaultSceneStyle } from '../config/sceneStyles.js'
+import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
+import { sheepCharacterDefaults } from '../config/sheepMaterials.js'
+
+// { piano: { orange:{baseColor}, white:{baseColor}, brown:{baseColor} }, drums:{…}, winds:{…} }
+function cloneSheepCharacters() {
+    return Object.fromEntries(
+        Object.entries(sheepCharacterDefaults).map(([music, mats]) => [
+            music,
+            Object.fromEntries(Object.entries(mats).map(([id, color]) => [id, { baseColor: color }])),
+        ])
+    )
+}
 
 const GRASS_STYLE_VERSION = 19
 const CHARACTER_STYLIZED_VERSION = 4
@@ -187,6 +199,30 @@ const DEFAULT_MUSIC_PARAMETERS = {
     volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
+// The sheep music companion: animation pacing, world scale, and the scales' jump-driven twist.
+const DEFAULT_SHEEP_PARAMETERS = {
+    modelScale: 0.65, // world scale of the glb (× the per-companion definition.scale)
+    modelYaw: 90, // degrees — correct the model's facing (it exported 90° off)
+    yOffset: 0, // lift off the ground if the model sinks
+    idleTimeScale: 1,
+    runTimeScale: 1,
+    runBlendInSpeed: 8, // idle→run crossfade speed when it starts moving
+    runBlendOutSpeed: 6, // run→idle crossfade speed when it stops
+    swayAxis: 'Z', // local axis the scales twist around (Blender Y often maps to three's Z)
+    swayGain: 6, // motion-bone bounce → scale twist (radians per world unit of vertical move)
+    swayDamp: 1.5, // how quickly the twist follows the bounce (lower = more lag/inertia)
+    swayMax: 0.15, // clamp on the twist angle (radians)
+    scaleColorVariation: 0.12, // slight per-scale colour jitter (0 = all scales the same colour)
+    followLead: 2.4, // trail distance from the hero to the FIRST collected companion
+    followGap: 1.7, // trail distance between consecutive collected companions
+}
+
+// Sheep stylized material: the hero's painterly settings + per-companion base colours.
+const DEFAULT_SHEEP_MATERIAL_PARAMETERS = {
+    ...characterStylizedDefaults,
+    characters: cloneSheepCharacters(),
+}
+
 // One-time stylization baked into the paintery brush texture (blur + levels +
 // contrast + posterize) so its small details merge into larger painterly regions,
 // replacing the per-frame Kuwahara abstraction.
@@ -310,6 +346,8 @@ const createStore = () =>
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
             musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS },
             musicParameters: { ...DEFAULT_MUSIC_PARAMETERS },
+            sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS },
+            sheepMaterialParameters: { ...DEFAULT_SHEEP_MATERIAL_PARAMETERS, characters: cloneSheepCharacters() },
 
             /**
              * Paintery brush texture stylization (baked once)
@@ -446,6 +484,12 @@ if (import.meta?.hot) {
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
         musicParameters: { ...DEFAULT_MUSIC_PARAMETERS, ...state.musicParameters },
+        sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS, ...state.sheepParameters },
+        sheepMaterialParameters: {
+            ...DEFAULT_SHEEP_MATERIAL_PARAMETERS,
+            ...state.sheepMaterialParameters,
+            characters: { ...cloneSheepCharacters(), ...state.sheepMaterialParameters?.characters },
+        },
         painteryTextureParameters: { ...DEFAULT_PAINTERY_TEXTURE_PARAMETERS, ...state.painteryTextureParameters },
         edgeParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.edgeParameters } : { ...defaultSceneStyle.edgeParameters, ...state.edgeParameters },
         propRimParameters: applyObjectStyleDefaults ? { ...defaultSceneStyle.propRimParameters } : { ...defaultSceneStyle.propRimParameters, ...state.propRimParameters },

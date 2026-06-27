@@ -7,9 +7,13 @@ uniform float uPainterlyContrast;
 uniform vec3 uPainterlyColor;
 uniform float uPainterlyColorStrength;
 uniform float uPainterlyBrightnessVariation;
+// Reveal-edge fade (companions only; the hero leaves uFade = 0 so this is a no-op for it).
+uniform float uFade;
+uniform vec3 uBackgroundColor;
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
+varying vec3 vInstanceTint; // per-instance colour jitter (sheep scales); vec3(1) everywhere else
 
 float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
     vec3 blendWeights = pow(abs(normalDirection), vec3(4.0));
@@ -24,7 +28,7 @@ float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
 
 void main() {
     float painterlyValue = 0.5;
-    vec3 finalColor = uBaseColor;
+    vec3 finalColor = uBaseColor * vInstanceTint;
     if (uPainterlyEnabled == 1) {
         painterlyValue = samplePainterlyTexture(vObjectPosition * uPainterlyScale, normalize(vObjectNormal));
         painterlyValue = clamp((painterlyValue - 0.5) * uPainterlyContrast + 0.5, 0.0, 1.0);
@@ -40,7 +44,9 @@ void main() {
         finalColor = vec3(painterlyValue);
     }
 
-    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+    // Fade to the background as the creature leaves the lit reveal circle (uFade 0→1).
+    finalColor = mix(finalColor, uBackgroundColor, uFade);
+    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0 - uFade);
 
     #include <colorspace_fragment>
 }
