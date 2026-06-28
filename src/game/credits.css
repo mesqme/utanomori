@@ -81,16 +81,18 @@
     pointer-events: none;
 }
 
-/* Same theme button as Start / the in-world "Yes" (.song-yes), sized up for the end screen. */
+/* Exactly the Start button's font (the speech-bubble .dialogue-start: inherited Bebas, normal
+   weight, 0.04em tracking), just a larger CTA size for the end screen. */
 .credits-button {
-    /* font-family inherits. */
+    font-family: inherit;
     padding: 12px 40px;
     border: 2px solid var(--sj-ui-primary);
     border-radius: 12px;
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
     font-size: 20px;
-    letter-spacing: 0.1em;
+    font-weight: normal;
+    letter-spacing: 0.04em;
     cursor: pointer;
     transition: background 0.12s, transform 0.12s;
 }

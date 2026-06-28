@@ -246,6 +246,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.mushroomYOffset,
         objectParameters.mushroomCapColor,
         objectParameters.mushroomLegColor,
+        objectParameters.colorVariation,
     ].join('|')
     const roadGenerationKey = [
         roadParameters.enabled,
@@ -296,6 +297,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             const stoneTintObj = new THREE.Color(objectParameters.stoneTint ?? '#ffffff')
             const mushroomCapObj = new THREE.Color(objectParameters.mushroomCapColor ?? '#c4452f')
             const mushroomLegObj = new THREE.Color(objectParameters.mushroomLegColor ?? '#ecdcc4')
+            const colorVariation = objectParameters.colorVariation ?? 0
 
             for (const chunk of activeChunks) {
                 if (chunkInstances.has(chunk.key)) continue
@@ -344,6 +346,14 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                                 color.copy(pool.prototypeColors[prototypeId] ?? WHITE)
                             }
                             color.multiplyScalar(instance.colorTone)
+                            // Slight per-instance per-channel tint variation on stones + mushrooms
+                            // (like the sheep scales). Trees keep their flat foliage colour.
+                            if ((isStone || isMushroom) && colorVariation > 0 && instance.colorJitter) {
+                                const j = instance.colorJitter
+                                color.r *= THREE.MathUtils.clamp(1 + j[0] * colorVariation, 0.25, 1.75)
+                                color.g *= THREE.MathUtils.clamp(1 + j[1] * colorVariation, 0.25, 1.75)
+                                color.b *= THREE.MathUtils.clamp(1 + j[2] * colorVariation, 0.25, 1.75)
+                            }
                             const instanceId = pool.addInstance(prototypeId, dummy.matrix, color)
                             if (instanceId !== -1) {
                                 ids.push(instanceId)

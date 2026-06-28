@@ -20,7 +20,7 @@ const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
-const OBJECT_STYLE_VERSION = 6
+const OBJECT_STYLE_VERSION = 8
 const LOADER_DEBUG_VERSION = 6
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
@@ -120,12 +120,13 @@ const DEFAULT_SONG_GAME_PARAMETERS = {
     songVolume: 0.12, // base loudness of a companion's looping song
     hearNear: 4, // distance (world units) at which a song is at full volume
     hearFar: 28, // distance at which it fades to silence
-    // Floating notes above a singing head (and the in-game listen bubbles)
-    noteSize: 56, // px diameter of a note as it emerges
-    noteRise: 90, // px it floats upward over its life
-    noteDuration: 1.5, // seconds each note lives
-    noteGrow: 1.8, // final scale multiplier before it fades
-    noteWobble: 14, // px of side-to-side sine sway while rising
+    // Floating notes above a singing head — now the 3D models from notes.glb (CompanionNotes).
+    noteDuration: 1.75, // seconds each note lives
+    noteGrow: 1.45, // final scale multiplier before it fades
+    noteScale: 0.19, // base world size of a note
+    noteRiseWorld: 1.45, // world units it floats upward over its life
+    noteWobbleWorld: 0.77, // world units of side-to-side sway + initial spread
+    noteColor: '#99e386', // fallback note tint (each companion's notes use its own body colour)
 }
 
 // 3D music stones (song mini-game): seven coloured stones that rise around the companion,
@@ -204,9 +205,9 @@ const DEFAULT_SHEEP_PARAMETERS = {
     runBlendInSpeed: 8, // idle→run crossfade speed when it starts moving
     runBlendOutSpeed: 6, // run→idle crossfade speed when it stops
     swayAxis: 'Z', // local axis the scales twist around (Blender Y often maps to three's Z)
-    swayGain: 6, // motion-bone bounce → scale twist (radians per world unit of vertical move)
+    swayGain: 10, // motion-bone bounce → scale twist (radians per world unit of vertical move)
     swayDamp: 1.5, // how quickly the twist follows the bounce (lower = more lag/inertia)
-    swayMax: 0.15, // clamp on the twist angle (radians)
+    swayMax: 0.45, // clamp on the twist angle (radians)
     scaleColorVariation: 0.12, // slight per-scale colour jitter (0 = all scales the same colour)
     followLead: 2.4, // trail distance from the hero to the FIRST collected companion
     followGap: 1.7, // trail distance between consecutive collected companions

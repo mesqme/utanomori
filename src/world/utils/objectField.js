@@ -220,7 +220,16 @@ function buildRawCellGroup(cellX, cellZ, settings) {
             normal: socket.normal ?? [0, 1, 0],
         }))
 
-        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, grassRadius, solidRadius, colorTone, sockets })
+        // Per-instance colour jitter (hash-based so it never shifts the placement rng) — a subtle
+        // per-CHANNEL tint variation on stones / mushrooms, like the sheep scales' colour offsets.
+        const ji = instances.length
+        const colorJitter = [
+            hash01(cellX * 131 + ji, cellZ, settings.worldSeed ^ 0x2c1b3a7d) * 2 - 1,
+            hash01(cellX * 131 + ji, cellZ, settings.worldSeed ^ 0x4e9f1d11) * 2 - 1,
+            hash01(cellX * 131 + ji, cellZ, settings.worldSeed ^ 0x51aa3319) * 2 - 1,
+        ]
+
+        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, grassRadius, solidRadius, colorTone, colorJitter, sockets })
     }
 
     if (instances.length === 0) return null

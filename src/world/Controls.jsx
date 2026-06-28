@@ -100,6 +100,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
         mushroomYOffset: 'mushroomYOffset',
         mushroomCapColor: 'mushroomCapColor',
         mushroomLegColor: 'mushroomLegColor',
+        colorVariation: 'colorVariation',
         mushroomGrassRadius: 'mushroomGrassRadius',
         mushroomGrassFade: 'mushroomGrassFade',
         mushroomGrassLean: 'mushroomGrassLean',
@@ -1219,6 +1220,7 @@ export default function Controls() {
         mushroomYOffset: { value: objectParameters.mushroomYOffset, min: -1, max: 2, step: 0.05, onChange: setParam('objectParameters', 'mushroomYOffset') },
         mushroomCapColor: { value: objectParameters.mushroomCapColor, onChange: setParam('objectParameters', 'mushroomCapColor') },
         mushroomLegColor: { value: objectParameters.mushroomLegColor, onChange: setParam('objectParameters', 'mushroomLegColor') },
+        colorVariation: { value: objectParameters.colorVariation, min: 0, max: 0.6, step: 0.01, onChange: setParam('objectParameters', 'colorVariation') },
         mushroomGrassRadius: { value: objectParameters.mushroomGrassRadius, min: 0.1, max: 4, step: 0.05, onChange: setParam('objectParameters', 'mushroomGrassRadius') },
         mushroomGrassFade: { value: objectParameters.mushroomGrassFade, min: 0, max: 5, step: 0.05, onChange: setParam('objectParameters', 'mushroomGrassFade') },
         mushroomGrassLean: { value: objectParameters.mushroomGrassLean, min: 0, max: 2, step: 0.05, onChange: setParam('objectParameters', 'mushroomGrassLean') },
@@ -1903,11 +1905,12 @@ export default function Controls() {
         songVolume: { value: songGameParameters.songVolume, min: 0, max: 0.5, step: 0.01, onChange: setParam('songGameParameters', 'songVolume') },
         hearNear: { value: songGameParameters.hearNear, min: 0, max: 20, step: 0.5, onChange: setParam('songGameParameters', 'hearNear') },
         hearFar: { value: songGameParameters.hearFar, min: 4, max: 80, step: 1, onChange: setParam('songGameParameters', 'hearFar') },
-        noteSize: { value: songGameParameters.noteSize, min: 16, max: 140, step: 1, onChange: setParam('songGameParameters', 'noteSize') },
-        noteRise: { value: songGameParameters.noteRise, min: 0, max: 260, step: 2, onChange: setParam('songGameParameters', 'noteRise') },
         noteDuration: { value: songGameParameters.noteDuration, min: 0.4, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteDuration') },
         noteGrow: { value: songGameParameters.noteGrow, min: 0.5, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteGrow') },
-        noteWobble: { value: songGameParameters.noteWobble, min: 0, max: 60, step: 1, onChange: setParam('songGameParameters', 'noteWobble') },
+        noteScale: { value: songGameParameters.noteScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'noteScale') },
+        noteRiseWorld: { value: songGameParameters.noteRiseWorld, min: 0, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteRiseWorld') },
+        noteWobbleWorld: { value: songGameParameters.noteWobbleWorld, min: 0, max: 1.5, step: 0.01, onChange: setParam('songGameParameters', 'noteWobbleWorld') },
+        noteColor: { value: songGameParameters.noteColor, onChange: setParam('songGameParameters', 'noteColor') },
     })
 
     useControls('Painterly Postprocess', {

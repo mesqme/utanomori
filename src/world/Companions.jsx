@@ -139,7 +139,7 @@ function TargetCreature({ target, creatureMaterial }) {
             <group ref={creatureRef}>
                 <SheepCreature definition={target} moving={stage === 'flee'} />
             </group>
-            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} isTarget />
+            <CompanionNotes headY={(target.scale ?? 0.5) + 0.6} isTarget music={target.music} />
             <CharacterFeedback headY={(target.scale ?? 0.5) + 1.1} />
         </group>
     )
@@ -258,7 +258,7 @@ function Follower({ definition, index, creatureMaterial }) {
             <group ref={creatureRef}>
                 <SheepCreature definition={definition} moving={moving} />
             </group>
-            <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} />
+            <CompanionNotes headY={(definition.scale ?? 0.5) + 0.6} music={definition.music} />
         </group>
     )
 }
