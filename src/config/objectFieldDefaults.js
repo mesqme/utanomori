@@ -132,7 +132,7 @@ export const objectFieldDefaults = Object.freeze({
     minObjectSpacing: 0.75,
     treeSize: 0.65, // mean tree scale
     treeYOffset: 0, // lift/sink trees relative to the ground
-    treeColor: '#7257c3', // tree bush (foliage) colour
+    treeColor: '#575ac2', // tree bush (foliage) colour
     treeTrunkColor: '#877fb9', // tree trunk colour
     stoneSize: 0.55, // global stone scale (the GLB models are authored near final size)
     stoneYOffset: -0.3, // lift/sink stones relative to the ground
@@ -153,8 +153,8 @@ export const objectFieldDefaults = Object.freeze({
     mushroomWiggleDecay: 3, // how fast the wiggle fades (higher = quicker settle)
     // Tree wind (vertex-shader bend; trees only). Direction reuses windParameters.direction (shared
     // with the grass). The motion is a sin sway whose amplitude is gust-modulated (non-sin/abrupt).
-    treeWindStrength: 0.003, // bend amount (× height², so small values; tune on the fine slider)
-    treeWindSpeed: 1.35, // sway speed
-    treeWindGust: 0.6, // 0 = steady sin sway, 1 = strong gusty / abrupt amplitude swings
+    treeWindStrength: 0.01, // bend amount (× height², so small values; tune on the fine slider)
+    treeWindSpeed: 0.65, // sway speed
+    treeWindGust: 1.0, // 0 = steady sin sway, 1 = strong gusty / abrupt amplitude swings
     debugAnchors: false,
 })

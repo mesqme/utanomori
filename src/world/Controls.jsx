@@ -344,6 +344,7 @@ function addLevaSectionValues(values, folder, section, paths) {
 
 function addSeeThroughValues(values) {
     values['See-Through.enabled'] = seeThrough.enabled
+    values['See-Through.grassEnabled'] = seeThrough.grassEnabled
     values['See-Through.worldRadius'] = seeThrough.worldRadius
     values['See-Through.inner'] = seeThrough.inner
     values['See-Through.depthBias'] = seeThrough.depthBias
@@ -607,6 +608,12 @@ export default function Controls() {
                 if (!context?.initial) seeThrough.enabled = value
             },
         },
+        grassEnabled: {
+            value: seeThrough.grassEnabled,
+            onChange: (value, _, context) => {
+                if (!context?.initial) seeThrough.grassEnabled = value
+            },
+        },
         worldRadius: {
             value: seeThrough.worldRadius,
             min: 0.4,
@@ -764,7 +771,8 @@ export default function Controls() {
         scaleColorVariation: { value: sheepParameters.scaleColorVariation, min: 0, max: 0.6, step: 0.01, onChange: setParam('sheepParameters', 'scaleColorVariation') },
         followLead: { value: sheepParameters.followLead, min: 0.5, max: 8, step: 0.1, onChange: setParam('sheepParameters', 'followLead') },
         followGap: { value: sheepParameters.followGap, min: 0.5, max: 8, step: 0.1, onChange: setParam('sheepParameters', 'followGap') },
-        seeThroughRadius: { value: sheepParameters.seeThroughRadius, min: 0.3, max: 5, step: 0.05, onChange: setParam('sheepParameters', 'seeThroughRadius') },
+        // Sheep see-through size is now the SHARED See-Through.worldRadius (common with the hero);
+        // only the per-sheep head-anchor height stays here.
         seeThroughHeight: { value: sheepParameters.seeThroughHeight, min: 0, max: 3, step: 0.05, onChange: setParam('sheepParameters', 'seeThroughHeight') },
         painterlyEnabled: { value: sheepMaterialParameters.painterlyEnabled, onChange: setParam('sheepMaterialParameters', 'painterlyEnabled') },
         painterlyBrightnessVariation: { value: sheepMaterialParameters.painterlyBrightnessVariation, min: 0, max: 1.5, step: 0.02, onChange: setParam('sheepMaterialParameters', 'painterlyBrightnessVariation') },

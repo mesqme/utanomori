@@ -316,7 +316,8 @@ export default function MusicStones() {
             musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
         }
 
-        // See-through: the BOTTOM (lower) stones act like the hero — trees in front of them fade.
+        // See-through: every stone acts like the hero — trees in front of any stone fade, so even
+        // the highest stones stay visible behind tall trees.
         clearMusicStoneSeeThrough()
         if (seeThrough.enabled && p.seeThroughEnabled && staged) {
             state.gl.getDrawingBufferSize(stBuffer)
@@ -324,7 +325,6 @@ export default function MusicStones() {
             for (let i = 0; i < count && musicStoneSeeThrough.count < MAX_STONE_SEE_THROUGH; i++) {
                 const mesh = meshRefs.current[i]
                 if (!mesh || !mesh.visible) continue
-                if (Math.sin(Math.PI * (1 - i / span)) > 0.6) continue // only the lower stones
                 stCenter.copy(mesh.position)
                 const camDist = state.camera.position.distanceTo(stCenter)
                 stEdge.copy(stCenter).addScaledVector(stRight, p.seeThroughRadius)

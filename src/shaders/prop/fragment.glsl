@@ -26,14 +26,14 @@ uniform float uSeeThroughDepthBias;
 uniform float uSeeThroughOpacityIntensity;
 uniform float uSeeThroughTextureContrast;
 uniform float uSeeThroughTextureScale;
-// Extra see-through subjects: the bottom music stones. xy = screen centre px, z = radius px,
+// Extra see-through subjects: the music stones. xy = screen centre px, z = radius px,
 // w = camera depth. Props fade where ANY of these (or the hero) sits behind them.
-#define MAX_STONE_ST 4
+#define MAX_STONE_ST 7
 uniform vec4 uStoneSeeThrough[MAX_STONE_ST];
 uniform int uStoneSeeThroughCount;
 // Extra see-through subjects: the music characters (sheep). Same packing as the stones; inactive
 // slots carry radius 0 (skipped).
-#define MAX_CHAR_ST 4
+#define MAX_CHAR_ST 5
 uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 

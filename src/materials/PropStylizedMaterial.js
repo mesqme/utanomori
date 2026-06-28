@@ -57,11 +57,11 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uSeeThroughOpacityIntensity: { value: 0.7 },
             uSeeThroughTextureContrast: { value: 1.0 },
             uSeeThroughTextureScale: { value: 250 },
-            // Extra see-through subjects: the bottom music stones (see musicStoneSeeThrough).
-            uStoneSeeThrough: { value: new Float32Array(4 * 4) },
+            // Extra see-through subjects: every music stone (see musicStoneSeeThrough).
+            uStoneSeeThrough: { value: new Float32Array(7 * 4) },
             uStoneSeeThroughCount: { value: 0 },
             // Extra see-through subjects: the music characters / sheep (see characterSeeThrough).
-            uCharSeeThrough: { value: new Float32Array(4 * 4) },
+            uCharSeeThrough: { value: new Float32Array(5 * 4) },
             uCharSeeThroughCount: { value: 0 },
             uPropRimEnabled: { value: 1 },
             uPropRimColor: { value: new THREE.Color('#cfc2ff') },

@@ -9,6 +9,8 @@ import TerrainChunk from './TerrainChunk.jsx'
 import ScatteredObjects from './ScatteredObjects.jsx'
 import GrassTrail from './GrassTrail.jsx'
 import { revealCircle } from './utils/revealCircle.js'
+import { seeThrough } from './utils/seeThrough.js'
+import { characterSeeThrough } from './utils/characterSeeThrough.js'
 import { useBakedPainteryTexture } from './utils/useBakedPainteryTexture.js'
 import { getRefScale } from './utils/screenScale.js'
 import useTerrainMaterial from '../materials/TerrainMaterial.jsx'
@@ -205,6 +207,10 @@ export default function Terrain() {
         grassMaterial.uniforms.uTime.value = frameState.clock.elapsedTime
         grassMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         grassMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
+        // Grass see-through (hero + sheep) is the same shared buffer as the props, but it can be
+        // toggled OFF for the grass only (props stay see-through). Off → count 0 skips the loop.
+        grassMaterial.uniforms.uCharSeeThroughCount.value =
+            seeThrough.enabled && seeThrough.grassEnabled ? characterSeeThrough.count : 0
 
         revealCircle.centerX = state.smoothedCircleCenter.x
         revealCircle.centerZ = state.smoothedCircleCenter.z

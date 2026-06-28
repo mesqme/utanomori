@@ -143,10 +143,10 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     scale: 0.55, // normal stone scale (matches the ordinary stoneSize)
     yOffset: 1.25, // base height offset (added on top of hoverHeight)
     hoverHeight: 2.0, // height of the rainbow's low ends above the ground
-    bobAmount: 0.15, // gentle vertical bob amplitude (when floatRotate is off)
-    bobSpeed: 1.2, // bob / wobble speed
-    floatRotate: false, // float in place (gentle rotation wobble) instead of a vertical bob
-    floatRotateAmount: 0.12, // wobble amplitude in radians when floatRotate is on
+    bobAmount: 0.07, // gentle vertical bob amplitude (when floatRotate is off)
+    bobSpeed: 0.95, // bob / wobble speed
+    floatRotate: true, // float in place (gentle rotation wobble) instead of a vertical bob
+    floatRotateAmount: 0.17, // wobble amplitude in radians when floatRotate is on
     flashBoost: 1.4, // brightness multiplier when a note hits the stone (sing / click)
     hoverBoost: 0.35, // slight brighten while a clickable stone is hovered
     hoverScale: 0.18, // extra scale-up while a clickable stone is hovered (on top of brighten)

@@ -25,6 +25,9 @@ import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
 const FOLLOW_DAMP = 10
+const FOLLOW_MAX_SPEED = 7.5 // cap on a follower's catch-up speed (u/s) — a freshly-collected sheep
+// RUNS to its slot instead of snapping across the scene. Kept above the hero's RUN_SPEED (5.5) so
+// followers never lag during normal running; only the big just-joined gap is throttled.
 const HEADING_DAMP = 9
 const CELEBRATE_DURATION = 2.5 // happy hop before joining the party
 const FLEE_DURATION = 1.4 // running away before relocating after a failed song
@@ -233,9 +236,23 @@ function Follower({ definition, index, creatureMaterial }) {
         }
 
         const blend = 1 - Math.exp(-FOLLOW_DAMP * safeDelta)
-        position.x += (result.x - position.x) * blend
-        position.y += (result.y - position.y) * blend
-        position.z += (result.z - position.z) * blend
+        let stepX = (result.x - position.x) * blend
+        let stepY = (result.y - position.y) * blend
+        let stepZ = (result.z - position.z) * blend
+        // Cap the horizontal catch-up speed so a freshly-collected sheep RUNS to its slot (its run
+        // animation kicks in once speed passes MOVE_THRESHOLD) instead of snapping across the scene /
+        // teleporting through props. Normal trailing never reaches the cap (gap stays tiny).
+        const maxStep = FOLLOW_MAX_SPEED * safeDelta
+        const stepLen = Math.hypot(stepX, stepZ)
+        if (stepLen > maxStep) {
+            const k = maxStep / stepLen
+            stepX *= k
+            stepY *= k
+            stepZ *= k
+        }
+        position.x += stepX
+        position.y += stepY
+        position.z += stepZ
 
         const speed = position.distanceTo(previousRef.current) / safeDelta
         previousRef.current.copy(position)

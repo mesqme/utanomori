@@ -1,13 +1,15 @@
-// Extra see-through subjects for the music characters (sheep): props (trees) in front of a
-// companion fade so you can still see it through them — exactly like the hero / music stones,
-// but for the characters. (This does NOT make the characters themselves transparent; it punches
-// the paintary see-through hole into the PROPS that occlude them.)
+// Extra see-through subjects for the characters — the music sheep AND the main hero: props
+// (trees / stones) AND the grass in front of a character fade so you can still see it through
+// them. (This does NOT make the characters themselves transparent; it punches the paintary
+// see-through hole into the PROPS + grass that occlude them.) The hero shares this buffer so the
+// SAME see-through options drive the hero and the sheep, and the GRASS see-through can be toggled
+// for all of them at once (see Terrain.jsx — gated by seeThrough.grassEnabled).
 //
-// Unlike the stones (one component writes all of them each frame), each sheep is its own
-// SheepCreature component, so there are several independent writers. To avoid a per-frame clear
-// race, every SheepCreature claims a FIXED slot on mount and frees it on unmount; inactive /
-// off-screen slots carry radius 0 and are skipped by the prop shader.
-export const MAX_CHARACTER_SEE_THROUGH = 4
+// Each writer (every SheepCreature + MainCharacter) is its own component, so there are several
+// independent writers. To avoid a per-frame clear race, every writer claims a FIXED slot on mount
+// and frees it on unmount; inactive / off-screen slots carry radius 0 and are skipped.
+// Sized for up to 4 concurrent sheep + the hero.
+export const MAX_CHARACTER_SEE_THROUGH = 5
 
 const used = new Array(MAX_CHARACTER_SEE_THROUGH).fill(false)
 

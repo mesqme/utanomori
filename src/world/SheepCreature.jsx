@@ -265,16 +265,18 @@ export default function SheepCreature({ definition, moving = false }) {
                 material.uniforms.uBackgroundColor.value.set(bg)
             })
 
-            // See-through: project this companion to a screen disc so PROPS in front of it fade
-            // (the sheep itself stays opaque — the hole is punched in the trees). Skip when it's
-            // already fading out at the world edge or is off-screen / behind the camera.
+            // See-through: project this companion to a screen disc so PROPS (and grass) in front of
+            // it fade (the sheep itself stays opaque — the hole is punched in the trees/grass). Skip
+            // when it's already fading out at the world edge or is off-screen / behind the camera.
+            // Radius is the SHARED see-through size (seeThrough.worldRadius) so the hero and the sheep
+            // use the same option; only the head-anchor height stays per-sheep.
             const slot = seeThroughSlotRef.current
             if (slot >= 0 && seeThrough.enabled && fade < 0.85) {
                 stAnchor.copy(tmpWorld)
                 stAnchor.y += p.seeThroughHeight ?? 0.6
                 const camDist = state.camera.position.distanceTo(stAnchor)
                 stRight.setFromMatrixColumn(state.camera.matrixWorld, 0)
-                stEdge.copy(stAnchor).addScaledVector(stRight, p.seeThroughRadius ?? 1.6)
+                stEdge.copy(stAnchor).addScaledVector(stRight, seeThrough.worldRadius)
                 stAnchor.project(state.camera)
                 stEdge.project(state.camera)
                 if (stAnchor.z > -1 && stAnchor.z < 1) {

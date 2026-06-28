@@ -40,7 +40,7 @@ varying float vLanternInfluence;
 
 // Music-character see-through: grass in FRONT of a sheep (closer to the camera, inside its screen
 // disc) clears so the companion shows through. [centerX(px), centerY(px), radiusPx, cameraDist].
-#define MAX_CHAR_ST 4
+#define MAX_CHAR_ST 5
 uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 

@@ -7,9 +7,13 @@
 // fragments that fall inside the screen disc and sit closer to the camera than the
 // hero. Edited live by the See-Through Leva folder.
 export const seeThrough = {
-    // Tunables (Leva)
+    // Tunables (Leva). These options are SHARED by the hero AND the music sheep — both punch the
+    // same kind of paintary hole into props/grass that occlude them (worldRadius, inner, depthBias,
+    // opacityIntensity, brush). `grassEnabled` toggles only the GRASS clearing (for hero + sheep);
+    // the props always stay see-through so characters read behind trees/stones.
     enabled: true,
-    worldRadius: 2.5, // size of the hole in world units around the hero
+    grassEnabled: false, // also punch the hole into the GRASS in front of the hero + sheep (test toggle)
+    worldRadius: 2.5, // size of the hole in world units around the hero / sheep
     inner: 0.41, // 0..1 - core radius before the falloff begins
     depthBias: 0.5, // occluder must be at least this many world units in front
     opacityIntensity: 0.7, // 0 = object stays opaque, 1 = hero fully visible at the core
@@ -29,6 +33,7 @@ export const seeThrough = {
 export function applySeeThroughParameters(params) {
     if (!params) return
     if (params.enabled !== undefined) seeThrough.enabled = params.enabled
+    if (params.grassEnabled !== undefined) seeThrough.grassEnabled = params.grassEnabled
     if (params.worldRadius !== undefined) seeThrough.worldRadius = params.worldRadius
     if (params.inner !== undefined) seeThrough.inner = params.inner
     if (params.depthBias !== undefined) seeThrough.depthBias = params.depthBias

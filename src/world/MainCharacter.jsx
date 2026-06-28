@@ -13,6 +13,12 @@ import { createObjectFieldSampler } from './utils/objectField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
 import { seeThrough } from './utils/seeThrough.js'
+import {
+    claimCharacterSeeThroughSlot,
+    releaseCharacterSeeThroughSlot,
+    writeCharacterSeeThrough,
+    clearCharacterSeeThrough,
+} from './utils/characterSeeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { CAMERA_TOP_SHOT } from '../game/gameConfig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
@@ -110,7 +116,18 @@ export default function MainCharacter() {
     const wasJumpPressedRef = useRef(false)
     const isGroundedRef = useRef(true)
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
+    const seeThroughSlotRef = useRef(-1) // hero's slot in the shared character see-through buffer (grass + props)
     const [isMoving, setIsMoving] = useState(false)
+
+    // The hero shares the character see-through buffer with the sheep, so the GRASS (and props) in
+    // front of him clear the same way. Claim a fixed slot for the lifetime of the component.
+    useEffect(() => {
+        seeThroughSlotRef.current = claimCharacterSeeThroughSlot()
+        return () => {
+            releaseCharacterSeeThroughSlot(seeThroughSlotRef.current)
+            seeThroughSlotRef.current = -1
+        }
+    }, [])
 
 
     const getGroundY = useCallback((x, z) => {
@@ -446,6 +463,14 @@ export default function MainCharacter() {
         seeThrough.centerY = stCenterY
         seeThrough.radiusPx = Math.hypot((_stEdge.x * 0.5 + 0.5) * bufferW - stCenterX, (_stEdge.y * 0.5 + 0.5) * bufferH - stCenterY)
         seeThrough.active = seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits)
+
+        // Mirror the hero's hole into the shared character buffer so the GRASS clears in front of him
+        // too (the grass reads only this buffer, not the single hero disc). Same projection as above.
+        if (seeThrough.active) {
+            writeCharacterSeeThrough(seeThroughSlotRef.current, seeThrough.centerX, seeThrough.centerY, seeThrough.radiusPx, seeThrough.cameraDist)
+        } else {
+            clearCharacterSeeThrough(seeThroughSlotRef.current)
+        }
 
         setSmoothedCircleCenter(smoothedCircleCenter)
     })
