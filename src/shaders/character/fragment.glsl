@@ -15,6 +15,11 @@ varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying vec3 vInstanceTint; // per-instance colour jitter (sheep scales); vec3(1) everywhere else
 
+// Stable per-pixel dither (interleaved gradient noise) for the reveal-edge dissolve.
+float ditherNoise(vec2 p) {
+    return fract(52.9829189 * fract(dot(p, vec2(0.06711056, 0.00583715))));
+}
+
 float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
     vec3 blendWeights = pow(abs(normalDirection), vec3(4.0));
     blendWeights /= max(blendWeights.x + blendWeights.y + blendWeights.z, 0.0001);
@@ -44,9 +49,14 @@ void main() {
         finalColor = vec3(painterlyValue);
     }
 
-    // Fade to the background as the creature leaves the lit reveal circle (uFade 0→1).
-    finalColor = mix(finalColor, uBackgroundColor, uFade);
-    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0 - uFade);
+    // Reveal-edge fade (uFade 0→1): a SCREEN-DOOR dither dissolve (not alpha) so the creature stays
+    // OPAQUE and depth-sorts cleanly with the transparent grass — instead of blending through it and
+    // ghosting. A small colour pull toward the background softens the dissolving pixels.
+    if (uFade > 0.0) {
+        finalColor = mix(finalColor, uBackgroundColor, uFade * 0.5);
+        if (uFade >= ditherNoise(gl_FragCoord.xy)) discard;
+    }
+    gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
 
     #include <colorspace_fragment>
 }

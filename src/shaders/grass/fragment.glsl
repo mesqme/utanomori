@@ -38,6 +38,12 @@ varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
 
+// Music-character see-through: grass in FRONT of a sheep (closer to the camera, inside its screen
+// disc) clears so the companion shows through. [centerX(px), centerY(px), radiusPx, cameraDist].
+#define MAX_CHAR_ST 4
+uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
+uniform int uCharSeeThroughCount;
+
 // --- Dither Functions ---
 // 0. Diamond Dither
 float getDiamondThreshold(vec2 fragCoord, float pixelSize) {
@@ -194,6 +200,22 @@ void main() {
     } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve, uDitherMode)) {
       discard;
     }
+  }
+
+  // Music-character see-through: discard grass that sits in FRONT of a sheep (closer than it) and
+  // inside its screen disc, so the companion shows through. Paintery edge via the same brush.
+  float charSt = 0.0;
+  for (int i = 0; i < MAX_CHAR_ST; i++) {
+    if (i >= uCharSeeThroughCount) break;
+    vec4 c = uCharSeeThrough[i];
+    if (c.z <= 0.0) continue; // inactive slot
+    if (length(vWorldPosition - cameraPosition) >= c.w - 0.5) continue; // behind the sheep → keep grass
+    float sd = length(gl_FragCoord.xy - c.xy) / max(c.z, 1.0);
+    charSt = max(charSt, 1.0 - smoothstep(0.35, 1.0, sd));
+  }
+  if (charSt > 0.0) {
+    float charBrush = samplePainteryBrush(vWorldPosition.xz);
+    if (charSt > charBrush) discard;
   }
 
   float borderFade = 1.0 - vGrassData.w;

@@ -128,11 +128,18 @@ export const objectFieldDefaults = Object.freeze({
     stoneSize: 0.55, // global stone scale (the GLB models are authored near final size)
     stoneYOffset: -0.3, // lift/sink stones relative to the ground
     stoneTint: '#58a4fc', // multiplies the GLB stone colour (white = as authored)
-    mushroomSize: 1.0, // global mushroom scale (the GLB models are authored near final size)
-    mushroomYOffset: 0, // lift/sink mushrooms relative to the ground (geometry grounded at the leg base)
+    mushroomSize: 0.75, // global mushroom scale (the GLB models are authored near final size)
+    mushroomYOffset: -0.1, // lift/sink mushrooms relative to the ground (geometry grounded at the leg base)
     mushroomCapColor: '#c4452f', // cap (head) base colour
     mushroomLegColor: '#ecdcc4', // leg (stem) base colour
     grassFadeDistance: 0.0, // grass fade band beyond a stone/tree's safe radius
     grassLean: 0.45, // how far the grass leans away from a stone/tree in the fade band
+    mushroomGrassRadius: 0.1, // multiplier on a mushroom's grass-clear radius (× its footprint)
+    mushroomGrassFade: 0.4, // grass fade band beyond a mushroom's clear radius
+    mushroomGrassLean: 0.45, // how far the grass leans away from a mushroom
+    mushroomWiggleRadius: 1.2, // hero distance (world units) that triggers a mushroom's bend
+    mushroomWiggleAngle: 0.4, // peak tilt of the bend (radians; 0 disables)
+    mushroomWiggleSpeed: 12, // wiggle oscillation speed (rad/s)
+    mushroomWiggleDecay: 3, // how fast the wiggle fades (higher = quicker settle)
     debugAnchors: false,
 })

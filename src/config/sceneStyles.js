@@ -14,6 +14,9 @@ const painteryStyle = {
         groundTextureScale: 0.05,
         groundTextureContrast: 0.45,
         chunkSize: 9,
+        shadowRadius: 1.0, // character ground-shadow size multiplier
+        shadowSoftness: 0.65, // 0 = hard edge, 1 = very soft falloff
+        shadowDarkness: 1.0, // character ground-shadow strength multiplier
     },
     grassParameters: {
         enabled: true,
@@ -115,12 +118,19 @@ const painteryStyle = {
         stoneSize: 0.55,
         stoneYOffset: -0.3,
         stoneTint: '#58a4fc',
-        mushroomSize: 1.0,
-        mushroomYOffset: 0,
+        mushroomSize: 0.75,
+        mushroomYOffset: -0.1,
         mushroomCapColor: '#c4452f',
         mushroomLegColor: '#ecdcc4',
         grassFadeDistance: 0,
         grassLean: 0.45,
+        mushroomGrassRadius: 0.1,
+        mushroomGrassFade: 0.4,
+        mushroomGrassLean: 0.45,
+        mushroomWiggleRadius: 1.2,
+        mushroomWiggleAngle: 0.4,
+        mushroomWiggleSpeed: 12,
+        mushroomWiggleDecay: 3,
         debugAnchors: false,
         painterlyEnabled: true,
         painterlyScale: 0.13,

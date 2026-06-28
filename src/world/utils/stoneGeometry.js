@@ -7,7 +7,7 @@ import * as THREE from 'three'
 // Normalise a geometry to ONE attribute layout: position, normal, uv, aFoliage. Copy only
 // those (zero-fill uv when missing, recompute normals if absent). aFoliage tags tree leaves
 // so the fragment gives them the painterly edge; everything else (stones) gets the fresnel rim.
-export function toCanonicalGeometry(source, foliage) {
+export function toCanonicalGeometry(source, foliage, seeThrough = 0) {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', source.getAttribute('position').clone())
     if (source.index) geometry.setIndex(source.index.clone())
@@ -20,6 +20,12 @@ export function toCanonicalGeometry(source, foliage) {
     const flag = new Float32Array(count)
     if (foliage) flag.fill(1)
     geometry.setAttribute('aFoliage', new THREE.BufferAttribute(flag, 1))
+    // aSeeThrough: 1 = this prop fades when it occludes the hero/characters (trees only); 0 = it
+    // never see-throughs (stones, mushrooms — they stay solid). Consistent attribute on EVERY
+    // geometry so the BatchedMesh layout matches.
+    const stFlag = new Float32Array(count)
+    if (seeThrough) stFlag.fill(1)
+    geometry.setAttribute('aSeeThrough', new THREE.BufferAttribute(stFlag, 1))
     return geometry
 }
 
@@ -33,7 +39,7 @@ export function createStoneGeometry(node) {
     geometry.computeBoundingBox()
     const box = geometry.boundingBox
     geometry.translate(-(box.min.x + box.max.x) * 0.5, -box.min.y, -(box.min.z + box.max.z) * 0.5)
-    const canonical = toCanonicalGeometry(geometry, false)
+    const canonical = toCanonicalGeometry(geometry, false, 1) // stones see-through (mushrooms don't)
     geometry.dispose()
     return canonical
 }

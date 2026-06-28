@@ -43,6 +43,10 @@ function getSettings(parameters = {}, roadParameters = {}) {
         mushroomSize: Math.max(0.1, parameters.mushroomSize ?? objectFieldDefaults.mushroomSize),
         grassFadeDistance: Math.max(0, parameters.grassFadeDistance ?? objectFieldDefaults.grassFadeDistance),
         grassLean: Math.max(0, parameters.grassLean ?? objectFieldDefaults.grassLean),
+        // Mushrooms get their own grass-clear values (same logic as stones, different numbers).
+        mushroomGrassRadius: Math.max(0.1, parameters.mushroomGrassRadius ?? objectFieldDefaults.mushroomGrassRadius),
+        mushroomGrassFade: Math.max(0, parameters.mushroomGrassFade ?? objectFieldDefaults.mushroomGrassFade),
+        mushroomGrassLean: Math.max(0, parameters.mushroomGrassLean ?? objectFieldDefaults.mushroomGrassLean),
         roadParameters,
     }
 }
@@ -51,7 +55,8 @@ function getSettings(parameters = {}, roadParameters = {}) {
 // may be queried by several chunks / by grass; we generate it once and reuse it.
 // Capped with FIFO eviction so an endless world doesn't grow it without bound —
 // evicted cells regenerate deterministically on next query.
-const groupCache = new Map()
+const groupCache = new Map() // final (cross-group de-overlapped) groups
+const rawGroupCache = new Map() // raw groups (own-group spacing only) — used by the de-overlap pass
 const MAX_CACHED_CELLS = 4096
 let cacheSignature = ''
 
@@ -72,6 +77,7 @@ function ensureCache(settings) {
 
     if (signature !== cacheSignature) {
         groupCache.clear()
+        rawGroupCache.clear()
         cacheSignature = signature
     }
 }
@@ -91,7 +97,9 @@ function pickType(mix, rng) {
     return pickWeighted(entries, ([, weight]) => weight, rng)[0]
 }
 
-function buildCellGroup(cellX, cellZ, settings) {
+// Raw group: scatters + spaces instances against ITS OWN members only. The cross-group de-overlap
+// in buildCellGroup() then drops any that collide with a neighbour cell's raw instances.
+function buildRawCellGroup(cellX, cellZ, settings) {
     if (!settings.enabled) return null
 
     // Density gate — keeps ~density fraction of cells, giving an even-but-natural spread.
@@ -181,7 +189,10 @@ function buildCellGroup(cellX, cellZ, settings) {
         for (const other of instances) {
             const dx = other.localX - localX
             const dz = other.localZ - localZ
-            const minDist = settings.minObjectSpacing + (footprintRadius + other.footprintRadius) * 0.5
+            // Keep the soft spacing gap, but never closer than the two safe circles touching
+            // (footprint sum) so the meshes can't overlap even for a big + small pair.
+            const sumRadii = footprintRadius + other.footprintRadius
+            const minDist = Math.max(settings.minObjectSpacing + sumRadii * 0.5, sumRadii)
             if (dx * dx + dz * dz < minDist * minDist) {
                 fits = false
                 break
@@ -215,6 +226,60 @@ function buildCellGroup(cellX, cellZ, settings) {
     if (instances.length === 0) return null
 
     return { id: `${cellX},${cellZ}`, cellX, cellZ, anchorX, anchorZ, archetype: archetype.id, instances }
+}
+
+function getRawCellGroup(cellX, cellZ, settings) {
+    const key = `${cellX},${cellZ}`
+    if (rawGroupCache.has(key)) return rawGroupCache.get(key)
+
+    const group = buildRawCellGroup(cellX, cellZ, settings)
+    rawGroupCache.set(key, group)
+
+    if (rawGroupCache.size > MAX_CACHED_CELLS) {
+        const evictCount = rawGroupCache.size - MAX_CACHED_CELLS
+        let evicted = 0
+        for (const cachedKey of rawGroupCache.keys()) {
+            rawGroupCache.delete(cachedKey)
+            if (++evicted >= evictCount) break
+        }
+    }
+
+    return group
+}
+
+// Cross-group de-overlap: a raw group only spaces its OWN instances, so an instance near a cell
+// border can still overlap one in an adjacent cell's group (the rare mushroom-on-stone). Drop any
+// instance whose safe circle overlaps an instance in one of the 8 neighbour cells' RAW groups.
+// Both cells test against each other's raw, so an overlapping pair is removed from BOTH → no leak,
+// fully deterministic.
+function buildCellGroup(cellX, cellZ, settings) {
+    const raw = getRawCellGroup(cellX, cellZ, settings)
+    if (!raw) return null
+
+    const kept = []
+    for (const inst of raw.instances) {
+        let fits = true
+        for (let dx = -1; dx <= 1 && fits; dx++) {
+            for (let dz = -1; dz <= 1 && fits; dz++) {
+                if (dx === 0 && dz === 0) continue
+                const neighbor = getRawCellGroup(cellX + dx, cellZ + dz, settings)
+                if (!neighbor) continue
+                for (const other of neighbor.instances) {
+                    const ddx = other.worldX - inst.worldX
+                    const ddz = other.worldZ - inst.worldZ
+                    const minDist = inst.footprintRadius + other.footprintRadius
+                    if (ddx * ddx + ddz * ddz < minDist * minDist) {
+                        fits = false
+                        break
+                    }
+                }
+            }
+        }
+        if (fits) kept.push(inst)
+    }
+
+    if (kept.length === 0) return null
+    return { ...raw, instances: kept }
 }
 
 function getCellGroup(cellX, cellZ, settings) {
@@ -292,7 +357,6 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
         sampleObjectField(worldX, worldZ) {
             if (!settings.enabled) return { suppress: 0, leanX: 0, leanZ: 0 }
 
-            const fade = settings.grassFadeDistance
             let suppress = 0
             let leanX = 0
             let leanZ = 0
@@ -300,13 +364,17 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
                 const dx = worldX - instance.worldX
                 const dz = worldZ - instance.worldZ
                 const dist = Math.sqrt(dx * dx + dz * dz)
-                const r = instance.grassRadius // trees: trunk only; stones/mushrooms: footprint
+                // Mushrooms use their own radius scale / fade / lean; trees & stones use the globals.
+                const isMushroom = instance.type === 'mushroom'
+                const r = isMushroom ? instance.grassRadius * settings.mushroomGrassRadius : instance.grassRadius
+                const fade = isMushroom ? settings.mushroomGrassFade : settings.grassFadeDistance
+                const lean = isMushroom ? settings.mushroomGrassLean : settings.grassLean
                 const s = 1 - smoothstep(r, r + fade, dist) // 1 inside r → 0 at r + fade
                 if (s > suppress) {
                     suppress = s
                     if (dist > 1e-4) {
-                        leanX = (dx / dist) * s * settings.grassLean
-                        leanZ = (dz / dist) * s * settings.grassLean
+                        leanX = (dx / dist) * s * lean
+                        leanZ = (dz / dist) * s * lean
                     } else {
                         leanX = 0
                         leanZ = 0

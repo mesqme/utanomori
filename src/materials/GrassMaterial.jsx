@@ -7,6 +7,7 @@ import useStore from '../stores/useStore.jsx'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { getTrampleData } from '../world/utils/trampleField.js'
 import { getMusicStoneData } from '../world/utils/musicStoneField.js'
+import { characterSeeThrough } from '../world/utils/characterSeeThrough.js'
 
 // Characters react the grass via four independent layers (dissolve / lighten /
 // scale / lean), each reading the fading trail texture or a radius around the
@@ -95,6 +96,11 @@ export default function useGrassMaterial({
                     uTramplers: { value: getTrampleData() },
                     uMusicStones: { value: getMusicStoneData() },
                     uMusicStoneFade: { value: 0.6 },
+                    // Music-character see-through: grass in front of a sheep clears so it shows through
+                    // (the trample only presses the grass down at foot level). Shared buffer, mutated
+                    // by each SheepCreature each frame and re-uploaded — like uMusicStones / uTramplers.
+                    uCharSeeThrough: { value: characterSeeThrough.data },
+                    uCharSeeThroughCount: { value: characterSeeThrough.count },
                     uUseTrailSource: { value: computeSourceUsage(grassParameters).useTrail },
                     uUseRadiusSource: { value: computeSourceUsage(grassParameters).useRadius },
 

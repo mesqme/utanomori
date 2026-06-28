@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import terrainVertexShader from '../shaders/terrain/vertex.glsl'
 import terrainFragmentShader from '../shaders/terrain/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
+import { getGroundShadowData } from '../world/utils/groundShadowField.js'
 
 // Edge fade modes shared across the world: 0 = Dither, 1 = Color, 2 = Paintery.
 export function fadeModeToInt(mode) {
@@ -23,6 +24,9 @@ export default function useTerrainMaterial({
     const groundTextureEnabled = useStore((s) => s.terrainParameters.groundTextureEnabled)
     const groundTextureScale = useStore((s) => s.terrainParameters.groundTextureScale)
     const groundTextureContrast = useStore((s) => s.terrainParameters.groundTextureContrast)
+    const shadowRadius = useStore((s) => s.terrainParameters.shadowRadius ?? 1)
+    const shadowSoftness = useStore((s) => s.terrainParameters.shadowSoftness ?? 0.65)
+    const shadowDarkness = useStore((s) => s.terrainParameters.shadowDarkness ?? 1)
     const roadParameters = useStore((s) => s.roadParameters)
     const lanternGroundLightParameters = useStore((s) => s.lanternGroundLightParameters)
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
@@ -75,6 +79,12 @@ export default function useTerrainMaterial({
                 uLanternLightOuterDarkness: { value: lanternGroundLightParameters.outerDarkness },
                 uPixelSize: { value: pixelSize },
                 uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
+                // Character ground shadows (hero + companions): shared [x, z, radius, strength] buffer,
+                // mutated each frame and re-uploaded — like uTramplers. Drawn into the opaque ground.
+                uGroundShadows: { value: getGroundShadowData() },
+                uShadowRadiusMul: { value: shadowRadius },
+                uShadowSoftness: { value: shadowSoftness },
+                uShadowDarkness: { value: shadowDarkness },
             },
             vertexShader: terrainVertexShader,
             fragmentShader: terrainFragmentShader,
@@ -117,9 +127,15 @@ export default function useTerrainMaterial({
         u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
+        u.uShadowRadiusMul.value = shadowRadius
+        u.uShadowSoftness.value = shadowSoftness
+        u.uShadowDarkness.value = shadowDarkness
     }, [
         material,
         terrainColor,
+        shadowRadius,
+        shadowSoftness,
+        shadowDarkness,
         backgroundColor,
         terrainBaseBrightness,
         chunkSize,

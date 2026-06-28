@@ -24,6 +24,11 @@ import mushroomsModelUrl from '../assets/models/mushrooms.glb'
 // extended to batch + fade at the reveal-circle edge (see PropStylizedMaterial).
 const MAX_OBJECT_INSTANCES = 4096
 const WHITE = new THREE.Color('#ffffff')
+// Reused temps for the mushroom "bend when the hero reaches it" wiggle (rotates the baked instance
+// around its leg-base origin — the geometry is grounded there — so cap + leg tip together).
+const _wiggleAxis = new THREE.Vector3()
+const _wiggleRot = new THREE.Matrix4()
+const _wiggleMat = new THREE.Matrix4()
 
 // Procedural placeholder primitives (trees + mushrooms). Stones are authored GLB meshes.
 function createPartGeometry(part) {
@@ -95,7 +100,7 @@ function buildPrototypes(stoneNodes, mushroomNodes) {
                 )
             )
             const foliage = !!part.foliage
-            const geometry = toCanonicalGeometry(base, foliage)
+            const geometry = toCanonicalGeometry(base, foliage, 1) // trees are the only see-through props
             base.dispose()
             const id = `${type}:${partIndex}`
             prototypes.push({ id, type, geometry, color: part.color })
@@ -143,7 +148,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         if (uniforms?.uPainterlyTexture) uniforms.uPainterlyTexture.value = painterlyTexture
     }, [pool, painterlyTexture])
 
-    useFrame((frameState) => {
+    useFrame((frameState, delta) => {
         const state = useStore.getState()
         updatePropStylizedMaterial(pool.mesh.material, {
             propRim: state.propRimParameters,
@@ -172,9 +177,54 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             stoneSeeThrough: musicStoneSeeThrough,
             charSeeThrough: characterSeeThrough,
         })
+
+        // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
+        // (re-composing base × a rotation around the leg-base origin). One-shot on each entry into
+        // the trigger radius; restores the rest matrix once the wiggle settles.
+        const op = state.objectParameters
+        const maxAngle = op.mushroomWiggleAngle ?? 0.4
+        if (maxAngle > 0.0001) {
+            const dt = Math.min(delta, 0.05)
+            const hero = state.ballPosition
+            const radiusSq = (op.mushroomWiggleRadius ?? 1.2) ** 2
+            const speed = op.mushroomWiggleSpeed ?? 12
+            const decay = op.mushroomWiggleDecay ?? 3
+            for (const entries of chunkMushroomsRef.current.values()) {
+                for (const m of entries) {
+                    const dx = m.x - hero.x
+                    const dz = m.z - hero.z
+                    const distSq = dx * dx + dz * dz
+                    const within = distSq < radiusSq
+                    if (within && !m.inside) {
+                        const d = Math.sqrt(distSq) || 1
+                        m.dirX = dx / d // tip AWAY from the hero
+                        m.dirZ = dz / d
+                        m.phase = 0
+                        m.active = true
+                    }
+                    m.inside = within
+                    if (!m.active) continue
+                    m.phase += dt
+                    const amp = Math.exp(-m.phase * decay)
+                    if (amp < 0.02) {
+                        m.active = false
+                        pool.setMatrix(m.capId, m.base)
+                        pool.setMatrix(m.legId, m.base)
+                        continue
+                    }
+                    const angle = Math.sin(m.phase * speed) * maxAngle * amp
+                    _wiggleAxis.set(m.dirZ, 0, -m.dirX) // horizontal axis ⟂ to the tip direction
+                    _wiggleRot.makeRotationAxis(_wiggleAxis, angle)
+                    _wiggleMat.multiplyMatrices(m.base, _wiggleRot)
+                    pool.setMatrix(m.capId, _wiggleMat)
+                    pool.setMatrix(m.legId, _wiggleMat)
+                }
+            }
+        }
     })
 
     const chunkInstancesRef = useRef(new Map())
+    const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
     const generationKeyRef = useRef(null)
 
     const objectGenerationKey = [
@@ -209,6 +259,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
     useEffect(() => {
         const chunkInstances = chunkInstancesRef.current
+        const chunkMushrooms = chunkMushroomsRef.current
         const dummy = new THREE.Object3D()
         const color = new THREE.Color()
 
@@ -219,6 +270,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         if (generationKey !== generationKeyRef.current) {
             for (const ids of chunkInstances.values()) releaseChunk(ids)
             chunkInstances.clear()
+            chunkMushrooms.clear()
             generationKeyRef.current = generationKey
         }
 
@@ -228,6 +280,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             if (!desired.has(key)) {
                 releaseChunk(ids)
                 chunkInstances.delete(key)
+                chunkMushrooms.delete(key)
             }
         }
 
@@ -248,6 +301,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 if (chunkInstances.has(chunk.key)) continue
 
                 const ids = []
+                const mushroomsForChunk = []
                 for (const group of sampler.getGroupsInChunk(chunk.x, chunk.z, chunkSize)) {
                     for (const instance of group.instances) {
                         const y = noise2D ? noise2D(instance.worldX * terrainScale, instance.worldZ * terrainScale) * terrainAmplitude : 0
@@ -277,6 +331,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             prototypeIds = pool.prototypeIdsByType[instance.type] ?? []
                         }
 
+                        const addedIds = []
                         for (const prototypeId of prototypeIds) {
                             const meta = pool.prototypeMeta[prototypeId]
                             if (isStone) {
@@ -290,11 +345,32 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             }
                             color.multiplyScalar(instance.colorTone)
                             const instanceId = pool.addInstance(prototypeId, dummy.matrix, color)
-                            if (instanceId !== -1) ids.push(instanceId)
+                            if (instanceId !== -1) {
+                                ids.push(instanceId)
+                                addedIds.push(instanceId)
+                            }
+                        }
+
+                        // Register the mushroom (cap + leg share one transform) so it can bend when
+                        // the hero reaches it. base = the rest matrix; we re-compose base × wiggle below.
+                        if (isMushroom && addedIds.length === 2) {
+                            mushroomsForChunk.push({
+                                capId: addedIds[0],
+                                legId: addedIds[1],
+                                base: dummy.matrix.clone(),
+                                x: instance.worldX,
+                                z: instance.worldZ,
+                                phase: 0,
+                                active: false,
+                                inside: false,
+                                dirX: 0,
+                                dirZ: 1,
+                            })
                         }
                     }
                 }
                 chunkInstances.set(chunk.key, ids)
+                if (mushroomsForChunk.length) chunkMushrooms.set(chunk.key, mushroomsForChunk)
             }
         }
     }, [pool, activeChunks, objectGenerationKey, roadGenerationKey, terrainScale, terrainAmplitude, objectParameters.enabled, chunkSize, noise2D])

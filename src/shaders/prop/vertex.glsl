@@ -8,6 +8,7 @@ uniform float uPropChunkSize;
 uniform float uPropFadeOffset;
 
 attribute float aFoliage; // 1 on tree-leaf vertices → painterly edge; 0 elsewhere → fresnel rim
+attribute float aSeeThrough; // 1 = this prop see-throughs (trees); 0 = stays solid (stones, mushrooms)
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
@@ -16,6 +17,7 @@ varying vec2 vWorldXZ;
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 varying float vFoliage;
+varying float vSeeThrough;
 
 void main() {
     #include <color_vertex>
@@ -25,6 +27,7 @@ void main() {
     vObjectPosition = position;
     vObjectNormal = normalize(normal);
     vFoliage = aFoliage;
+    vSeeThrough = aSeeThrough;
 
     // Apply the BatchedMesh per-instance matrix to reach world space.
     vec4 batchedPosition = vec4(position, 1.0);

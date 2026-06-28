@@ -55,8 +55,12 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         objectParameters.minObjectSpacing,
         objectParameters.treeSize,
         objectParameters.stoneSize,
+        objectParameters.mushroomSize,
         objectParameters.grassFadeDistance,
         objectParameters.grassLean,
+        objectParameters.mushroomGrassRadius,
+        objectParameters.mushroomGrassFade,
+        objectParameters.mushroomGrassLean,
     ].join('|')
 
     const grassGeometry = useMemo(() => {

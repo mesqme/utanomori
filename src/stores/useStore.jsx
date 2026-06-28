@@ -20,7 +20,7 @@ const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change so a dev
 // hot-reload force-applies them instead of keeping the preserved runtime values (which would
 // otherwise mask the new defaults).
-const OBJECT_STYLE_VERSION = 4
+const OBJECT_STYLE_VERSION = 6
 const LOADER_DEBUG_VERSION = 6
 const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
@@ -53,7 +53,8 @@ const DEFAULT_LANTERN_FIRE_PARAMETERS = {
     fireOffsetX: 0,
     fireOffsetY: -0.7,
     fireOffsetZ: 0.05,
-    fireSize: 0.15,
+    fireBoneOffset: 0.08, // nudge the flame up the lantern→flame bone axis (only used with the flame bone)
+    fireSize: 0.13,
     fireColorCore: '#ffe6a8', // hot inner flame
     fireColorEdge: '#ff6a16', // outer flame
     flickerSpeed: 7.3,

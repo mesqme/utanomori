@@ -36,9 +36,11 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
             uFade: { value: 0 },
             uBackgroundColor: { value: new THREE.Color(options.backgroundColor ?? '#000000') },
         },
-        transparent: options.transparent ?? sourceMaterial?.transparent ?? false,
-        // The companion is opaque-looking until it fades; keep depth writes so its own parts sort.
-        depthWrite: options.transparent ? true : undefined,
+        // Companions render OPAQUE (their reveal-edge fade is a dither dissolve in the fragment, not
+        // alpha) so they depth-sort cleanly with the transparent grass instead of blending through
+        // it. (The hero keeps whatever its source material declared.)
+        transparent: options.transparent ? false : (sourceMaterial?.transparent ?? false),
+        depthWrite: true,
         opacity: sourceMaterial?.opacity ?? 1,
         alphaTest: sourceMaterial?.alphaTest ?? 0,
         toneMapped: false,

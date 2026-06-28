@@ -16,8 +16,8 @@ import { getGroundY } from './utils/groundHeight.js'
 import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
 import { getRefScale } from './utils/screenScale.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
+import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
-import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { resumeAudio } from '../game/songAudio.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
@@ -49,17 +49,24 @@ function findHiddenSpawn(player) {
     return { x: player.x + Math.cos(angle) * distance, z: player.z + Math.sin(angle) * distance }
 }
 
-function CompanionShadow({ geometry, material, radius }) {
-    return <mesh geometry={geometry} material={material} rotation-x={-Math.PI / 2} position={[0, 0.02, 0]} scale={radius} renderOrder={1} />
-}
+// Companion ground shadow strength (the dark blob is drawn in the terrain shader now, see
+// groundShadowField — opacity that the old transparent decal used).
+const GROUND_SHADOW_STRENGTH = 0.3
 
-function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMaterial }) {
+function TargetCreature({ target, creatureMaterial }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const fleeRef = useRef(0)
+    const fleeTargetRef = useRef(null) // the new spawn it runs toward when it flees
     const stage = useSongGame((state) => state.stage)
 
-    useEffect(() => () => clearTrampler(TRAMPLE_SLOT_TARGET), [])
+    useEffect(
+        () => () => {
+            clearTrampler(TRAMPLE_SLOT_TARGET)
+            clearGroundShadow(TRAMPLE_SLOT_TARGET)
+        },
+        []
+    )
 
     // Won the song → a happy hop, then join the party. Its backing track keeps playing softly
     // behind the hero (handled by the MusicController) once collected.
@@ -73,12 +80,17 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
     }, [stage, target])
 
     // Failed the song → it stands its ground through the ❗ moment + its grumpy speech, and only
-    // bolts once you click OK (stage 'flee'); then it relocates so you must find it again.
+    // bolts once you click OK (stage 'flee'). We pick its new hidden spawn UP FRONT so it can turn
+    // and run toward where it'll reappear (fading out via the reveal circle), then relocate there.
     useEffect(() => {
-        if (stage !== 'flee') return
+        if (stage !== 'flee') {
+            fleeTargetRef.current = null
+            return undefined
+        }
+        const player = useStore.getState().ballPosition
+        const spawn = findHiddenSpawn(player)
+        fleeTargetRef.current = spawn
         const timer = setTimeout(() => {
-            const player = useStore.getState().ballPosition
-            const spawn = findHiddenSpawn(player)
             useCompanions.getState().relocateTarget(spawn.x, spawn.z)
             useSongGame.getState().reset()
         }, FLEE_DURATION * 1000)
@@ -91,15 +103,20 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
         const player = useStore.getState().ballPosition
 
         if (stage === 'flee') {
-            // Bolt directly away from the player.
-            fleeRef.current += Math.min(delta, 0.1)
-            const ax = target.x - player.x
-            const az = target.z - player.z
-            const len = Math.hypot(ax, az) || 1
+            // Turn toward the new spawn and run there (it fades out at the reveal edge en route).
+            const dt = Math.min(delta, 0.1)
+            fleeRef.current += dt
+            const spawn = fleeTargetRef.current
+            let dirX = spawn ? spawn.x - target.x : target.x - player.x
+            let dirZ = spawn ? spawn.z - target.z : target.z - player.z
+            const len = Math.hypot(dirX, dirZ) || 1
+            dirX /= len
+            dirZ /= len
             const dist = fleeRef.current * FLEE_SPEED
-            const fx = target.x + (ax / len) * dist
-            const fz = target.z + (az / len) * dist
+            const fx = target.x + dirX * dist
+            const fz = target.z + dirZ * dist
             group.position.set(fx, getGroundY(fx, fz), fz)
+            group.rotation.y = dampAngle(group.rotation.y, Math.atan2(dirX, dirZ), HEADING_DAMP, dt)
         } else {
             // Stay put facing the player (gameplay, prompt, the game, and the fail ❗ / speech).
             fleeRef.current = 0
@@ -113,11 +130,12 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
             const t = state.clock.elapsedTime
             creatureRef.current.position.y = stage === 'success' ? Math.abs(Math.sin(t * 9)) * 0.5 : Math.abs(Math.sin(t * 2.5)) * 0.12
         }
+
+        setGroundShadow(TRAMPLE_SLOT_TARGET, group.position.x, group.position.z, (target.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
     })
 
     return (
         <group ref={groupRef}>
-            <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(target.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
                 <SheepCreature definition={target} moving={stage === 'flee'} />
             </group>
@@ -127,7 +145,7 @@ function TargetCreature({ target, shadowGeometry, shadowMaterial, creatureMateri
     )
 }
 
-function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureMaterial }) {
+function Follower({ definition, index, creatureMaterial }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const positionRef = useRef(new THREE.Vector3())
@@ -139,7 +157,13 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
     const fleeStateRef = useRef(null)
     const [moving, setMoving] = useState(false)
 
-    useEffect(() => () => clearTrampler(slot), [slot])
+    useEffect(
+        () => () => {
+            clearTrampler(slot)
+            clearGroundShadow(slot)
+        },
+        [slot]
+    )
 
     useFrame((state, delta) => {
         const group = groupRef.current
@@ -226,11 +250,11 @@ function Follower({ definition, index, shadowGeometry, shadowMaterial, creatureM
         group.rotation.y = headingRef.current
 
         setTrampler(slot, position.x, groundY, position.z)
+        setGroundShadow(slot, position.x, position.z, (definition.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
     })
 
     return (
         <group ref={groupRef}>
-            <CompanionShadow geometry={shadowGeometry} material={shadowMaterial} radius={(definition.scale ?? 0.5) * 0.62} />
             <group ref={creatureRef}>
                 <SheepCreature definition={definition} moving={moving} />
             </group>
@@ -257,16 +281,11 @@ export default function Companions() {
     // eyes, painterly stylization, and the reveal-circle / paintery fade.
     const creatureMaterial = useMemo(() => createCompanionEyeMaterial(painterlyTexture), [painterlyTexture])
 
-    const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 24), [])
-    const shadowMaterial = useMemo(() => createGroundShadowMaterial({ color: soundJourneyPalette.loaderBackground, opacity: 0.3 }), [])
-
     useEffect(() => {
         return () => {
-            shadowGeometry.dispose()
-            shadowMaterial.dispose()
             creatureMaterial.dispose()
         }
-    }, [shadowGeometry, shadowMaterial, creatureMaterial])
+    }, [creatureMaterial])
 
     // Reset the party only on a fresh loop (warmup/loading) — keep it through the
     // intro and credits so the followers can trail the auto-running hero.
@@ -322,7 +341,6 @@ export default function Companions() {
                 bleed: store.borderParameters.painteryBleed,
             },
         })
-        updateGroundShadowMaterial(shadowMaterial)
 
         if (usePhases.getState().phase !== PHASES.start) return
 
@@ -356,18 +374,9 @@ export default function Companions() {
 
     return (
         <>
-            {target && (
-                <TargetCreature key={target.key} target={target} shadowGeometry={shadowGeometry} shadowMaterial={shadowMaterial} creatureMaterial={creatureMaterial} />
-            )}
+            {target && <TargetCreature key={target.key} target={target} creatureMaterial={creatureMaterial} />}
             {found.map((member, index) => (
-                <Follower
-                    key={member.key}
-                    definition={member}
-                    index={index}
-                    shadowGeometry={shadowGeometry}
-                    shadowMaterial={shadowMaterial}
-                    creatureMaterial={creatureMaterial}
-                />
+                <Follower key={member.key} definition={member} index={index} creatureMaterial={creatureMaterial} />
             ))}
             <TargetArrow />
         </>

@@ -40,6 +40,12 @@ uniform float uLanternLightInnerBrightness;
 uniform float uLanternLightOuterDarkness;
 uniform float uPixelSize;
 uniform int uDitherMode;
+// Character ground shadows: [worldX, worldZ, radius, strength] per character (hero + companions).
+#define MAX_GROUND_SHADOWS 6
+uniform vec4 uGroundShadows[MAX_GROUND_SHADOWS];
+uniform float uShadowRadiusMul;  // global radius multiplier
+uniform float uShadowSoftness;   // 0 = hard edge, 1 = very soft falloff
+uniform float uShadowDarkness;   // global strength multiplier
 
 // Varyings
 varying vec3 vWorldPosition;
@@ -177,6 +183,18 @@ void main() {
       lanternMask
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
+
+  // Character ground shadows — soft dark circles under the hero + companions, drawn directly in the
+  // opaque ground so they never have the transparent-decal sorting issues the old shadow meshes did.
+  for (int i = 0; i < MAX_GROUND_SHADOWS; i++) {
+      vec4 sh = uGroundShadows[i];
+      if (sh.z <= 0.0001 || sh.w <= 0.0) continue; // inactive
+      float shadowR = sh.z * uShadowRadiusMul;
+      float shadowInner = clamp(1.0 - uShadowSoftness, 0.0, 0.99); // softness → falloff band
+      float shadowDist = length(worldXZ - sh.xy);
+      float shadowMask = 1.0 - smoothstep(shadowR * shadowInner, shadowR, shadowDist);
+      color *= 1.0 - sh.w * uShadowDarkness * shadowMask;
+  }
 
   if (uFadeMode == 1) {
       color = mix(color, uBackgroundColor, t);

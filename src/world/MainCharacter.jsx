@@ -24,7 +24,7 @@ import watercolorBasicUrl from '../assets/textures/watercolorBasic.png'
 import watercolorBasicLargeUrl from '../assets/textures/watercolorBasicLarge.png'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
-import { createGroundShadowMaterial, updateGroundShadowMaterial } from '../materials/GroundShadowMaterial.js'
+import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
 
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT
@@ -99,7 +99,6 @@ export default function MainCharacter() {
 
     const [subscribeKeys, getKeys] = useKeyboardControls()
 
-    const shadowRef = useRef(null)
     const modelRef = useRef(null)
     const scaleAnimationRef = useRef(null)
     const positionRef = useRef(new THREE.Vector3())
@@ -113,9 +112,6 @@ export default function MainCharacter() {
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const [isMoving, setIsMoving] = useState(false)
 
-    const shadowGeometry = useMemo(() => new THREE.CircleGeometry(1, 32), [])
-
-    const shadowMaterial = useMemo(() => createGroundShadowMaterial({ color: '#050312', opacity: SHADOW_MAX_OPACITY }), [])
 
     const getGroundY = useCallback((x, z) => {
         const terrainParameters = useStore.getState().terrainParameters
@@ -218,10 +214,9 @@ export default function MainCharacter() {
                 scaleAnimationRef.current.kill()
                 scaleAnimationRef.current = null
             }
-            shadowGeometry.dispose()
-            shadowMaterial.dispose()
+            clearGroundShadow(TRAMPLE_SLOT_MAIN)
         }
-    }, [shadowGeometry, shadowMaterial])
+    }, [])
 
     useFrame((state, delta) => {
         const safeDelta = Math.min(delta, 0.1)
@@ -356,16 +351,13 @@ export default function MainCharacter() {
         const visualPosition = visualPositionRef.current
         visualPosition.copy(position)
 
-        if (shadowRef.current) {
+        {
+            // Hero ground shadow → drawn in the terrain shader (groundShadowField), not a decal mesh.
             const distanceFromGround = Math.max(0, visualPosition.y - groundedY)
             const distanceFactor = THREE.MathUtils.clamp(distanceFromGround / 1.6, 0, 1)
             const shadowScale = THREE.MathUtils.lerp(SHADOW_MIN_SCALE, SHADOW_MAX_SCALE, distanceFactor)
             const shadowOpacity = THREE.MathUtils.lerp(SHADOW_MAX_OPACITY, SHADOW_MIN_OPACITY, distanceFactor)
-
-            shadowRef.current.position.set(visualPosition.x, groundY + SHADOW_GROUND_OFFSET, visualPosition.z)
-            shadowRef.current.scale.set(shadowScale, shadowScale, 1)
-            shadowRef.current.material.opacity = shadowOpacity
-            updateGroundShadowMaterial(shadowMaterial)
+            setGroundShadow(TRAMPLE_SLOT_MAIN, visualPosition.x, visualPosition.z, shadowScale, shadowOpacity)
         }
 
         setBallPosition(visualPosition)
@@ -461,7 +453,6 @@ export default function MainCharacter() {
     return (
         <>
             <CharacterModel ref={modelRef} moving={isMoving} />
-            <mesh ref={shadowRef} geometry={shadowGeometry} material={shadowMaterial} rotation-x={-Math.PI / 2} renderOrder={2} />
         </>
     )
 }
@@ -481,6 +472,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const lanternWorldPositionRef = useRef(new THREE.Vector3())
     const lanternFireOffsetRef = useRef(new THREE.Vector3())
     const lanternGlowOffsetRef = useRef(new THREE.Vector3())
+    const lanternFlameAxisRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
     const painterlyTextures = useTexture(PAINTERLY_TEXTURE_URLS)
     const painterlyTexturesById = useMemo(() => {
@@ -631,12 +623,30 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
         if (nodes.lantern_1) {
             nodes.lantern_1.getWorldPosition(lanternWorldPositionRef.current)
             setLanternPosition(lanternWorldPositionRef.current)
-            // Flame + glow: each a LOCAL offset on the lantern, transformed to world — so they
-            // stay attached to the bone (position + rotation) but can sit at independent offsets.
             const fp = useStore.getState().lanternFireParameters
-            lanternFireOffsetRef.current.set(fp.fireOffsetX, fp.fireOffsetY, fp.fireOffsetZ)
-            nodes.lantern_1.localToWorld(lanternFireOffsetRef.current)
+            // Fire: anchored to the dedicated `flame` bone (the lantern's geometric bottom-centre,
+            // parented to the lantern bone) so it tracks the lantern exactly as it swings — no manual
+            // offset needed. Falls back to the old lantern_1 + offset only if the bone is missing.
+            if (nodes.flame) {
+                nodes.flame.getWorldPosition(lanternFireOffsetRef.current)
+                // Nudge the flame along the lantern→flame bone axis (head of lantern bone → head of
+                // flame bone) so it rides a bit higher up that line without leaving it. + = toward
+                // the lantern bone head (up the lantern); − = down toward/past the flame bone.
+                const boneOffset = fp.fireBoneOffset ?? 0
+                if (boneOffset !== 0 && nodes.flame.parent) {
+                    nodes.flame.parent.getWorldPosition(lanternFlameAxisRef.current) // lantern bone head
+                    lanternFlameAxisRef.current.sub(lanternFireOffsetRef.current) // → flame→lantern (up the bone)
+                    if (lanternFlameAxisRef.current.lengthSq() > 1e-8) {
+                        lanternFlameAxisRef.current.normalize()
+                        lanternFireOffsetRef.current.addScaledVector(lanternFlameAxisRef.current, boneOffset)
+                    }
+                }
+            } else {
+                lanternFireOffsetRef.current.set(fp.fireOffsetX, fp.fireOffsetY, fp.fireOffsetZ)
+                nodes.lantern_1.localToWorld(lanternFireOffsetRef.current)
+            }
             setLanternFirePosition(lanternFireOffsetRef.current)
+            // Glow: still a local offset on the lantern (a soft halo around the lantern body).
             lanternGlowOffsetRef.current.set(fp.glowOffsetX, fp.glowOffsetY, fp.glowOffsetZ)
             nodes.lantern_1.localToWorld(lanternGlowOffsetRef.current)
             setLanternGlowPosition(lanternGlowOffsetRef.current)
