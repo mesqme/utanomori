@@ -58,6 +58,7 @@ function TargetCreature({ target, creatureMaterial }) {
     const creatureRef = useRef(null)
     const fleeRef = useRef(0)
     const fleeTargetRef = useRef(null) // the new spawn it runs toward when it flees
+    const placedRef = useRef(0) // hidden until positioned + the reveal-fade settles (no spawn-snap flash)
     const stage = useSongGame((state) => state.stage)
 
     useEffect(
@@ -132,6 +133,14 @@ function TargetCreature({ target, creatureMaterial }) {
         }
 
         setGroundShadow(TRAMPLE_SLOT_TARGET, group.position.x, group.position.z, (target.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
+
+        // Stay hidden until it's been positioned AND the SheepCreature's reveal-fade has been
+        // computed from that real position (one frame behind, since the child runs first) — avoids
+        // the one-frame flash of the companion snapping to its spawn when gameplay starts.
+        if (placedRef.current < 2) {
+            placedRef.current += 1
+            group.visible = placedRef.current >= 2
+        }
     })
 
     return (
@@ -155,6 +164,7 @@ function Follower({ definition, index, creatureMaterial }) {
     const sample = useMemo(() => ({}), [])
     const slot = TRAMPLE_SLOT_FOLLOWER + index
     const fleeStateRef = useRef(null)
+    const placedRef = useRef(0) // hidden until positioned + the reveal-fade settles (no spawn-snap flash)
     const [moving, setMoving] = useState(false)
 
     useEffect(
@@ -251,6 +261,12 @@ function Follower({ definition, index, creatureMaterial }) {
 
         setTrampler(slot, position.x, groundY, position.z)
         setGroundShadow(slot, position.x, position.z, (definition.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
+
+        // Hidden until positioned + the reveal-fade settles — avoids the one-frame snap-to-trail flash.
+        if (placedRef.current < 2) {
+            placedRef.current += 1
+            group.visible = placedRef.current >= 2
+        }
     })
 
     return (

@@ -1,6 +1,6 @@
 import { mulberry32 } from './randomUtils.js'
 import { sampleRoadDistance } from './roadField.js'
-import { MUSHROOM_VARIANTS, objectArchetypes, objectFieldDefaults, objectLibrary, STONE_VARIANTS } from '../../config/objectFieldDefaults.js'
+import { MUSHROOM_VARIANTS, objectArchetypes, objectFieldDefaults, objectLibrary, STONE_VARIANTS, TREE_VARIANTS } from '../../config/objectFieldDefaults.js'
 
 const UINT_MAX = 4294967296
 
@@ -156,21 +156,27 @@ function buildRawCellGroup(cellX, cellZ, settings) {
             variantIndex = Math.floor(rng() * MUSHROOM_VARIANTS.length) % MUSHROOM_VARIANTS.length
             baseFootprint = MUSHROOM_VARIANTS[variantIndex].diameter * 0.5
             sizeMul = settings.mushroomSize
+        } else if (type === 'tree') {
+            variantIndex = Math.floor(rng() * TREE_VARIANTS.length) % TREE_VARIANTS.length
+            baseFootprint = TREE_VARIANTS[variantIndex].diameter * 0.5 // SMALL diameter (vs other props + grass)
+            sizeMul = settings.treeSize
         } else {
             baseFootprint = library.footprintRadius
-            sizeMul = type === 'tree' ? settings.treeSize : 1
+            sizeMul = 1
         }
         const footprintRadius = baseFootprint * scale * sizeMul
+        // Trees carry a SECOND (canopy) radius from the BIG diameter, for tree↔tree spacing only.
+        // Everything else uses its footprint for canopyRadius so the spacing test treats them uniformly.
+        const canopyRadius = type === 'tree' ? TREE_VARIANTS[variantIndex].canopyDiameter * 0.5 * scale * sizeMul : footprintRadius
 
-        // Footprint (above) drives spacing. Grass suppression + collision use a separate
-        // radius: trees clear/collide on the slim trunk only (canopy floats high), stones use
-        // their full footprint, mushrooms are passable (no collision) but still part grass.
+        // Footprint (above) drives spacing. Grass suppression + collision use a separate radius:
+        // trees clear the grass on their SMALL footprint but the hero collides only with the slim
+        // trunk (canopy floats high); stones use their full footprint; mushrooms are passable.
         let grassRadius
         let solidRadius
         if (type === 'tree') {
-            const trunkRadius = (library.trunkRadius ?? 0.22) * scale * sizeMul
-            grassRadius = trunkRadius
-            solidRadius = trunkRadius
+            grassRadius = footprintRadius
+            solidRadius = (library.trunkRadius ?? 0.28) * scale * sizeMul
         } else if (type === 'stone') {
             grassRadius = footprintRadius
             solidRadius = footprintRadius
@@ -189,9 +195,11 @@ function buildRawCellGroup(cellX, cellZ, settings) {
         for (const other of instances) {
             const dx = other.localX - localX
             const dz = other.localZ - localZ
-            // Keep the soft spacing gap, but never closer than the two safe circles touching
-            // (footprint sum) so the meshes can't overlap even for a big + small pair.
-            const sumRadii = footprintRadius + other.footprintRadius
+            // Tree↔tree uses the BIG canopy radius (so bushes don't overlap); any other pair uses
+            // the small footprints. Keep the soft spacing gap, but never closer than the circles
+            // touching so the meshes can't overlap even for a big + small pair.
+            const bothTrees = type === 'tree' && other.type === 'tree'
+            const sumRadii = (bothTrees ? canopyRadius : footprintRadius) + (bothTrees ? other.canopyRadius : other.footprintRadius)
             const minDist = Math.max(settings.minObjectSpacing + sumRadii * 0.5, sumRadii)
             if (dx * dx + dz * dz < minDist * minDist) {
                 fits = false
@@ -229,7 +237,7 @@ function buildRawCellGroup(cellX, cellZ, settings) {
             hash01(cellX * 131 + ji, cellZ, settings.worldSeed ^ 0x51aa3319) * 2 - 1,
         ]
 
-        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, grassRadius, solidRadius, colorTone, colorJitter, sockets })
+        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, canopyRadius, grassRadius, solidRadius, colorTone, colorJitter, sockets })
     }
 
     if (instances.length === 0) return null
@@ -276,7 +284,8 @@ function buildCellGroup(cellX, cellZ, settings) {
                 for (const other of neighbor.instances) {
                     const ddx = other.worldX - inst.worldX
                     const ddz = other.worldZ - inst.worldZ
-                    const minDist = inst.footprintRadius + other.footprintRadius
+                    const bothTrees = inst.type === 'tree' && other.type === 'tree'
+                    const minDist = (bothTrees ? inst.canopyRadius : inst.footprintRadius) + (bothTrees ? other.canopyRadius : other.footprintRadius)
                     if (ddx * ddx + ddz * ddz < minDist * minDist) {
                         fits = false
                         break

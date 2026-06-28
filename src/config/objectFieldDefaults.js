@@ -1,5 +1,3 @@
-import { soundJourneyPalette } from './soundJourneyPalette.js'
-
 /**
  * Placeholder object library.
  *
@@ -65,21 +63,31 @@ export const MUSHROOM_VARIANTS = Object.freeze([
     { cap: 'mushroom_06', leg: 'mushroom_06_leg', diameter: 0.82 },
 ])
 
-// Procedural parts sit on the ground (origin at the base) so a per-type instance scale
-// (treeSize — see ScatteredObjects) resizes them while keeping them grounded.
+/**
+ * Tree variants from trees.glb. Each tree is two meshes — `trunk` + `bush` (canopy) — baked
+ * together (shared recentre/ground offset) so the bush keeps sitting on its trunk (see
+ * createTreeGeometries). Two measured safe diameters:
+ *   - `diameter` (SMALL): the base footprint → spacing vs OTHER props (stones/mushrooms) + the grass
+ *     clear radius, exactly like STONE_VARIANTS / MUSHROOM_VARIANTS.
+ *   - `canopyDiameter` (BIG): the bush spread → used ONLY for tree↔tree spacing, so canopies don't
+ *     overlap (other props use the small one against a tree).
+ */
+export const TREE_VARIANTS = Object.freeze([
+    { trunk: 'tree_01_trunk', bush: 'tree_01_bush', diameter: 1.33, canopyDiameter: 3.9 },
+    { trunk: 'tree_02_trunk', bush: 'tree_02_bush', diameter: 1.06, canopyDiameter: 3.22 },
+    { trunk: 'tree_03_trunk', bush: 'tree_03_bush', diameter: 0.92, canopyDiameter: 4.54 },
+])
+
+// Procedural parts sit on the ground (origin at the base) so a per-type instance scale resizes
+// them while keeping them grounded. Trees / stones / mushrooms are now authored GLB meshes.
 export const objectLibrary = Object.freeze({
-    // A simple stylized tree placeholder: a tapered trunk + a round sphere canopy.
-    // The canopy part carries `foliage: true` so it takes treeColor.
+    // Authored tree — trunk + bush geometry comes from trees.glb (TREE_VARIANTS), baked together.
+    // footprintRadius is a fallback; the real small/big radii are per-variant. trunkRadius is the
+    // hero-collision radius (the slim trunk; the canopy floats high).
     tree: {
         footprintRadius: 0.9,
-        // Solid/grass radius for trees = the trunk (the canopy floats up high), so the hero
-        // collides with — and grass only clears around — the slim trunk, not the whole canopy.
-        // Matches the trunk cylinder's base radius (0.2) with a touch of margin.
-        trunkRadius: 0.22,
-        parts: [
-            { geometry: 'cylinder', args: [0.13, 0.2, 1.4, 6], offset: [0, 0.7, 0], color: soundJourneyPalette.trunkLight },
-            { geometry: 'sphere', args: [1.0, 16, 12], offset: [0, 2.0, 0], color: soundJourneyPalette.leaves, foliage: true },
-        ],
+        trunkRadius: 0.28,
+        parts: [],
         sockets: [],
     },
     // Authored boulder — geometry comes from stones.glb (STONE_VARIANTS), recentred to sit
@@ -122,9 +130,10 @@ export const objectFieldDefaults = Object.freeze({
     roadClearance: 2.4,
     groupScale: 1.0,
     minObjectSpacing: 0.75,
-    treeSize: 1.2, // mean tree scale
+    treeSize: 0.65, // mean tree scale
     treeYOffset: 0, // lift/sink trees relative to the ground
-    treeColor: '#5a2fb2', // tree foliage colour
+    treeColor: '#7257c3', // tree bush (foliage) colour
+    treeTrunkColor: '#877fb9', // tree trunk colour
     stoneSize: 0.55, // global stone scale (the GLB models are authored near final size)
     stoneYOffset: -0.3, // lift/sink stones relative to the ground
     stoneTint: '#58a4fc', // multiplies the GLB stone colour (white = as authored)
@@ -142,5 +151,10 @@ export const objectFieldDefaults = Object.freeze({
     mushroomWiggleAngle: 0.4, // peak tilt of the bend (radians; 0 disables)
     mushroomWiggleSpeed: 12, // wiggle oscillation speed (rad/s)
     mushroomWiggleDecay: 3, // how fast the wiggle fades (higher = quicker settle)
+    // Tree wind (vertex-shader bend; trees only). Direction reuses windParameters.direction (shared
+    // with the grass). The motion is a sin sway whose amplitude is gust-modulated (non-sin/abrupt).
+    treeWindStrength: 0.003, // bend amount (× height², so small values; tune on the fine slider)
+    treeWindSpeed: 1.35, // sway speed
+    treeWindGust: 0.6, // 0 = steady sin sway, 1 = strong gusty / abrupt amplitude swings
     debugAnchors: false,
 })

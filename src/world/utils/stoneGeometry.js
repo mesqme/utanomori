@@ -7,7 +7,7 @@ import * as THREE from 'three'
 // Normalise a geometry to ONE attribute layout: position, normal, uv, aFoliage. Copy only
 // those (zero-fill uv when missing, recompute normals if absent). aFoliage tags tree leaves
 // so the fragment gives them the painterly edge; everything else (stones) gets the fresnel rim.
-export function toCanonicalGeometry(source, foliage, seeThrough = 0) {
+export function toCanonicalGeometry(source, foliage, seeThrough = 0, wind = 0) {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', source.getAttribute('position').clone())
     if (source.index) geometry.setIndex(source.index.clone())
@@ -20,12 +20,15 @@ export function toCanonicalGeometry(source, foliage, seeThrough = 0) {
     const flag = new Float32Array(count)
     if (foliage) flag.fill(1)
     geometry.setAttribute('aFoliage', new THREE.BufferAttribute(flag, 1))
-    // aSeeThrough: 1 = this prop fades when it occludes the hero/characters (trees only); 0 = it
-    // never see-throughs (stones, mushrooms — they stay solid). Consistent attribute on EVERY
-    // geometry so the BatchedMesh layout matches.
+    // aSeeThrough: 1 = this prop fades when it occludes the hero/characters (trees + stones); 0 =
+    // never see-throughs (mushrooms). aWind: 1 = sways in the wind (trees only). Consistent
+    // attributes on EVERY geometry so the BatchedMesh layout matches.
     const stFlag = new Float32Array(count)
     if (seeThrough) stFlag.fill(1)
     geometry.setAttribute('aSeeThrough', new THREE.BufferAttribute(stFlag, 1))
+    const windFlag = new Float32Array(count)
+    if (wind) windFlag.fill(1)
+    geometry.setAttribute('aWind', new THREE.BufferAttribute(windFlag, 1))
     return geometry
 }
 
@@ -105,4 +108,37 @@ export function createMushroomGeometries(capNode, legNode) {
     cap.dispose()
     leg.dispose()
     return { cap: capCanonical, leg: legCanonical }
+}
+
+// Bake a tree's trunk + bush into two grounded prototypes that stay ASSEMBLED (shared recentre/
+// ground offset from their COMBINED bbox — XZ centred on the pair, dropped so the trunk base sits
+// at y = 0), so the bush keeps sitting on the trunk. Both get aSeeThrough=1 (trees fade when they
+// occlude) + aWind=1 (sway); the bush gets aFoliage=1 (painterly edge), the trunk aFoliage=0
+// (fresnel rim). Returns { trunk, bush } canonical geometries.
+export function createTreeGeometries(trunkNode, bushNode) {
+    const trunk = trunkNode.geometry.clone()
+    trunkNode.updateWorldMatrix(true, false)
+    trunk.applyMatrix4(trunkNode.matrixWorld)
+    const bush = bushNode.geometry.clone()
+    bushNode.updateWorldMatrix(true, false)
+    bush.applyMatrix4(bushNode.matrixWorld)
+
+    trunk.computeBoundingBox()
+    bush.computeBoundingBox()
+    const minX = Math.min(trunk.boundingBox.min.x, bush.boundingBox.min.x)
+    const maxX = Math.max(trunk.boundingBox.max.x, bush.boundingBox.max.x)
+    const minY = Math.min(trunk.boundingBox.min.y, bush.boundingBox.min.y)
+    const minZ = Math.min(trunk.boundingBox.min.z, bush.boundingBox.min.z)
+    const maxZ = Math.max(trunk.boundingBox.max.z, bush.boundingBox.max.z)
+    const ox = -(minX + maxX) * 0.5
+    const oy = -minY
+    const oz = -(minZ + maxZ) * 0.5
+    trunk.translate(ox, oy, oz)
+    bush.translate(ox, oy, oz)
+
+    const trunkCanonical = toCanonicalGeometry(trunk, false, 1, 1)
+    const bushCanonical = toCanonicalGeometry(bush, true, 1, 1)
+    trunk.dispose()
+    bush.dispose()
+    return { trunk: trunkCanonical, bush: bushCanonical }
 }

@@ -42,6 +42,12 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uCircleRadiusFactor: { value: 0.07 },
             uPropChunkSize: { value: 9 },
             uPropFadeOffset: { value: 2.5 },
+            // Tree wind sway (vertex bend; only vertices with aWind = 1 move).
+            uTime: { value: 0 },
+            uWindDir: { value: new THREE.Vector2(1, 0) },
+            uWindStrength: { value: 0 },
+            uWindSpeed: { value: 1 },
+            uWindGust: { value: 0.5 },
             uSeeThroughActive: { value: 0 },
             uSeeThroughCenter: { value: new THREE.Vector2() },
             uSeeThroughRadius: { value: 120 },
@@ -125,5 +131,13 @@ export function updatePropStylizedMaterial(material, options) {
         u.uCharSeeThroughCount.value = options.charSeeThrough.count
     } else {
         u.uCharSeeThroughCount.value = 0
+    }
+    // Tree wind (trees only — gated by aWind in the vertex shader).
+    if (options.wind) {
+        u.uTime.value = options.wind.time
+        u.uWindDir.value.set(options.wind.dirX, options.wind.dirZ)
+        u.uWindStrength.value = options.wind.strength
+        u.uWindSpeed.value = options.wind.speed
+        u.uWindGust.value = options.wind.gust
     }
 }

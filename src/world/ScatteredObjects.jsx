@@ -12,11 +12,12 @@ import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
-import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS } from '../config/objectFieldDefaults.js'
+import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS, TREE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
-import { createMushroomGeometries, createStoneGeometry, toCanonicalGeometry } from './utils/stoneGeometry.js'
+import { createMushroomGeometries, createStoneGeometry, createTreeGeometries, toCanonicalGeometry } from './utils/stoneGeometry.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 import mushroomsModelUrl from '../assets/models/mushrooms.glb'
+import treesModelUrl from '../assets/models/trees.glb'
 
 // Every scattered object (trees, stones, mushrooms across all active chunks) is an
 // instance in ONE BatchedMesh (see createBatchedMeshPool) → ~1 draw call with
@@ -49,7 +50,7 @@ function createPartGeometry(part) {
 // chosen per instance at placement). Mushrooms expand to TWO prototypes per GLB variant — a
 // [capId, legId] pair rendered together (cap + leg take different colours). `prototypeMeta`
 // carries the foliage flag (tree canopy) and, for mushrooms, the `part` ('cap' | 'leg').
-function buildPrototypes(stoneNodes, mushroomNodes) {
+function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
     const prototypes = []
     const prototypeIdsByType = {}
     const prototypeMeta = {}
@@ -57,6 +58,23 @@ function buildPrototypes(stoneNodes, mushroomNodes) {
 
     for (const type of OBJECT_TYPES) {
         prototypeIdsByType[type] = []
+
+        if (type === 'tree') {
+            TREE_VARIANTS.forEach((variant, variantIndex) => {
+                const trunkNode = treeNodes[variant.trunk]
+                const bushNode = treeNodes[variant.bush]
+                if (!trunkNode || !bushNode) return
+                const { trunk, bush } = createTreeGeometries(trunkNode, bushNode)
+                const trunkId = `tree:${variantIndex}:trunk`
+                const bushId = `tree:${variantIndex}:bush`
+                prototypes.push({ id: trunkId, type, geometry: trunk, color: WHITE })
+                prototypes.push({ id: bushId, type, geometry: bush, color: WHITE })
+                prototypeIdsByType[type].push([trunkId, bushId]) // variant-indexed pair
+                prototypeMeta[trunkId] = { type, foliage: false, part: 'trunk' }
+                prototypeMeta[bushId] = { type, foliage: true, part: 'bush' }
+            })
+            continue
+        }
 
         if (type === 'stone') {
             STONE_VARIANTS.forEach((variant, variantIndex) => {
@@ -120,6 +138,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
     const { nodes: stoneNodes } = useGLTF(stonesModelUrl)
     const { nodes: mushroomNodes } = useGLTF(mushroomsModelUrl)
+    const { nodes: treeNodes } = useGLTF(treesModelUrl)
 
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
@@ -132,7 +151,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
-        const { prototypes, prototypeIdsByType, prototypeMeta } = buildPrototypes(stoneNodes, mushroomNodes)
+        const { prototypes, prototypeIdsByType, prototypeMeta } = buildPrototypes(stoneNodes, mushroomNodes, treeNodes)
         const material = createPropStylizedMaterial(painterlyTexture, { toneMapped: true })
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
@@ -140,7 +159,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         // Built once the GLBs are ready; texture is swapped in place, and size/shape go through
         // per-instance scale below.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [stoneNodes, mushroomNodes])
+    }, [stoneNodes, mushroomNodes, treeNodes])
 
     // Swap the prop paintery texture when the selection changes (no pool rebuild).
     useEffect(() => {
@@ -176,6 +195,14 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             seeThrough,
             stoneSeeThrough: musicStoneSeeThrough,
             charSeeThrough: characterSeeThrough,
+            wind: {
+                time: frameState.clock.elapsedTime,
+                dirX: Math.cos(state.windParameters?.direction ?? 0),
+                dirZ: Math.sin(state.windParameters?.direction ?? 0),
+                strength: state.objectParameters.treeWindStrength ?? 0,
+                speed: state.objectParameters.treeWindSpeed ?? 1,
+                gust: state.objectParameters.treeWindGust ?? 0.5,
+            },
         })
 
         // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
@@ -239,6 +266,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.treeSize,
         objectParameters.treeYOffset,
         objectParameters.treeColor,
+        objectParameters.treeTrunkColor,
         objectParameters.stoneSize,
         objectParameters.stoneYOffset,
         objectParameters.stoneTint,
@@ -294,6 +322,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             const mushroomSize = objectParameters.mushroomSize ?? 1.0
             const mushroomYOffset = objectParameters.mushroomYOffset ?? 0
             const treeColorObj = new THREE.Color(objectParameters.treeColor ?? '#6f8f4a')
+            const treeTrunkObj = new THREE.Color(objectParameters.treeTrunkColor ?? '#6b4a2f')
             const stoneTintObj = new THREE.Color(objectParameters.stoneTint ?? '#ffffff')
             const mushroomCapObj = new THREE.Color(objectParameters.mushroomCapColor ?? '#c4452f')
             const mushroomLegObj = new THREE.Color(objectParameters.mushroomLegColor ?? '#ecdcc4')
@@ -319,7 +348,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         dummy.updateMatrix()
 
                         // Stones render ONE chosen variant; mushrooms render the chosen variant's
-                        // [cap, leg] pair; trees render all parts.
+                        // [cap, leg] pair; trees render the chosen variant's [trunk, bush] pair.
                         let prototypeIds
                         if (isStone) {
                             const variants = pool.prototypeIdsByType.stone ?? []
@@ -329,6 +358,10 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             const variants = pool.prototypeIdsByType.mushroom ?? []
                             const chosen = variants.length ? variants[(instance.variantIndex ?? 0) % variants.length] : null
                             prototypeIds = chosen ?? [] // [capId, legId]
+                        } else if (isTree) {
+                            const variants = pool.prototypeIdsByType.tree ?? []
+                            const chosen = variants.length ? variants[(instance.variantIndex ?? 0) % variants.length] : null
+                            prototypeIds = chosen ?? [] // [trunkId, bushId]
                         } else {
                             prototypeIds = pool.prototypeIdsByType[instance.type] ?? []
                         }
@@ -340,6 +373,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                                 color.copy(pool.prototypeColors[prototypeId] ?? WHITE).multiply(stoneTintObj)
                             } else if (isMushroom) {
                                 color.copy(meta?.part === 'cap' ? mushroomCapObj : mushroomLegObj)
+                            } else if (isTree) {
+                                color.copy(meta?.part === 'bush' ? treeColorObj : treeTrunkObj)
                             } else if (meta?.foliage) {
                                 color.copy(treeColorObj)
                             } else {
@@ -392,3 +427,4 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
 useGLTF.preload(stonesModelUrl)
 useGLTF.preload(mushroomsModelUrl)
+useGLTF.preload(treesModelUrl)
