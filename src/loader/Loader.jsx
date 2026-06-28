@@ -8,6 +8,7 @@ import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
 import { startMusicTracks } from '../game/musicTracks.js'
 import { preloadGameSounds } from '../game/gameSounds.js'
+import { preloadAmbientSounds } from '../game/ambientSounds.js'
 import { resumeAudio } from '../game/songAudio.js'
 import './loader.css'
 
@@ -83,6 +84,7 @@ export default function Loader() {
         resumeAudio()
         startMusicTracks()
         preloadGameSounds()
+        preloadAmbientSounds()
         // The bar simply fades to transparent; the camera intro starts at the same time.
         setIsExiting(true)
         setPhase(PHASES.intro)

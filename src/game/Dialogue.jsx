@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import useStore from '../stores/useStore.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
+import { playSigh } from './ambientSounds.js'
 import { DIALOGUE_TEXT, INTRO_DIALOGUE_DELAY } from './gameConfig.js'
 
 // Intro speech bubble, shown after the camera arcs to the hero's face. The bubble + word-by-word
@@ -20,7 +22,12 @@ export default function Dialogue() {
             setVisible(false)
             return
         }
-        timerRef.current = setTimeout(() => setVisible(true), INTRO_DIALOGUE_DELAY * 1000)
+        timerRef.current = setTimeout(() => {
+            setVisible(true)
+            // The hero sighs as the camera settles and the bubble opens (not at the intro start).
+            const ambient = useStore.getState().ambientSoundParameters
+            playSigh(ambient.sighSound, ambient.sighVolume)
+        }, INTRO_DIALOGUE_DELAY * 1000)
         return () => clearTimeout(timerRef.current)
     }, [phase])
 

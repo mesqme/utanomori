@@ -377,6 +377,8 @@ export default function Controls() {
     const songGameParameters = useStore((state) => state.songGameParameters)
     const musicStoneParameters = useStore((state) => state.musicStoneParameters)
     const musicParameters = useStore((state) => state.musicParameters)
+    const ambientSoundParameters = useStore((state) => state.ambientSoundParameters)
+    const characterEyesParameters = useStore((state) => state.characterEyesParameters)
     const sheepParameters = useStore((state) => state.sheepParameters)
     const sheepMaterialParameters = useStore((state) => state.sheepMaterialParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
@@ -743,6 +745,24 @@ export default function Controls() {
         distanceFalloff: { value: musicParameters.distanceFalloff, min: 1, max: 5, step: 0.1, onChange: setParam('musicParameters', 'distanceFalloff') },
         collectedVolume: { value: musicParameters.collectedVolume, min: 0, max: 1, step: 0.01, onChange: setParam('musicParameters', 'collectedVolume') },
         volumeLerp: { value: musicParameters.volumeLerp, min: 0.2, max: 10, step: 0.1, onChange: setParam('musicParameters', 'volumeLerp') },
+    })
+
+    useControls('Ambient SFX', {
+        windVolume: { value: ambientSoundParameters.windVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windVolume') },
+        windDialogueVolume: { value: ambientSoundParameters.windDialogueVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windDialogueVolume') },
+        cicadaVolume: { value: ambientSoundParameters.cicadaVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'cicadaVolume') },
+        owlVolume: { value: ambientSoundParameters.owlVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'owlVolume') },
+        owlGapMin: { value: ambientSoundParameters.owlGapMin, min: 0, max: 30, step: 0.5, onChange: setParam('ambientSoundParameters', 'owlGapMin') },
+        owlGapMax: { value: ambientSoundParameters.owlGapMax, min: 1, max: 60, step: 0.5, onChange: setParam('ambientSoundParameters', 'owlGapMax') },
+        owlFade: { value: ambientSoundParameters.owlFade, min: 0.1, max: 5, step: 0.1, onChange: setParam('ambientSoundParameters', 'owlFade') },
+        footstepGrass: { value: ambientSoundParameters.footstepGrass, onChange: setParam('ambientSoundParameters', 'footstepGrass') },
+        footstepVolume: { value: ambientSoundParameters.footstepVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'footstepVolume') },
+        footstepInterval: { value: ambientSoundParameters.footstepInterval, min: 0.12, max: 0.8, step: 0.01, onChange: setParam('ambientSoundParameters', 'footstepInterval') },
+        footstepSpeedThreshold: { value: ambientSoundParameters.footstepSpeedThreshold, min: 0, max: 4, step: 0.05, onChange: setParam('ambientSoundParameters', 'footstepSpeedThreshold') },
+        mumbleVolume: { value: ambientSoundParameters.mumbleVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'mumbleVolume') },
+        sadVolume: { value: ambientSoundParameters.sadVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sadVolume') },
+        sighSound: { value: ambientSoundParameters.sighSound, options: { 'Sigh 1': 0, 'Sigh 2': 1, 'Sigh 3': 2, 'Sigh 4': 3 }, onChange: setParam('ambientSoundParameters', 'sighSound') },
+        sighVolume: { value: ambientSoundParameters.sighVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sighVolume') },
     })
 
     const sheepChars = sheepMaterialParameters.characters
@@ -2164,6 +2184,48 @@ export default function Controls() {
             }
             return controls
         }, {}),
+    })
+
+    useControls('Character Eyes', {
+        enabled: { value: characterEyesParameters.enabled, onChange: setParam('characterEyesParameters', 'enabled') },
+        // Placement on the face (local to the character model).
+        offsetX: { value: characterEyesParameters.offsetX, min: -2, max: 2, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetX') },
+        offsetY: { value: characterEyesParameters.offsetY, min: -1, max: 4, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetY') },
+        offsetZ: { value: characterEyesParameters.offsetZ, min: -2, max: 2, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetZ') },
+        rotX: { value: characterEyesParameters.rotX, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotX') },
+        rotY: { value: characterEyesParameters.rotY, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotY') },
+        rotZ: { value: characterEyesParameters.rotZ, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotZ') },
+        planeScale: { value: characterEyesParameters.planeScale, min: 0.05, max: 4, step: 0.01, onChange: setParam('characterEyesParameters', 'planeScale') },
+        headFollow: { value: characterEyesParameters.headFollow, onChange: setParam('characterEyesParameters', 'headFollow') },
+        headFollowStrength: { value: characterEyesParameters.headFollowStrength, min: 0, max: 2, step: 0.05, onChange: setParam('characterEyesParameters', 'headFollowStrength') },
+        // Eyeball (yellow circle, big wobbly border).
+        eyeColor: { value: characterEyesParameters.eyeColor, onChange: setParam('characterEyesParameters', 'eyeColor') },
+        eyeRadius: { value: characterEyesParameters.eyeRadius, min: 0.02, max: 0.5, step: 0.005, onChange: setParam('characterEyesParameters', 'eyeRadius') },
+        eyeSpacing: { value: characterEyesParameters.eyeSpacing, min: 0, max: 0.9, step: 0.005, onChange: setParam('characterEyesParameters', 'eyeSpacing') },
+        eyeOffsetY: { value: characterEyesParameters.eyeOffsetY, min: -0.4, max: 0.4, step: 0.005, onChange: setParam('characterEyesParameters', 'eyeOffsetY') },
+        eyeAspect: { value: characterEyesParameters.eyeAspect, min: 0.4, max: 1.6, step: 0.01, onChange: setParam('characterEyesParameters', 'eyeAspect') },
+        eyeNoiseScale: { value: characterEyesParameters.eyeNoiseScale, min: 0.5, max: 12, step: 0.1, onChange: setParam('characterEyesParameters', 'eyeNoiseScale') },
+        eyeNoiseStrength: { value: characterEyesParameters.eyeNoiseStrength, min: 0, max: 0.6, step: 0.01, onChange: setParam('characterEyesParameters', 'eyeNoiseStrength') },
+        // Pupil (squished ellipse, perlin border).
+        pupilColor: { value: characterEyesParameters.pupilColor, onChange: setParam('characterEyesParameters', 'pupilColor') },
+        pupilWidth: { value: characterEyesParameters.pupilWidth, min: 0.01, max: 0.3, step: 0.005, onChange: setParam('characterEyesParameters', 'pupilWidth') },
+        pupilHeight: { value: characterEyesParameters.pupilHeight, min: 0.01, max: 0.3, step: 0.005, onChange: setParam('characterEyesParameters', 'pupilHeight') },
+        pupilOffsetX: { value: characterEyesParameters.pupilOffsetX, min: -0.15, max: 0.15, step: 0.005, onChange: setParam('characterEyesParameters', 'pupilOffsetX') },
+        pupilOffsetY: { value: characterEyesParameters.pupilOffsetY, min: -0.15, max: 0.15, step: 0.005, onChange: setParam('characterEyesParameters', 'pupilOffsetY') },
+        pupilNoiseScale: { value: characterEyesParameters.pupilNoiseScale, min: 0.5, max: 12, step: 0.1, onChange: setParam('characterEyesParameters', 'pupilNoiseScale') },
+        pupilNoiseStrength: { value: characterEyesParameters.pupilNoiseStrength, min: 0, max: 0.6, step: 0.01, onChange: setParam('characterEyesParameters', 'pupilNoiseStrength') },
+        edgeSoftness: { value: characterEyesParameters.edgeSoftness, min: 0.005, max: 0.3, step: 0.005, onChange: setParam('characterEyesParameters', 'edgeSoftness') },
+        // Blink.
+        blinkInterval: { value: characterEyesParameters.blinkInterval, min: 0.3, max: 10, step: 0.1, onChange: setParam('characterEyesParameters', 'blinkInterval') },
+        blinkIntervalRandom: { value: characterEyesParameters.blinkIntervalRandom, min: 0, max: 8, step: 0.1, onChange: setParam('characterEyesParameters', 'blinkIntervalRandom') },
+        blinkDuration: { value: characterEyesParameters.blinkDuration, min: 0.04, max: 1, step: 0.01, onChange: setParam('characterEyesParameters', 'blinkDuration') },
+        // Occasional left/right pupil glance (rarer than blinks).
+        pupilLook: { value: characterEyesParameters.pupilLook, onChange: setParam('characterEyesParameters', 'pupilLook') },
+        pupilLookAmount: { value: characterEyesParameters.pupilLookAmount, min: 0, max: 0.15, step: 0.005, onChange: setParam('characterEyesParameters', 'pupilLookAmount') },
+        pupilLookInterval: { value: characterEyesParameters.pupilLookInterval, min: 1, max: 20, step: 0.5, onChange: setParam('characterEyesParameters', 'pupilLookInterval') },
+        pupilLookIntervalRandom: { value: characterEyesParameters.pupilLookIntervalRandom, min: 0, max: 15, step: 0.5, onChange: setParam('characterEyesParameters', 'pupilLookIntervalRandom') },
+        pupilLookHold: { value: characterEyesParameters.pupilLookHold, min: 0.1, max: 4, step: 0.1, onChange: setParam('characterEyesParameters', 'pupilLookHold') },
+        pupilLookSpeed: { value: characterEyesParameters.pupilLookSpeed, min: 1, max: 20, step: 0.5, onChange: setParam('characterEyesParameters', 'pupilLookSpeed') },
     })
 
     useControls('Camera Debug', {

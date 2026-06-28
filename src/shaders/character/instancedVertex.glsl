@@ -10,10 +10,23 @@ varying vec3 vInstanceTint;
 
 void main() {
     #include <beginnormal_vertex>
-    vObjectNormal = normalize(objectNormal);
-
     #include <begin_vertex>
-    vObjectPosition = transformed;
+
+    // The triplanar painterly reads vObjectPosition/Normal. Each scale is the SAME leaf geometry, so
+    // its raw local position is identical across all 36 instances — sampling that makes the brush
+    // repeat per-scale. Instead use the scale's REST position on the body: the instance matrix is
+    // recomposed each frame as compose(restPos, restRot*twist, scale), so its translation column
+    // (instanceMatrix[3]) is the rest centre — constant under the fur-dance twist. Sampling that
+    // locks the brush to the body surface (no swim as the sheep moves or the scales dance), giving a
+    // painterly shade per tuft that flows across the body like the skinned hero.
+    #ifdef USE_INSTANCING
+        vec3 restCentre = instanceMatrix[3].xyz;
+        vObjectPosition = restCentre;
+        vObjectNormal = normalize(restCentre); // radial ≈ surface normal for the triplanar blend
+    #else
+        vObjectPosition = transformed;
+        vObjectNormal = normalize(objectNormal);
+    #endif
 
     // Per-instance colour jitter (set via InstancedMesh.setColorAt → instanceColor).
     #ifdef USE_INSTANCING_COLOR

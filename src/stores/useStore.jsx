@@ -195,6 +195,71 @@ const DEFAULT_MUSIC_PARAMETERS = {
     volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
+// Ambient + character + footstep SFX (see ambientSounds.js / AmbientController). Wind is the
+// constant bed (ducked during dialogues), cicadas a secondary bed, owls a random far/close pool,
+// plus per-character one-shots and a switchable footstep pair.
+const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
+    windVolume: 0.09, // wind during walking gameplay (always present, gentle)
+    windDialogueVolume: 0.05, // wind ducked right down during a conversation / mini-game / intro
+    cicadaVolume: 0.12, // secondary ambient bed
+    owlVolume: 0.5, // peak volume of each owl hoot in the random pool
+    owlGapMin: 5, // min seconds of silence between owls
+    owlGapMax: 16, // max seconds of silence between owls
+    owlFade: 1.6, // fade in / out time (s) around each owl clip
+    footstepVolume: 0.02,
+    footstepInterval: 0.45, // seconds between steps while moving
+    footstepSpeedThreshold: 2.95, // hero speed (u/s) above which footsteps play
+    footstepGrass: true, // true = grassy footstep pair, false = plain footstep pair
+    mumbleVolume: 0.38, // capucine_mumble — companion conversation
+    sadVolume: 0.42, // capucin_sad — companion runs away after a missed song
+    sighSound: 2, // which sigh plays on the hero's intro dialogue (0..3 = sigh_01..04)
+    sighVolume: 0.9, // intro-dialogue sigh volume
+}
+
+// Procedural cartoon eyes drawn on a quad in front of the hero's face (see CharacterEyes + the
+// characterEyes shader). Placement is local to the character model; shape is in quad-UV units.
+const DEFAULT_CHARACTER_EYES_PARAMETERS = {
+    enabled: true,
+    // Placement on the model (local units; tune to sit the quad on the face).
+    offsetX: -1.5,
+    offsetY: 1.24,
+    offsetZ: 0.02,
+    rotX: -1.8,
+    rotY: 1.56,
+    rotZ: 1.82,
+    planeScale: 2.95, // overall size of the eyes quad
+    headFollow: true, // ride the `head` bone's bob / tilt on top of the tuned placement
+    headFollowStrength: 1.0, // 0 = ignore the head animation, 1 = full
+    // Eyeball (yellow circle with a big wobbly border).
+    eyeColor: '#f2c20a',
+    eyeRadius: 0.16, // fraction of the quad
+    eyeSpacing: 0.47, // gap between the two eyes
+    eyeOffsetY: 0,
+    eyeAspect: 1.02, // 1 = round, <1 squished horizontally
+    eyeNoiseScale: 1.1, // LOW = big chunky border wobbles ("very large noise")
+    eyeNoiseStrength: 0.07,
+    // Pupil (squished ellipse with its own perlin border).
+    pupilColor: '#130d09',
+    pupilWidth: 0.07,
+    pupilHeight: 0.1, // taller than wide = squished
+    pupilOffsetX: 0.02,
+    pupilOffsetY: 0,
+    pupilNoiseScale: 0.9,
+    pupilNoiseStrength: 0.13,
+    edgeSoftness: 0.01, // border softness (normalised)
+    // Blink.
+    blinkInterval: 2.9, // base seconds between blinks
+    blinkIntervalRandom: 3.0, // + up to this many extra seconds (randomised)
+    blinkDuration: 0.21, // seconds for a full close + open
+    // Occasional left/right glance (pupil slides ±amount). Rarer than blinks.
+    pupilLook: true,
+    pupilLookAmount: 0.06, // how far the pupil slides left/right
+    pupilLookInterval: 6.5, // base seconds between glances (well above the blink interval)
+    pupilLookIntervalRandom: 5.0, // + up to this many extra seconds (randomised)
+    pupilLookHold: 1.1, // seconds it holds the glance before returning to centre
+    pupilLookSpeed: 6.0, // glance ease speed (higher = snappier)
+}
+
 // The sheep music companion: animation pacing, world scale, and the scales' jump-driven twist.
 const DEFAULT_SHEEP_PARAMETERS = {
     modelScale: 0.65, // world scale of the glb (× the per-companion definition.scale)
@@ -344,6 +409,8 @@ const createStore = () =>
             songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS },
             musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS },
             musicParameters: { ...DEFAULT_MUSIC_PARAMETERS },
+            ambientSoundParameters: { ...DEFAULT_AMBIENT_SOUND_PARAMETERS },
+            characterEyesParameters: { ...DEFAULT_CHARACTER_EYES_PARAMETERS },
             sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS },
             sheepMaterialParameters: { ...DEFAULT_SHEEP_MATERIAL_PARAMETERS, characters: cloneSheepCharacters() },
 
@@ -482,6 +549,8 @@ if (import.meta?.hot) {
         songGameParameters: { ...DEFAULT_SONG_GAME_PARAMETERS, ...state.songGameParameters },
         musicStoneParameters: { ...DEFAULT_MUSIC_STONE_PARAMETERS, ...state.musicStoneParameters },
         musicParameters: { ...DEFAULT_MUSIC_PARAMETERS, ...state.musicParameters },
+        ambientSoundParameters: { ...DEFAULT_AMBIENT_SOUND_PARAMETERS, ...state.ambientSoundParameters },
+        characterEyesParameters: { ...DEFAULT_CHARACTER_EYES_PARAMETERS, ...state.characterEyesParameters },
         sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS, ...state.sheepParameters },
         sheepMaterialParameters: {
             ...DEFAULT_SHEEP_MATERIAL_PARAMETERS,

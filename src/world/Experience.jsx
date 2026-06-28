@@ -9,6 +9,7 @@ import BackgroundSphere from './BackgroundSphere.jsx'
 import Companions from './Companions.jsx'
 import MusicStones from './MusicStones.jsx'
 import MusicController from './MusicController.jsx'
+import AmbientController from './AmbientController.jsx'
 import CameraProjection from './CameraProjection.jsx'
 import useStore from '../stores/useStore.jsx'
 import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.jsx'
@@ -31,6 +32,7 @@ export default function Experience() {
             <Companions />
             <MusicStones />
             <MusicController />
+            <AmbientController />
 
             <Controls />
             <BackgroundSphere />
