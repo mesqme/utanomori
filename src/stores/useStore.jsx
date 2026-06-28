@@ -113,6 +113,7 @@ const DEFAULT_ARROW_PARAMETERS = {
 
 // Song mini-game UI (the note wheel) + the spatial singing voices.
 const DEFAULT_SONG_GAME_PARAMETERS = {
+    interactRadius: 4.0, // distance (world units) to a companion at which the "press E" prompt appears
     wheelRadius: 150, // px from the wheel centre to each note button
     buttonSize: 64, // px diameter of each note button
     songVolume: 0.12, // base loudness of a companion's looping song
@@ -140,14 +141,18 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     scale: 0.55, // normal stone scale (matches the ordinary stoneSize)
     yOffset: 1.25, // base height offset (added on top of hoverHeight)
     hoverHeight: 2.0, // height of the rainbow's low ends above the ground
-    bobAmount: 0.15, // gentle vertical bob amplitude
-    bobSpeed: 1.2, // bob speed
+    bobAmount: 0.15, // gentle vertical bob amplitude (when floatRotate is off)
+    bobSpeed: 1.2, // bob / wobble speed
+    floatRotate: false, // float in place (gentle rotation wobble) instead of a vertical bob
+    floatRotateAmount: 0.12, // wobble amplitude in radians when floatRotate is on
     flashBoost: 1.4, // brightness multiplier when a note hits the stone (sing / click)
     hoverBoost: 0.35, // slight brighten while a clickable stone is hovered
     hoverScale: 0.18, // extra scale-up while a clickable stone is hovered (on top of brighten)
+    hoverProxyRadius: 1.8, // world radius of the invisible hover/click proxy around each stone
     flashDuration: 0.32, // seconds the flash decays over
     listenTempo: 1.6, // playback speed multiplier when hearing the song (>1 = slower)
-    soundSpacing: 0.7, // base seconds between melody sounds during playback (× listenTempo)
+    notePlayDuration: 0.9, // base seconds each note plays before the next during the melody (× listenTempo)
+    alwaysSixNotes: true, // always stage a full 6-stone board (extra stones are silent decoys)
     roundClearPause: 1.1, // seconds the "Nice!" banner holds before the next round's countdown
     countdownFrom: 3, // 3·2·1 — how many counts before each round's playback
     countdownStep: 0.7, // seconds per countdown tick
@@ -163,26 +168,15 @@ const DEFAULT_MUSIC_STONE_PARAMETERS = {
     dialogueCameraHeight: 2.6, // camera height for the close-up speech framing
     dialogueCameraDistance: 7, // distance back from the character during speech
     dialogueTargetY: 1.2, // look-at height (the character's head) during speech
-    // Pointer: a downward indicator that hops to the singing note (playback) then the pressed
-    // note (input), so the player can follow / confirm which stone is active.
+    // Pointer (the shared arrow): during playback it snaps to the singing note; during input it
+    // follows the mouse freely around the arc and snaps onto a stone only while its proxy is hovered.
     pointerColor: '#ffffff',
     // Size is taken from the walking target arrow (arrowParameters.scale) — it's the same arrow.
     pointerRadius: 1.75, // arrow distance from the rainbow centre (the half-circle's centre)
-    pointerStiffness: 86, // spring → how fast the arrow orbits round to the note
-    pointerDamping: 14, // spring → lower = more overshoot/wobble (inertia from the travel speed)
-    pointerPulseAmount: 0.5, // radius dip on a same-note replay / a press (a poke toward the centre)
-    pointerPulseDuration: 0.3, // seconds the poke lasts
-    pointerAppearTime: 0.12, // seconds the arrow fades back in after snapping to a new note
     // See-through: during the game, the bottom side stones act like the hero — trees in front of
     // them fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,
     seeThroughRadius: 2.8,
-    // Feedback torus ring around a pressed stone (green = correct, red = wrong), see [[#31]].
-    ringRadius: 1.15, // ring radius (world units, scales with the stone's rise)
-    ringFlashDuration: 0.6, // seconds the ring flash fades over
-    ringOpacity: 0.95, // peak ring opacity
-    ringColorCorrect: '#46e06a',
-    ringColorWrong: '#ff4d4d',
 }
 
 // The three synched backing tracks (one per music companion). All start (looping, muted) on GO;
@@ -215,6 +209,8 @@ const DEFAULT_SHEEP_PARAMETERS = {
     scaleColorVariation: 0.12, // slight per-scale colour jitter (0 = all scales the same colour)
     followLead: 2.4, // trail distance from the hero to the FIRST collected companion
     followGap: 1.7, // trail distance between consecutive collected companions
+    seeThroughRadius: 1.6, // world radius of the see-through hole props punch around this companion
+    seeThroughHeight: 0.6, // height above the companion's feet to centre the see-through hole
 }
 
 // Sheep stylized material: the hero's painterly settings + per-companion base colours.

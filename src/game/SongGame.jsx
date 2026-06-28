@@ -41,7 +41,7 @@ export default function SongGame() {
             return
         }
         setStonesReady(false)
-        const stoneCount = useSongGame.getState().stoneSounds.length
+        const stoneCount = useSongGame.getState().stoneCount
         const t = setTimeout(() => setStonesReady(true), setupDuration(stoneCount) * 1000)
         return () => clearTimeout(t)
     }, [stage])
@@ -71,7 +71,7 @@ export default function SongGame() {
         const len = game.rounds[round] ?? game.song.length
         const sequence = game.song.slice(0, len)
         const p = useStore.getState().musicStoneParameters
-        const spacing = (p?.soundSpacing ?? 0.7) * (p?.listenTempo ?? 1)
+        const spacing = (p?.notePlayDuration ?? 0.9) * (p?.listenTempo ?? 1)
         resumeAudio()
 
         const timers = []
@@ -84,7 +84,7 @@ export default function SongGame() {
                     playSound(game.track, game.stoneSounds[stone])
                 }, at * 1000)
             )
-            timers.push(setTimeout(() => useSongGame.getState().setActiveNote(null), (at + spacing * 0.7) * 1000))
+            timers.push(setTimeout(() => useSongGame.getState().setActiveNote(null), (at + spacing * 0.85) * 1000))
             t += spacing
         })
         timers.push(setTimeout(() => useSongGame.getState().openWheel(), (t + 0.3) * 1000))

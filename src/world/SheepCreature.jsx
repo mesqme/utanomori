@@ -6,6 +6,13 @@ import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import { revealCircle } from './utils/revealCircle.js'
+import { seeThrough } from './utils/seeThrough.js'
+import {
+    claimCharacterSeeThroughSlot,
+    releaseCharacterSeeThroughSlot,
+    writeCharacterSeeThrough,
+    clearCharacterSeeThrough,
+} from './utils/characterSeeThrough.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import sheepUrl from '../assets/models/sheep.glb'
@@ -56,6 +63,20 @@ export default function SheepCreature({ definition, moving = false }) {
     const tmpMat = useMemo(() => new THREE.Matrix4(), [])
     const tmpWorld = useMemo(() => new THREE.Vector3(), [])
     const tmpColor = useMemo(() => new THREE.Color(), [])
+    // See-through projection temps (props in front of this companion fade — like the hero/stones).
+    const stAnchor = useMemo(() => new THREE.Vector3(), [])
+    const stEdge = useMemo(() => new THREE.Vector3(), [])
+    const stRight = useMemo(() => new THREE.Vector3(), [])
+    const seeThroughSlotRef = useRef(-1)
+
+    // Claim a fixed see-through slot for this companion (freed on unmount).
+    useEffect(() => {
+        seeThroughSlotRef.current = claimCharacterSeeThroughSlot()
+        return () => {
+            releaseCharacterSeeThroughSlot(seeThroughSlotRef.current)
+            seeThroughSlotRef.current = -1
+        }
+    }, [])
 
     // Slight per-scale colour jitter (tunable). Each scale keeps a stable random offset; the
     // variation amount scales it into a per-instance tint multiplied onto the scale base colour.
@@ -243,6 +264,33 @@ export default function SheepCreature({ definition, moving = false }) {
                 material.uniforms.uFade.value = fade
                 material.uniforms.uBackgroundColor.value.set(bg)
             })
+
+            // See-through: project this companion to a screen disc so PROPS in front of it fade
+            // (the sheep itself stays opaque — the hole is punched in the trees). Skip when it's
+            // already fading out at the world edge or is off-screen / behind the camera.
+            const slot = seeThroughSlotRef.current
+            if (slot >= 0 && seeThrough.enabled && fade < 0.85) {
+                stAnchor.copy(tmpWorld)
+                stAnchor.y += p.seeThroughHeight ?? 0.6
+                const camDist = state.camera.position.distanceTo(stAnchor)
+                stRight.setFromMatrixColumn(state.camera.matrixWorld, 0)
+                stEdge.copy(stAnchor).addScaledVector(stRight, p.seeThroughRadius ?? 1.6)
+                stAnchor.project(state.camera)
+                stEdge.project(state.camera)
+                if (stAnchor.z > -1 && stAnchor.z < 1) {
+                    const dpr = state.viewport.dpr
+                    const bw = state.size.width * dpr
+                    const bh = state.size.height * dpr
+                    const cx = (stAnchor.x * 0.5 + 0.5) * bw
+                    const cy = (stAnchor.y * 0.5 + 0.5) * bh
+                    const rPx = Math.hypot((stEdge.x * 0.5 + 0.5) * bw - cx, (stEdge.y * 0.5 + 0.5) * bh - cy)
+                    writeCharacterSeeThrough(slot, cx, cy, rPx, camDist)
+                } else {
+                    clearCharacterSeeThrough(slot)
+                }
+            } else if (slot >= 0) {
+                clearCharacterSeeThrough(slot)
+            }
         }
     })
 

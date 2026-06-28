@@ -109,11 +109,12 @@
 
 .loader-go-button {
     font-size: var(--sj-loader-go-size, 52px);
-    letter-spacing: 0.15em;
+    letter-spacing: 0.04em;
     color: var(--sj-ui-primary);
-    font-family: 'Bebas Neue', sans-serif;
-    font-weight: 100;
-    font-stretch: condensed;
+    /* Match the speech-bubble text: normal-weight, normal-stretch Bebas (not the thin/condensed
+       loader-percent treatment), so the "GO/Start" CTA reads the same as the in-game dialogue. */
+    font-family: 'Bebas Neue', cursive;
+    font-weight: normal;
     user-select: none;
     pointer-events: none;
     /* Fade in gently when GO appears (initial warmup, and after the restart curtain lifts). */

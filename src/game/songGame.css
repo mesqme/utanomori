@@ -52,8 +52,9 @@
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
     font-family: inherit;
-    font-size: 16px;
-    letter-spacing: 0.1em;
+    font-size: 18px;
+    font-weight: normal;
+    letter-spacing: 0.04em; /* match the speech-bubble text */
     cursor: pointer;
     transition: background 0.12s, transform 0.12s;
 }
@@ -78,9 +79,9 @@
 }
 
 .song-start-button {
-    font-size: 20px;
+    font-size: 22px;
     padding: 12px 44px;
-    letter-spacing: 0.16em;
+    letter-spacing: 0.04em; /* match the speech-bubble text */
 }
 
 /* 3·2·1 countdown before each round's playback. */
@@ -101,6 +102,9 @@
     font-size: 52px;
     font-weight: 700;
     line-height: 1;
+    letter-spacing: 0; /* a single digit + inherited tracking would shove it off-centre */
+    text-indent: 0;
+    text-align: center;
     text-shadow: 0 2px 14px rgba(9, 8, 34, 0.6);
     animation: song-count-pop var(--count-step, 0.7s) ease-out forwards;
 }

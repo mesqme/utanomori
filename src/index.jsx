@@ -45,7 +45,7 @@ root.render(
             >
                 <Experience />
             </Canvas>
-            <Leva collapsed />
+            <Leva collapsed theme={{ sizes: { rootWidth: '400px', controlWidth: '150px' } }} />
             <ControlsIcons />
             <InteractionPrompt />
             <SongGame />

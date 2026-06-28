@@ -684,12 +684,16 @@ export default function Controls() {
         hoverHeight: { value: musicStoneParameters.hoverHeight, min: 0, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'hoverHeight') },
         bobAmount: { value: musicStoneParameters.bobAmount, min: 0, max: 1, step: 0.01, onChange: setParam('musicStoneParameters', 'bobAmount') },
         bobSpeed: { value: musicStoneParameters.bobSpeed, min: 0, max: 5, step: 0.05, onChange: setParam('musicStoneParameters', 'bobSpeed') },
+        floatRotate: { value: musicStoneParameters.floatRotate, onChange: setParam('musicStoneParameters', 'floatRotate') },
+        floatRotateAmount: { value: musicStoneParameters.floatRotateAmount, min: 0, max: 0.6, step: 0.01, onChange: setParam('musicStoneParameters', 'floatRotateAmount') },
         flashBoost: { value: musicStoneParameters.flashBoost, min: 0, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'flashBoost') },
         hoverBoost: { value: musicStoneParameters.hoverBoost, min: 0, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'hoverBoost') },
         hoverScale: { value: musicStoneParameters.hoverScale, min: 0, max: 1, step: 0.01, onChange: setParam('musicStoneParameters', 'hoverScale') },
+        hoverProxyRadius: { value: musicStoneParameters.hoverProxyRadius, min: 0.5, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'hoverProxyRadius') },
         flashDuration: { value: musicStoneParameters.flashDuration, min: 0.05, max: 2, step: 0.01, onChange: setParam('musicStoneParameters', 'flashDuration') },
         listenTempo: { value: musicStoneParameters.listenTempo, min: 0.5, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'listenTempo') },
-        soundSpacing: { value: musicStoneParameters.soundSpacing, min: 0.2, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'soundSpacing') },
+        notePlayDuration: { value: musicStoneParameters.notePlayDuration, min: 0.2, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'notePlayDuration') },
+        alwaysSixNotes: { value: musicStoneParameters.alwaysSixNotes, onChange: setParam('musicStoneParameters', 'alwaysSixNotes') },
         roundClearPause: { value: musicStoneParameters.roundClearPause, min: 0, max: 4, step: 0.1, onChange: setParam('musicStoneParameters', 'roundClearPause') },
         countdownFrom: { value: musicStoneParameters.countdownFrom, min: 1, max: 5, step: 1, onChange: setParam('musicStoneParameters', 'countdownFrom') },
         countdownStep: { value: musicStoneParameters.countdownStep, min: 0.3, max: 1.5, step: 0.05, onChange: setParam('musicStoneParameters', 'countdownStep') },
@@ -705,18 +709,8 @@ export default function Controls() {
         dialogueTargetY: { value: musicStoneParameters.dialogueTargetY, min: 0, max: 4, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueTargetY') },
         pointerColor: { value: musicStoneParameters.pointerColor, onChange: setParam('musicStoneParameters', 'pointerColor') },
         pointerRadius: { value: musicStoneParameters.pointerRadius, min: 0, max: 6, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerRadius') },
-        pointerStiffness: { value: musicStoneParameters.pointerStiffness, min: 5, max: 400, step: 1, onChange: setParam('musicStoneParameters', 'pointerStiffness') },
-        pointerDamping: { value: musicStoneParameters.pointerDamping, min: 1, max: 40, step: 0.5, onChange: setParam('musicStoneParameters', 'pointerDamping') },
-        pointerPulseAmount: { value: musicStoneParameters.pointerPulseAmount, min: 0, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseAmount') },
-        pointerPulseDuration: { value: musicStoneParameters.pointerPulseDuration, min: 0.05, max: 1.5, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerPulseDuration') },
-        pointerAppearTime: { value: musicStoneParameters.pointerAppearTime, min: 0.02, max: 0.6, step: 0.01, onChange: setParam('musicStoneParameters', 'pointerAppearTime') },
         seeThroughEnabled: { value: musicStoneParameters.seeThroughEnabled, onChange: setParam('musicStoneParameters', 'seeThroughEnabled') },
         seeThroughRadius: { value: musicStoneParameters.seeThroughRadius, min: 1, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'seeThroughRadius') },
-        ringRadius: { value: musicStoneParameters.ringRadius, min: 0.3, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'ringRadius') },
-        ringFlashDuration: { value: musicStoneParameters.ringFlashDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'ringFlashDuration') },
-        ringOpacity: { value: musicStoneParameters.ringOpacity, min: 0, max: 1, step: 0.05, onChange: setParam('musicStoneParameters', 'ringOpacity') },
-        ringColorCorrect: { value: musicStoneParameters.ringColorCorrect, onChange: setParam('musicStoneParameters', 'ringColorCorrect') },
-        ringColorWrong: { value: musicStoneParameters.ringColorWrong, onChange: setParam('musicStoneParameters', 'ringColorWrong') },
     })
 
     useControls('Music', {
@@ -755,6 +749,8 @@ export default function Controls() {
         scaleColorVariation: { value: sheepParameters.scaleColorVariation, min: 0, max: 0.6, step: 0.01, onChange: setParam('sheepParameters', 'scaleColorVariation') },
         followLead: { value: sheepParameters.followLead, min: 0.5, max: 8, step: 0.1, onChange: setParam('sheepParameters', 'followLead') },
         followGap: { value: sheepParameters.followGap, min: 0.5, max: 8, step: 0.1, onChange: setParam('sheepParameters', 'followGap') },
+        seeThroughRadius: { value: sheepParameters.seeThroughRadius, min: 0.3, max: 5, step: 0.05, onChange: setParam('sheepParameters', 'seeThroughRadius') },
+        seeThroughHeight: { value: sheepParameters.seeThroughHeight, min: 0, max: 3, step: 0.05, onChange: setParam('sheepParameters', 'seeThroughHeight') },
         painterlyEnabled: { value: sheepMaterialParameters.painterlyEnabled, onChange: setParam('sheepMaterialParameters', 'painterlyEnabled') },
         painterlyBrightnessVariation: { value: sheepMaterialParameters.painterlyBrightnessVariation, min: 0, max: 1.5, step: 0.02, onChange: setParam('sheepMaterialParameters', 'painterlyBrightnessVariation') },
         painterlyScale: { value: sheepMaterialParameters.painterlyScale, min: 0.01, max: 1, step: 0.01, onChange: setParam('sheepMaterialParameters', 'painterlyScale') },
@@ -1856,6 +1852,7 @@ export default function Controls() {
     })
 
     useControls('Song Game', {
+        interactRadius: { value: songGameParameters.interactRadius, min: 1, max: 12, step: 0.1, onChange: setParam('songGameParameters', 'interactRadius') },
         wheelRadius: { value: songGameParameters.wheelRadius, min: 60, max: 320, step: 1, onChange: setParam('songGameParameters', 'wheelRadius') },
         buttonSize: { value: songGameParameters.buttonSize, min: 24, max: 140, step: 1, onChange: setParam('songGameParameters', 'buttonSize') },
         songVolume: { value: songGameParameters.songVolume, min: 0, max: 0.5, step: 0.01, onChange: setParam('songGameParameters', 'songVolume') },

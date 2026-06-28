@@ -31,6 +31,11 @@ uniform float uSeeThroughTextureScale;
 #define MAX_STONE_ST 4
 uniform vec4 uStoneSeeThrough[MAX_STONE_ST];
 uniform int uStoneSeeThroughCount;
+// Extra see-through subjects: the music characters (sheep). Same packing as the stones; inactive
+// slots carry radius 0 (skipped).
+#define MAX_CHAR_ST 4
+uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
+uniform int uCharSeeThroughCount;
 
 // Fresnel colour rim for the hard-surface props (trunks / stones / mushrooms). Tree
 // leaves use the painterly silhouette edge below instead.
@@ -117,6 +122,12 @@ void main() {
         if (i >= uStoneSeeThroughCount) break;
         vec4 s = uStoneSeeThrough[i];
         stAmount = max(stAmount, seeThroughAmount(s.xy, s.z, s.w));
+    }
+    for (int i = 0; i < MAX_CHAR_ST; i++) {
+        if (i >= uCharSeeThroughCount) break;
+        vec4 c = uCharSeeThrough[i];
+        if (c.z <= 0.0) continue; // inactive slot
+        stAmount = max(stAmount, seeThroughAmount(c.xy, c.z, c.w));
     }
     if (stAmount > 0.0) {
         vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);

@@ -23,7 +23,7 @@ export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble
 export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 
 export const DIALOGUE_TEXT =
-    'Well met, wandering soul. My song has slipped away into this old whispering wood... wouldst thou help me find my lost melody?'
+    'Well met, wandering soul. My song has slipped away into this old whispering wood... would you help me find my lost melody?'
 
 // Funny-angry one-liners a music character blurts out when you play the wrong note, just before
 // it storms off to a new hiding place. One is picked at random per failure.
@@ -42,8 +42,11 @@ export const CREDITS_LINES = [
     'A small tale of a traveller',
     'and his lost melody',
     '\u00a0',
-    '— Design & Code —',
-    'You',
+    '— Code —',
+    'mesq',
+    ' ',
+    '— Music —',
+    'Alexander Manin',
     '\u00a0',
     '— Built with —',
     'Three.js · React Three Fiber',

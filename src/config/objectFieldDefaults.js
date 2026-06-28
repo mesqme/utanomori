@@ -34,15 +34,18 @@ export const STONE_VARIANTS = Object.freeze([
  * The seven music-stone meshes from stones.glb, used only by the song mini-game (one per
  * note). `diameter` is the measured safe diameter (world units) → safe radius = diameter/2,
  * which drives the dynamic grass clearing around each rising stone (see MusicStones).
+ * `circle` is the matching `musicStone_0X_circle` mesh — a ring authored AROUND the stone
+ * that flashes green/red as the correct/incorrect press feedback (baked with the stone's
+ * offset + parented to it so it stays aligned).
  */
 export const MUSIC_STONE_VARIANTS = Object.freeze([
-    { node: 'musicStone_01', diameter: 3.27 },
-    { node: 'musicStone_02', diameter: 3.27 },
-    { node: 'musicStone_03', diameter: 3.11 },
-    { node: 'musicStone_04', diameter: 3.11 },
-    { node: 'musicStone_05', diameter: 3.11 },
-    { node: 'musicStone_06', diameter: 3.0 },
-    { node: 'musicStone_07', diameter: 3.25 },
+    { node: 'musicStone_01', circle: 'musicStone_01_circle', diameter: 3.27 },
+    { node: 'musicStone_02', circle: 'musicStone_02_circle', diameter: 3.27 },
+    { node: 'musicStone_03', circle: 'musicStone_03_circle', diameter: 3.11 },
+    { node: 'musicStone_04', circle: 'musicStone_04_circle', diameter: 3.11 },
+    { node: 'musicStone_05', circle: 'musicStone_05_circle', diameter: 3.11 },
+    { node: 'musicStone_06', circle: 'musicStone_06_circle', diameter: 3.0 },
+    { node: 'musicStone_07', circle: 'musicStone_07_circle', diameter: 3.25 },
 ])
 
 /**

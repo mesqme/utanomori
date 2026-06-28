@@ -24,9 +24,15 @@ import stonesModelUrl from '../assets/models/stones.glb'
 // character (3–6), in a half-circle "rainbow" above the singing companion. The camera lifts, each
 // played sound flashes its stone, and the player clicks the stones to repeat the melody. Stone i
 // plays the unique sound game.stoneSounds[i]; the melody (game.song) is a sequence of stone indices.
+//
+// Hover/click happen on a FIXED-SIZE invisible proxy sphere per stone (not the visible mesh, which
+// scales with the rise + hover and would drop the hover at its edges). The shared arrow pointer
+// (TargetArrow) follows the mouse freely around the arc during input and snaps onto a stone only
+// when its proxy is hovered (during playback it snaps to the singing note).
 const COUNT_MAX = 7 // we keep up to 7 meshes; the active game uses the first `count` of them
 const STAGED = new Set(['setup', 'countdown', 'playback', 'input', 'roundClear', 'success', 'fail'])
 const REVEAL_FACTOR_ALWAYS = 1000 // focal element → never fade at the reveal-circle edge
+const POINTER_APPEAR_TIME = 0.14 // seconds the pointer scales back from 0 when it pops to a new note
 const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 
 export default function MusicStones() {
@@ -53,42 +59,34 @@ export default function MusicStones() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nodes])
 
+    // Shared invisible hover proxy: a unit sphere (scaled per frame to a fixed world radius). It
+    // renders nothing (colorWrite off) but stays raycastable so hover/click are stable.
+    const proxyGeometry = useMemo(() => new THREE.SphereGeometry(1, 12, 8), [])
+    const proxyMaterial = useMemo(
+        () => new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, depthTest: false, colorWrite: false }),
+        []
+    )
+
     useEffect(() => {
         stones.forEach((s) => {
             if (s.material.uniforms.uPainterlyTexture) s.material.uniforms.uPainterlyTexture.value = painterlyTexture
         })
     }, [stones, painterlyTexture])
 
-    // Feedback torus: one ring per stone, hidden until a press flashes it green (correct) or red
-    // (incorrect). Unit-radius geometry (scaled per frame); each ring has its own basic material
-    // so it can carry its own colour/opacity. (Later: swap in a custom torus per stone.)
-    const ringGeometry = useMemo(() => new THREE.TorusGeometry(1, 0.085, 14, 56), [])
-    const ringMaterials = useMemo(
-        () =>
-            Array.from(
-                { length: COUNT_MAX },
-                () => new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, toneMapped: false, depthTest: false, depthWrite: false })
-            ),
-        []
-    )
-
     useEffect(() => () => {
         stones.forEach((s) => {
             s.geometry.dispose()
             s.material.dispose()
         })
-        ringGeometry.dispose()
-        ringMaterials.forEach((m) => m.dispose())
+        proxyGeometry.dispose()
+        proxyMaterial.dispose()
         clearAllMusicStones()
         clearMusicStoneSeeThrough()
         musicStonePointer.active = false
-    }, [stones, ringGeometry, ringMaterials])
+    }, [stones, proxyGeometry, proxyMaterial])
 
     const meshRefs = useRef([])
-    const ringRefs = useRef([])
-    const ringFlashRef = useRef(new Array(COUNT_MAX).fill(0)) // ring flash decay 0..1
-    const ringCorrectRef = useRef(new Array(COUNT_MAX).fill(true)) // last flash was correct?
-    const prevPressNonceRef = useRef(0)
+    const proxyRefs = useRef([])
     const scaleRef = useRef(new Array(COUNT_MAX).fill(0)) // animated rise progress 0..1
     const flashRef = useRef(new Array(COUNT_MAX).fill(0)) // flash decay 0..1
     const hoverRef = useRef(new Array(COUNT_MAX).fill(false)) // pointer is over a clickable stone
@@ -101,12 +99,10 @@ export default function MusicStones() {
     const tmpColor = useMemo(() => new THREE.Color(), [])
 
     // Pointer pose: written to the shared musicStonePointer, rendered by the single arrow (TargetArrow).
-    const pointerWasVisibleRef = useRef(false)
-    const pointerAngleRef = useRef(0)
-    const pointerTargetRef = useRef(-1)
-    const pointerPrevTargetRef = useRef(-1)
-    const pointerAppearRef = useRef(0)
-    const pointerPulseRef = useRef(0)
+    // The pointer is bound to the PLAYED note (sung during the melody / pressed while repeating) — it
+    // pops note-to-note (scales from 0 at each new note), it does not rotate or follow the cursor.
+    const pointerTargetRef = useRef(-1) // stone the pointer currently sits at
+    const pointerAppearRef = useRef(0) // 0..1 scale-in after a snap to a new note
     const pointerTargetPos = useMemo(() => new THREE.Vector3(), [])
     const ptrRadial = useMemo(() => new THREE.Vector3(), [])
     const ptrForward = useMemo(() => new THREE.Vector3(), [])
@@ -130,7 +126,7 @@ export default function MusicStones() {
 
         // Capture the layout (companion centre + this character's stone count) when staging begins.
         if (staged && !layoutRef.current && game.stoneSounds.length > 0) {
-            layoutRef.current = { cx: game.companion.x, cz: game.companion.z, count: game.stoneSounds.length }
+            layoutRef.current = { cx: game.companion.x, cz: game.companion.z, count: game.stoneCount }
             stageStartRef.current = state.clock.elapsedTime
         }
 
@@ -168,19 +164,8 @@ export default function MusicStones() {
         if (game.activeNote !== prevNoteRef.current) {
             if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < COUNT_MAX) {
                 flashRef.current[game.activeNote] = 1
-                if (game.activeNote === pointerTargetRef.current) pointerPulseRef.current = p.pointerPulseDuration
             }
             prevNoteRef.current = game.activeNote
-        }
-
-        // Press feedback: flash the pressed stone's ring green (correct) or red (incorrect).
-        if (game.lastPress && game.lastPress.nonce !== prevPressNonceRef.current) {
-            prevPressNonceRef.current = game.lastPress.nonce
-            const st = game.lastPress.stone
-            if (st != null && st >= 0 && st < COUNT_MAX) {
-                ringFlashRef.current[st] = 1
-                ringCorrectRef.current[st] = game.lastPress.correct
-            }
         }
 
         // No layout (idle): everything sunk → hide, clear state, leave the camera.
@@ -188,9 +173,10 @@ export default function MusicStones() {
             clearAllMusicStones()
             clearMusicStoneSeeThrough()
             musicStonePointer.active = false
+            pointerTargetRef.current = -1
             for (let i = 0; i < COUNT_MAX; i++) {
                 if (meshRefs.current[i]) meshRefs.current[i].visible = false
-                if (ringRefs.current[i]) ringRefs.current[i].visible = false
+                if (proxyRefs.current[i]) proxyRefs.current[i].visible = false
             }
             return
         }
@@ -204,6 +190,11 @@ export default function MusicStones() {
         const rightX = Math.cos(cameraRig.angle)
         const rightZ = -Math.sin(cameraRig.angle)
         const span = Math.max(1, count - 1)
+        // Stone visuals + clicking happen ONLY while the player repeats (input). During the melody
+        // (playback) the proxies still RAYCAST — so we track which note the cursor is over — but the
+        // stones don't react (no enlarge / hover-brighten) and nothing is clickable yet.
+        const inputStage = game.stage === 'input'
+        const trackActive = staged && (inputStage || game.stage === 'playback')
 
         let allDown = true
         for (let i = 0; i < COUNT_MAX; i++) {
@@ -213,9 +204,8 @@ export default function MusicStones() {
                 // Not part of this character's set.
                 scaleRef.current[i] = 0
                 hoverScaleRef.current[i] = 0
-                ringFlashRef.current[i] = 0
                 mesh.visible = false
-                if (ringRefs.current[i]) ringRefs.current[i].visible = false
+                if (proxyRefs.current[i]) proxyRefs.current[i].visible = false
                 continue
             }
 
@@ -229,8 +219,8 @@ export default function MusicStones() {
 
             flashRef.current[i] = Math.max(0, flashRef.current[i] - dt / Math.max(0.02, p.flashDuration))
 
-            // Hover: ease a small scale-up (and brighten below) while clickable.
-            const hovered = game.stage === 'input' && hoverRef.current[i]
+            // Hover visual (enlarge + brighten) only while the player repeats (input).
+            const hovered = inputStage && hoverRef.current[i]
             hoverScaleRef.current[i] = THREE.MathUtils.damp(hoverScaleRef.current[i], hovered ? 1 : 0, 12, dt)
 
             const appear = easeOut(s)
@@ -241,91 +231,89 @@ export default function MusicStones() {
             const hOff = Math.cos(theta) * p.radius
             const vOff = Math.sin(theta) * p.radius
             const appearDrift = (1 - appear) * 0.6
-            const bob = Math.sin(state.clock.elapsedTime * p.bobSpeed + i * 1.3) * p.bobAmount * appear
+
+            // Idle motion: a vertical bob (bobAmount) AND/OR a gentle in-place rotation wobble
+            // (floatRotate) — both can run together now.
+            const ph = state.clock.elapsedTime * p.bobSpeed + i * 1.3
+            const bob = Math.sin(ph) * p.bobAmount * appear
+            let wobbleYaw = 0
+            let wobbleTilt = 0
+            if (p.floatRotate) {
+                wobbleYaw = Math.sin(ph) * (p.floatRotateAmount ?? 0.12) * appear
+                wobbleTilt = Math.cos(ph * 0.8) * (p.floatRotateAmount ?? 0.12) * 0.5 * appear
+            }
+
             mesh.position.set(
                 layout.cx + rightX * hOff,
                 groundY + p.yOffset + p.hoverHeight + vOff - appearDrift + bob,
                 layout.cz + rightZ * hOff
             )
-            mesh.rotation.set(Math.PI / 2, rotations[i], 0)
+            mesh.rotation.set(Math.PI / 2 + wobbleTilt, rotations[i] + wobbleYaw, 0)
             mesh.scale.setScalar(meshScale)
+
+            // Invisible hover proxy: fixed world radius at the stone's centre. Live during the melody
+            // AND input so we always track which note the cursor is over — but it only highlights /
+            // is clickable during input (above + onClick guard). Clear stale hover when it goes idle
+            // (pointer-out doesn't always fire as the proxy hides).
+            const proxy = proxyRefs.current[i]
+            if (proxy) {
+                const proxyLive = trackActive && s > 0.4
+                proxy.visible = proxyLive
+                if (proxyLive) {
+                    proxy.position.copy(mesh.position)
+                    proxy.scale.setScalar(p.hoverProxyRadius ?? 1.8)
+                } else {
+                    hoverRef.current[i] = false
+                }
+            }
 
             baseColor.set(p['color' + i] ?? '#ffffff')
             const hoverAmount = hovered ? p.hoverBoost : 0
             tmpColor.copy(baseColor).multiplyScalar(1 + flashRef.current[i] * p.flashBoost + hoverAmount)
             stones[i].material.uniforms.uBaseColor.value.copy(tmpColor)
-
-            // Feedback ring: billboarded torus around the stone, fading after a press.
-            const ring = ringRefs.current[i]
-            if (ring) {
-                ringFlashRef.current[i] = Math.max(0, ringFlashRef.current[i] - dt / Math.max(0.05, p.ringFlashDuration))
-                const rf = ringFlashRef.current[i]
-                if (rf > 0 && mesh.visible) {
-                    ring.visible = true
-                    ring.position.copy(mesh.position)
-                    ring.quaternion.copy(state.camera.quaternion)
-                    ring.scale.setScalar(p.ringRadius * appear)
-                    ringMaterials[i].color.set(ringCorrectRef.current[i] ? p.ringColorCorrect : p.ringColorWrong)
-                    ringMaterials[i].opacity = rf * (p.ringOpacity ?? 0.95)
-                } else {
-                    ring.visible = false
-                }
-            }
         }
 
-        // Pointer: orbits the rainbow centre to the singing note (playback) or the hovered stone
-        // (input), via a damped spring. Persists between notes. (Rendered by the single arrow.)
-        let instTarget = -1
-        if (game.stage === 'playback' && game.activeNote != null && game.activeNote >= 0 && game.activeNote < count) {
-            instTarget = game.activeNote
-        } else if (game.stage === 'input') {
+        // Pointer (the shared arrow): playback → the singing note; input → the HOVERED stone. On
+        // each change it snaps to that note's place and re-"appears" (scales from 0), so it pops
+        // note-to-note. A press doesn't move it — pressing just flashes green/red (TargetArrow,
+        // via lastPress). When nothing is hovered it rests on the last note.
+        let desiredTarget = -1
+        if (game.stage === 'playback') {
+            if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < count) desiredTarget = game.activeNote
+        } else if (inputStage) {
             for (let i = 0; i < count; i++) {
                 if (hoverRef.current[i]) {
-                    instTarget = i
+                    desiredTarget = i
                     break
                 }
             }
         }
-        if (!staged) pointerTargetRef.current = -1
-        else if (instTarget >= 0) pointerTargetRef.current = instTarget
-        const target = pointerTargetRef.current
+        if (desiredTarget >= 0 && desiredTarget !== pointerTargetRef.current) {
+            pointerTargetRef.current = desiredTarget
+            pointerAppearRef.current = 0
+        }
+        const pointerTarget = pointerTargetRef.current
+        const pointerShow = staged && !allDown && pointerTarget >= 0 && pointerTarget < count && (game.stage === 'playback' || inputStage)
+        musicStonePointer.active = pointerShow
+        if (pointerShow) {
+            pointerAppearRef.current = Math.min(1, pointerAppearRef.current + dt / POINTER_APPEAR_TIME)
+            musicStonePointer.appear = pointerAppearRef.current
 
-        {
-            const targetMesh = target >= 0 && target < count ? meshRefs.current[target] : null
-            const show = staged && !!targetMesh && targetMesh.visible
-            musicStonePointer.active = show
-            if (show) {
-                const targetAngle = Math.PI * (1 - target / span)
-                // Snap straight to the note — no orbiting between notes (the travel distracted the
-                // player). On a note change the arrow re-"appears" via a quick fade (pointerAppear).
-                if (target !== pointerPrevTargetRef.current || !pointerWasVisibleRef.current) pointerAppearRef.current = 0
-                pointerAngleRef.current = targetAngle
-                pointerPrevTargetRef.current = target
-                pointerAppearRef.current = Math.min(1, pointerAppearRef.current + dt / Math.max(0.02, p.pointerAppearTime))
-                musicStonePointer.appear = pointerAppearRef.current
-                const ang = pointerAngleRef.current
-                ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
-                let radiusNow = p.pointerRadius
-                if (pointerPulseRef.current > 0) {
-                    const prog = 1 - pointerPulseRef.current / Math.max(0.01, p.pointerPulseDuration)
-                    radiusNow -= Math.sin(prog * Math.PI) * p.pointerPulseAmount
-                    pointerPulseRef.current = Math.max(0, pointerPulseRef.current - dt)
-                }
-                pointerTargetPos.set(
-                    layout.cx + ptrRadial.x * radiusNow,
-                    groundY + p.yOffset + p.hoverHeight + ptrRadial.y * radiusNow,
-                    layout.cz + ptrRadial.z * radiusNow
-                )
-                musicStonePointer.position.copy(pointerTargetPos)
-                state.camera.getWorldDirection(ptrForward)
-                ptrInPlane.copy(ptrRadial).addScaledVector(ptrForward, -ptrRadial.dot(ptrForward)).normalize()
-                ptrY.copy(ptrForward).negate()
-                ptrX.copy(ptrInPlane).negate()
-                ptrZ.crossVectors(ptrX, ptrY)
-                ptrBasis.makeBasis(ptrX, ptrY, ptrZ)
-                musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
-            }
-            pointerWasVisibleRef.current = show
+            const ang = Math.PI * (1 - pointerTarget / span)
+            ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
+            pointerTargetPos.set(
+                layout.cx + ptrRadial.x * p.pointerRadius,
+                groundY + p.yOffset + p.hoverHeight + ptrRadial.y * p.pointerRadius,
+                layout.cz + ptrRadial.z * p.pointerRadius
+            )
+            musicStonePointer.position.copy(pointerTargetPos)
+            state.camera.getWorldDirection(ptrForward)
+            ptrInPlane.copy(ptrRadial).addScaledVector(ptrForward, -ptrRadial.dot(ptrForward)).normalize()
+            ptrY.copy(ptrForward).negate()
+            ptrX.copy(ptrInPlane).negate()
+            ptrZ.crossVectors(ptrX, ptrY)
+            ptrBasis.makeBasis(ptrX, ptrY, ptrZ)
+            musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
         }
 
         // See-through: the BOTTOM (lower) stones act like the hero — trees in front of them fade.
@@ -387,18 +375,21 @@ export default function MusicStones() {
     return (
         <group>
             {stones.map((stone, i) => (
+                <mesh key={i} ref={(el) => (meshRefs.current[i] = el)} geometry={stone.geometry} material={stone.material} frustumCulled={false} scale={0} />
+            ))}
+            {stones.map((stone, i) => (
                 <mesh
-                    key={i}
-                    ref={(el) => (meshRefs.current[i] = el)}
-                    geometry={stone.geometry}
-                    material={stone.material}
+                    key={`proxy${i}`}
+                    ref={(el) => (proxyRefs.current[i] = el)}
+                    geometry={proxyGeometry}
+                    material={proxyMaterial}
                     frustumCulled={false}
-                    scale={0}
+                    visible={false}
+                    renderOrder={-1}
                     onPointerOver={(event) => {
-                        if (useSongGame.getState().stage !== 'input') return
                         event.stopPropagation()
-                        hoverRef.current[i] = true
-                        document.body.style.cursor = 'pointer'
+                        hoverRef.current[i] = true // highlights + aims the arrow even while listening
+                        if (useSongGame.getState().stage === 'input') document.body.style.cursor = 'pointer'
                     }}
                     onPointerOut={() => {
                         hoverRef.current[i] = false
@@ -409,21 +400,9 @@ export default function MusicStones() {
                         if (g.stage !== 'input') return
                         event.stopPropagation()
                         flashRef.current[i] = 1
-                        pointerPulseRef.current = useStore.getState().musicStoneParameters.pointerPulseDuration
                         playSound(g.track, g.stoneSounds[i]) // this stone's unique sound
                         g.pressNote(i)
                     }}
-                />
-            ))}
-            {ringMaterials.map((material, i) => (
-                <mesh
-                    key={`ring${i}`}
-                    ref={(el) => (ringRefs.current[i] = el)}
-                    geometry={ringGeometry}
-                    material={material}
-                    frustumCulled={false}
-                    visible={false}
-                    renderOrder={999}
                 />
             ))}
         </group>

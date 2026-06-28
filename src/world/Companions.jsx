@@ -350,7 +350,8 @@ export default function Companions() {
             return
         }
 
-        companions.setTargetInRange(distance <= INTERACT_RADIUS)
+        const interactRadius = useStore.getState().songGameParameters?.interactRadius ?? INTERACT_RADIUS
+        companions.setTargetInRange(distance <= interactRadius)
     })
 
     return (

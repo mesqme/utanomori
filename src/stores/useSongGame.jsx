@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { getMusicCharacter } from '../config/musicCharacters.js'
 import { FAIL_LINES } from '../game/gameConfig.js'
+import useStore from './useStore.jsx'
 
 /**
  * Companion song mini-game state machine (pure state — timers live in SongGame.jsx and the
@@ -20,7 +21,8 @@ const initialState = {
     stage: 'idle',
     companion: null, // the target definition (carries `music`)
     track: null, // 'piano' | 'drums' | 'winds'
-    stoneSounds: [], // stone index → unique-sound index (random permutation)
+    stoneSounds: [], // stone index → unique-sound index (or -1 for a silent decoy stone)
+    stoneCount: 0, // how many stones to stage (= real sounds, or 6 with "always six notes")
     song: [], // the full melody as a STONE sequence the player must reproduce
     rounds: [], // notes per round, e.g. [2,3,4]
     round: 0,
@@ -55,11 +57,19 @@ const useSongGame = create((set, get) => ({
             set({ ...initialState, active: true, stage: 'prompt', companion })
             return
         }
-        const stoneSounds = shuffledRange(config.soundCount) // stone i → sound stoneSounds[i]
+        // "Always 6 notes" (debug): stage a full 6-stone board and scatter the character's real
+        // sounds across random slots; the remaining stones are silent decoys (a wrong click = miss).
+        const soundCount = config.soundCount
+        const alwaysSix = useStore.getState().musicStoneParameters?.alwaysSixNotes
+        const stoneCount = Math.min(7, alwaysSix ? Math.max(soundCount, 6) : soundCount)
+        const slots = shuffledRange(stoneCount) // random stone slot per real sound
+        const stoneSounds = new Array(stoneCount).fill(-1) // stone i → sound index (or -1 = decoy)
         const soundToStone = []
-        stoneSounds.forEach((sound, stone) => {
+        for (let sound = 0; sound < soundCount; sound++) {
+            const stone = slots[sound]
+            stoneSounds[stone] = sound
             soundToStone[sound] = stone
-        })
+        }
         const song = config.melody.map((sound) => soundToStone[sound]) // melody as a stone sequence
         set({
             ...initialState,
@@ -68,6 +78,7 @@ const useSongGame = create((set, get) => ({
             companion,
             track: config.track,
             stoneSounds,
+            stoneCount,
             song,
             rounds: config.rounds,
         })

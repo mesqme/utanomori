@@ -38,6 +38,36 @@ export function createStoneGeometry(node) {
     return canonical
 }
 
+// Bake a music stone + its surrounding `_circle` ring into two grounded geometries that stay
+// ALIGNED. The stone is grounded exactly like createStoneGeometry (XZ-centred, base at y = 0);
+// the circle gets the SAME offset (computed from the STONE's bbox), so when the circle is
+// parented to the stone it keeps its authored position around it. `circleNode` may be null
+// (then `circle` is null). Returns { stone, circle } canonical geometries.
+export function createMusicStoneGeometry(stoneNode, circleNode) {
+    const stone = stoneNode.geometry.clone()
+    stoneNode.updateWorldMatrix(true, false)
+    stone.applyMatrix4(stoneNode.matrixWorld)
+    stone.computeBoundingBox()
+    const box = stone.boundingBox
+    const ox = -(box.min.x + box.max.x) * 0.5
+    const oy = -box.min.y
+    const oz = -(box.min.z + box.max.z) * 0.5
+    stone.translate(ox, oy, oz)
+    const stoneCanonical = toCanonicalGeometry(stone, false)
+    stone.dispose()
+
+    let circleCanonical = null
+    if (circleNode) {
+        const circle = circleNode.geometry.clone()
+        circleNode.updateWorldMatrix(true, false)
+        circle.applyMatrix4(circleNode.matrixWorld)
+        circle.translate(ox, oy, oz) // SAME offset as the stone → stays aligned around it
+        circleCanonical = toCanonicalGeometry(circle, false)
+        circle.dispose()
+    }
+    return { stone: stoneCanonical, circle: circleCanonical }
+}
+
 // Bake a mushroom's cap + leg into two grounded prototypes that stay ASSEMBLED. Unlike
 // createStoneGeometry (which grounds each mesh independently to y = 0), the cap and leg
 // share ONE recentre/ground offset computed from their COMBINED bounding box — XZ centred

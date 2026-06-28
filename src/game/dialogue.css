@@ -59,14 +59,17 @@
 
 /* Matches the in-world "Yes" button (.song-yes). */
 .dialogue-start {
-    /* font-family inherits — same as the bubble text. */
+    /* Exactly the bubble text's font: inherited Bebas, same size + tracking (not a tighter/
+       wider button treatment), so "Start" reads identically to the line above it. */
+    font-family: inherit;
     padding: 8px 28px;
     border: 2px solid var(--sj-ui-primary);
     border-radius: 10px;
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
-    font-size: 16px;
-    letter-spacing: 0.1em;
+    font-size: 18px;
+    font-weight: normal;
+    letter-spacing: 0.04em;
     cursor: pointer;
     transition: opacity 0.25s ease-out, background 0.12s, transform 0.12s;
 }
