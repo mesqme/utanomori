@@ -15,6 +15,7 @@ import {
 } from './utils/characterSeeThrough.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import maskKanadeUrl from '../assets/textures/mask_kanade.png'
 import sheepUrl from '../assets/models/sheep.glb'
 
 const IDLE_CLIP = 'sheep_Idle'
@@ -42,6 +43,14 @@ export default function SheepCreature({ definition, moving = false }) {
         painterlyTexture.colorSpace = THREE.NoColorSpace
         painterlyTexture.needsUpdate = true
     }, [painterlyTexture])
+
+    // Character face texture for the mask mesh (Sheep_Mask). flipY=false to match the glTF UVs.
+    const maskTexture = useTexture(maskKanadeUrl)
+    useMemo(() => {
+        maskTexture.colorSpace = THREE.SRGBColorSpace
+        maskTexture.flipY = false
+        maskTexture.needsUpdate = true
+    }, [maskTexture])
 
     // One clone per companion → its own skeleton, so they animate independently.
     const clone = useMemo(() => cloneSkeleton(scene), [scene])
@@ -122,10 +131,13 @@ export default function SheepCreature({ definition, moving = false }) {
             return material
         }
 
+        // The mask mesh (Sheep_Mask) shows the flat character face texture instead of the stylized
+        // colour — only this mesh; everything else keeps the painterly stylized material.
+        const maskMaterial = new THREE.MeshBasicMaterial({ map: maskTexture, toneMapped: false })
         clone.traverse((object) => {
             if (object.name === 'motion') motionBoneRef.current = object
             if (object.isSkinnedMesh) {
-                object.material = makeMaterial(object.material, false)
+                object.material = object.name === 'Sheep_Mask' ? maskMaterial : makeMaterial(object.material, false)
                 object.frustumCulled = false
             }
         })
@@ -160,13 +172,14 @@ export default function SheepCreature({ definition, moving = false }) {
         materialsRef.current = created
         return () => {
             created.forEach(({ material }) => material.dispose())
+            maskMaterial.dispose()
             if (scalesRef.current?.mesh) scalesRef.current.mesh.dispose()
             materialsRef.current = []
             scalesRef.current = null
             motionBoneRef.current = null
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [clone, painterlyTexture])
+    }, [clone, painterlyTexture, maskTexture])
 
     // Animations: idle + run, crossfaded by `moving`.
     useEffect(() => {
