@@ -141,7 +141,11 @@ export const objectFieldDefaults = Object.freeze({
     mushroomYOffset: -0.1, // lift/sink mushrooms relative to the ground (geometry grounded at the leg base)
     mushroomCapColor: '#31bac0', // cap (head) base colour
     mushroomLegColor: '#ecdcc4', // leg (stem) base colour
-    colorVariation: 0.12, // slight per-instance colour jitter on stones + mushrooms (like sheep scales)
+    // Per-instance per-channel colour variation of the SAME base colour (like the sheep scales),
+    // separate factor per prop type (0 = all identical).
+    stoneColorVariation: 0.12,
+    mushroomColorVariation: 0.12,
+    treeColorVariation: 0.1,
     grassFadeDistance: 0.0, // grass fade band beyond a stone/tree's safe radius
     grassLean: 0.45, // how far the grass leans away from a stone/tree in the fade band
     mushroomGrassRadius: 0.45, // multiplier on a mushroom's grass-clear radius (× its footprint)

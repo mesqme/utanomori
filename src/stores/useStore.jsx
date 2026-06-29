@@ -253,6 +253,31 @@ const DEFAULT_CHARACTER_EYES_PARAMETERS = {
     pupilLookSpeed: 6.0, // glance ease speed (higher = snappier)
 }
 
+// Eyes drawn on the authored eye PLANES of the tree GLBs (one eye pair per plane's [0,1] UV). Each
+// tree shows a random `planesPerTree` of its planes (see ScatteredObjects + the eyePlane shaders).
+const DEFAULT_TREE_EYES_PARAMETERS = {
+    planesPerTree: 3, // how many of a tree's eye planes show (random subset)
+    eyeColor: '#f0e24a',
+    pupilColor: '#120d09',
+    eyeRadius: 0.2, // in the plane's [0,1] UV (0.5 = half the square)
+    eyeSpacing: 0.5,
+    eyeOffsetY: 0,
+    eyeAspect: 1.0,
+    eyeNoiseScale: 1.2,
+    eyeNoiseStrength: 0.08,
+    pupilWidth: 0.06,
+    pupilHeight: 0.13,
+    pupilNoiseScale: 1.0,
+    pupilNoiseStrength: 0.1,
+    edgeSoftness: 0.04,
+    blinkInterval: 3.5, // seconds between blinks
+    blinkWidth: 0.06, // fraction of the interval a blink occupies
+    lookInterval: 7.0, // seconds between glances
+    lookHold: 0.3, // fraction of the interval a glance is held
+    lookAmount: 0.06, // how far the pupil slides
+    lookChance: 0.4, // fraction of eye planes that do the occasional glance
+}
+
 // The sheep music companion: animation pacing, world scale, and the scales' jump-driven twist.
 const DEFAULT_SHEEP_PARAMETERS = {
     modelScale: 0.65, // world scale of the glb (× the per-companion definition.scale)
@@ -404,6 +429,7 @@ const createStore = () =>
             musicParameters: { ...DEFAULT_MUSIC_PARAMETERS },
             ambientSoundParameters: { ...DEFAULT_AMBIENT_SOUND_PARAMETERS },
             characterEyesParameters: { ...DEFAULT_CHARACTER_EYES_PARAMETERS },
+            treeEyesParameters: { ...DEFAULT_TREE_EYES_PARAMETERS },
             sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS },
             sheepMaterialParameters: { ...DEFAULT_SHEEP_MATERIAL_PARAMETERS, characters: cloneSheepCharacters() },
 
@@ -544,6 +570,7 @@ if (import.meta?.hot) {
         musicParameters: { ...DEFAULT_MUSIC_PARAMETERS, ...state.musicParameters },
         ambientSoundParameters: { ...DEFAULT_AMBIENT_SOUND_PARAMETERS, ...state.ambientSoundParameters },
         characterEyesParameters: { ...DEFAULT_CHARACTER_EYES_PARAMETERS, ...state.characterEyesParameters },
+        treeEyesParameters: { ...DEFAULT_TREE_EYES_PARAMETERS, ...state.treeEyesParameters },
         sheepParameters: { ...DEFAULT_SHEEP_PARAMETERS, ...state.sheepParameters },
         sheepMaterialParameters: {
             ...DEFAULT_SHEEP_MATERIAL_PARAMETERS,

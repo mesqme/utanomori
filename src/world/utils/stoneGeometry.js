@@ -140,5 +140,37 @@ export function createTreeGeometries(trunkNode, bushNode) {
     const bushCanonical = toCanonicalGeometry(bush, true, 1, 1)
     trunk.dispose()
     bush.dispose()
-    return { trunk: trunkCanonical, bush: bushCanonical }
+    // The grounding offset is also applied to the eye planes (createEyePlaneGeometry) so they land in
+    // the SAME tree-local space as the bush.
+    return { trunk: trunkCanonical, bush: bushCanonical, offset: { x: ox, y: oy, z: oz } }
+}
+
+// Bake one tree eye plane (a flat UV-square authored on the canopy) into tree-local space using the
+// SAME grounding offset as createTreeGeometries — so the tree's instance matrix maps it onto the
+// canopy. Carries the plane's UV (the eye is drawn in [0,1]) + aPlaneCenter (its tree-local centre,
+// same on every vertex) so the wind can translate the WHOLE plane (no per-vertex distortion).
+export function createEyePlaneGeometry(planeNode, offset) {
+    const baked = planeNode.geometry.clone()
+    planeNode.updateWorldMatrix(true, false)
+    baked.applyMatrix4(planeNode.matrixWorld)
+    baked.translate(offset.x, offset.y, offset.z)
+
+    const out = new THREE.BufferGeometry()
+    out.setAttribute('position', baked.getAttribute('position').clone())
+    if (baked.index) out.setIndex(baked.index.clone())
+    const count = out.getAttribute('position').count
+    const uv = baked.getAttribute('uv')
+    out.setAttribute('uv', uv ? uv.clone() : new THREE.BufferAttribute(new Float32Array(count * 2), 2))
+
+    baked.computeBoundingBox()
+    const c = baked.boundingBox.getCenter(new THREE.Vector3())
+    const centers = new Float32Array(count * 3)
+    for (let i = 0; i < count; i++) {
+        centers[i * 3] = c.x
+        centers[i * 3 + 1] = c.y
+        centers[i * 3 + 2] = c.z
+    }
+    out.setAttribute('aPlaneCenter', new THREE.BufferAttribute(centers, 3))
+    baked.dispose()
+    return out
 }

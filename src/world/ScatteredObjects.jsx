@@ -12,9 +12,10 @@ import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
+import { createEyePlaneMaterial, updateEyePlaneMaterial } from '../materials/EyePlaneMaterial.js'
 import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS, TREE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
-import { createMushroomGeometries, createStoneGeometry, createTreeGeometries, toCanonicalGeometry } from './utils/stoneGeometry.js'
+import { createEyePlaneGeometry, createMushroomGeometries, createStoneGeometry, createTreeGeometries, toCanonicalGeometry } from './utils/stoneGeometry.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 import mushroomsModelUrl from '../assets/models/mushrooms.glb'
 import treesModelUrl from '../assets/models/trees.glb'
@@ -24,12 +25,29 @@ import treesModelUrl from '../assets/models/trees.glb'
 // per-instance frustum culling. The material is the character's stylized look,
 // extended to batch + fade at the reveal-circle edge (see PropStylizedMaterial).
 const MAX_OBJECT_INSTANCES = 4096
+const MAX_EYE_PLANE_INSTANCES = 2048
 const WHITE = new THREE.Color('#ffffff')
 // Reused temps for the mushroom "bend when the hero reaches it" wiggle (rotates the baked instance
 // around its leg-base origin — the geometry is grounded there — so cap + leg tip together).
 const _wiggleAxis = new THREE.Vector3()
 const _wiggleRot = new THREE.Matrix4()
 const _wiggleMat = new THREE.Matrix4()
+
+// Deterministically pick which of a tree's eye planes show (the GLB authors many; a tree only uses
+// a random few). Rank the planes by a hash of the tree's world position and take the lowest `count`.
+function eyePlaneHash(x, z, i) {
+    const s = Math.sin(x * 12.9898 + z * 78.233 + i * 37.719) * 43758.5453
+    return s - Math.floor(s)
+}
+function pickEyePlaneIds(planeIds, count, x, z) {
+    const k = Math.min(count, planeIds.length)
+    if (k <= 0) return []
+    return planeIds
+        .map((id, i) => ({ id, h: eyePlaneHash(x, z, i) }))
+        .sort((a, b) => a.h - b.h)
+        .slice(0, k)
+        .map((entry) => entry.id)
+}
 
 // Procedural placeholder primitives (trees + mushrooms). Stones are authored GLB meshes.
 function createPartGeometry(part) {
@@ -54,6 +72,8 @@ function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
     const prototypes = []
     const prototypeIdsByType = {}
     const prototypeMeta = {}
+    const eyePlanePrototypes = [] // tree eye planes (separate batched pool / material)
+    const eyePlaneIdsByVariant = {} // variantIndex → [eye-plane prototype ids]
     const partMatrix = new THREE.Matrix4()
 
     for (const type of OBJECT_TYPES) {
@@ -64,7 +84,7 @@ function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
                 const trunkNode = treeNodes[variant.trunk]
                 const bushNode = treeNodes[variant.bush]
                 if (!trunkNode || !bushNode) return
-                const { trunk, bush } = createTreeGeometries(trunkNode, bushNode)
+                const { trunk, bush, offset } = createTreeGeometries(trunkNode, bushNode)
                 const trunkId = `tree:${variantIndex}:trunk`
                 const bushId = `tree:${variantIndex}:bush`
                 prototypes.push({ id: trunkId, type, geometry: trunk, color: WHITE })
@@ -72,6 +92,22 @@ function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
                 prototypeIdsByType[type].push([trunkId, bushId]) // variant-indexed pair
                 prototypeMeta[trunkId] = { type, foliage: false, part: 'trunk' }
                 prototypeMeta[bushId] = { type, foliage: true, part: 'bush' }
+
+                // Eye planes for this variant (tree_0X_eyesPlane_*) → tree-local prototypes, grounded
+                // identically so the tree's instance matrix lands them on the canopy.
+                const base = variant.trunk.replace('_trunk', '')
+                const planeIds = []
+                Object.keys(treeNodes)
+                    .filter((key) => key.startsWith(`${base}_eyesPlane`))
+                    .sort()
+                    .forEach((key, planeIndex) => {
+                        const node = treeNodes[key]
+                        if (!node?.geometry) return
+                        const id = `eyeplane:${variantIndex}:${planeIndex}`
+                        eyePlanePrototypes.push({ id, geometry: createEyePlaneGeometry(node, offset) })
+                        planeIds.push(id)
+                    })
+                eyePlaneIdsByVariant[variantIndex] = planeIds
             })
             continue
         }
@@ -127,11 +163,12 @@ function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
         })
     }
 
-    return { prototypes, prototypeIdsByType, prototypeMeta }
+    return { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant }
 }
 
 export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const objectParameters = useStore((s) => s.objectParameters)
+    const treeEyesPlanesPerTree = useStore((s) => s.treeEyesParameters.planesPerTree)
     const roadParameters = useStore((s) => s.roadParameters)
     const terrainScale = useStore((s) => s.terrainParameters.scale)
     const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
@@ -151,11 +188,22 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
-        const { prototypes, prototypeIdsByType, prototypeMeta } = buildPrototypes(stoneNodes, mushroomNodes, treeNodes)
+        const { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant } = buildPrototypes(
+            stoneNodes,
+            mushroomNodes,
+            treeNodes
+        )
         const material = createPropStylizedMaterial(painterlyTexture, { toneMapped: true })
         const created = createBatchedMeshPool({ prototypes, material, maxInstances: MAX_OBJECT_INSTANCES })
         prototypes.forEach((prototype) => prototype.geometry.dispose()) // pool kept its own copies
-        return { ...created, prototypeIdsByType, prototypeMeta }
+
+        // Separate batched pool + material for the tree eye planes (one eye pair per UV-square).
+        const eyePool = eyePlanePrototypes.length
+            ? createBatchedMeshPool({ prototypes: eyePlanePrototypes, material: createEyePlaneMaterial(), maxInstances: MAX_EYE_PLANE_INSTANCES })
+            : null
+        eyePlanePrototypes.forEach((prototype) => prototype.geometry.dispose())
+
+        return { ...created, prototypeIdsByType, prototypeMeta, eyePool, eyePlaneIdsByVariant }
         // Built once the GLBs are ready; texture is swapped in place, and size/shape go through
         // per-instance scale below.
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -205,6 +253,26 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             },
         })
 
+        // Tree eye planes share the tree's wind (whole-plane translation) + fade at the reveal edge.
+        if (pool.eyePool) {
+            updateEyePlaneMaterial(pool.eyePool.mesh.material, {
+                circleCenterX: revealCircle.centerX,
+                circleCenterZ: revealCircle.centerZ,
+                radiusFactor: revealCircle.radiusFactor,
+                chunkSize: revealCircle.chunkSize,
+                fadeOffset: state.objectParameters.fadeOffset,
+                wind: {
+                    time: frameState.clock.elapsedTime,
+                    dirX: Math.cos(state.windParameters?.direction ?? 0),
+                    dirZ: Math.sin(state.windParameters?.direction ?? 0),
+                    strength: state.objectParameters.treeWindStrength ?? 0,
+                    speed: state.objectParameters.treeWindSpeed ?? 1,
+                    gust: state.objectParameters.treeWindGust ?? 0.5,
+                },
+                eyes: state.treeEyesParameters,
+            })
+        }
+
         // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
         // (re-composing base × a rotation around the leg-base origin). One-shot on each entry into
         // the trigger radius; restores the rest matrix once the wiggle settles.
@@ -252,6 +320,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
 
     const chunkInstancesRef = useRef(new Map())
     const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
+    const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
     const generationKeyRef = useRef(null)
 
     const objectGenerationKey = [
@@ -274,7 +343,10 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.mushroomYOffset,
         objectParameters.mushroomCapColor,
         objectParameters.mushroomLegColor,
-        objectParameters.colorVariation,
+        objectParameters.stoneColorVariation,
+        objectParameters.mushroomColorVariation,
+        objectParameters.treeColorVariation,
+        treeEyesPlanesPerTree,
     ].join('|')
     const roadGenerationKey = [
         roadParameters.enabled,
@@ -289,17 +361,21 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     useEffect(() => {
         const chunkInstances = chunkInstancesRef.current
         const chunkMushrooms = chunkMushroomsRef.current
+        const chunkEyePlanes = chunkEyePlanesRef.current
         const dummy = new THREE.Object3D()
         const color = new THREE.Color()
 
         const releaseChunk = (ids) => ids.forEach((id) => pool.removeInstance(id))
+        const releaseEyePlanes = (ids) => pool.eyePool && ids.forEach((id) => pool.eyePool.removeInstance(id))
 
         // A change to placement/terrain params invalidates every instance — full reset.
         const generationKey = [objectGenerationKey, roadGenerationKey, terrainScale, terrainAmplitude].join('::')
         if (generationKey !== generationKeyRef.current) {
             for (const ids of chunkInstances.values()) releaseChunk(ids)
+            for (const ids of chunkEyePlanes.values()) releaseEyePlanes(ids)
             chunkInstances.clear()
             chunkMushrooms.clear()
+            chunkEyePlanes.clear()
             generationKeyRef.current = generationKey
         }
 
@@ -310,11 +386,14 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 releaseChunk(ids)
                 chunkInstances.delete(key)
                 chunkMushrooms.delete(key)
+                releaseEyePlanes(chunkEyePlanes.get(key) ?? [])
+                chunkEyePlanes.delete(key)
             }
         }
 
         if (objectParameters.enabled) {
             const sampler = createObjectFieldSampler(objectParameters, roadParameters)
+            const eyePlanesPerTree = Math.max(0, Math.round(useStore.getState().treeEyesParameters?.planesPerTree ?? 3))
             const treeSize = objectParameters.treeSize ?? 1.2
             const treeYOffset = objectParameters.treeYOffset ?? 0
             const stoneSize = objectParameters.stoneSize ?? 1.0
@@ -326,13 +405,17 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             const stoneTintObj = new THREE.Color(objectParameters.stoneTint ?? '#ffffff')
             const mushroomCapObj = new THREE.Color(objectParameters.mushroomCapColor ?? '#c4452f')
             const mushroomLegObj = new THREE.Color(objectParameters.mushroomLegColor ?? '#ecdcc4')
-            const colorVariation = objectParameters.colorVariation ?? 0
+            // Per-instance colour variation factor, separate per prop type.
+            const stoneColorVariation = objectParameters.stoneColorVariation ?? 0
+            const mushroomColorVariation = objectParameters.mushroomColorVariation ?? 0
+            const treeColorVariation = objectParameters.treeColorVariation ?? 0
 
             for (const chunk of activeChunks) {
                 if (chunkInstances.has(chunk.key)) continue
 
                 const ids = []
                 const mushroomsForChunk = []
+                const eyePlanesForChunk = []
                 for (const group of sampler.getGroupsInChunk(chunk.x, chunk.z, chunkSize)) {
                     for (const instance of group.instances) {
                         const y = noise2D ? noise2D(instance.worldX * terrainScale, instance.worldZ * terrainScale) * terrainAmplitude : 0
@@ -381,13 +464,14 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                                 color.copy(pool.prototypeColors[prototypeId] ?? WHITE)
                             }
                             color.multiplyScalar(instance.colorTone)
-                            // Slight per-instance per-channel tint variation on stones + mushrooms
-                            // (like the sheep scales). Trees keep their flat foliage colour.
-                            if ((isStone || isMushroom) && colorVariation > 0 && instance.colorJitter) {
+                            // Per-instance per-channel tint variation of the same base colour (like the
+                            // sheep scales), with its own factor per prop type.
+                            const variation = isStone ? stoneColorVariation : isMushroom ? mushroomColorVariation : isTree ? treeColorVariation : 0
+                            if (variation > 0 && instance.colorJitter) {
                                 const j = instance.colorJitter
-                                color.r *= THREE.MathUtils.clamp(1 + j[0] * colorVariation, 0.25, 1.75)
-                                color.g *= THREE.MathUtils.clamp(1 + j[1] * colorVariation, 0.25, 1.75)
-                                color.b *= THREE.MathUtils.clamp(1 + j[2] * colorVariation, 0.25, 1.75)
+                                color.r *= THREE.MathUtils.clamp(1 + j[0] * variation, 0.25, 1.75)
+                                color.g *= THREE.MathUtils.clamp(1 + j[1] * variation, 0.25, 1.75)
+                                color.b *= THREE.MathUtils.clamp(1 + j[2] * variation, 0.25, 1.75)
                             }
                             const instanceId = pool.addInstance(prototypeId, dummy.matrix, color)
                             if (instanceId !== -1) {
@@ -412,17 +496,40 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                                 dirZ: 1,
                             })
                         }
+
+                        // Tree → instance a random subset of its variant's eye planes (the GLB authors
+                        // many; we show only a few). They share the tree's instance matrix so they ride
+                        // its placement (and wind, done in the eye shader).
+                        if (isTree && pool.eyePool && eyePlanesPerTree > 0) {
+                            const planeIds = pool.eyePlaneIdsByVariant?.[instance.variantIndex ?? 0] ?? []
+                            for (const planeId of pickEyePlaneIds(planeIds, eyePlanesPerTree, instance.worldX, instance.worldZ)) {
+                                const eyeId = pool.eyePool.addInstance(planeId, dummy.matrix, null)
+                                if (eyeId !== -1) eyePlanesForChunk.push(eyeId)
+                            }
+                        }
                     }
                 }
                 chunkInstances.set(chunk.key, ids)
                 if (mushroomsForChunk.length) chunkMushrooms.set(chunk.key, mushroomsForChunk)
+                if (eyePlanesForChunk.length) chunkEyePlanesRef.current.set(chunk.key, eyePlanesForChunk)
             }
         }
     }, [pool, activeChunks, objectGenerationKey, roadGenerationKey, terrainScale, terrainAmplitude, objectParameters.enabled, chunkSize, noise2D])
 
-    useEffect(() => () => pool.dispose(), [pool])
+    useEffect(
+        () => () => {
+            pool.dispose()
+            pool.eyePool?.dispose()
+        },
+        [pool]
+    )
 
-    return <primitive object={pool.mesh} />
+    return (
+        <>
+            <primitive object={pool.mesh} />
+            {pool.eyePool && <primitive object={pool.eyePool.mesh} />}
+        </>
+    )
 }
 
 useGLTF.preload(stonesModelUrl)
