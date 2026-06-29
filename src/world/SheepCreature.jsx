@@ -68,6 +68,10 @@ export default function SheepCreature({ definition, moving = false }) {
     const stEdge = useMemo(() => new THREE.Vector3(), [])
     const stRight = useMemo(() => new THREE.Vector3(), [])
     const seeThroughSlotRef = useRef(-1)
+    // Skip the see-through write for the first couple frames: this component's useFrame runs BEFORE
+    // the parent (TargetCreature/Follower) positions the group, so frame 1 reads an un-positioned
+    // (≈origin) transform and would punch a stale see-through hole in a prop near the origin.
+    const placedFramesRef = useRef(0)
 
     // Claim a fixed see-through slot for this companion (freed on unmount).
     useEffect(() => {
@@ -270,8 +274,12 @@ export default function SheepCreature({ definition, moving = false }) {
             // when it's already fading out at the world edge or is off-screen / behind the camera.
             // Radius is the SHARED see-through size (seeThrough.worldRadius) so the hero and the sheep
             // use the same option; only the head-anchor height stays per-sheep.
+            // Warm-up gate: don't write a hole until the parent has positioned us for a couple
+            // frames (otherwise frame 1 reads ≈origin and punches a stale hole in a prop there).
+            const placed = placedFramesRef.current >= 2
+            if (placedFramesRef.current < 2) placedFramesRef.current++
             const slot = seeThroughSlotRef.current
-            if (slot >= 0 && seeThrough.enabled && fade < 0.85) {
+            if (placed && slot >= 0 && seeThrough.enabled && fade < 0.85) {
                 stAnchor.copy(tmpWorld)
                 stAnchor.y += p.seeThroughHeight ?? 0.6
                 const camDist = state.camera.position.distanceTo(stAnchor)

@@ -130,6 +130,10 @@ export const DEFAULT_SONG_GAME_PARAMETERS = {
     noteRiseWorld: 1.45, // world units it floats upward over its life
     noteWobbleWorld: 0.77, // world units of side-to-side sway + initial spread
     noteColor: '#99e386', // fallback note tint (each companion's notes use its own body colour)
+    // 3D feedback above the character head (CharacterFeedback): heart.glb on a correct press,
+    // mark.glb (rocking) on a miss. Models are authored large, so these scales are small.
+    heartScale: 0.15,
+    markScale: 0.15,
 }
 
 // 3D music stones (song mini-game): seven coloured stones that rise around the companion,
