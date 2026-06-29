@@ -2,6 +2,7 @@ varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying vec3 vInstanceTint;
 varying vec2 vUv1; // second UV set (TEXCOORD_1) — the head's front-face layout for the in-shader eyes
+varying vec2 vUv; // first UV set (TEXCOORD_0) — mask face texture (uUseBaseTexture)
 
 attribute vec2 uv1;
 
@@ -26,6 +27,7 @@ void main() {
     vObjectPosition = transformed;
     vInstanceTint = vec3(1.0); // skinned meshes carry no per-instance tint
     vUv1 = uv1;
+    vUv = uv;
 
     #include <project_vertex>
 }

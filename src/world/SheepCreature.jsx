@@ -89,6 +89,7 @@ export default function SheepCreature({ definition, moving = false }) {
     // the parent (TargetCreature/Follower) positions the group, so frame 1 reads an un-positioned
     // (≈origin) transform and would punch a stale see-through hole in a prop near the origin.
     const placedFramesRef = useRef(0)
+    const maskMaterialRef = useRef(null) // the mask-mesh material (face texture + reveal fade)
 
     // Claim a fixed see-through slot for this companion (freed on unmount).
     useEffect(() => {
@@ -139,9 +140,18 @@ export default function SheepCreature({ definition, moving = false }) {
             return material
         }
 
-        // The mask mesh (Sheep_Mask) shows the flat character face texture instead of the stylized
-        // colour — only this mesh; everything else keeps the painterly stylized material.
-        const maskMaterial = new THREE.MeshBasicMaterial({ map: maskTexture, toneMapped: false })
+        // The mask mesh (Sheep_Mask) shows the character face TEXTURE (flat — painterly off) but
+        // through the stylized material, so it dither-fades at the reveal edge with the rest of the
+        // sheep. Tracked separately (not in `created`) so the painterly-update loop leaves it flat;
+        // the per-frame fade loop drives its uFade.
+        const maskMaterial = createCharacterStylizedMaterial(
+            null,
+            { baseColor: '#ffffff' },
+            { ...sheepMaterialParameters, painterlyEnabled: false },
+            painterlyTexture,
+            { transparent: true, baseTexture: maskTexture }
+        )
+        maskMaterialRef.current = maskMaterial
         clone.traverse((object) => {
             if (object.name === 'motion') motionBoneRef.current = object
             if (object.isSkinnedMesh) {
@@ -185,6 +195,7 @@ export default function SheepCreature({ definition, moving = false }) {
             materialsRef.current = []
             scalesRef.current = null
             motionBoneRef.current = null
+            maskMaterialRef.current = null
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [clone, painterlyTexture, maskTexture])
@@ -289,6 +300,11 @@ export default function SheepCreature({ definition, moving = false }) {
                 material.uniforms.uFade.value = fade
                 material.uniforms.uBackgroundColor.value.set(bg)
             })
+            // The mask material fades with the rest (it's not in materialsRef, so update it here).
+            if (maskMaterialRef.current) {
+                maskMaterialRef.current.uniforms.uFade.value = fade
+                maskMaterialRef.current.uniforms.uBackgroundColor.value.set(bg)
+            }
 
             // See-through: project this companion to a screen disc so PROPS (and grass) in front of
             // it fade (the sheep itself stays opaque — the hole is punched in the trees/grass). Skip
@@ -339,3 +355,6 @@ export default function SheepCreature({ definition, moving = false }) {
 }
 
 useGLTF.preload(sheepUrl)
+// Preload the (large) mask textures during the loading screen so the first sheep spawn at GO
+// doesn't decode ~4.6 MB of PNG on the main thread (a stutter the moment gameplay starts).
+useTexture.preload([maskKanadeUrl, maskHibikiUrl, maskKazaneUrl])

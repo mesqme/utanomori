@@ -5,6 +5,7 @@ import * as THREE from 'three'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
+import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import notesUrl from '../assets/models/notes.glb'
 
 // The 3 authored note models (notes.glb) — they replaced the CSS glyph placeholders. A small pool
@@ -80,9 +81,14 @@ export default function CompanionNotes({ headY = 1.05, isTarget = false, music =
         const t = state.clock.elapsedTime
         const wobble = p.noteWobbleWorld ?? 0.22
 
-        // --- Spawn timing (unchanged): the target mirrors the demonstrated sequence; otherwise a
-        // gentle ambient "is singing" stream; stay quiet while another companion is mid-game. ---
-        if (isTarget && songGame.active) {
+        // Notes stay hidden until gameplay: the music character is pre-placed (faded) during
+        // warmup/intro but shouldn't sing yet. They begin (and fade in per-note) at the Start, and
+        // during the credits run. Existing notes still animate out below.
+        const notesActive = usePhases.getState().phase === PHASES.start || usePhases.getState().phase === PHASES.credits
+
+        // --- Spawn timing: the target mirrors the demonstrated sequence; otherwise a gentle ambient
+        // "is singing" stream; stay quiet while another companion is mid-game or before gameplay. ---
+        if (notesActive && isTarget && songGame.active) {
             const active = songGame.stage === 'playback' ? songGame.activeNote : null
             if (active != null && prevActiveRef.current == null) gameKeyRef.current++
             prevActiveRef.current = active
@@ -94,7 +100,7 @@ export default function CompanionNotes({ headY = 1.05, isTarget = false, music =
                 lastKeyRef.current = null
             }
             nextAmbientRef.current = 0
-        } else if (!songGame.active) {
+        } else if (notesActive && !songGame.active) {
             if (nextAmbientRef.current === 0 || t >= nextAmbientRef.current) {
                 if (nextAmbientRef.current !== 0) spawn(Math.floor(Math.random() * NOTE_NODES.length), t, wobble)
                 nextAmbientRef.current = t + AMBIENT_MIN + Math.random() * (AMBIENT_MAX - AMBIENT_MIN)

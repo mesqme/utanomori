@@ -375,7 +375,13 @@ export default function Companions() {
             },
         })
 
-        if (usePhases.getState().phase !== PHASES.start) return
+        // Pre-place the FIRST music character during warmup/intro so its sheep warms up (skeleton
+        // clone + shader compile + texture upload) BEFORE gameplay — it spawns ≥15u away and stays
+        // faded by the tiny reveal, so there's no spawn hitch/blink the instant gameplay starts.
+        // Range / abandon stay gameplay-only.
+        const phaseNow = usePhases.getState().phase
+        const inStart = phaseNow === PHASES.start
+        if (!inStart && phaseNow !== PHASES.warmup && phaseNow !== PHASES.intro) return
 
         const companions = useCompanions.getState()
         const gameActive = useSongGame.getState().active
@@ -392,6 +398,9 @@ export default function Companions() {
             }
             return
         }
+
+        // The pre-placed target just sits there faded — abandon / in-range checks are gameplay-only.
+        if (!inStart) return
 
         const distance = Math.hypot(player.x - companions.target.x, player.z - companions.target.z)
 

@@ -4,6 +4,6 @@
 // to a colour. Only baseColor is consumed by the stylized material (painterly settings are shared).
 export const sheepCharacterDefaults = Object.freeze({
     piano: { orange: '#b938a5', white: '#efe7f7', brown: '#e096cf' },
-    drums: { orange: '#e08548', white: '#e7eaf7', brown: '#cda66b' },
+    drums: { orange: '#259eda', white: '#e7eaf7', brown: '#cda66b' },
     winds: { orange: '#8db92f', white: '#eef7e7', brown: '#9fc385' },
 })

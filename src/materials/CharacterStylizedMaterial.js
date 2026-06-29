@@ -5,6 +5,11 @@ import characterInstancedVertexShader from '../shaders/character/instancedVertex
 import characterFragmentShader from '../shaders/character/fragment.glsl'
 import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
 
+// 1×1 white fallback so materials that don't use a base texture still have a valid sampler bound
+// (avoids "no texture bound" warnings); it's never sampled (uUseBaseTexture stays 0 for them).
+const WHITE_PIXEL = new THREE.DataTexture(new Uint8Array([255, 255, 255, 255]), 1, 1)
+WHITE_PIXEL.needsUpdate = true
+
 function getSettings(settings) {
     return {
         ...characterStylizedDefaults,
@@ -35,6 +40,10 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
             uPainterlyBrightnessVariation: { value: settings.painterlyBrightnessVariation },
             uFade: { value: 0 },
             uBackgroundColor: { value: new THREE.Color(options.backgroundColor ?? '#000000') },
+            // Optional base-colour texture (e.g. the sheep mask faces). Gated by uUseBaseTexture so
+            // the hero / body / scales (which pass no texture) keep their flat uBaseColor.
+            uBaseTexture: { value: options.baseTexture ?? WHITE_PIXEL },
+            uUseBaseTexture: { value: options.baseTexture ? 1 : 0 },
             // In-shader cartoon eyes (head mesh only). Off by default; CharacterEyes flips uDrawEyes
             // on the head material + drives the rest each frame when the "Head Shader (uv1)" mode is on.
             uDrawEyes: { value: 0 },

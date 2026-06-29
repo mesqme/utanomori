@@ -10,6 +10,9 @@ uniform float uPainterlyBrightnessVariation;
 // Reveal-edge fade (companions only; the hero leaves uFade = 0 so this is a no-op for it).
 uniform float uFade;
 uniform vec3 uBackgroundColor;
+// Optional base-colour texture (mask faces), gated by uUseBaseTexture; flat uBaseColor otherwise.
+uniform sampler2D uBaseTexture;
+uniform int uUseBaseTexture;
 
 // In-shader cartoon eyes (head mesh only, uDrawEyes = 1) — drawn in the second UV set (uv1), where
 // the front face is laid out. Same look as the procedural eyes quad; CharacterEyes drives these.
@@ -35,6 +38,7 @@ varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying vec3 vInstanceTint; // per-instance colour jitter (sheep scales); vec3(1) everywhere else
 varying vec2 vUv1;
+varying vec2 vUv; // first UV set (TEXCOORD_0) — used only when uUseBaseTexture (mask face texture)
 
 // Stable per-pixel dither (interleaved gradient noise) for the reveal-edge dissolve.
 float ditherNoise(vec2 p) {
@@ -103,7 +107,11 @@ vec3 drawEyes(vec3 baseColor, vec2 uv1) {
 
 void main() {
     float painterlyValue = 0.5;
-    vec3 finalColor = uBaseColor * vInstanceTint;
+    vec3 baseColor = uBaseColor;
+    if (uUseBaseTexture == 1) {
+        baseColor = texture2D(uBaseTexture, vUv).rgb;
+    }
+    vec3 finalColor = baseColor * vInstanceTint;
     if (uPainterlyEnabled == 1) {
         painterlyValue = samplePainterlyTexture(vObjectPosition * uPainterlyScale, normalize(vObjectNormal));
         painterlyValue = clamp((painterlyValue - 0.5) * uPainterlyContrast + 0.5, 0.0, 1.0);

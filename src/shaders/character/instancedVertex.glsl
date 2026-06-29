@@ -6,6 +6,7 @@ varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying vec3 vInstanceTint;
 varying vec2 vUv1; // unused on the sheep (no in-shader eyes) — kept so the varyings match the fragment
+varying vec2 vUv; // unused on the scales — kept so the varyings match the fragment
 
 #include <common>
 
@@ -30,6 +31,7 @@ void main() {
     #endif
 
     vUv1 = vec2(0.0);
+    vUv = vec2(0.0);
 
     // Per-instance colour jitter (set via InstancedMesh.setColorAt → instanceColor).
     #ifdef USE_INSTANCING_COLOR
