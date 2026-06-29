@@ -348,6 +348,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.mushroomLegColor,
         objectParameters.stoneColorVariation,
         objectParameters.mushroomColorVariation,
+        objectParameters.mushroomLegColorVariation,
         objectParameters.treeColorVariation,
         treeEyesPlanesPerTree,
     ].join('|')
@@ -411,6 +412,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             // Per-instance colour variation factor, separate per prop type.
             const stoneColorVariation = objectParameters.stoneColorVariation ?? 0
             const mushroomColorVariation = objectParameters.mushroomColorVariation ?? 0
+            // How much of the mushroom colour variation reaches the LEG (0 = legs all the same, 1 =
+            // legs vary as much as caps). Keeps the colour play mostly on the caps.
+            const mushroomLegColorVariation = objectParameters.mushroomLegColorVariation ?? 0.25
             const treeColorVariation = objectParameters.treeColorVariation ?? 0
 
             for (const chunk of activeChunks) {
@@ -469,7 +473,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             color.multiplyScalar(instance.colorTone)
                             // Per-instance per-channel tint variation of the same base colour (like the
                             // sheep scales), with its own factor per prop type.
-                            const variation = isStone ? stoneColorVariation : isMushroom ? mushroomColorVariation : isTree ? treeColorVariation : 0
+                            let variation = isStone ? stoneColorVariation : isMushroom ? mushroomColorVariation : isTree ? treeColorVariation : 0
+                            // Dampen the variation on the mushroom leg so the colour play stays on the cap.
+                            if (isMushroom && meta?.part === 'leg') variation *= mushroomLegColorVariation
                             if (variation > 0 && instance.colorJitter) {
                                 const j = instance.colorJitter
                                 color.r *= THREE.MathUtils.clamp(1 + j[0] * variation, 0.25, 1.75)

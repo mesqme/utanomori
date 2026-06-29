@@ -29,7 +29,7 @@ export default function InteractionPrompt() {
 
             {showPrompt && (
                 <button className="interaction-prompt" onClick={startSong}>
-                    Hear {target.label}'s song <span className="interaction-key">E</span>
+                    Talk to {target.label} <span className="interaction-key">E</span>
                 </button>
             )}
         </>

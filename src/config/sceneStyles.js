@@ -125,6 +125,7 @@ const painteryStyle = {
         mushroomLegColor: '#ecdcc4',
         stoneColorVariation: 0.12,
         mushroomColorVariation: 0.12,
+        mushroomLegColorVariation: 0.25,
         treeColorVariation: 0.1,
         grassFadeDistance: 0,
         grassLean: 0.45,

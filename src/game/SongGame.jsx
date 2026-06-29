@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
+import { getMusicCharacter } from '../config/musicCharacters.js'
 import SpeechBubble from './SpeechBubble.jsx'
 import { playSound } from './gameSounds.js'
 import { resumeAudio } from './songAudio.js'
@@ -147,7 +148,7 @@ export default function SongGame() {
 
             {stage === 'prompt' && (
                 <SpeechBubble
-                    text="Hello, will you try my melody?"
+                    text={getMusicCharacter(companion?.music)?.prompt ?? 'Will you try my melody?'}
                     confirmLabel="Yes"
                     onConfirm={() => {
                         resumeAudio()

@@ -20,7 +20,7 @@ import {
     clearCharacterSeeThrough,
 } from './utils/characterSeeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
-import { updateNoiseReveal } from '../game/visualReveal.js'
+import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import { CAMERA_TOP_SHOT } from '../game/gameConfig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
@@ -242,9 +242,10 @@ export default function MainCharacter() {
     useFrame((state, delta) => {
         const safeDelta = Math.min(delta, 0.1)
 
-        // Painterly contrast reveals 0→full before the game (same clock as the post-FX grain), so the
-        // hero's brush "develops" in as the scene appears instead of popping at full strength.
-        contrastRevealRef.current = updateNoiseReveal(contrastRevealRef.current, phase, safeDelta)
+        // Painterly contrast reveals 0→full during the INTRO camera travel (same clock as the
+        // texture/stars/glow reveal) — so before GO the hero's contrast is 0 and the brush "develops"
+        // in as the camera flies down, instead of fading in while we're still on the loading screen.
+        contrastRevealRef.current = updatePhaseTextureReveal(contrastRevealRef.current, phase, safeDelta)
         const targetContrast = useStore.getState().characterMaterialParameters.painterlyContrast
         const fadedContrast = targetContrast * contrastRevealRef.current
         const stylizedMaterials = characterHead.materials
@@ -368,6 +369,14 @@ export default function MainCharacter() {
             if (movingNow) {
                 const targetRotationY = Math.atan2(velocity.x, velocity.z) + characterParameters.rotationOffset
                 modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, targetRotationY, CHARACTER_TURN_SPEED, safeDelta)
+            } else if (phase === PHASES.start && useSongGame.getState().active) {
+                // In a conversation / mini-game: turn to face the music character we're talking to,
+                // so the hero is never left standing with his back to them.
+                const companion = useSongGame.getState().companion
+                if (companion) {
+                    const faceAngle = Math.atan2(companion.x - position.x, companion.z - position.z) + characterParameters.rotationOffset
+                    modelRef.current.rotation.y = dampAngle(modelRef.current.rotation.y, faceAngle, CHARACTER_TURN_SPEED, safeDelta)
+                }
             } else if (phase === PHASES.restarting) {
                 // Smoothly turn back to the initial menu facing as he settles.
                 const menuFacing = Math.atan2(0, 1) + characterParameters.rotationOffset

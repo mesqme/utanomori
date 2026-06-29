@@ -24,7 +24,7 @@ export function cloneSheepCharacters() {
 export const GRASS_STYLE_VERSION = 19
 export const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change.
-export const OBJECT_STYLE_VERSION = 8
+export const OBJECT_STYLE_VERSION = 9
 export const LOADER_DEBUG_VERSION = 6
 export const GAME_UI_VERSION = 5
 

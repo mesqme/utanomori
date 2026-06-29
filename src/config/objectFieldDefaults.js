@@ -145,6 +145,7 @@ export const objectFieldDefaults = Object.freeze({
     // separate factor per prop type (0 = all identical).
     stoneColorVariation: 0.12,
     mushroomColorVariation: 0.12,
+    mushroomLegColorVariation: 0.25, // how much of mushroomColorVariation reaches the leg (keeps play on the cap)
     treeColorVariation: 0.1,
     grassFadeDistance: 0.0, // grass fade band beyond a stone/tree's safe radius
     grassLean: 0.45, // how far the grass leans away from a stone/tree in the fade band
