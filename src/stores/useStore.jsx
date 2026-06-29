@@ -112,14 +112,11 @@ const DEFAULT_ARROW_PARAMETERS = {
     color: '#ffffff',
 }
 
-// Song mini-game UI (the note wheel) + the spatial singing voices.
+// Song mini-game: the "press E" interaction radius + the floating head-notes (CompanionNotes).
+// (The old 2D note wheel + spatial singing voices were removed — the mini-game is now the 3D
+// music stones, and the backing audio lives in musicTracks.js.)
 const DEFAULT_SONG_GAME_PARAMETERS = {
     interactRadius: 4.0, // distance (world units) to a companion at which the "press E" prompt appears
-    wheelRadius: 150, // px from the wheel centre to each note button
-    buttonSize: 64, // px diameter of each note button
-    songVolume: 0.12, // base loudness of a companion's looping song
-    hearNear: 4, // distance (world units) at which a song is at full volume
-    hearFar: 28, // distance at which it fades to silence
     // Floating notes above a singing head — now the 3D models from notes.glb (CompanionNotes).
     noteDuration: 1.75, // seconds each note lives
     noteGrow: 1.45, // final scale multiplier before it fades

@@ -1941,11 +1941,6 @@ export default function Controls() {
 
     useControls('Song Game', {
         interactRadius: { value: songGameParameters.interactRadius, min: 1, max: 12, step: 0.1, onChange: setParam('songGameParameters', 'interactRadius') },
-        wheelRadius: { value: songGameParameters.wheelRadius, min: 60, max: 320, step: 1, onChange: setParam('songGameParameters', 'wheelRadius') },
-        buttonSize: { value: songGameParameters.buttonSize, min: 24, max: 140, step: 1, onChange: setParam('songGameParameters', 'buttonSize') },
-        songVolume: { value: songGameParameters.songVolume, min: 0, max: 0.5, step: 0.01, onChange: setParam('songGameParameters', 'songVolume') },
-        hearNear: { value: songGameParameters.hearNear, min: 0, max: 20, step: 0.5, onChange: setParam('songGameParameters', 'hearNear') },
-        hearFar: { value: songGameParameters.hearFar, min: 4, max: 80, step: 1, onChange: setParam('songGameParameters', 'hearFar') },
         noteDuration: { value: songGameParameters.noteDuration, min: 0.4, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteDuration') },
         noteGrow: { value: songGameParameters.noteGrow, min: 0.5, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteGrow') },
         noteScale: { value: songGameParameters.noteScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'noteScale') },

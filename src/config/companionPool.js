@@ -1,7 +1,7 @@
 /**
  * Pool of secondary characters. One is drawn per spawn (in order), up to the
- * party cap. These are placeholder "blob creatures" built from primitives —
- * swap for Blender models later by replacing the mesh in CompanionCreature.
+ * party cap. The music companions are rendered as the sheep model (see the
+ * SheepCreature path in Companions.jsx); each entry supplies id/label/colours.
  */
 // The first three (spawn order) are the music companions — each carries a `music` track id
 // (see musicCharacters.js). The remainder are spares if the party cap ever grows.
