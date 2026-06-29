@@ -2188,17 +2188,8 @@ export default function Controls() {
 
     useControls('Character Eyes', {
         enabled: { value: characterEyesParameters.enabled, onChange: setParam('characterEyesParameters', 'enabled') },
-        // Placement on the face (local to the character model).
-        offsetX: { value: characterEyesParameters.offsetX, min: -2, max: 2, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetX') },
-        offsetY: { value: characterEyesParameters.offsetY, min: -1, max: 4, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetY') },
-        offsetZ: { value: characterEyesParameters.offsetZ, min: -2, max: 2, step: 0.01, onChange: setParam('characterEyesParameters', 'offsetZ') },
-        rotX: { value: characterEyesParameters.rotX, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotX') },
-        rotY: { value: characterEyesParameters.rotY, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotY') },
-        rotZ: { value: characterEyesParameters.rotZ, min: -3.15, max: 3.15, step: 0.01, onChange: setParam('characterEyesParameters', 'rotZ') },
-        planeScale: { value: characterEyesParameters.planeScale, min: 0.05, max: 4, step: 0.01, onChange: setParam('characterEyesParameters', 'planeScale') },
-        headFollow: { value: characterEyesParameters.headFollow, onChange: setParam('characterEyesParameters', 'headFollow') },
-        headFollowStrength: { value: characterEyesParameters.headFollowStrength, min: 0, max: 2, step: 0.05, onChange: setParam('characterEyesParameters', 'headFollowStrength') },
-        // Eyeball (yellow circle, big wobbly border).
+        debugUv1: { value: characterEyesParameters.debugUv1, onChange: setParam('characterEyesParameters', 'debugUv1') },
+        // Eyeball (yellow circle, big wobbly border) — laid out in the head's second UV (uv1).
         eyeColor: { value: characterEyesParameters.eyeColor, onChange: setParam('characterEyesParameters', 'eyeColor') },
         eyeRadius: { value: characterEyesParameters.eyeRadius, min: 0.02, max: 0.5, step: 0.005, onChange: setParam('characterEyesParameters', 'eyeRadius') },
         eyeSpacing: { value: characterEyesParameters.eyeSpacing, min: 0, max: 0.9, step: 0.005, onChange: setParam('characterEyesParameters', 'eyeSpacing') },

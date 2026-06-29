@@ -35,6 +35,25 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
             uPainterlyBrightnessVariation: { value: settings.painterlyBrightnessVariation },
             uFade: { value: 0 },
             uBackgroundColor: { value: new THREE.Color(options.backgroundColor ?? '#000000') },
+            // In-shader cartoon eyes (head mesh only). Off by default; CharacterEyes flips uDrawEyes
+            // on the head material + drives the rest each frame when the "Head Shader (uv1)" mode is on.
+            uDrawEyes: { value: 0 },
+            uEyeColor: { value: new THREE.Color('#f2c20a') },
+            uPupilColor: { value: new THREE.Color('#130d09') },
+            uEyeRadius: { value: 0.16 },
+            uEyeSpacing: { value: 0.47 },
+            uEyeOffsetY: { value: 0 },
+            uEyeAspect: { value: 1.0 },
+            uEyeNoiseScale: { value: 1.1 },
+            uEyeNoiseStrength: { value: 0.07 },
+            uPupilWidth: { value: 0.07 },
+            uPupilHeight: { value: 0.1 },
+            uPupilOffsetX: { value: 0 },
+            uPupilOffsetY: { value: 0 },
+            uPupilNoiseScale: { value: 0.9 },
+            uPupilNoiseStrength: { value: 0.13 },
+            uEyeEdgeSoftness: { value: 0.01 },
+            uEyeBlink: { value: 0 },
         },
         // Companions render OPAQUE (their reveal-edge fade is a dither dissolve in the fragment, not
         // alpha) so they depth-sort cleanly with the transparent grass instead of blending through

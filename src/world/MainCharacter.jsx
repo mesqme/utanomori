@@ -120,7 +120,6 @@ export default function MainCharacter() {
     const isGroundedRef = useRef(true)
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const seeThroughSlotRef = useRef(-1) // hero's slot in the shared character see-through buffer (grass + props)
-    const stylizedMaterialsRef = useRef([]) // the hero's stylized materials (for the per-frame contrast reveal)
     const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 before the game (same clock as the grain)
     const [isMoving, setIsMoving] = useState(false)
 
@@ -248,7 +247,7 @@ export default function MainCharacter() {
         contrastRevealRef.current = updateNoiseReveal(contrastRevealRef.current, phase, safeDelta)
         const targetContrast = useStore.getState().characterMaterialParameters.painterlyContrast
         const fadedContrast = targetContrast * contrastRevealRef.current
-        const stylizedMaterials = stylizedMaterialsRef.current
+        const stylizedMaterials = characterHead.materials
         for (let i = 0; i < stylizedMaterials.length; i++) {
             const u = stylizedMaterials[i].uniforms
             if (u && u.uPainterlyContrast) u.uPainterlyContrast.value = fadedContrast
@@ -561,18 +560,28 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             object.material = Array.isArray(object.material)
                 ? object.material.map((material, index) => getStylizedMaterial(object, material, index))
                 : getStylizedMaterial(object, object.material)
+
+            // The head mesh's material hosts the in-shader (uv1) eyes. The mesh is named `head_1`
+            // (drei suffixes the mesh node), NOT `head` (that's the bone) — match the prefix.
+            if (object.name.startsWith('head')) {
+                characterHead.material = Array.isArray(object.material) ? object.material[0] : object.material
+            }
         })
+
+        // Share every stylized material for the painterly-contrast reveal (per-frame, in the useFrame).
+        characterHead.materials = Array.from(stylizedMaterialsRef.current.values())
 
         return () => {
             stylizedMaterialsRef.current.forEach((material) => material.dispose())
             stylizedMaterialsRef.current.clear()
+            characterHead.material = null
+            characterHead.materials = []
         }
     }, [materialSlotsByMeshName, nodes, painterlyTexturesById])
 
     useEffect(() => {
         if (!animationRootRef.current) return
 
-        const collected = []
         animationRootRef.current.traverse((object) => {
             if (!object.isMesh && !object.isSkinnedMesh) return
 
@@ -584,23 +593,9 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             objectMaterials.forEach((material) => {
                 if (!material?.uniforms?.uBaseColor) return
                 updateCharacterStylizedMaterial(material, materialSettings, characterMaterialParameters, selectedPainterlyTexture)
-                collected.push(material)
             })
         })
-        stylizedMaterialsRef.current = collected
     }, [characterMaterialParameters, materialSlotsByMeshName, selectedPainterlyTexture])
-
-    // Expose the `head` bone so the procedural eyes can ride its animation (see CharacterEyes).
-    useEffect(() => {
-        let bone = null
-        nodes.root?.traverse?.((object) => {
-            if (!bone && object.isBone && object.name === 'head') bone = object
-        })
-        characterHead.bone = bone
-        return () => {
-            if (characterHead.bone === bone) characterHead.bone = null
-        }
-    }, [nodes])
 
     useEffect(() => {
         if (!animationRootRef.current) return

@@ -218,34 +218,27 @@ const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
 
 // Procedural cartoon eyes drawn on a quad in front of the hero's face (see CharacterEyes + the
 // characterEyes shader). Placement is local to the character model; shape is in quad-UV units.
+// The eyes are drawn directly in the head mesh's fragment shader, laid out in the head's second UV
+// (uv1). CharacterEyes drives the blink + glance; everything here is shape/colour in uv1 space.
 const DEFAULT_CHARACTER_EYES_PARAMETERS = {
     enabled: true,
-    // Placement on the model (local units; tune to sit the quad on the face).
-    offsetX: -1.5,
-    offsetY: 1.24,
-    offsetZ: 0.02,
-    rotX: -1.8,
-    rotY: 1.56,
-    rotZ: 1.82,
-    planeScale: 2.95, // overall size of the eyes quad
-    headFollow: true, // ride the `head` bone's bob / tilt on top of the tuned placement
-    headFollowStrength: 1.0, // 0 = ignore the head animation, 1 = full
-    // Eyeball (yellow circle with a big wobbly border).
+    debugUv1: false, // paint the head by its second UV (R=u, G=v) to find the eye layout
+    // Eyeball (yellow circle with a big wobbly border), positioned in the head's uv1.
     eyeColor: '#f2c20a',
-    eyeRadius: 0.16, // fraction of the quad
-    eyeSpacing: 0.47, // gap between the two eyes
-    eyeOffsetY: 0,
-    eyeAspect: 1.02, // 1 = round, <1 squished horizontally
-    eyeNoiseScale: 1.1, // LOW = big chunky border wobbles ("very large noise")
-    eyeNoiseStrength: 0.07,
+    eyeRadius: 0.26,
+    eyeSpacing: 0.55, // gap between the two eyes
+    eyeOffsetY: -0.1,
+    eyeAspect: 0.8, // 1 = round, <1 squished horizontally
+    eyeNoiseScale: 1.0, // LOW = big chunky border wobbles ("very large noise")
+    eyeNoiseStrength: 0.04,
     // Pupil (squished ellipse with its own perlin border).
     pupilColor: '#130d09',
-    pupilWidth: 0.07,
-    pupilHeight: 0.1, // taller than wide = squished
-    pupilOffsetX: 0.02,
-    pupilOffsetY: 0,
-    pupilNoiseScale: 0.9,
-    pupilNoiseStrength: 0.13,
+    pupilWidth: 0.08,
+    pupilHeight: 0.15, // taller than wide = squished
+    pupilOffsetX: 0,
+    pupilOffsetY: 0.03,
+    pupilNoiseScale: 0.8,
+    pupilNoiseStrength: 0.05,
     edgeSoftness: 0.01, // border softness (normalised)
     // Blink.
     blinkInterval: 2.9, // base seconds between blinks

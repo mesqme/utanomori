@@ -11,9 +11,30 @@ uniform float uPainterlyBrightnessVariation;
 uniform float uFade;
 uniform vec3 uBackgroundColor;
 
+// In-shader cartoon eyes (head mesh only, uDrawEyes = 1) — drawn in the second UV set (uv1), where
+// the front face is laid out. Same look as the procedural eyes quad; CharacterEyes drives these.
+uniform int uDrawEyes;
+uniform vec3 uEyeColor;
+uniform vec3 uPupilColor;
+uniform float uEyeRadius;
+uniform float uEyeSpacing;
+uniform float uEyeOffsetY;
+uniform float uEyeAspect;
+uniform float uEyeNoiseScale;
+uniform float uEyeNoiseStrength;
+uniform float uPupilWidth;
+uniform float uPupilHeight;
+uniform float uPupilOffsetX;
+uniform float uPupilOffsetY;
+uniform float uPupilNoiseScale;
+uniform float uPupilNoiseStrength;
+uniform float uEyeEdgeSoftness;
+uniform float uEyeBlink;
+
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
 varying vec3 vInstanceTint; // per-instance colour jitter (sheep scales); vec3(1) everywhere else
+varying vec2 vUv1;
 
 // Stable per-pixel dither (interleaved gradient noise) for the reveal-edge dissolve.
 float ditherNoise(vec2 p) {
@@ -29,6 +50,55 @@ float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
     float zProjection = texture2D(uPainterlyTexture, position.xy).r;
 
     return xProjection * blendWeights.x + yProjection * blendWeights.y + zProjection * blendWeights.z;
+}
+
+// --- Ashima 2D simplex noise (for the eye / pupil perlin borders) ---
+vec3 eyeMod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec2 eyeMod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
+vec3 eyePermute(vec3 x) { return eyeMod289(((x * 34.0) + 1.0) * x); }
+float eyeSnoise(vec2 v) {
+    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+    vec2 i = floor(v + dot(v, C.yy));
+    vec2 x0 = v - i + dot(i, C.xx);
+    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
+    vec4 x12 = x0.xyxy + C.xxzz;
+    x12.xy -= i1;
+    i = eyeMod289(i);
+    vec3 p = eyePermute(eyePermute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
+    vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
+    m = m * m; m = m * m;
+    vec3 x = 2.0 * fract(p * C.www) - 1.0;
+    vec3 h = abs(x) - 0.5;
+    vec3 ox = floor(x + 0.5);
+    vec3 a0 = x - ox;
+    m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
+    vec3 g;
+    g.x = a0.x * x0.x + h.x * x0.y;
+    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+    return 130.0 * dot(m, g);
+}
+
+// Composite the two eyes (+ squished pupils + blink) onto the head colour, sampled in uv1.
+vec3 drawEyes(vec3 baseColor, vec2 uv1) {
+    vec2 euv = uv1 - 0.5;
+    float side = euv.x < 0.0 ? -1.0 : 1.0;
+    vec2 ep = euv - vec2(side * uEyeSpacing * 0.5, uEyeOffsetY);
+
+    vec2 epe = ep / vec2(max(uEyeRadius * uEyeAspect, 1e-3), max(uEyeRadius, 1e-3));
+    float er = length(epe);
+    float eedge = 1.0 + eyeSnoise(epe * uEyeNoiseScale) * uEyeNoiseStrength;
+    float emask = 1.0 - smoothstep(eedge - uEyeEdgeSoftness, eedge, er);
+
+    float ap = (1.0 - uEyeBlink) * uEyeRadius;
+    float lidS = max(uEyeRadius * uEyeEdgeSoftness, 1e-4);
+    emask *= 1.0 - smoothstep(ap - lidS, ap, abs(ep.y));
+
+    vec2 epp = (ep - vec2(uPupilOffsetX, uPupilOffsetY)) / vec2(max(uPupilWidth, 1e-3), max(uPupilHeight, 1e-3));
+    float erp = length(epp);
+    float pedge = 1.0 + eyeSnoise(epp * uPupilNoiseScale + 11.3) * uPupilNoiseStrength;
+    float pmask = 1.0 - smoothstep(pedge - uEyeEdgeSoftness, pedge, erp);
+
+    return mix(baseColor, mix(uEyeColor, uPupilColor, pmask), emask);
 }
 
 void main() {
@@ -47,6 +117,13 @@ void main() {
         finalColor = uBaseColor;
     } else if (uDebugMode == 2) {
         finalColor = vec3(painterlyValue);
+    }
+
+    // In-shader eyes (head mesh only) — drawn last so they read on top of the head paint.
+    if (uDrawEyes == 1) {
+        finalColor = drawEyes(finalColor, vUv1);
+    } else if (uDrawEyes == 2) {
+        finalColor = vec3(vUv1, 0.0); // debug: paint the head by its second UV (R=u, G=v; black = no uv1)
     }
 
     // Reveal-edge fade (uFade 0→1): a SCREEN-DOOR dither dissolve (not alpha) so the creature stays

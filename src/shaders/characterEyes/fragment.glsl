@@ -20,8 +20,8 @@ uniform float uPupilOffsetX;
 uniform float uPupilOffsetY;
 uniform float uPupilNoiseScale;
 uniform float uPupilNoiseStrength;
-uniform float uEdgeSoftness;
-uniform float uBlink; // 0 = open, 1 = shut
+uniform float uEyeEdgeSoftness;
+uniform float uEyeBlink; // 0 = open, 1 = shut
 
 // --- Ashima 2D simplex noise (perlin-like, smooth) -------------------------------------------
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
@@ -62,11 +62,11 @@ void main() {
     vec2 pe = p / vec2(max(uEyeRadius * uEyeAspect, 1e-3), max(uEyeRadius, 1e-3));
     float r = length(pe);
     float eyeEdge = 1.0 + snoise(pe * uEyeNoiseScale) * uEyeNoiseStrength;
-    float eyeMask = 1.0 - smoothstep(eyeEdge - uEdgeSoftness, eyeEdge, r);
+    float eyeMask = 1.0 - smoothstep(eyeEdge - uEyeEdgeSoftness, eyeEdge, r);
 
     // Blink: top + bottom lids close over a vertical aperture (full circle at open, nothing shut).
-    float aperture = (1.0 - uBlink) * uEyeRadius;
-    float lidSoft = max(uEyeRadius * uEdgeSoftness, 1e-4);
+    float aperture = (1.0 - uEyeBlink) * uEyeRadius;
+    float lidSoft = max(uEyeRadius * uEyeEdgeSoftness, 1e-4);
     float lid = 1.0 - smoothstep(aperture - lidSoft, aperture, abs(p.y));
     eyeMask *= lid;
 
@@ -74,7 +74,7 @@ void main() {
     vec2 pp = (p - vec2(uPupilOffsetX, uPupilOffsetY)) / vec2(max(uPupilWidth, 1e-3), max(uPupilHeight, 1e-3));
     float rp = length(pp);
     float pupilEdge = 1.0 + snoise(pp * uPupilNoiseScale + 11.3) * uPupilNoiseStrength;
-    float pupilMask = 1.0 - smoothstep(pupilEdge - uEdgeSoftness, pupilEdge, rp);
+    float pupilMask = 1.0 - smoothstep(pupilEdge - uEyeEdgeSoftness, pupilEdge, rp);
 
     vec3 color = mix(uEyeColor, uPupilColor, pupilMask);
     float alpha = eyeMask; // the pupil only shows where the (lidded) eyeball is opaque

@@ -1,4 +1,7 @@
-// Shared handle to the hero's `head` bone, set by MainCharacter once the rig loads. The procedural
-// eyes (CharacterEyes) read it so they can ride the head's animation (bob / tilt) on top of their
-// tuned placement — without being a child of the bone, so the Leva offset/rotation stay meaningful.
-export const characterHead = { bone: null }
+// Shared handles to the hero's rig, set by MainCharacter once it loads. Read by:
+//   • CharacterEyes — `material` (the head mesh's stylized material; the eyes are drawn in its uv1)
+//   • the painterly-contrast reveal in MainCharacter — `materials` (every hero stylized material)
+export const characterHead = {
+    material: null,
+    materials: [],
+}
