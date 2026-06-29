@@ -40,9 +40,11 @@ export default function MusicController() {
             desired[`${track}Preview`] = 0 // simplified preview
         }
         if (playing && !inGame) {
-            // Collected (beaten) companions hum their FULL melody softly behind the hero.
+            // Collected (beaten) companions hum their FULL melody behind the hero — softer (0.7) than
+            // the preview during gameplay, then swelling to full (creditsVolume) once we hit credits.
+            const collectedVol = phase === PHASES.credits ? m.creditsVolume ?? 1 : m.collectedVolume
             companions.found.forEach((c) => {
-                if (c.music) desired[c.music] = m.collectedVolume
+                if (c.music) desired[c.music] = collectedVol
             })
             // The companion we're heading toward (not yet beaten) plays its PREVIEW, growing louder as
             // we approach. The FULL version stays silent until the mini-game is won — so the player only

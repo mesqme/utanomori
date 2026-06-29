@@ -195,10 +195,11 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
 export const DEFAULT_MUSIC_PARAMETERS = {
     hearNear: 0, // distance (hero→target) at/under which the target track reaches nearVolume
     hearFar: 10, // distance beyond which it fades down to farVolume
-    nearVolume: 0.1, // target track volume when right next to the companion (only full once collected)
-    farVolume: 0.0, // target track volume when far (a faint hint of where to head)
+    nearVolume: 1.0, // PREVIEW volume when right next to the companion (the simplified track plays full)
+    farVolume: 0.0, // target preview volume when far (a faint hint of where to head)
     distanceFalloff: 1.0, // >1 = stays much quieter at range, only swells up close (ease-in on distance)
-    collectedVolume: 0.3, // a collected companion's track plays behind the hero
+    collectedVolume: 0.7, // a collected companion's FULL melody plays behind the hero (lower than preview)
+    creditsVolume: 1.0, // at the credits (party complete) all collected melodies swell to full
     volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
