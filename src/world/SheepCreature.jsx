@@ -16,6 +16,8 @@ import {
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
 import maskKanadeUrl from '../assets/textures/mask_kanade.png'
+import maskHibikiUrl from '../assets/textures/mask_hibiki.png'
+import maskKazaneUrl from '../assets/textures/mask_kazane.png'
 import sheepUrl from '../assets/models/sheep.glb'
 
 const IDLE_CLIP = 'sheep_Idle'
@@ -25,6 +27,8 @@ const SWAY_AXES = {
     Y: new THREE.Vector3(0, 1, 0),
     Z: new THREE.Vector3(0, 0, 1),
 }
+// Which mask face each music companion wears (index into the loaded mask texture array).
+const MASK_TEXTURE_INDEX = { piano: 0, drums: 1, winds: 2 }
 
 // The sheep music companion. Each instance is its own SkeletonUtils.clone (own skeleton + mixer),
 // shares the hero's stylized material (+ a reveal-edge fade), crossfades sheep_Idle↔sheep_Run by
@@ -44,17 +48,21 @@ export default function SheepCreature({ definition, moving = false }) {
         painterlyTexture.needsUpdate = true
     }, [painterlyTexture])
 
-    // Character face texture for the mask mesh (Sheep_Mask). flipY=false to match the glTF UVs.
-    const maskTexture = useTexture(maskKanadeUrl)
+    // Per-character face textures for the mask mesh (Sheep_Mask): piano→Kanade, drums→Hibiki,
+    // winds→Kazane. flipY=false to match the glTF UVs.
+    const maskTextures = useTexture([maskKanadeUrl, maskHibikiUrl, maskKazaneUrl])
     useMemo(() => {
-        maskTexture.colorSpace = THREE.SRGBColorSpace
-        maskTexture.flipY = false
-        maskTexture.needsUpdate = true
-    }, [maskTexture])
+        maskTextures.forEach((t) => {
+            t.colorSpace = THREE.SRGBColorSpace
+            t.flipY = false
+            t.needsUpdate = true
+        })
+    }, [maskTextures])
 
     // One clone per companion → its own skeleton, so they animate independently.
     const clone = useMemo(() => cloneSkeleton(scene), [scene])
     const music = definition?.music ?? 'piano' // which companion → its own colour set
+    const maskTexture = maskTextures[MASK_TEXTURE_INDEX[music] ?? 0] // this companion's face
 
     const groupRef = useRef(null)
     const mixerRef = useRef(null)
