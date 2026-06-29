@@ -10,9 +10,22 @@ import { getAudioContext } from './songAudio.js'
 import pianoFull from '../assets/audio/music/piano_full.wav'
 import drumsFull from '../assets/audio/music/drums_full.wav'
 import windsFull from '../assets/audio/music/winds_full.wav'
+import pianoPreview from '../assets/audio/music/piano_preview.wav'
+import drumsPreview from '../assets/audio/music/drums_preview.wav'
+import windsPreview from '../assets/audio/music/winds_preview.wav'
 
-const TRACK_URLS = { piano: pianoFull, drums: drumsFull, winds: windsFull }
-const ORDER = ['piano', 'drums', 'winds']
+// Six layers — the FULL melody per companion + a simplified PREVIEW per companion. All start together
+// on GO and stay on the same timeline (so the preview ↔ full swap on a win is musically seamless); the
+// MusicController only changes each layer's volume.
+const TRACK_URLS = {
+    piano: pianoFull,
+    drums: drumsFull,
+    winds: windsFull,
+    pianoPreview,
+    drumsPreview,
+    windsPreview,
+}
+const ORDER = ['piano', 'drums', 'winds', 'pianoPreview', 'drumsPreview', 'windsPreview']
 
 const buffers = {} // track → decoded AudioBuffer (cached across restarts)
 const gains = {} // track → GainNode (volume)
