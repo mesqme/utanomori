@@ -62,19 +62,23 @@ float getBayerThreshold(vec2 fragCoord, float pixelSize) {
     int x = int(mod(pixelCoord.x, 8.0));
     int y = int(mod(pixelCoord.y, 8.0));
     
-    // 8x8 Bayer matrix values (0-63)
-    int M[64];
-    M[0]=0;  M[1]=32; M[2]=8;  M[3]=40; M[4]=2;  M[5]=34; M[6]=10; M[7]=42;
-    M[8]=48; M[9]=16; M[10]=56;M[11]=24;M[12]=50;M[13]=18;M[14]=58;M[15]=26;
-    M[16]=12;M[17]=44;M[18]=4; M[19]=36;M[20]=14;M[21]=46;M[22]=6; M[23]=38;
-    M[24]=60;M[25]=28;M[26]=52;M[27]=20;M[28]=62;M[29]=30;M[30]=54;M[31]=22;
-    M[32]=3; M[33]=35;M[34]=11;M[35]=43;M[36]=1; M[37]=33;M[38]=9; M[39]=41;
-    M[40]=51;M[41]=19;M[42]=59;M[43]=27;M[44]=49;M[45]=17;M[46]=57;M[47]=25;
-    M[48]=15;M[49]=47;M[50]=7; M[51]=39;M[52]=13;M[53]=45;M[54]=5; M[55]=37;
-    M[56]=63;M[57]=31;M[58]=55;M[59]=23;M[60]=61;M[61]=29;M[62]=53;M[63]=21;
-    
-    int index = y * 8 + x;
-    return float(M[index]) / 64.0;
+    // 8x8 Bayer threshold, computed arithmetically via the recursive 2x2 construction.
+    // (The old version filled a 64-element local int array and indexed it with a runtime value;
+    // that dynamically-indexed large local array makes ANGLE's Metal shader compiler throw an
+    // internal error at pipeline creation, so the ground/grass fail to render on macOS. This is
+    // exactly equivalent — it reproduces the same 0..63 Bayer matrix.)
+    float bx = float(x);
+    float by = float(y);
+    float v = 0.0;
+    float scale = 16.0;
+    for (int bit = 0; bit < 3; bit++) {
+        float p = pow(2.0, float(bit));
+        float xi = mod(floor(bx / p), 2.0);
+        float yi = mod(floor(by / p), 2.0);
+        v += (2.0 * xi + 3.0 * yi - 4.0 * xi * yi) * scale;
+        scale *= 0.25;
+    }
+    return v / 64.0;
 }
 
 
