@@ -257,32 +257,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         strength: 'strength',
         power: 'power',
     },
-    'Music Stones': {
-        note1: 'color0',
-        note2: 'color1',
-        note3: 'color2',
-        note4: 'color3',
-        note5: 'color4',
-        note6: 'color5',
-        note7: 'color6',
-        radius: 'radius',
-        scale: 'scale',
-        yOffset: 'yOffset',
-        hoverHeight: 'hoverHeight',
-        bobAmount: 'bobAmount',
-        bobSpeed: 'bobSpeed',
-        flashBoost: 'flashBoost',
-        hoverBoost: 'hoverBoost',
-        flashDuration: 'flashDuration',
-        listenTempo: 'listenTempo',
-        staggerDelay: 'staggerDelay',
-        scaleInDuration: 'scaleInDuration',
-        scaleOutDuration: 'scaleOutDuration',
-        grassFade: 'grassFade',
-        cameraHeight: 'cameraHeight',
-        cameraDistance: 'cameraDistance',
-        cameraLerp: 'cameraLerp',
-    },
     Character: {
         modelScale: 'modelScale',
         modelYOffset: 'modelYOffset',
@@ -345,13 +319,13 @@ function addLevaSectionValues(values, folder, section, paths) {
 }
 
 function addSeeThroughValues(values) {
-    values['See-Through.enabled'] = seeThrough.enabled
-    values['See-Through.grassEnabled'] = seeThrough.grassEnabled
-    values['See-Through.worldRadius'] = seeThrough.worldRadius
-    values['See-Through.inner'] = seeThrough.inner
-    values['See-Through.depthBias'] = seeThrough.depthBias
-    values['See-Through.opacityIntensity'] = seeThrough.opacityIntensity
-    values['See-Through.textureContrast'] = seeThrough.textureContrast
+    values['Debug.See-Through.enabled'] = seeThrough.enabled
+    values['Debug.See-Through.grassEnabled'] = seeThrough.grassEnabled
+    values['Debug.See-Through.worldRadius'] = seeThrough.worldRadius
+    values['Debug.See-Through.inner'] = seeThrough.inner
+    values['Debug.See-Through.depthBias'] = seeThrough.depthBias
+    values['Debug.See-Through.opacityIntensity'] = seeThrough.opacityIntensity
+    values['Debug.See-Through.textureContrast'] = seeThrough.textureContrast
 }
 
 export default function Controls() {
@@ -443,29 +417,29 @@ export default function Controls() {
             'General.bgWireframe': backgroundWireframe,
         }
 
-        addLevaSectionValues(values, 'Terrain', terrainParameters, LEVA_SECTION_PATHS.Terrain)
-        addLevaSectionValues(values, 'Grass', grassParameters, LEVA_SECTION_PATHS.Grass)
-        addLevaSectionValues(values, 'Wind', windParameters, LEVA_SECTION_PATHS.Wind)
-        addLevaSectionValues(values, 'Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
-        addLevaSectionValues(values, 'Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
-        addLevaSectionValues(values, 'Objects', objectParameters, LEVA_SECTION_PATHS.Objects)
-        addLevaSectionValues(values, 'Grass Trail', grassParameters, LEVA_SECTION_PATHS['Grass Trail'])
-        addLevaSectionValues(values, 'GT Dissolve', grassParameters, LEVA_SECTION_PATHS['GT Dissolve'])
-        addLevaSectionValues(values, 'GT Lighten', grassParameters, LEVA_SECTION_PATHS['GT Lighten'])
-        addLevaSectionValues(values, 'GT Scale', grassParameters, LEVA_SECTION_PATHS['GT Scale'])
-        addLevaSectionValues(values, 'GT Lean', grassParameters, LEVA_SECTION_PATHS['GT Lean'])
-        addLevaSectionValues(values, 'Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
-        addLevaSectionValues(values, 'Border', borderParameters, LEVA_SECTION_PATHS.Border)
-        addLevaSectionValues(values, 'Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
-        addLevaSectionValues(values, 'Background', backgroundParameters, LEVA_SECTION_PATHS.Background)
-        addLevaSectionValues(values, 'Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
-        addLevaSectionValues(values, 'Leaves Edge', edgeParameters, LEVA_SECTION_PATHS['Leaves Edge'])
-        addLevaSectionValues(values, 'Character', characterParameters, LEVA_SECTION_PATHS.Character)
-        addLevaSectionValues(values, 'Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
-        addLevaSectionValues(values, 'Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
+        addLevaSectionValues(values, 'World.Terrain', terrainParameters, LEVA_SECTION_PATHS.Terrain)
+        addLevaSectionValues(values, 'Grass.Grass', grassParameters, LEVA_SECTION_PATHS.Grass)
+        addLevaSectionValues(values, 'Grass.Wind', windParameters, LEVA_SECTION_PATHS.Wind)
+        addLevaSectionValues(values, 'Grass.Grass Patches', grassPatchParameters, LEVA_SECTION_PATHS['Grass Patches'])
+        addLevaSectionValues(values, 'Grass.Roads', roadParameters, LEVA_SECTION_PATHS.Roads)
+        addLevaSectionValues(values, 'Props.Objects', objectParameters, LEVA_SECTION_PATHS.Objects)
+        addLevaSectionValues(values, 'Grass.Grass Trail', grassParameters, LEVA_SECTION_PATHS['Grass Trail'])
+        addLevaSectionValues(values, 'Grass.GT Dissolve', grassParameters, LEVA_SECTION_PATHS['GT Dissolve'])
+        addLevaSectionValues(values, 'Grass.GT Lighten', grassParameters, LEVA_SECTION_PATHS['GT Lighten'])
+        addLevaSectionValues(values, 'Grass.GT Scale', grassParameters, LEVA_SECTION_PATHS['GT Scale'])
+        addLevaSectionValues(values, 'Grass.GT Lean', grassParameters, LEVA_SECTION_PATHS['GT Lean'])
+        addLevaSectionValues(values, 'Lantern.Lantern Ground Light', lanternGroundLightParameters, LEVA_SECTION_PATHS['Lantern Ground Light'])
+        addLevaSectionValues(values, 'World.Border', borderParameters, LEVA_SECTION_PATHS.Border)
+        addLevaSectionValues(values, 'World.Dithering Params', ditheringParameters, LEVA_SECTION_PATHS['Dithering Params'])
+        addLevaSectionValues(values, 'World.Background', backgroundParameters, LEVA_SECTION_PATHS.Background)
+        addLevaSectionValues(values, 'World.Painterly Postprocess', painterlyPostParameters, LEVA_SECTION_PATHS['Painterly Postprocess'])
+        addLevaSectionValues(values, 'Props.Leaves Edge', edgeParameters, LEVA_SECTION_PATHS['Leaves Edge'])
+        addLevaSectionValues(values, 'Characters.Character', characterParameters, LEVA_SECTION_PATHS.Character)
+        addLevaSectionValues(values, 'Characters.Character Stylized', characterMaterialParameters, LEVA_SECTION_PATHS['Character Stylized'])
+        addLevaSectionValues(values, 'Debug.Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
 
         mainCharacterMaterialGroups.forEach((group) => {
-            values[`Character Stylized.${group.label} Base`] =
+            values[`Characters.Character Stylized.${group.label} Base`] =
                 characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor
         })
 
@@ -479,7 +453,7 @@ export default function Controls() {
 
     useEffect(() => {
         const values = {}
-        addLevaSectionValues(values, 'Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
+        addLevaSectionValues(values, 'Game.Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
 
         syncingLeva.current = true
         try {
@@ -491,7 +465,7 @@ export default function Controls() {
 
     useEffect(() => {
         const values = {}
-        addLevaSectionValues(values, 'Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
+        addLevaSectionValues(values, 'Debug.Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
 
         syncingLeva.current = true
         try {
@@ -503,7 +477,7 @@ export default function Controls() {
 
     useEffect(() => {
         const values = {}
-        addLevaSectionValues(values, 'Game UI', gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
+        addLevaSectionValues(values, 'Game.Game UI', gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
 
         syncingLeva.current = true
         try {
@@ -519,7 +493,7 @@ export default function Controls() {
 
     useEffect(() => {
         const values = {}
-        addLevaSectionValues(values, 'Props Edge', propRimParameters, LEVA_SECTION_PATHS['Props Edge'])
+        addLevaSectionValues(values, 'Props.Props Edge', propRimParameters, LEVA_SECTION_PATHS['Props Edge'])
 
         syncingLeva.current = true
         try {
@@ -543,7 +517,7 @@ export default function Controls() {
         }
     }, [])
 
-    useControls('General', {
+    useControls('Debug.General', {
         toCredits: button(() => {
             // Dev: gather the full party behind the hero and jump straight into the credits run.
             useCompanions.getState().fillParty()
@@ -579,7 +553,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Game UI', {
+    useControls('Game.Game UI', {
         bubbleShape: {
             value: gameUiParameters.bubbleShape,
             options: ['Rect', 'Ellipse', 'Circle'],
@@ -606,7 +580,7 @@ export default function Controls() {
         wordFade: { value: gameUiParameters.wordFade, min: 80, max: 1200, step: 10, onChange: setParam('gameUiParameters', 'wordFade') },
     })
 
-    useControls('See-Through', {
+    useControls('Debug.See-Through', {
         enabled: {
             value: seeThrough.enabled,
             onChange: (value, _, context) => {
@@ -676,7 +650,7 @@ export default function Controls() {
     })
 
     // Painterly silhouette edge — applied only to the tree leaves (canopy).
-    useControls('Leaves Edge', {
+    useControls('Props.Leaves Edge', {
         enabled: { value: edgeParameters.enabled, onChange: setParam('edgeParameters', 'enabled') },
         mode: { value: edgeParameters.mode, options: ['Dither', 'Alpha'], onChange: setParam('edgeParameters', 'mode') },
         color: { value: edgeParameters.color, onChange: setParam('edgeParameters', 'color') },
@@ -689,7 +663,7 @@ export default function Controls() {
     })
 
     // Fresnel colour rim — applied to the hard-surface props (trunks / stones / mushrooms).
-    useControls('Props Edge', {
+    useControls('Props.Props Edge', {
         enabled: { value: propRimParameters.enabled, onChange: setParam('propRimParameters', 'enabled') },
         color: { value: propRimParameters.color, onChange: setParam('propRimParameters', 'color') },
         strength: { value: propRimParameters.strength, min: 0, max: 3, step: 0.01, onChange: setParam('propRimParameters', 'strength') },
@@ -697,7 +671,7 @@ export default function Controls() {
     })
 
     // The 7 song-mini-game stones (colours = the 7 notes) + their staging / camera tweaks.
-    useControls('Music Stones', {
+    useControls('Audio.Music Stones', {
         note1: { value: musicStoneParameters.color0, onChange: setParam('musicStoneParameters', 'color0') },
         note2: { value: musicStoneParameters.color1, onChange: setParam('musicStoneParameters', 'color1') },
         note3: { value: musicStoneParameters.color2, onChange: setParam('musicStoneParameters', 'color2') },
@@ -740,7 +714,7 @@ export default function Controls() {
         seeThroughRadius: { value: musicStoneParameters.seeThroughRadius, min: 1, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'seeThroughRadius') },
     })
 
-    useControls('Music', {
+    useControls('Audio.Music', {
         hearNear: { value: musicParameters.hearNear, min: 0, max: 30, step: 0.5, onChange: setParam('musicParameters', 'hearNear') },
         hearFar: { value: musicParameters.hearFar, min: 5, max: 100, step: 1, onChange: setParam('musicParameters', 'hearFar') },
         nearVolume: { value: musicParameters.nearVolume, min: 0, max: 1, step: 0.01, onChange: setParam('musicParameters', 'nearVolume') },
@@ -750,7 +724,7 @@ export default function Controls() {
         volumeLerp: { value: musicParameters.volumeLerp, min: 0.2, max: 10, step: 0.1, onChange: setParam('musicParameters', 'volumeLerp') },
     })
 
-    useControls('Ambient SFX', {
+    useControls('Audio.Ambient SFX', {
         windVolume: { value: ambientSoundParameters.windVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windVolume') },
         windDialogueVolume: { value: ambientSoundParameters.windDialogueVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windDialogueVolume') },
         cicadaVolume: { value: ambientSoundParameters.cicadaVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'cicadaVolume') },
@@ -769,7 +743,7 @@ export default function Controls() {
     })
 
     const sheepChars = sheepMaterialParameters.characters
-    useControls('Sheep', {
+    useControls('Characters.Sheep', {
         // Per-companion colours. char1 = piano (1st), char2 = drums (2nd), char3 = winds (3rd).
         char1Body: { value: sheepChars.piano.orange.baseColor, onChange: setSheepMaterialParam('piano', 'orange') },
         char1Wool: { value: sheepChars.piano.white.baseColor, onChange: setSheepMaterialParam('piano', 'white') },
@@ -803,7 +777,7 @@ export default function Controls() {
         painterlyContrast: { value: sheepMaterialParameters.painterlyContrast, min: 0.5, max: 2, step: 0.01, onChange: setParam('sheepMaterialParameters', 'painterlyContrast') },
     })
 
-    useControls('Terrain', {
+    useControls('World.Terrain', {
         groundTexture: {
             value: terrainParameters.groundTextureEnabled,
             onChange: setParam('terrainParameters', 'groundTextureEnabled'),
@@ -884,7 +858,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Grass', {
+    useControls('Grass.Grass', {
         enabled: {
             value: grassParameters.enabled,
             onChange: setParam('grassParameters', 'enabled'),
@@ -937,7 +911,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Wind', {
+    useControls('Grass.Wind', {
         direction: {
             value: windParameters.direction,
             min: -Math.PI,
@@ -968,7 +942,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Grass Patches', {
+    useControls('Grass.Grass Patches', {
         worldSeed: {
             value: grassPatchParameters.worldSeed,
             step: 1,
@@ -1111,7 +1085,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Roads', {
+    useControls('Grass.Roads', {
         enabled: {
             value: roadParameters.enabled,
             onChange: setParam('roadParameters', 'enabled'),
@@ -1193,7 +1167,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Objects', {
+    useControls('Props.Objects', {
         enabled: {
             value: objectParameters.enabled,
             onChange: setParam('objectParameters', 'enabled'),
@@ -1365,7 +1339,7 @@ export default function Controls() {
         ...extra,
     })
 
-    useControls('Grass Trail', {
+    useControls('Grass.Grass Trail', {
         enabled: {
             value: grassParameters.trampleEnabled,
             onChange: setParam('grassParameters', 'trampleEnabled'),
@@ -1380,7 +1354,7 @@ export default function Controls() {
     })
 
     useControls(
-        'GT Dissolve',
+        'Grass.GT Dissolve',
         grassLayerControls('dissolve', {
             mode: {
                 value: grassParameters.dissolveMode,
@@ -1391,7 +1365,7 @@ export default function Controls() {
     )
 
     useControls(
-        'GT Lighten',
+        'Grass.GT Lighten',
         grassLayerControls('lighten', {
             color: {
                 value: grassParameters.lightenColor,
@@ -1400,11 +1374,11 @@ export default function Controls() {
         })
     )
 
-    useControls('GT Scale', grassLayerControls('scale'))
+    useControls('Grass.GT Scale', grassLayerControls('scale'))
 
-    useControls('GT Lean', grassLayerControls('lean'))
+    useControls('Grass.GT Lean', grassLayerControls('lean'))
 
-    useControls('Lantern Ground Light', {
+    useControls('Lantern.Lantern Ground Light', {
         radius: {
             value: lanternGroundLightParameters.radius,
             min: 0.25,
@@ -1449,7 +1423,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Lantern Fire', {
+    useControls('Lantern.Lantern Fire', {
         fireEnabled: {
             value: lanternFireParameters.enabled,
             onChange: setParam('lanternFireParameters', 'enabled'),
@@ -1580,7 +1554,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Lantern Grass', {
+    useControls('Lantern.Lantern Grass', {
         grassEnabled: {
             value: lanternGrassParameters.enabled,
             onChange: setParam('lanternGrassParameters', 'enabled'),
@@ -1626,7 +1600,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Border', {
+    useControls('World.Border', {
         fadeMode: {
             value: borderParameters.fadeMode,
             options: ['Color', 'Dither', 'Paintery'],
@@ -1711,7 +1685,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Dithering Params', {
+    useControls('World.Dithering Params', {
         ditherMode: {
             value: ditheringParameters.ditherMode,
             options: ['Diamond', 'Bayer'],
@@ -1726,7 +1700,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Background', {
+    useControls('World.Background', {
         backgroundColor: {
             value: backgroundParameters.backgroundColor,
             onChange: setParam('backgroundParameters', 'backgroundColor'),
@@ -1925,7 +1899,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Target Arrow', {
+    useControls('Game.Target Arrow', {
         distance: { value: arrowParameters.distance, min: 0.5, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'distance') },
         yOffset: { value: arrowParameters.yOffset, min: 0, max: 4, step: 0.05, onChange: setParam('arrowParameters', 'yOffset') },
         scale: { value: arrowParameters.scale, min: 0.05, max: 2, step: 0.01, onChange: setParam('arrowParameters', 'scale') },
@@ -1939,7 +1913,7 @@ export default function Controls() {
         color: { value: arrowParameters.color, onChange: setParam('arrowParameters', 'color') },
     })
 
-    useControls('Song Game', {
+    useControls('Game.Song Game', {
         interactRadius: { value: songGameParameters.interactRadius, min: 1, max: 12, step: 0.1, onChange: setParam('songGameParameters', 'interactRadius') },
         noteDuration: { value: songGameParameters.noteDuration, min: 0.4, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteDuration') },
         noteGrow: { value: songGameParameters.noteGrow, min: 0.5, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteGrow') },
@@ -1949,7 +1923,7 @@ export default function Controls() {
         noteColor: { value: songGameParameters.noteColor, onChange: setParam('songGameParameters', 'noteColor') },
     })
 
-    useControls('Painterly Postprocess', {
+    useControls('World.Painterly Postprocess', {
         enabled: {
             value: painterlyPostParameters.enabled,
             onChange: setParam('painterlyPostParameters', 'enabled'),
@@ -2031,7 +2005,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Paintery Texture', {
+    useControls('World.Paintery Texture', {
         enabled: {
             value: painteryTextureParameters.enabled,
             onChange: setParam('painteryTextureParameters', 'enabled'),
@@ -2078,7 +2052,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Character', {
+    useControls('Characters.Character', {
         modelScale: {
             value: characterParameters.modelScale,
             min: 0.05,
@@ -2130,7 +2104,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Character Stylized', {
+    useControls('Characters.Character Stylized', {
         debug: {
             value: characterMaterialParameters.debugMode,
             options: stylizedDebugModes,
@@ -2186,7 +2160,7 @@ export default function Controls() {
         }, {}),
     })
 
-    useControls('Character Eyes', {
+    useControls('Characters.Character Eyes', {
         enabled: { value: characterEyesParameters.enabled, onChange: setParam('characterEyesParameters', 'enabled') },
         debugUv1: { value: characterEyesParameters.debugUv1, onChange: setParam('characterEyesParameters', 'debugUv1') },
         // Eyeball (yellow circle, big wobbly border) — laid out in the head's second UV (uv1).
@@ -2219,7 +2193,7 @@ export default function Controls() {
         pupilLookSpeed: { value: characterEyesParameters.pupilLookSpeed, min: 1, max: 20, step: 0.5, onChange: setParam('characterEyesParameters', 'pupilLookSpeed') },
     })
 
-    useControls('Tree Eyes', {
+    useControls('Characters.Tree Eyes', {
         planesPerTree: { value: treeEyesParameters.planesPerTree, min: 0, max: 11, step: 1, onChange: setParam('treeEyesParameters', 'planesPerTree') },
         // Camera-facing fade (transparent edge-on near 90° + on back-facing planes).
         facingThreshold: { value: treeEyesParameters.facingThreshold, min: 0, max: 0.95, step: 0.01, onChange: setParam('treeEyesParameters', 'facingThreshold') },
@@ -2248,7 +2222,7 @@ export default function Controls() {
         lookChance: { value: treeEyesParameters.lookChance, min: 0, max: 1, step: 0.05, onChange: setParam('treeEyesParameters', 'lookChance') },
     })
 
-    useControls('Camera Debug', {
+    useControls('Game.Camera Debug', {
         debugOrbit: {
             value: cameraParameters.debugOrbit,
             onChange: setParam('cameraParameters', 'debugOrbit'),
@@ -2283,7 +2257,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Loader Debug', {
+    useControls('Debug.Loader Debug', {
         enabled: {
             value: loaderDebugParameters.enabled,
             onChange: setParam('loaderDebugParameters', 'enabled'),
@@ -2340,7 +2314,7 @@ export default function Controls() {
         },
     })
 
-    useControls('Intro Camera', {
+    useControls('Game.Intro Camera', {
         'redo the animation': button(() => replayIntro()),
         riseHeight: {
             value: introCameraParameters.riseHeight,
