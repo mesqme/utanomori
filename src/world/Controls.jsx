@@ -2226,6 +2226,9 @@ export default function Controls() {
 
     useControls('Tree Eyes', {
         planesPerTree: { value: treeEyesParameters.planesPerTree, min: 0, max: 11, step: 1, onChange: setParam('treeEyesParameters', 'planesPerTree') },
+        // Camera-facing fade (transparent edge-on near 90° + on back-facing planes).
+        facingThreshold: { value: treeEyesParameters.facingThreshold, min: 0, max: 0.95, step: 0.01, onChange: setParam('treeEyesParameters', 'facingThreshold') },
+        facingFalloff: { value: treeEyesParameters.facingFalloff, min: 0.02, max: 0.9, step: 0.01, onChange: setParam('treeEyesParameters', 'facingFalloff') },
         // Eyeball (drawn in the plane's [0,1] UV).
         eyeColor: { value: treeEyesParameters.eyeColor, onChange: setParam('treeEyesParameters', 'eyeColor') },
         eyeRadius: { value: treeEyesParameters.eyeRadius, min: 0.02, max: 0.5, step: 0.005, onChange: setParam('treeEyesParameters', 'eyeRadius') },

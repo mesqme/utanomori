@@ -19,10 +19,18 @@ attribute vec3 aPlaneCenter; // tree-local centre of this plane (same on every v
 varying vec2 vUv;
 varying float vPropMask;
 varying float vPhase;
+varying vec3 vWorldNormal;
+varying vec3 vWorldPos;
 
 void main() {
     #include <batching_vertex>
     vUv = uv;
+
+    vec3 batchedNormal = normal;
+    #ifdef USE_BATCHING
+        batchedNormal = mat3(batchingMatrix) * normal;
+    #endif
+    vWorldNormal = normalize(mat3(modelMatrix) * batchedNormal);
 
     vec4 batchedPos = vec4(position, 1.0);
     vec4 batchedCenter = vec4(aPlaneCenter, 1.0);
@@ -44,6 +52,7 @@ void main() {
         worldPosition.xz += uWindDir * ((sway * gust + kick) * uWindStrength * windH * windH);
     }
 
+    vWorldPos = worldPosition.xyz;
     float distanceToCenter = length(centerWorld.xz - uCircleCenter.xz);
     float radius = uPropChunkSize * uCircleRadiusFactor;
     vPropMask = 1.0 - smoothstep(radius - uPropFadeOffset, radius, distanceToCenter);

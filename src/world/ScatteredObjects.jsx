@@ -270,6 +270,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                     gust: state.objectParameters.treeWindGust ?? 0.5,
                 },
                 eyes: state.treeEyesParameters,
+                seeThrough,
+                stoneSeeThrough: musicStoneSeeThrough,
+                charSeeThrough: characterSeeThrough,
             })
         }
 

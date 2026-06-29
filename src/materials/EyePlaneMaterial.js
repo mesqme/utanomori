@@ -47,6 +47,20 @@ export function createEyePlaneMaterial() {
             uLookHold: { value: 0.3 },
             uLookAmount: { value: 0.06 },
             uLookChance: { value: 0.4 },
+            uFacingThreshold: { value: 0.15 },
+            uFacingFalloff: { value: 0.3 },
+            // See-through subjects (same as the prop material — the eyes are part of the tree).
+            uSeeThroughActive: { value: 0 },
+            uSeeThroughCenter: { value: new THREE.Vector2() },
+            uSeeThroughRadius: { value: 120 },
+            uSeeThroughDepth: { value: 20 },
+            uSeeThroughInner: { value: 0.35 },
+            uSeeThroughDepthBias: { value: 0.5 },
+            uSeeThroughOpacityIntensity: { value: 0.7 },
+            uStoneSeeThrough: { value: new Float32Array(7 * 4) },
+            uStoneSeeThroughCount: { value: 0 },
+            uCharSeeThrough: { value: new Float32Array(5 * 4) },
+            uCharSeeThroughCount: { value: 0 },
         },
     })
 }
@@ -85,5 +99,30 @@ export function updateEyePlaneMaterial(material, options) {
         u.uLookHold.value = e.lookHold
         u.uLookAmount.value = e.lookAmount
         u.uLookChance.value = e.lookChance
+        u.uFacingThreshold.value = e.facingThreshold
+        u.uFacingFalloff.value = e.facingFalloff
+    }
+    // See-through (the hero + music stones + sheep), matching the tree props.
+    if (options.seeThrough) {
+        const st = options.seeThrough
+        u.uSeeThroughActive.value = st.active ? 1 : 0
+        u.uSeeThroughCenter.value.set(st.centerX, st.centerY)
+        u.uSeeThroughRadius.value = st.radiusPx
+        u.uSeeThroughDepth.value = st.cameraDist
+        u.uSeeThroughInner.value = st.inner
+        u.uSeeThroughDepthBias.value = st.depthBias
+        u.uSeeThroughOpacityIntensity.value = st.opacityIntensity
+    }
+    if (options.stoneSeeThrough) {
+        u.uStoneSeeThrough.value = options.stoneSeeThrough.data
+        u.uStoneSeeThroughCount.value = options.stoneSeeThrough.count
+    } else {
+        u.uStoneSeeThroughCount.value = 0
+    }
+    if (options.charSeeThrough) {
+        u.uCharSeeThrough.value = options.charSeeThrough.data
+        u.uCharSeeThroughCount.value = options.charSeeThrough.count
+    } else {
+        u.uCharSeeThroughCount.value = 0
     }
 }

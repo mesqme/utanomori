@@ -161,6 +161,9 @@ export function createEyePlaneGeometry(planeNode, offset) {
     const count = out.getAttribute('position').count
     const uv = baked.getAttribute('uv')
     out.setAttribute('uv', uv ? uv.clone() : new THREE.BufferAttribute(new Float32Array(count * 2), 2))
+    const normal = baked.getAttribute('normal') // tree-local plane normal (for the camera-facing fade)
+    if (normal) out.setAttribute('normal', normal.clone())
+    else out.computeVertexNormals()
 
     baked.computeBoundingBox()
     const c = baked.boundingBox.getCenter(new THREE.Vector3())
