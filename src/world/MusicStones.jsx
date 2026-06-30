@@ -5,6 +5,7 @@ import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
+import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { createStoneGeometry } from './utils/stoneGeometry.js'
 import { MUSIC_STONE_VARIANTS } from '../config/objectFieldDefaults.js'
@@ -132,32 +133,37 @@ export default function MusicStones() {
 
         // Camera: the shared "dialogue camera" (a close framing on the music character) for any
         // interaction speech (prompt / fail speech); the wider stones framing while they're up;
-        // otherwise hand back to the follow camera.
+        // otherwise hand back to the follow camera. The song game OWNS the camera only during gameplay
+        // (PHASES.start) — once the final game ends and we move to the finale/credits, GameDirector is
+        // the sole camera owner, so we never fight its shot from here (this is what broke the old
+        // finale: a stale stones-framing kept overriding it post-game).
         const layout = layoutRef.current
         const speechStage = (game.stage === 'prompt' || game.stage === 'failSpeech') && !!game.companion
-        if (speechStage) {
-            cameraRig.mode = 'orbit'
-            cameraRig.centerX = game.companion.x
-            cameraRig.centerZ = game.companion.z
-            cameraRig.angle = 0
-            cameraRig.height = p.dialogueCameraHeight
-            cameraRig.distance = p.dialogueCameraDistance
-            cameraRig.targetYOffset = p.dialogueTargetY
-            cameraRig.lerpSpeed = p.cameraLerp
-        } else if (layout) {
-            cameraRig.mode = 'orbit'
-            cameraRig.centerX = layout.cx
-            cameraRig.centerZ = layout.cz
-            cameraRig.angle = 0
-            cameraRig.height = p.cameraHeight
-            cameraRig.distance = p.cameraDistance
-            cameraRig.targetYOffset = p.hoverHeight + p.radius * 0.5
-            cameraRig.lerpSpeed = p.cameraLerp
-        } else if (cameraRig.centerX !== null) {
-            cameraRig.mode = 'follow'
-            cameraRig.centerX = null
-            cameraRig.centerZ = null
-            cameraRig.lerpSpeed = 5
+        if (usePhases.getState().phase === PHASES.start) {
+            if (speechStage) {
+                cameraRig.mode = 'orbit'
+                cameraRig.centerX = game.companion.x
+                cameraRig.centerZ = game.companion.z
+                cameraRig.angle = 0
+                cameraRig.height = p.dialogueCameraHeight
+                cameraRig.distance = p.dialogueCameraDistance
+                cameraRig.targetYOffset = p.dialogueTargetY
+                cameraRig.lerpSpeed = p.cameraLerp
+            } else if (layout) {
+                cameraRig.mode = 'orbit'
+                cameraRig.centerX = layout.cx
+                cameraRig.centerZ = layout.cz
+                cameraRig.angle = 0
+                cameraRig.height = p.cameraHeight
+                cameraRig.distance = p.cameraDistance
+                cameraRig.targetYOffset = p.hoverHeight + p.radius * 0.5
+                cameraRig.lerpSpeed = p.cameraLerp
+            } else if (cameraRig.centerX !== null) {
+                cameraRig.mode = 'follow'
+                cameraRig.centerX = null
+                cameraRig.centerZ = null
+                cameraRig.lerpSpeed = 5
+            }
         }
 
         // Flash the matching stone when a new sound plays.

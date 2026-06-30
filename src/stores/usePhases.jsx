@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 // Game-cycle phases:
 //   loading → warmup (GO) → intro (camera travel + dialogue) → start (gameplay)
-//   → credits (after the party is complete) → restarting (cinematic reverse) → warmup, or
+//   → finale (party complete: final line) → credits → restarting (cinematic reverse) → warmup, or
 //   credits → start (continue).
 // In debug mode the cycle is skipped: loading → start (scene immediately playable).
 export const PHASES = {
@@ -10,6 +10,7 @@ export const PHASES = {
     warmup: 'warmup',
     intro: 'intro',
     start: 'start',
+    finale: 'finale', // party complete → camera eases to the hero, one closing line, then credits
     credits: 'credits',
     restarting: 'restarting', // the cinematic teardown (camera up + fades) while the hero waits in place
     resettling: 'resettling', // loading-circle curtain masks the instant snap back to origin → warmup

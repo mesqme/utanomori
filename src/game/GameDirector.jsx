@@ -181,6 +181,15 @@ export default function GameDirector() {
                 cameraRig.mode = 'follow'
                 cameraRig.lerpSpeed = 5
             }
+        } else if (phase === PHASES.finale) {
+            // Keep the plain gameplay follow camera — NO special finale move. The hero just stands
+            // where he beat the last game, the closing line shows, then "Say goodbye" rolls credits.
+            // (Deliberately no camera binding here — it's not needed and only risks fighting other
+            // camera writers.)
+            cameraRig.mode = 'follow'
+            cameraRig.lerpSpeed = 5
+            cameraRig.centerX = null
+            cameraRig.centerZ = null
         } else if (phase === PHASES.credits) {
             cameraRig.mode = 'follow'
             cameraRig.lerpSpeed = 2.5
@@ -226,11 +235,12 @@ export default function GameDirector() {
         if (phase === PHASES.warmup) setCreditsShown(false)
     }, [phase, setCreditsShown])
 
-    // Party complete during gameplay → roll the credits once (not after "Continue").
+    // Party complete during gameplay → the finale (one closing line), then credits. Once only (the
+    // creditsShown guard also blocks re-entry after "Continue" sends credits → start).
     useEffect(() => {
         if (!debugMode && phase === PHASES.start && found.length >= MAX_PARTY && !creditsShown) {
             setCreditsShown(true)
-            setPhase(PHASES.credits)
+            setPhase(PHASES.finale)
         }
     }, [debugMode, phase, found.length, creditsShown, setPhase, setCreditsShown])
 

@@ -25,6 +25,12 @@ export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 export const DIALOGUE_TEXT =
     'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
 
+// Finale: shown once the party is complete (PHASES.finale), before the credits roll. The hero speaks
+// the closing line; the confirm button ("Say goodbye") rolls the credits.
+export const FINALE_LINE = 'Thank you, kind stranger, you gathered my melody spirits and now I can continue my journey with my song.'
+export const FINALE_CONFIRM = 'Say goodbye'
+export const FINALE_DIALOGUE_DELAY = 0.6 // seconds after entering finale before the bubble opens
+
 // Funny-angry one-liners a music character blurts out when you play the wrong note, just before
 // it storms off to a new hiding place. One is picked at random per failure.
 export const FAIL_LINES = [

@@ -572,6 +572,12 @@ export default function Controls() {
     }, [])
 
     useControls('Debug.General', {
+        toFinale: button(() => {
+            // Dev: complete the party and jump to the finale (closing line → credits).
+            useCompanions.getState().fillParty()
+            usePhases.getState().setCreditsShown(true) // don't auto-retrigger on Continue
+            usePhases.getState().setPhase(PHASES.finale)
+        }),
         toCredits: button(() => {
             // Dev: gather the full party behind the hero and jump straight into the credits run.
             useCompanions.getState().fillParty()

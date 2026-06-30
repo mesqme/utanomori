@@ -170,8 +170,8 @@ export default function Terrain() {
         } else if (phase === PHASES.restarting) {
             // Reverse: shrink the lit circle back down as the camera lifts to the top shot.
             runRestartReveal()
-        } else if (phase === PHASES.start || phase === PHASES.credits) {
-            // Full circle during gameplay / credits (debug jumps straight here).
+        } else if (phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits) {
+            // Full circle during gameplay / finale / credits (debug jumps straight here).
             if (!radiusAnimationRef.current) setCircleRadius(borderCircleRadius)
         } else {
             // loading / warmup: tiny circle so the hat covers the small terrain from top.

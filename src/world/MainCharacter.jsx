@@ -214,6 +214,7 @@ export default function MainCharacter() {
         // the loading cover); reset only for the true menu phases.
         if (
             phase !== PHASES.start &&
+            phase !== PHASES.finale &&
             phase !== PHASES.credits &&
             phase !== PHASES.restarting &&
             phase !== PHASES.resettling
@@ -397,7 +398,7 @@ export default function MainCharacter() {
 
         setBallPosition(visualPosition)
 
-        if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits) {
+        if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits) {
             recordTrail(visualPosition)
             setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, groundY, visualPosition.z)
         } else {
@@ -480,7 +481,7 @@ export default function MainCharacter() {
         seeThrough.centerX = stCenterX
         seeThrough.centerY = stCenterY
         seeThrough.radiusPx = Math.hypot((_stEdge.x * 0.5 + 0.5) * bufferW - stCenterX, (_stEdge.y * 0.5 + 0.5) * bufferH - stCenterY)
-        seeThrough.active = seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.credits)
+        seeThrough.active = seeThrough.enabled && _stWorld.z > -1 && _stWorld.z < 1 && (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits)
 
         // Mirror the hero's hole into the shared character buffer so the GRASS clears in front of him
         // too (the grass reads only this buffer, not the single hero disc). Same projection as above.

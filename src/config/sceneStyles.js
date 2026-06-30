@@ -184,7 +184,7 @@ const painteryStyle = {
         backgroundColor: '#070258',
         gradientTopColor: '#3d1f95',
         horizonColor: '#0093ff',
-        gradientIntensity: 1,
+        gradientIntensity: 0.47,
         gradientHeight: -0.9,
         gradientPower: 3.1,
         textureEnabled: true,
