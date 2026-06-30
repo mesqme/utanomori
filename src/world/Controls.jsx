@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useThree } from '@react-three/fiber'
-import { button, levaStore, useControls } from 'leva'
+import { button, folder, levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
@@ -295,21 +295,36 @@ const LEVA_SECTION_PATHS = Object.freeze({
         cssA: 'cssColorA',
         cssB: 'cssColorB',
     },
+    // Keys are the Leva control PATHS under "Game.Game UI" (incl. the subfolders the controls live in,
+    // so the store→Leva reverse-sync hits the real fields); values are the gameUiParameters keys.
     'Game UI': {
-        bubbleShape: 'bubbleShape',
-        buttonShape: 'buttonShape',
-        roughness: 'roughness',
-        detail: 'detail',
-        cornerRadius: 'cornerRadius',
-        bubbleWidth: 'bubbleWidth',
-        textSize: 'textSize',
-        padding: 'padding',
-        buttonWidth: 'buttonWidth',
-        buttonHeight: 'buttonHeight',
-        textureStrength: 'textureStrength',
-        textureScale: 'textureScale',
-        fillColor: 'fillColor',
-        textColor: 'textColor',
+        'Text & scale.uiScale': 'uiScale',
+        'Text & scale.sizeFloor': 'sizeFloor',
+        'Text & scale.bubbleWidth': 'bubbleWidth',
+        'Corners & frame.panelRadius': 'panelRadius',
+        'Corners & frame.chipRadius': 'chipRadius',
+        'Corners & frame.borderWidth': 'borderWidth',
+        'Speech bubble.bubblePadX': 'bubblePadX',
+        'Speech bubble.bubblePadY': 'bubblePadY',
+        'Countdown.countSize': 'countSize',
+        'Countdown.countBox': 'countBox',
+        'Countdown.countBorder': 'countBorder',
+        'Countdown.countNudge': 'countNudge',
+        'Key chips.chipSize': 'chipSize',
+        'Key chips.chipPadX': 'chipPadX',
+        'Key chips.chipBorder': 'chipBorder',
+        'Key chips.chipNudge': 'chipNudge',
+        'Key chips.chipNudgeX': 'chipNudgeX',
+        'Start button.startBtnSize': 'startBtnSize',
+        'Start button.startBtnPadX': 'startBtnPadX',
+        'Start button.startBtnPadY': 'startBtnPadY',
+        'Credits buttons.creditsBtnSize': 'creditsBtnSize',
+        'Credits buttons.creditsBtnPadX': 'creditsBtnPadX',
+        'Credits buttons.creditsBtnPadY': 'creditsBtnPadY',
+        'Credits buttons.creditsBtnOffset': 'creditsBtnOffset',
+        'Dialogue reveal.wordStagger': 'wordStagger',
+        'Dialogue reveal.wordFade': 'wordFade',
+        previewUI: 'previewUI',
     },
 })
 
@@ -504,6 +519,39 @@ export default function Controls() {
         }
     }, [propRimParameters])
 
+    // Push the UI design tokens onto :root so the whole DOM UI (bubble, prompts, HUD, chips) restyles
+    // live. style.css keys every size/corner/border off these vars. One effect for the lot.
+    useEffect(() => {
+        const root = document.documentElement.style
+        const p = gameUiParameters
+        // Sizes route through --ui-vmin (a floored vmin) so they re-evaluate live when --ui-scale or the
+        // floor change, and never shrink past the floor at extreme aspect ratios.
+        const vm = (n) => `calc(${n} * var(--ui-vmin) * var(--ui-scale))`
+        root.setProperty('--ui-scale', String(p.uiScale ?? 1.3))
+        root.setProperty('--ui-size-floor', `${p.sizeFloor ?? 6.5}px`)
+        root.setProperty('--ui-radius', `${p.panelRadius ?? 14}px`)
+        root.setProperty('--ui-radius-chip', `${p.chipRadius ?? 8}px`)
+        root.setProperty('--ui-border', `${p.borderWidth ?? 2}px`)
+        root.setProperty('--ui-bubble-pad-y', vm(p.bubblePadY ?? 1.7))
+        root.setProperty('--ui-bubble-pad-x', vm(p.bubblePadX ?? 2.5))
+        root.setProperty('--ui-count-size', vm(p.countSize ?? 5.2))
+        root.setProperty('--ui-count-box', vm(p.countBox ?? 9.2))
+        root.setProperty('--ui-count-border', `${p.countBorder ?? 2}px`)
+        root.setProperty('--ui-count-nudge', `${p.countNudge ?? 0.04}em`)
+        root.setProperty('--ui-chip-size', vm(p.chipSize ?? 2.3))
+        root.setProperty('--ui-chip-pad-x', vm(p.chipPadX ?? 0.6))
+        root.setProperty('--ui-chip-border', `${p.chipBorder ?? 1}px`)
+        root.setProperty('--ui-chip-nudge', `${p.chipNudge ?? 0.05}em`)
+        root.setProperty('--ui-chip-nudge-x', `${p.chipNudgeX ?? 0}em`)
+        root.setProperty('--start-btn-size', vm(p.startBtnSize ?? 2.0))
+        root.setProperty('--start-btn-pad-y', vm(p.startBtnPadY ?? 0.7))
+        root.setProperty('--start-btn-pad-x', vm(p.startBtnPadX ?? 2.0))
+        root.setProperty('--credits-btn-size', vm(p.creditsBtnSize ?? 2.0))
+        root.setProperty('--credits-btn-pad-y', vm(p.creditsBtnPadY ?? 1.2))
+        root.setProperty('--credits-btn-pad-x', vm(p.creditsBtnPadX ?? 4.0))
+        root.setProperty('--credits-btn-offset', `${p.creditsBtnOffset ?? 9}%`)
+    }, [gameUiParameters])
+
     useEffect(() => {
         const params = defaultSceneStyle.seeThroughParameters
         if (!params) return
@@ -554,31 +602,77 @@ export default function Controls() {
         },
     })
 
+    // The whole in-game UI skin (SpeechBubble + InteractionPrompt + SongGame HUD + key chips). Each
+    // value is written to a CSS custom property on :root (see the effect below) so the DOM UI restyles
+    // live. Toggle previewUI to splay every overlay on screen at once while dialing these in.
     useControls('Game.Game UI', {
-        bubbleShape: {
-            value: gameUiParameters.bubbleShape,
-            options: ['Rect', 'Ellipse', 'Circle'],
-            onChange: setParam('gameUiParameters', 'bubbleShape'),
-        },
-        buttonShape: {
-            value: gameUiParameters.buttonShape,
-            options: ['Rect', 'Ellipse', 'Circle'],
-            onChange: setParam('gameUiParameters', 'buttonShape'),
-        },
-        roughness: { value: gameUiParameters.roughness, min: 0, max: 24, step: 0.5, onChange: setParam('gameUiParameters', 'roughness') },
-        detail: { value: gameUiParameters.detail, min: 2, max: 60, step: 1, onChange: setParam('gameUiParameters', 'detail') },
-        cornerRadius: { value: gameUiParameters.cornerRadius, min: 0, max: 80, step: 1, onChange: setParam('gameUiParameters', 'cornerRadius') },
-        bubbleWidth: { value: gameUiParameters.bubbleWidth, min: 260, max: 760, step: 10, onChange: setParam('gameUiParameters', 'bubbleWidth') },
-        textSize: { value: gameUiParameters.textSize, min: 12, max: 34, step: 1, onChange: setParam('gameUiParameters', 'textSize') },
-        padding: { value: gameUiParameters.padding, min: 12, max: 60, step: 1, onChange: setParam('gameUiParameters', 'padding') },
-        buttonWidth: { value: gameUiParameters.buttonWidth, min: 80, max: 360, step: 5, onChange: setParam('gameUiParameters', 'buttonWidth') },
-        buttonHeight: { value: gameUiParameters.buttonHeight, min: 36, max: 120, step: 2, onChange: setParam('gameUiParameters', 'buttonHeight') },
-        textureStrength: { value: gameUiParameters.textureStrength, min: 0, max: 1, step: 0.01, onChange: setParam('gameUiParameters', 'textureStrength') },
-        textureScale: { value: gameUiParameters.textureScale, min: 20, max: 600, step: 5, onChange: setParam('gameUiParameters', 'textureScale') },
-        fillColor: { value: gameUiParameters.fillColor, onChange: setParam('gameUiParameters', 'fillColor') },
-        textColor: { value: gameUiParameters.textColor, onChange: setParam('gameUiParameters', 'textColor') },
-        wordStagger: { value: gameUiParameters.wordStagger, min: 0, max: 300, step: 5, onChange: setParam('gameUiParameters', 'wordStagger') },
-        wordFade: { value: gameUiParameters.wordFade, min: 80, max: 1200, step: 10, onChange: setParam('gameUiParameters', 'wordFade') },
+        'Text & scale': folder(
+            {
+                uiScale: { value: gameUiParameters.uiScale, min: 0.5, max: 3, step: 0.05, onChange: setParam('gameUiParameters', 'uiScale') },
+                sizeFloor: { value: gameUiParameters.sizeFloor, min: 0, max: 16, step: 0.5, label: 'sizeFloor (px)', onChange: setParam('gameUiParameters', 'sizeFloor') },
+                bubbleWidth: { value: gameUiParameters.bubbleWidth, min: 200, max: 1600, step: 10, onChange: setParam('gameUiParameters', 'bubbleWidth') },
+            },
+            { collapsed: false }
+        ),
+        'Corners & frame': folder(
+            {
+                panelRadius: { value: gameUiParameters.panelRadius, min: 0, max: 40, step: 1, onChange: setParam('gameUiParameters', 'panelRadius') },
+                chipRadius: { value: gameUiParameters.chipRadius, min: 0, max: 20, step: 1, onChange: setParam('gameUiParameters', 'chipRadius') },
+                borderWidth: { value: gameUiParameters.borderWidth, min: 0, max: 6, step: 0.5, onChange: setParam('gameUiParameters', 'borderWidth') },
+            },
+            { collapsed: false }
+        ),
+        'Speech bubble': folder(
+            {
+                bubblePadX: { value: gameUiParameters.bubblePadX, min: 0, max: 8, step: 0.1, onChange: setParam('gameUiParameters', 'bubblePadX') },
+                bubblePadY: { value: gameUiParameters.bubblePadY, min: 0, max: 8, step: 0.1, onChange: setParam('gameUiParameters', 'bubblePadY') },
+            },
+            { collapsed: true }
+        ),
+        'Countdown': folder(
+            {
+                countSize: { value: gameUiParameters.countSize, min: 2, max: 12, step: 0.1, onChange: setParam('gameUiParameters', 'countSize') },
+                countBox: { value: gameUiParameters.countBox, min: 4, max: 20, step: 0.1, onChange: setParam('gameUiParameters', 'countBox') },
+                countBorder: { value: gameUiParameters.countBorder, min: 0, max: 8, step: 0.5, label: 'countBorder (px)', onChange: setParam('gameUiParameters', 'countBorder') },
+                countNudge: { value: gameUiParameters.countNudge, min: -0.25, max: 0.25, step: 0.005, onChange: setParam('gameUiParameters', 'countNudge') },
+            },
+            { collapsed: false }
+        ),
+        'Key chips': folder(
+            {
+                chipSize: { value: gameUiParameters.chipSize, min: 1, max: 6, step: 0.05, onChange: setParam('gameUiParameters', 'chipSize') },
+                chipPadX: { value: gameUiParameters.chipPadX, min: 0, max: 3, step: 0.05, onChange: setParam('gameUiParameters', 'chipPadX') },
+                chipBorder: { value: gameUiParameters.chipBorder, min: 0, max: 4, step: 0.25, onChange: setParam('gameUiParameters', 'chipBorder') },
+                chipNudge: { value: gameUiParameters.chipNudge, min: -0.25, max: 0.25, step: 0.005, onChange: setParam('gameUiParameters', 'chipNudge') },
+                chipNudgeX: { value: gameUiParameters.chipNudgeX, min: -0.25, max: 0.25, step: 0.005, onChange: setParam('gameUiParameters', 'chipNudgeX') },
+            },
+            { collapsed: false }
+        ),
+        'Start button': folder(
+            {
+                startBtnSize: { value: gameUiParameters.startBtnSize, min: 1, max: 5, step: 0.05, onChange: setParam('gameUiParameters', 'startBtnSize') },
+                startBtnPadX: { value: gameUiParameters.startBtnPadX, min: 0, max: 8, step: 0.1, onChange: setParam('gameUiParameters', 'startBtnPadX') },
+                startBtnPadY: { value: gameUiParameters.startBtnPadY, min: 0, max: 5, step: 0.1, onChange: setParam('gameUiParameters', 'startBtnPadY') },
+            },
+            { collapsed: true }
+        ),
+        'Credits buttons': folder(
+            {
+                creditsBtnSize: { value: gameUiParameters.creditsBtnSize, min: 1, max: 5, step: 0.05, onChange: setParam('gameUiParameters', 'creditsBtnSize') },
+                creditsBtnPadX: { value: gameUiParameters.creditsBtnPadX, min: 0, max: 10, step: 0.1, onChange: setParam('gameUiParameters', 'creditsBtnPadX') },
+                creditsBtnPadY: { value: gameUiParameters.creditsBtnPadY, min: 0, max: 5, step: 0.1, onChange: setParam('gameUiParameters', 'creditsBtnPadY') },
+                creditsBtnOffset: { value: gameUiParameters.creditsBtnOffset, min: 0, max: 45, step: 0.5, label: 'creditsBtnOffset (%)', onChange: setParam('gameUiParameters', 'creditsBtnOffset') },
+            },
+            { collapsed: true }
+        ),
+        'Dialogue reveal': folder(
+            {
+                wordStagger: { value: gameUiParameters.wordStagger, min: 0, max: 300, step: 5, onChange: setParam('gameUiParameters', 'wordStagger') },
+                wordFade: { value: gameUiParameters.wordFade, min: 80, max: 1200, step: 10, onChange: setParam('gameUiParameters', 'wordFade') },
+            },
+            { collapsed: true }
+        ),
+        previewUI: { value: gameUiParameters.previewUI, label: '🐞 preview all UI', onChange: setParam('gameUiParameters', 'previewUI') },
     })
 
     useControls('Debug.See-Through', {

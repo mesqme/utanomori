@@ -1,0 +1,28 @@
+/* DEBUG ONLY — the splay-all-UI overlay (UIPreview.jsx). Remove with the component. */
+.ui-preview {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 24px;
+    overflow: auto;
+    pointer-events: none; /* children re-enable, so the scene/Leva stay reachable around them */
+    background: rgba(3, 2, 26, 0.55);
+    color: var(--sj-ui-primary); /* samples rendered outside their usual parents inherit the UI colour */
+}
+
+.ui-preview > * {
+    pointer-events: auto;
+    flex: 0 0 auto;
+}
+
+.ui-preview-label {
+    color: var(--sj-ui-primary);
+    font-size: calc(1.3 * var(--ui-vmin) * var(--ui-scale));
+    letter-spacing: 0.16em;
+    opacity: 0.6;
+}

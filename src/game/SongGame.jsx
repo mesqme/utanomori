@@ -142,13 +142,13 @@ export default function SongGame() {
 
             {canExit && (
                 <button className="song-exit" onClick={() => useSongGame.getState().reset()} aria-label="Exit">
-                    Exit <span className="song-key">ESC</span>
+                    Exit <span className="song-key"><span>ESC</span></span>
                 </button>
             )}
 
             {stage === 'prompt' && (
                 <SpeechBubble
-                    text={getMusicCharacter(companion?.music)?.prompt ?? 'Will you try my melody?'}
+                    text={getMusicCharacter(companion?.music)?.prompt ?? 'Would you like to listen to my song?'}
                     confirmLabel="Yes"
                     onConfirm={() => {
                         resumeAudio()
@@ -158,7 +158,7 @@ export default function SongGame() {
             )}
 
             {stage === 'failSpeech' && (
-                <SpeechBubble text={failLine ?? 'Hmph! That was not my melody.'} confirmLabel="OK" onConfirm={() => useSongGame.getState().confirmFail()} />
+                <SpeechBubble text={failLine ?? 'Hmph! That was not my melody.'} confirmLabel="Continue" onConfirm={() => useSongGame.getState().confirmFail()} />
             )}
 
             {stage === 'setup' && stonesReady && (
@@ -171,7 +171,7 @@ export default function SongGame() {
 
             {stage === 'countdown' && count > 0 && (
                 <div key={count} className="song-countdown">
-                    {count}
+                    <span>{count}</span>
                 </div>
             )}
 

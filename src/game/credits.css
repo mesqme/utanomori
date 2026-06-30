@@ -62,7 +62,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 32px;
-    padding: 0 9%;
+    padding: 0 var(--credits-btn-offset);
     pointer-events: none;
     animation: credits-fade-in 0.4s ease-out;
 }
@@ -85,12 +85,12 @@
    weight, 0.04em tracking), just a larger CTA size for the end screen. */
 .credits-button {
     font-family: inherit;
-    padding: 12px 40px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 12px;
+    padding: var(--credits-btn-pad-y) var(--credits-btn-pad-x);
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
-    font-size: 20px;
+    font-size: var(--credits-btn-size);
     font-weight: normal;
     letter-spacing: 0.04em;
     cursor: pointer;

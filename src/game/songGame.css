@@ -13,11 +13,12 @@
     top: 24px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 7px 16px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 20px;
+    padding: calc(0.7 * var(--ui-vmin) * var(--ui-scale)) calc(1.6 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
-    font-size: 14px;
+    color: var(--sj-ui-primary); /* self-sufficient: the preview renders this outside .song-game */
+    font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.14em;
 }
 
@@ -32,8 +33,8 @@
     align-items: center;
     gap: 12px;
     padding: 18px 26px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 14px;
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     pointer-events: auto;
     animation: song-pop 0.18s ease-out;
@@ -46,13 +47,13 @@
 }
 
 .song-yes {
-    padding: 8px 28px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 10px;
+    padding: calc(0.8 * var(--ui-vmin) * var(--ui-scale)) calc(2.8 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
     font-family: inherit;
-    font-size: 18px;
+    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
     font-weight: normal;
     letter-spacing: 0.04em; /* match the speech-bubble text */
     cursor: pointer;
@@ -79,8 +80,8 @@
 }
 
 .song-start-button {
-    font-size: 22px;
-    padding: 12px 44px;
+    font-size: var(--start-btn-size);
+    padding: var(--start-btn-pad-y) var(--start-btn-pad-x);
     letter-spacing: 0.04em; /* match the speech-bubble text */
 }
 
@@ -90,16 +91,18 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 96px;
-    height: 96px;
+    /* A square frame (not a circle) so the digit reads like the other rectangular UI frames. Sized in
+       vmin so it scales with the page like the text. */
+    width: var(--ui-count-box);
+    height: var(--ui-count-box);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 3px solid var(--sj-ui-primary);
-    border-radius: 50%;
+    border: var(--ui-count-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
-    font-size: 52px;
+    font-size: var(--ui-count-size);
     font-weight: 700;
     line-height: 1;
     letter-spacing: 0; /* a single digit + inherited tracking would shove it off-centre */
@@ -107,6 +110,12 @@
     text-align: center;
     text-shadow: 0 2px 14px rgba(9, 8, 34, 0.6);
     animation: song-count-pop var(--count-step, 0.7s) ease-out forwards;
+}
+
+/* The flex box centres the line; this nudges the cap glyph to its optical centre (Bebas sits high). */
+.song-countdown > span {
+    display: block;
+    transform: translateY(var(--ui-count-nudge));
 }
 
 @keyframes song-count-pop {
@@ -130,11 +139,11 @@
     left: 50%;
     bottom: 96px;
     transform: translateX(-50%);
-    padding: 10px 22px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 12px;
+    padding: calc(1.0 * var(--ui-vmin) * var(--ui-scale)) calc(2.2 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
-    font-size: 18px;
+    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.08em;
     animation: song-pop 0.18s ease-out;
 }
@@ -170,7 +179,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--sj-ui-primary);
+    border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: 50%;
     color: #0d0a2a;
     font-size: 18px;
@@ -203,13 +212,13 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 7px 14px;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 10px;
+    padding: calc(0.7 * var(--ui-vmin) * var(--ui-scale)) calc(1.4 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
     font-family: inherit;
-    font-size: 14px;
+    font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.08em;
     cursor: pointer;
     pointer-events: auto;
@@ -224,11 +233,18 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 1px 6px;
-    border: 1px solid var(--sj-ui-primary);
-    border-radius: 5px;
-    font-size: 11px;
+    height: var(--ui-chip-size);
+    padding: 0 var(--ui-chip-pad-x);
+    border: var(--ui-chip-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius-chip);
+    font-size: calc(1.1 * var(--ui-vmin) * var(--ui-scale));
+    line-height: 1;
     opacity: 0.85;
+}
+
+.song-key > span {
+    display: block;
+    transform: translate(var(--ui-chip-nudge-x), var(--ui-chip-nudge));
 }
 
 .song-wheel-center {
@@ -264,7 +280,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--sj-ui-primary);
+    border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: 50%;
     color: #0d0a2a;
     font-weight: 700;

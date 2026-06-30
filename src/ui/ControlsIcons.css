@@ -21,8 +21,8 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 2px solid var(--sj-ui-primary);
-    border-radius: 8px;
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius-chip);
     background: var(--sj-ui-panel);
     transition: background 0.1s, transform 0.1s;
     box-sizing: border-box; /* Include border in width/height */

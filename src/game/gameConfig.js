@@ -37,12 +37,11 @@ export const FAIL_LINES = [
 ]
 
 export const CREDITS_LINES = [
-    'UTAMORI',
+    'UTANOMORI',
     '\u00a0',
-    'A small tale of a traveller',
-    'and his lost melody',
+    'The forest of songs',
     '\u00a0',
-    '— Code —',
+    '— Code and Models —',
     'mesq',
     ' ',
     '— Music —',
@@ -51,6 +50,10 @@ export const CREDITS_LINES = [
     '— Built with —',
     'Three.js · React Three Fiber',
     '\u00a0',
+    '— Special thanks —',
+    'Amelab — for the inspiration',
+    'Bruno Simon — for the journey',
+    ' ',
     'Thank you for wandering',
     'through the forest.',
 ]

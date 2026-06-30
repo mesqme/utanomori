@@ -8,6 +8,7 @@ import Loader from './loader/Loader.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
+import UIPreview from './ui/UIPreview.jsx'
 import LoaderDebugOverlay from './ui/LoaderDebugOverlay.jsx'
 import GameDirector from './game/GameDirector.jsx'
 import Dialogue from './game/Dialogue.jsx'
@@ -49,6 +50,7 @@ root.render(
             <ControlsIcons />
             <InteractionPrompt />
             <SongGame />
+            <UIPreview />
         </KeyboardControls>
         <GameDirector />
         <Loader />

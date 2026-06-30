@@ -273,24 +273,48 @@ const painteryStyle = {
             lantern: { baseColor: '#ffbf00', toonColor: '#7a3d18' },
         },
     },
+    // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Every value here is written
+    // to a CSS custom property on :root by Controls.jsx, so the DOM UI restyles live. The old
+    // textured/Blot-bubble params (shape, roughness, texture, colours, button sizes) are gone.
     gameUiParameters: {
-        bubbleShape: 'Rect',
-        buttonShape: 'Rect',
-        roughness: 8.5,
-        detail: 29,
-        cornerRadius: 55,
-        bubbleWidth: 760,
-        textSize: 24,
-        padding: 43,
-        buttonWidth: 180,
-        buttonHeight: 58,
-        textureStrength: 1,
-        textureScale: 600,
-        fillColor: '#fef4ef',
-        textColor: '#26285a',
-        // Dialogue word-by-word reveal (the clean DOM bubble — no Blot texture/edge).
+        // Global multiplier on ALL in-game UI text (sized in vmin → constant proportion at any
+        // resolution); written to --ui-scale.
+        uiScale: 1.4,
+        sizeFloor: 6.5, // px → --ui-size-floor: floor under the vmin unit so the UI stops shrinking
+        //                  at extreme aspect ratios (vmin tracks the shorter viewport side)
+        bubbleWidth: 1500, // max width (px) of the speech bubble
+        bubblePadY: 1.7, // vmin·scale → --ui-bubble-pad-y: speech-bubble vertical padding
+        bubblePadX: 2.5, // vmin·scale → --ui-bubble-pad-x: speech-bubble horizontal padding
+        // Unified corner rounding (the "complete mess" of mixed radii is gone — two tokens now):
+        panelRadius: 14, // px → --ui-radius: panels, bubbles, banners, buttons, counter, round
+        chipRadius: 8, // px → --ui-radius-chip: the little key chips (E, ESC, WASD)
+        borderWidth: 2, // px → --ui-border: panel border thickness
+        // 3·2·1 countdown — now a square frame. Sized in vmin·scale so it tracks the page like text.
+        countSize: 3.2, // vmin·scale → --ui-count-size: the digit font-size
+        countBox: 4.9, // vmin·scale → --ui-count-box: the square frame side
+        countBorder: 2, // px → --ui-count-border: countdown frame thickness
+        countNudge: 0.06, // em → --ui-count-nudge: digit vertical centering (Bebas caps sit high)
+        // Key chips (E / ESC). Sized in vmin·scale (consistent at any resolution) + full positioning.
+        chipSize: 2.25, // vmin·scale → --ui-chip-size: chip height (E chip = square)
+        chipPadX: 0.65, // vmin·scale → --ui-chip-pad-x: multi-letter chip (ESC) horizontal padding
+        chipBorder: 2, // px → --ui-chip-border: chip frame thickness
+        chipNudge: 0.05, // em → --ui-chip-nudge: chip glyph vertical centering
+        chipNudgeX: 0, // em → --ui-chip-nudge-x: chip glyph horizontal centering
+        // Mini-game "Start" button (size + padding; no offset — it's centred). Tighter padding default.
+        startBtnSize: 2.0, // vmin·scale → --start-btn-size: button text
+        startBtnPadX: 2.0, // vmin·scale → --start-btn-pad-x
+        startBtnPadY: 0.7, // vmin·scale → --start-btn-pad-y
+        // End-screen "Continue"/"Restart" buttons + how far they sit from the centred title.
+        creditsBtnSize: 2.0, // vmin·scale → --credits-btn-size
+        creditsBtnPadX: 4.0, // vmin·scale → --credits-btn-pad-x
+        creditsBtnPadY: 1.2, // vmin·scale → --credits-btn-pad-y
+        creditsBtnOffset: 9, // % → --credits-btn-offset: side gap from the centre (bigger = further out)
+        // Dialogue word-by-word reveal.
         wordStagger: 90, // ms between each word fading in
         wordFade: 420, // ms each word takes to fade + rise into place
+        // DEBUG: force every UI overlay (bubble, prompt, HUD, countdown, chips…) on at once so the
+        // values above can be dialed in live. Turn off (or remove UIPreview) when done.
+        previewUI: false,
     },
     seeThroughParameters: {
         enabled: true,
