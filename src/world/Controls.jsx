@@ -10,10 +10,12 @@ import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js
 import { defaultSceneStyle } from '../config/sceneStyles.js'
 import { painterlyTextureOptions, stylizedDebugModes } from '../config/stylizedMaterialDefaults.js'
 import { PAINTERY_TEXTURE_IDS } from '../config/painteryTextures.js'
+import { GROUND_TEXTURE_IDS, BACKGROUND_TEXTURE_IDS } from '../config/surfaceTextures.js'
 
 const LEVA_SECTION_PATHS = Object.freeze({
     Terrain: {
         groundTexture: 'groundTextureEnabled',
+        groundTextureName: 'groundTextureName',
         color: 'color',
         baseBrightness: 'baseBrightness',
         segments: 'segments',
@@ -194,6 +196,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Background: {
         backgroundColor: 'backgroundColor',
+        backgroundTexture: 'textureName',
         gradientTop: 'gradientTopColor',
         horizonColor: 'horizonColor',
         gradientIntensity: 'gradientIntensity',
@@ -300,6 +303,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
     'Game UI': {
         'Text & scale.uiScale': 'uiScale',
         'Text & scale.sizeFloor': 'sizeFloor',
+        'Text & scale.sizeCeil': 'sizeCeil',
         'Text & scale.bubbleWidth': 'bubbleWidth',
         'Corners & frame.panelRadius': 'panelRadius',
         'Corners & frame.chipRadius': 'chipRadius',
@@ -529,6 +533,7 @@ export default function Controls() {
         const vm = (n) => `calc(${n} * var(--ui-vmin) * var(--ui-scale))`
         root.setProperty('--ui-scale', String(p.uiScale ?? 1.3))
         root.setProperty('--ui-size-floor', `${p.sizeFloor ?? 6.5}px`)
+        root.setProperty('--ui-size-ceil', `${p.sizeCeil ?? 10.8}px`)
         root.setProperty('--ui-radius', `${p.panelRadius ?? 14}px`)
         root.setProperty('--ui-radius-chip', `${p.chipRadius ?? 8}px`)
         root.setProperty('--ui-border', `${p.borderWidth ?? 2}px`)
@@ -610,6 +615,7 @@ export default function Controls() {
             {
                 uiScale: { value: gameUiParameters.uiScale, min: 0.5, max: 3, step: 0.05, onChange: setParam('gameUiParameters', 'uiScale') },
                 sizeFloor: { value: gameUiParameters.sizeFloor, min: 0, max: 16, step: 0.5, label: 'sizeFloor (px)', onChange: setParam('gameUiParameters', 'sizeFloor') },
+                sizeCeil: { value: gameUiParameters.sizeCeil, min: 7, max: 40, step: 0.1, label: 'sizeCeil (px)', onChange: setParam('gameUiParameters', 'sizeCeil') },
                 bubbleWidth: { value: gameUiParameters.bubbleWidth, min: 200, max: 1600, step: 10, onChange: setParam('gameUiParameters', 'bubbleWidth') },
             },
             { collapsed: false }
@@ -878,6 +884,11 @@ export default function Controls() {
             value: terrainParameters.groundTextureEnabled,
             onChange: setParam('terrainParameters', 'groundTextureEnabled'),
         },
+        groundTextureName: {
+            value: terrainParameters.groundTextureName,
+            options: GROUND_TEXTURE_IDS,
+            onChange: setParam('terrainParameters', 'groundTextureName'),
+        },
         color: {
             value: terrainParameters.color,
             onChange: setParam('terrainParameters', 'color'),
@@ -941,7 +952,7 @@ export default function Controls() {
         groundTextureContrast: {
             value: terrainParameters.groundTextureContrast,
             min: 0,
-            max: 1.0,
+            max: 4.0,
             step: 0.01,
             onChange: setParam('terrainParameters', 'groundTextureContrast'),
         },
@@ -1801,6 +1812,11 @@ export default function Controls() {
         backgroundColor: {
             value: backgroundParameters.backgroundColor,
             onChange: setParam('backgroundParameters', 'backgroundColor'),
+        },
+        backgroundTexture: {
+            value: backgroundParameters.textureName,
+            options: BACKGROUND_TEXTURE_IDS,
+            onChange: setParam('backgroundParameters', 'textureName'),
         },
         gradientTop: {
             value: backgroundParameters.gradientTopColor,

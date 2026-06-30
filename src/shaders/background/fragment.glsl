@@ -6,7 +6,7 @@ uniform float uGradientIntensity; // 0 = flat base colour, 1 = full vertical gra
 uniform float uGradientHeight; // sky direction.y where the horizon colour sits
 uniform float uGradientPower; // gradient curve
 
-// Layer 2 — paintery texture (watercolorBasic), screen space
+// Layer 2 — paintery texture (watercolor), screen space
 uniform bool uTextureEnabled;
 uniform int uColorMode; // 0 = intensity, 1 = colour mix, 2 = both
 uniform sampler2D uTexture;

@@ -8,6 +8,7 @@ const painteryStyle = {
         color: '#747dff',
         baseBrightness: 0.66,
         groundTextureEnabled: true,
+        groundTextureName: 'ground', // ground-detail texture: 'ground' | 'paintaryAlpha'
         segments: 19,
         scale: 0.08,
         amplitude: 0,
@@ -104,7 +105,7 @@ const painteryStyle = {
     },
     objectParameters: {
         enabled: true,
-        textureName: 'paintaryAlpha_01',
+        textureName: 'paintaryAlpha',
         worldSeed: 7777,
         cellSize: 7,
         groupJitter: 0.52,
@@ -187,6 +188,7 @@ const painteryStyle = {
         gradientHeight: -0.9,
         gradientPower: 3.1,
         textureEnabled: true,
+        textureName: 'watercolor', // background image: 'watercolor' | 'paintaryAlpha'
         colorMode: 'Both',
         textureSize: 1322,
         textureLayer2: 1.1,
@@ -257,7 +259,7 @@ const painteryStyle = {
     characterMaterialParameters: {
         debugMode: 0,
         painterlyEnabled: true,
-        painterlyTexture: 'paintaryAlpha_01',
+        painterlyTexture: 'paintaryAlpha',
         painterlyScale: 0.11,
         painterlyContrast: 0.66,
         painterlyColor: '#ffffff',
@@ -282,6 +284,8 @@ const painteryStyle = {
         uiScale: 1.4,
         sizeFloor: 6.5, // px → --ui-size-floor: floor under the vmin unit so the UI stops shrinking
         //                  at extreme aspect ratios (vmin tracks the shorter viewport side)
+        sizeCeil: 10.8, // px → --ui-size-ceil: ceiling on the vmin unit so the UI doesn't balloon on 4K
+        //                   (≈ Full-HD's 1vmin → big screens cap at the Full-HD look)
         bubbleWidth: 1500, // max width (px) of the speech bubble
         bubblePadY: 1.7, // vmin·scale → --ui-bubble-pad-y: speech-bubble vertical padding
         bubblePadX: 2.5, // vmin·scale → --ui-bubble-pad-x: speech-bubble horizontal padding

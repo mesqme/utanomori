@@ -5,18 +5,14 @@ export const stylizedDebugModes = Object.freeze({
 })
 
 export const painterlyTextureOptions = Object.freeze({
-    paintaryAlpha_01: 'paintaryAlpha_01',
-    paintaryAlpha_02: 'paintaryAlpha_02',
-    paintaryAlpha_03: 'paintaryAlpha_03',
-    paintaryAlpha_04: 'paintaryAlpha_04',
-    watercolorBasic: 'watercolorBasic',
-    watercolorBasicLarge: 'watercolorBasicLarge',
+    paintaryAlpha: 'paintaryAlpha',
+    watercolor: 'watercolor',
 })
 
 export const characterStylizedDefaults = Object.freeze({
     debugMode: stylizedDebugModes.Final,
     painterlyEnabled: false,
-    painterlyTexture: painterlyTextureOptions.paintaryAlpha_01,
+    painterlyTexture: painterlyTextureOptions.paintaryAlpha,
     painterlyScale: 0.05,
     painterlyContrast: 1.02,
     painterlyColor: '#ffffff',

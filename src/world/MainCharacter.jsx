@@ -23,12 +23,7 @@ import { cameraRig } from '../game/cameraRig.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import { CAMERA_TOP_SHOT } from '../game/gameConfig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
-import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
-import paintaryAlpha03Url from '../assets/textures/paintaryAlpha_03.png'
-import paintaryAlpha04Url from '../assets/textures/paintaryAlpha_04.png'
-import watercolorBasicUrl from '../assets/textures/watercolorBasic.png'
-import watercolorBasicLargeUrl from '../assets/textures/watercolorBasicLarge.png'
+import { PAINTERY_TEXTURE_IDS, PAINTERY_TEXTURE_URL_LIST } from '../config/painteryTextures.js'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
@@ -58,8 +53,6 @@ const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
 const SHADOW_MAX_OPACITY = 0.42
 const EMPTY_INPUT = {} // stand-in for keys/controls while the hero is frozen (song game)
-const PAINTERLY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04', 'watercolorBasic', 'watercolorBasicLarge']
-const PAINTERLY_TEXTURE_URLS = [paintaryAlpha01Url, paintaryAlpha02Url, paintaryAlpha03Url, paintaryAlpha04Url, watercolorBasicUrl, watercolorBasicLargeUrl]
 
 const SEE_THROUGH_CENTER_Y = 0.85 // hole centred near the hero's mid-height
 const _stWorld = new THREE.Vector3()
@@ -524,7 +517,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const lanternGlowOffsetRef = useRef(new THREE.Vector3())
     const lanternFlameAxisRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
-    const painterlyTextures = useTexture(PAINTERLY_TEXTURE_URLS)
+    const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexturesById = useMemo(() => {
         return Object.fromEntries(
             painterlyTextures.map((texture, index) => {
@@ -534,11 +527,11 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
                 texture.minFilter = THREE.LinearMipmapLinearFilter
                 texture.magFilter = THREE.LinearFilter
                 texture.needsUpdate = true
-                return [PAINTERLY_TEXTURE_IDS[index], texture]
+                return [PAINTERY_TEXTURE_IDS[index], texture]
             })
         )
     }, [painterlyTextures])
-    const selectedPainterlyTexture = painterlyTexturesById[characterMaterialParameters.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
+    const selectedPainterlyTexture = painterlyTexturesById[characterMaterialParameters.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha
     const materialSlotsByMeshName = useMemo(() => {
         return mainCharacterMaterialSlots.reduce((slots, slot) => {
             slots[slot.meshName] = slot
@@ -554,7 +547,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             const slot = materialSlotsByMeshName[object.name]
             const stylizedSettings = useStore.getState().characterMaterialParameters
             const materialSettings = stylizedSettings.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
-            const painterlyTexture = painterlyTexturesById[stylizedSettings.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha_01
+            const painterlyTexture = painterlyTexturesById[stylizedSettings.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha
 
             if (!stylizedMaterialsRef.current.has(materialKey)) {
                 stylizedMaterialsRef.current.set(materialKey, createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture))

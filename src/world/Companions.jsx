@@ -20,7 +20,7 @@ import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { resumeAudio } from '../game/songAudio.js'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
@@ -302,7 +302,7 @@ export default function Companions() {
     const found = useCompanions((state) => state.found)
     const [subscribeKeys] = useKeyboardControls()
 
-    const painterlyTexture = useTexture(paintaryAlpha01Url)
+    const painterlyTexture = useTexture(paintaryAlphaUrl)
     useMemo(() => {
         painterlyTexture.wrapS = THREE.RepeatWrapping
         painterlyTexture.wrapT = THREE.RepeatWrapping

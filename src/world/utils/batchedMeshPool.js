@@ -86,10 +86,15 @@ export function createBatchedMeshPool({ prototypes, material, maxInstances = 102
         },
 
         setMatrix(instanceId, matrix) {
+            // Skip ids that were freed (e.g. a per-frame animation loop still holding a mushroom whose
+            // chunk just streamed out, or a stale id left over after an HMR pool rebuild) — otherwise
+            // BatchedMesh.setMatrixAt throws "Invalid instanceId" and crashes the render loop.
+            if (!liveInstanceIds.has(instanceId)) return
             mesh.setMatrixAt(instanceId, matrix)
         },
 
         setColor(instanceId, color) {
+            if (!liveInstanceIds.has(instanceId)) return
             mesh.setColorAt(instanceId, color)
         },
 

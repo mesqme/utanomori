@@ -26,7 +26,7 @@ export const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change.
 export const OBJECT_STYLE_VERSION = 9
 export const LOADER_DEBUG_VERSION = 6
-export const GAME_UI_VERSION = 13
+export const GAME_UI_VERSION = 14
 
 export const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
@@ -321,7 +321,7 @@ export const DEFAULT_SHEEP_MATERIAL_PARAMETERS = {
 // replacing the per-frame Kuwahara abstraction.
 export const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
     enabled: true,
-    textureName: 'paintaryAlpha_01', // source paintery texture for the terrain bake (ground/grass/border)
+    textureName: 'paintaryAlpha', // source paintery texture for the terrain bake (ground/grass/border)
     blur: 2.0,
     levelsLow: 0.0,
     levelsHigh: 1.0,

@@ -2,17 +2,18 @@
 // the same timeline; the MusicController only changes each track's volume (muted → distance-based for
 // the active target → collected level).
 //
-// Played through the Web Audio API (decoded WAV → looping AudioBufferSourceNode), NOT HTMLAudio: an
+// Played through the Web Audio API (decoded audio → looping AudioBufferSourceNode), NOT HTMLAudio: an
 // <audio> loop re-seeks at the boundary and isn't gapless, whereas a looping buffer source is
 // sample-accurate. All three sources start at ONE shared audio time, so the layers stay perfectly in
-// sync (and loop seamlessly). Decoded buffers are cached so a restart replays instantly.
+// sync (and loop seamlessly). Decoded buffers are cached so a restart replays instantly. (MP3 source
+// files — once decoded into a buffer the playback is identical to WAV, just a smaller download.)
 import { getAudioContext } from './songAudio.js'
-import pianoFull from '../assets/audio/music/piano_full.wav'
-import drumsFull from '../assets/audio/music/drums_full.wav'
-import windsFull from '../assets/audio/music/winds_full.wav'
-import pianoPreview from '../assets/audio/music/piano_preview.wav'
-import drumsPreview from '../assets/audio/music/drums_preview.wav'
-import windsPreview from '../assets/audio/music/winds_preview.wav'
+import pianoFull from '../assets/audio/music/piano_full.mp3'
+import drumsFull from '../assets/audio/music/drums_full.mp3'
+import windsFull from '../assets/audio/music/winds_full.mp3'
+import pianoPreview from '../assets/audio/music/piano_preview.mp3'
+import drumsPreview from '../assets/audio/music/drums_preview.mp3'
+import windsPreview from '../assets/audio/music/winds_preview.mp3'
 
 // Six layers — the FULL melody per companion + a simplified PREVIEW per companion. All start together
 // on GO and stay on the same timeline (so the preview ↔ full swap on a win is musically seamless); the

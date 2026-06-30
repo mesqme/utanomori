@@ -82,7 +82,7 @@ export default function LanternGlow() {
     const glowRef = useRef()
     const glowRevealRef = useRef(0) // 0 → 1 fade-in of the glow opacity as the experience starts
 
-    const painteryTexture = useTexture(PAINTERY_TEXTURE_URLS.paintaryAlpha_01, (texture) => {
+    const painteryTexture = useTexture(PAINTERY_TEXTURE_URLS.paintaryAlpha, (texture) => {
         texture.wrapS = THREE.RepeatWrapping
         texture.wrapT = THREE.RepeatWrapping
     })

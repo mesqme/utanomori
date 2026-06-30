@@ -21,8 +21,8 @@ import { loaderInteraction } from '../loader/loaderInteraction.js'
 import { RESTART_DURATION } from '../game/gameConfig.js'
 
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
+import { GROUND_TEXTURE_URL_LIST, groundTextureIndex } from '../config/surfaceTextures.js'
 import noiseTextureUrl from '../assets/textures/noiseTexture.png'
-import groundTextureUrl from '../assets/textures/ground.png'
 
 const START_CIRCLE_RADIUS = 0.07
 // Hovering the GO circle in warmup previews this much of the world (a partial reveal — well
@@ -63,18 +63,20 @@ export default function Terrain() {
         [noiseTextureUrl]
     )
 
-    const groundTexture = useTexture(
-        groundTextureUrl,
-        (texture) => {
-            texture.wrapS = THREE.RepeatWrapping
-            texture.wrapT = THREE.RepeatWrapping
-            texture.minFilter = THREE.LinearFilter
-            texture.magFilter = THREE.LinearFilter
-            texture.colorSpace = THREE.NoColorSpace
-            return texture
-        },
-        [groundTextureUrl]
-    )
+    // Selectable ground-detail texture (drei preloads all so swapping is instant). 'World ▸ Terrain ▸
+    // groundTextureName' picks which — defaults to the watercolor texture.
+    const groundTextureName = useStore((s) => s.terrainParameters.groundTextureName)
+    const groundTextures = useTexture(GROUND_TEXTURE_URL_LIST)
+    const groundTexture = useMemo(() => {
+        const texture = groundTextures[groundTextureIndex(groundTextureName)] ?? groundTextures[0]
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.minFilter = THREE.LinearFilter
+        texture.magFilter = THREE.LinearFilter
+        texture.colorSpace = THREE.NoColorSpace
+        texture.needsUpdate = true // these textures are preloaded/shared — force the wrap change to upload
+        return texture
+    }, [groundTextures, groundTextureName])
 
     // Selectable source texture for the bake (drei preloads all six so swapping is instant).
     const painteryTextureParameters = useStore((s) => s.painteryTextureParameters)
@@ -156,9 +158,10 @@ export default function Terrain() {
                 radiusAnimationRef.current = null
             }
             noiseTexture.dispose()
-            groundTexture.dispose()
+            // groundTexture is one of the shared preloaded SURFACE textures (swappable) — don't dispose
+            // it here, the same way the paintery list isn't disposed.
         }
-    }, [noiseTexture, groundTexture])
+    }, [noiseTexture])
 
     useEffect(() => {
         if (phase === PHASES.intro) {

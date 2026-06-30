@@ -9,7 +9,7 @@ import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials
 import { getWorldLockScale } from './utils/screenScale.js'
 import { screenPainteryUniforms, updateScreenPaintery } from './utils/screenPaintery.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
-import watercolorBasicUrl from '../assets/textures/watercolorBasicLarge.png'
+import { BACKGROUND_TEXTURE_URL_LIST, backgroundTextureIndex } from '../config/surfaceTextures.js'
 
 export default function BackgroundSphere() {
     const meshRef = useRef()
@@ -17,17 +17,29 @@ export default function BackgroundSphere() {
     const textureReveal = useRef(0)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
-    const watercolorTexture = useTexture(watercolorBasicUrl)
-    useMemo(() => {
-        watercolorTexture.wrapS = THREE.RepeatWrapping
-        watercolorTexture.wrapT = THREE.RepeatWrapping
-        watercolorTexture.colorSpace = THREE.NoColorSpace
-        watercolorTexture.needsUpdate = true
-    }, [watercolorTexture])
+    // Selectable background texture (drei preloads all so swapping is instant). 'World ▸ Background ▸
+    // backgroundTexture' picks which — defaults to watercolor; paintaryAlpha is the alternative.
+    const textureName = useStore((state) => state.backgroundParameters.textureName)
+    const surfaceTextures = useTexture(BACKGROUND_TEXTURE_URL_LIST)
+    const backgroundTexture = useMemo(() => {
+        const texture = surfaceTextures[backgroundTextureIndex(textureName)] ?? surfaceTextures[0]
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.colorSpace = THREE.NoColorSpace
+        texture.needsUpdate = true
+        return texture
+    }, [surfaceTextures, textureName])
 
     const geometry = useMemo(() => new THREE.SphereGeometry(50, 32, 24), [])
-    const material = useMemo(() => createBackgroundMaterial(watercolorTexture), [watercolorTexture])
+    // Created once; the texture is swapped on its uTexture uniform (below) so a switch doesn't leak a
+    // material.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const material = useMemo(() => createBackgroundMaterial(backgroundTexture), [])
     const wireframeMaterial = useMemo(() => new THREE.MeshBasicMaterial({ color: 'red', side: THREE.BackSide, wireframe: true }), [])
+
+    useEffect(() => {
+        material.uniforms.uTexture.value = backgroundTexture
+    }, [material, backgroundTexture])
 
     useEffect(() => {
         return () => {

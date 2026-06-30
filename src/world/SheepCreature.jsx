@@ -14,7 +14,7 @@ import {
     clearCharacterSeeThrough,
 } from './utils/characterSeeThrough.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
+import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 import maskKanadeUrl from '../assets/textures/mask_kanade.png'
 import maskHibikiUrl from '../assets/textures/mask_hibiki.png'
 import maskKazaneUrl from '../assets/textures/mask_kazane.png'
@@ -40,7 +40,7 @@ export default function SheepCreature({ definition, moving = false }) {
     const sheepParameters = useStore((s) => s.sheepParameters)
     const sheepMaterialParameters = useStore((s) => s.sheepMaterialParameters)
 
-    const painterlyTexture = useTexture(paintaryAlpha01Url)
+    const painterlyTexture = useTexture(paintaryAlphaUrl)
     useMemo(() => {
         painterlyTexture.wrapS = THREE.RepeatWrapping
         painterlyTexture.wrapT = THREE.RepeatWrapping

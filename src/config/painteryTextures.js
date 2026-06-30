@@ -1,22 +1,16 @@
 // Shared paintery/watercolor texture choices, used by the scene-texture controls
 // (terrain bake → ground/grass/border, props, …). Add a file here + an id and it
 // shows up in every selector.
-import paintaryAlpha01Url from '../assets/textures/paintaryAlpha_01.png'
-import paintaryAlpha02Url from '../assets/textures/paintaryAlpha_02.png'
-import paintaryAlpha03Url from '../assets/textures/paintaryAlpha_03.png'
-import paintaryAlpha04Url from '../assets/textures/paintaryAlpha_04.png'
-import watercolorBasicUrl from '../assets/textures/watercolorBasic.png'
-import watercolorBasicLargeUrl from '../assets/textures/watercolorBasicLarge.png'
+import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
+import watercolorUrl from '../assets/textures/watercolor.png'
 
-export const PAINTERY_TEXTURE_IDS = ['paintaryAlpha_01', 'paintaryAlpha_02', 'paintaryAlpha_03', 'paintaryAlpha_04', 'watercolorBasic', 'watercolorBasicLarge']
+// The two paintery brush textures. paintaryAlpha is the default every material uses; watercolor is the
+// alternative. (The old _01/_02/.. and watercolorBasic/Large variants were consolidated to these two.)
+export const PAINTERY_TEXTURE_IDS = ['paintaryAlpha', 'watercolor']
 
 export const PAINTERY_TEXTURE_URLS = {
-    paintaryAlpha_01: paintaryAlpha01Url,
-    paintaryAlpha_02: paintaryAlpha02Url,
-    paintaryAlpha_03: paintaryAlpha03Url,
-    paintaryAlpha_04: paintaryAlpha04Url,
-    watercolorBasic: watercolorBasicUrl,
-    watercolorBasicLarge: watercolorBasicLargeUrl,
+    paintaryAlpha: paintaryAlphaUrl,
+    watercolor: watercolorUrl,
 }
 
 // Parallel list (same order as the ids) for drei's useTexture, which preloads all so
