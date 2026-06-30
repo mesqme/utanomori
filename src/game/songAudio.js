@@ -6,6 +6,7 @@
 
 let ctx = null
 let master = null
+let muted = false
 
 function ensureContext() {
     if (typeof window === 'undefined') return null
@@ -13,8 +14,11 @@ function ensureContext() {
         const AC = window.AudioContext || window.webkitAudioContext
         if (!AC) return null
         ctx = new AC()
+        // Single master gain — EVERY sound (music tracks, one-shots, ambient) routes through it, so
+        // one knob mutes the whole experience (the on-screen sound toggle). 1.0 = full (sounds carry
+        // their own levels); 0 = muted.
         master = ctx.createGain()
-        master.gain.value = 0.5
+        master.gain.value = muted ? 0.0001 : 1.0
         master.connect(ctx.destination)
         if (ctx.state === 'suspended') {
             const resume = () => {
@@ -38,4 +42,21 @@ export function resumeAudio() {
 // everything stays on one clock.
 export function getAudioContext() {
     return ensureContext()
+}
+
+// The shared master gain — connect every sound here (instead of ctx.destination) so the on-screen
+// sound toggle can mute everything at once.
+export function getMasterGain() {
+    ensureContext()
+    return master
+}
+
+export function setAudioMuted(value) {
+    muted = value
+    const c = ensureContext()
+    if (master && c) master.gain.setTargetAtTime(value ? 0.0001 : 1.0, c.currentTime, 0.02)
+}
+
+export function isAudioMuted() {
+    return muted
 }

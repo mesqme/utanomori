@@ -1,6 +1,6 @@
 // One-shot mini-game sounds (the per-character unique sounds). Loaded once into decoded
 // AudioBuffers on the shared context so they fire with no latency and can overlap.
-import { getAudioContext } from './songAudio.js'
+import { getAudioContext, getMasterGain } from './songAudio.js'
 
 import piano01 from '../assets/audio/music/piano_01.mp3'
 import piano02 from '../assets/audio/music/piano_02.mp3'
@@ -56,6 +56,6 @@ export function playSound(track, soundIndex, { gain = 0.95 } = {}) {
     const g = c.createGain()
     g.gain.value = gain
     src.connect(g)
-    g.connect(c.destination)
+    g.connect(getMasterGain())
     src.start()
 }

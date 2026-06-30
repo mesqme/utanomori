@@ -7,37 +7,25 @@
 //     fades let the bedded ambience breathe)
 //   • capucine_mumble / capucin_sad — one-shots fired on conversation / flee
 //   • footsteps — one-shots fired on a cadence while the hero walks (plain OR grass pair)
-import { getAudioContext } from './songAudio.js'
+import { getAudioContext, getMasterGain } from './songAudio.js'
 
-import windUrl from '../assets/audio/sounds/wind.wav'
-import cicadesUrl from '../assets/audio/sounds/cicades.wav'
-import owlFarUrl from '../assets/audio/sounds/owlFar.wav'
-import owlCloseUrl from '../assets/audio/sounds/owlClose.wav'
-import mumbleUrl from '../assets/audio/sounds/capucine_mumble.wav'
-import sadUrl from '../assets/audio/sounds/capucin_sad.wav'
-import sigh01 from '../assets/audio/sounds/sigh_01.wav'
-import sigh02 from '../assets/audio/sounds/sigh_02.wav'
-import sigh03 from '../assets/audio/sounds/sigh_03.wav'
-import sigh04 from '../assets/audio/sounds/sigh_04.wav'
-import footstep01 from '../assets/audio/sounds/footstep_01.wav'
-import footstep02 from '../assets/audio/sounds/footstep_02.wav'
-import footstepGrass01 from '../assets/audio/sounds/footstepGrass_01.wav'
-import footstepGrass02 from '../assets/audio/sounds/footstepGrass_02.wav'
+import cicadesUrl from '../assets/audio/sounds/cicades.mp3'
+import owlFarUrl from '../assets/audio/sounds/owlFar.mp3'
+import owlCloseUrl from '../assets/audio/sounds/owlClose.mp3'
+import mumbleUrl from '../assets/audio/sounds/capucine_mumble.mp3'
+import sadUrl from '../assets/audio/sounds/capucin_sad.mp3'
+import sighUrl from '../assets/audio/sounds/sigh_03.mp3'
+import footstepGrass01 from '../assets/audio/sounds/footstepGrass_01.mp3'
+import footstepGrass02 from '../assets/audio/sounds/footstepGrass_02.mp3'
 
 const URLS = {
-    wind: windUrl,
     cicades: cicadesUrl,
     owlFar: owlFarUrl,
     owlClose: owlCloseUrl,
     mumble: mumbleUrl,
     sad: sadUrl,
-    sigh_0: sigh01,
-    sigh_1: sigh02,
-    sigh_2: sigh03,
-    sigh_3: sigh04,
-    footstep_0: footstep01,
-    footstep_1: footstep02,
-    footstepGrass_0: footstepGrass01,
+    sigh: sighUrl, // the one hero sigh (intro dialogue)
+    footstepGrass_0: footstepGrass01, // grass footstep pair (the only footsteps used)
     footstepGrass_1: footstepGrass02,
 }
 
@@ -60,7 +48,7 @@ export function preloadAmbientSounds() {
     }
 }
 
-// ----- Looping layers (wind, cicadas) -----
+// ----- Looping layer (cicadas — the original file) -----
 const loops = {} // name → { src, gain }
 
 function ensureLoop(name) {
@@ -74,7 +62,7 @@ function ensureLoop(name) {
     const gain = c.createGain()
     gain.gain.value = 0.0001
     src.connect(gain)
-    gain.connect(c.destination)
+    gain.connect(getMasterGain())
     try {
         src.start()
     } catch {
@@ -91,7 +79,6 @@ function setLoopGain(name, volume, smoothing = 0.35) {
     loop.gain.gain.setTargetAtTime(Math.max(0.0001, volume), c.currentTime, smoothing)
 }
 
-export const setWindGain = (v) => setLoopGain('wind', v)
 export const setCicadaGain = (v) => setLoopGain('cicades', v)
 
 // ----- Owls (random far/close pool, fade in → hold → fade out → gap) -----
@@ -122,7 +109,7 @@ function scheduleNextOwl() {
     gain.gain.setValueAtTime(peak, t0 + Math.max(fade, dur - fade))
     gain.gain.linearRampToValueAtTime(0.0001, t0 + dur)
     src.connect(gain)
-    gain.connect(c.destination)
+    gain.connect(getMasterGain())
     try {
         src.start()
     } catch {
@@ -157,7 +144,7 @@ function playOneShot(name, gain = 0.9) {
     const g = c.createGain()
     g.gain.value = gain
     src.connect(g)
-    g.connect(c.destination)
+    g.connect(getMasterGain())
     try {
         src.start()
     } catch {
@@ -168,14 +155,12 @@ function playOneShot(name, gain = 0.9) {
 export const playMumble = (gain = 0.9) => playOneShot('mumble', gain)
 export const playSad = (gain = 0.9) => playOneShot('sad', gain)
 
-// The chosen sigh (sigh_01..04, index 0..3) — the hero's intro dialogue.
-export function playSigh(index = 0, gain = 0.9) {
-    const i = Math.max(0, Math.min(3, Math.round(index)))
-    playOneShot(`sigh_${i}`, gain)
+// The hero's intro-dialogue sigh (a single sound).
+export function playSigh(gain = 0.9) {
+    playOneShot('sigh', gain)
 }
 
-// pair: 'grass' | 'plain'; index: 0 | 1 (the two samples are alternated for a left/right gait).
-export function playFootstep(pair, index, gain = 0.4) {
-    const prefix = pair === 'grass' ? 'footstepGrass_' : 'footstep_'
-    playOneShot(`${prefix}${index % 2}`, gain)
+// index: 0 | 1 — the two grass samples are alternated for a left/right gait.
+export function playFootstep(index, gain = 0.4) {
+    playOneShot(`footstepGrass_${index % 2}`, gain)
 }

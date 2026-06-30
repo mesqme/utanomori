@@ -30,7 +30,7 @@ export default function UIPreview() {
             </div>
 
             <button className="interaction-prompt" style={flat}>
-                Talk to Kanade{' '}
+                Talk to Kiri{' '}
                 <span className="interaction-key">
                     <span>E</span>
                 </span>

@@ -48,8 +48,8 @@ export default function SheepCreature({ definition, moving = false }) {
         painterlyTexture.needsUpdate = true
     }, [painterlyTexture])
 
-    // Per-character face textures for the mask mesh (Sheep_Mask): piano→Kanade, drums→Hibiki,
-    // winds→Kazane. flipY=false to match the glTF UVs.
+    // Per-character face textures for the mask mesh (Sheep_Mask): piano→Kiri, drums→Miki,
+    // winds→Tori (mask_kanade/hibiki/kazane.png files keep their old names internally). flipY=false.
     const maskTextures = useTexture([maskKanadeUrl, maskHibikiUrl, maskKazaneUrl])
     useMemo(() => {
         maskTextures.forEach((t) => {

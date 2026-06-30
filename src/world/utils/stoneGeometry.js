@@ -29,6 +29,16 @@ export function toCanonicalGeometry(source, foliage, seeThrough = 0, wind = 0) {
     const windFlag = new Float32Array(count)
     if (wind) windFlag.fill(1)
     geometry.setAttribute('aWind', new THREE.BufferAttribute(windFlag, 1))
+    // aHeight: 0 at this geometry's bottom → 1 at its top (normalised over its own y-bbox), so the
+    // stone fragment can darken the base regardless of the variant's size. Present on every prototype
+    // (consistent BatchedMesh layout); only stones actually use it.
+    geometry.computeBoundingBox()
+    const pos = geometry.getAttribute('position')
+    const minY = geometry.boundingBox.min.y
+    const rangeY = Math.max(geometry.boundingBox.max.y - minY, 1e-5)
+    const heights = new Float32Array(count)
+    for (let i = 0; i < count; i++) heights[i] = (pos.getY(i) - minY) / rangeY
+    geometry.setAttribute('aHeight', new THREE.BufferAttribute(heights, 1))
     return geometry
 }
 

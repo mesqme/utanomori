@@ -15,6 +15,7 @@ uniform float uWindGust;    // 0 = steady sin sway, 1 = strong gusty / abrupt am
 attribute float aFoliage; // 1 on tree-leaf vertices → painterly edge; 0 elsewhere → fresnel rim
 attribute float aSeeThrough; // 1 = this prop see-throughs (trees + stones); 0 = solid (mushrooms)
 attribute float aWind; // 1 = sways in the wind (trees); 0 = static (stones, mushrooms)
+attribute float aHeight; // 0 = prototype's bottom → 1 = its top (for the stone bottom-darken gradient)
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
@@ -24,6 +25,8 @@ varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 varying float vFoliage;
 varying float vSeeThrough;
+varying float vHeight;
+varying float vStone; // 1 only for scattered stones (aSeeThrough=1, aWind=0, aFoliage=0)
 
 void main() {
     #include <color_vertex>
@@ -34,6 +37,8 @@ void main() {
     vObjectNormal = normalize(normal);
     vFoliage = aFoliage;
     vSeeThrough = aSeeThrough;
+    vHeight = aHeight;
+    vStone = (aSeeThrough > 0.5 && aWind < 0.5 && aFoliage < 0.5) ? 1.0 : 0.0;
 
     // Apply the BatchedMesh per-instance matrix to reach world space.
     vec4 batchedPosition = vec4(position, 1.0);

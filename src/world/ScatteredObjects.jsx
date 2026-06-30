@@ -13,6 +13,7 @@ import { seeThrough } from './utils/seeThrough.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { createEyePlaneMaterial, updateEyePlaneMaterial } from '../materials/EyePlaneMaterial.js'
+import { playSound } from '../game/gameSounds.js'
 import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS, TREE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import { createEyePlaneGeometry, createMushroomGeometries, createStoneGeometry, createTreeGeometries, toCanonicalGeometry } from './utils/stoneGeometry.js'
@@ -32,6 +33,7 @@ const WHITE = new THREE.Color('#ffffff')
 const _wiggleAxis = new THREE.Vector3()
 const _wiggleRot = new THREE.Matrix4()
 const _wiggleMat = new THREE.Matrix4()
+const _litColor = new THREE.Color() // reused temp for the mushroom touch "light up"
 
 // Deterministically pick which of a tree's eye planes show (the GLB authors many; a tree only uses
 // a random few). Rank the planes by a hash of the tree's world position and take the lowest `count`.
@@ -218,7 +220,21 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     useFrame((frameState, delta) => {
         const state = useStore.getState()
         updatePropStylizedMaterial(pool.mesh.material, {
-            propRim: state.propRimParameters,
+            propRim: {
+                enabled: state.propRimParameters.enabled,
+                strength: state.propRimParameters.strength,
+                power: state.propRimParameters.power,
+                stoneColor: state.propRimParameters.stoneColor,
+                trunkColor: state.propRimParameters.trunkColor,
+                mushroomColor: state.propRimParameters.mushroomColor,
+            },
+            stoneGradient: {
+                enabled: state.objectParameters.stoneGradientEnabled,
+                dark: state.objectParameters.stoneGradientDark ?? 0.45,
+                color: state.objectParameters.stoneGradientColor ?? '#161335',
+                colorStrength: state.objectParameters.stoneGradientColorStrength ?? 0.5,
+                height: state.objectParameters.stoneGradientHeight ?? 0.65,
+            },
             refScale: getRefScale(frameState),
             circleCenterX: revealCircle.centerX,
             circleCenterZ: revealCircle.centerZ,
@@ -281,7 +297,12 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         // the trigger radius; restores the rest matrix once the wiggle settles.
         const op = state.objectParameters
         const maxAngle = op.mushroomWiggleAngle ?? 0.4
-        if (maxAngle > 0.0001) {
+        const litBoost = op.mushroomLitBoost ?? 0
+        const soundVolume = op.mushroomSoundVolume ?? 0
+        const wiggleOn = maxAngle > 0.0001
+        // Run the reaction loop if ANY of wiggle / light / sound is on, so the touch react still fires
+        // even when the bend is turned off.
+        if (wiggleOn || litBoost > 0 || soundVolume > 0) {
             const dt = Math.min(delta, 0.05)
             const hero = state.ballPosition
             const radiusSq = (op.mushroomWiggleRadius ?? 1.2) ** 2
@@ -299,6 +320,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         m.dirZ = dz / d
                         m.phase = 0
                         m.active = true
+                        // Soft wind one-shot on touch — one of Tori's (winds) melody sounds.
+                        if (soundVolume > 0) playSound('winds', Math.floor(Math.random() * 6), { gain: soundVolume })
                     }
                     m.inside = within
                     if (!m.active) continue
@@ -308,14 +331,27 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         m.active = false
                         pool.setMatrix(m.capId, m.base)
                         pool.setMatrix(m.legId, m.base)
+                        // Restore the base colours once the reaction settles.
+                        if (litBoost > 0 && m.capColor) {
+                            pool.setColor(m.capId, m.capColor)
+                            pool.setColor(m.legId, m.legColor)
+                        }
                         continue
                     }
-                    const angle = Math.sin(m.phase * speed) * maxAngle * amp
-                    _wiggleAxis.set(m.dirZ, 0, -m.dirX) // horizontal axis ⟂ to the tip direction
-                    _wiggleRot.makeRotationAxis(_wiggleAxis, angle)
-                    _wiggleMat.multiplyMatrices(m.base, _wiggleRot)
-                    pool.setMatrix(m.capId, _wiggleMat)
-                    pool.setMatrix(m.legId, _wiggleMat)
+                    // Light up: brighten cap + leg, riding the reaction amplitude (fades as it settles).
+                    if (litBoost > 0 && m.capColor) {
+                        const brightness = 1 + amp * litBoost
+                        pool.setColor(m.capId, _litColor.copy(m.capColor).multiplyScalar(brightness))
+                        pool.setColor(m.legId, _litColor.copy(m.legColor).multiplyScalar(brightness))
+                    }
+                    if (wiggleOn) {
+                        const angle = Math.sin(m.phase * speed) * maxAngle * amp
+                        _wiggleAxis.set(m.dirZ, 0, -m.dirX) // horizontal axis ⟂ to the tip direction
+                        _wiggleRot.makeRotationAxis(_wiggleAxis, angle)
+                        _wiggleMat.multiplyMatrices(m.base, _wiggleRot)
+                        pool.setMatrix(m.capId, _wiggleMat)
+                        pool.setMatrix(m.legId, _wiggleMat)
+                    }
                 }
             }
         }
@@ -457,6 +493,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         }
 
                         const addedIds = []
+                        const addedMushroomColors = [] // [capColor, legColor] — captured for the touch light-up
                         for (const prototypeId of prototypeIds) {
                             const meta = pool.prototypeMeta[prototypeId]
                             if (isStone) {
@@ -486,6 +523,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             if (instanceId !== -1) {
                                 ids.push(instanceId)
                                 addedIds.push(instanceId)
+                                if (isMushroom) addedMushroomColors.push(color.clone())
                             }
                         }
 
@@ -495,6 +533,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                             mushroomsForChunk.push({
                                 capId: addedIds[0],
                                 legId: addedIds[1],
+                                capColor: addedMushroomColors[0], // base colours, for the touch light-up
+                                legColor: addedMushroomColors[1],
                                 base: dummy.matrix.clone(),
                                 x: instance.worldX,
                                 z: instance.worldZ,

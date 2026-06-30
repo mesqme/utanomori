@@ -37,12 +37,25 @@ uniform int uStoneSeeThroughCount;
 uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 
-// Fresnel colour rim for the hard-surface props (trunks / stones / mushrooms). Tree
-// leaves use the painterly silhouette edge below instead.
+// Fresnel colour rim for the hard-surface props. A SEPARATE colour per type (selected by the
+// vStone / vSeeThrough attributes): stones, tree trunks, mushrooms. (Music stones use a separate
+// material instance, so their three slots are all set to the music-stone colour.) Tree leaves use
+// the painterly silhouette edge below instead.
 uniform int uPropRimEnabled;
-uniform vec3 uPropRimColor;
+uniform vec3 uPropRimColorStone;
+uniform vec3 uPropRimColorTrunk;
+uniform vec3 uPropRimColorMushroom;
 uniform float uPropRimStrength;
 uniform float uPropRimPower;
+
+// Stones only: darken + tint the BOTTOM, fading up to the normal colour. uDark = brightness at the
+// base (0 = black, 1 = no darkening); uColor/uColorStrength = a tint blended into the base; uHeight =
+// the normalised height (0..1) by which it reaches the normal colour.
+uniform int uStoneGradientEnabled;
+uniform float uStoneGradientDark;
+uniform vec3 uStoneGradientColor;
+uniform float uStoneGradientColorStrength;
+uniform float uStoneGradientHeight;
 
 #include <common>
 #include <color_pars_fragment>
@@ -55,16 +68,18 @@ varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 varying float vFoliage;
 varying float vSeeThrough; // 1 = trees (fade when occluding); 0 = stones/mushrooms (stay solid)
+varying float vHeight;
+varying float vStone;
 
 #include ../lib/paintedEdge.glsl
 
-// View-facing fresnel: tints the silhouette toward uPropRimColor, fully opaque.
-vec3 applyPropRim(vec3 color, vec3 worldNormal, vec3 worldPosition) {
+// View-facing fresnel: tints the silhouette toward the given rim colour, fully opaque.
+vec3 applyPropRim(vec3 color, vec3 rimColor, vec3 worldNormal, vec3 worldPosition) {
     if (uPropRimEnabled == 0) return color;
     vec3 viewDir = normalize(cameraPosition - worldPosition);
     float ndv = max(dot(normalize(worldNormal), viewDir), 0.0);
     float fresnel = pow(1.0 - ndv, max(uPropRimPower, 0.001));
-    return mix(color, uPropRimColor, clamp(fresnel * uPropRimStrength, 0.0, 1.0));
+    return mix(color, rimColor, clamp(fresnel * uPropRimStrength, 0.0, 1.0));
 }
 
 // Triplanar painterly sampling — identical to the character material.
@@ -155,6 +170,13 @@ void main() {
         finalColor = mix(finalColor, uPainterlyColor, tintMask);
     }
 
+    // Stone bottom gradient (stones only): base is darkened + tinted, fading up to the normal colour.
+    if (uStoneGradientEnabled == 1 && vStone > 0.5) {
+        float up = smoothstep(0.0, max(uStoneGradientHeight, 0.001), vHeight); // 0 = bottom → 1 = top
+        finalColor *= mix(uStoneGradientDark, 1.0, up); // darken the base
+        finalColor = mix(finalColor, uStoneGradientColor, (1.0 - up) * uStoneGradientColorStrength); // tint the base
+    }
+
     // Reveal-circle fade — colour, dithered, or paintery, matching the world.
     float fade = 1.0 - vPropMask;
     if (uPropFadeMode == 1) {
@@ -174,8 +196,9 @@ void main() {
         float edgeBrush = samplePainterlyTexture(vObjectPosition * uEdgeNoiseScale, normalize(vObjectNormal));
         edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush);
     } else {
-        // Trunks / stones / mushrooms get a fresnel colour rim instead (opaque).
-        finalColor = applyPropRim(finalColor, vWorldNormal, vWorldPos);
+        // Trunks / stones / mushrooms get a fresnel colour rim instead (opaque) — colour per type.
+        vec3 rimColor = vStone > 0.5 ? uPropRimColorStone : (vSeeThrough > 0.5 ? uPropRimColorTrunk : uPropRimColorMushroom);
+        finalColor = applyPropRim(finalColor, rimColor, vWorldNormal, vWorldPos);
     }
 
     gl_FragColor = vec4(clamp(finalColor, 0.0, 1.0), edgeAlpha);

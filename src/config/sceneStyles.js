@@ -119,13 +119,18 @@ const painteryStyle = {
         treeTrunkColor: '#877fb9',
         stoneSize: 0.55,
         stoneYOffset: -0.3,
-        stoneTint: '#58a4fc',
+        stoneTint: '#767ef3',
+        stoneGradientEnabled: true, // darken + tint the bottom of stones, fading up to the colour above
+        stoneGradientDark: 0.45, // brightness at the base (0 = black, 1 = no darkening)
+        stoneGradientColor: '#5638c2', // tint blended into the base
+        stoneGradientColorStrength: 1.0, // how strongly the tint applies at the base (0 = none)
+        stoneGradientHeight: 1.03, // normalised height (0..1) by which the stone reaches full colour
         mushroomSize: 0.75,
         mushroomYOffset: -0.1,
-        mushroomCapColor: '#31bac0',
+        mushroomCapColor: '#b53c3c',
         mushroomLegColor: '#ecdcc4',
-        stoneColorVariation: 0.12,
-        mushroomColorVariation: 0.12,
+        stoneColorVariation: 0.32,
+        mushroomColorVariation: 0.25,
         mushroomLegColorVariation: 0.25,
         treeColorVariation: 0.1,
         grassFadeDistance: 0,
@@ -137,6 +142,8 @@ const painteryStyle = {
         mushroomWiggleAngle: 0.4,
         mushroomWiggleSpeed: 12,
         mushroomWiggleDecay: 3,
+        mushroomLitBoost: 3.0, // how much a mushroom brightens when the hero touches it (rides the wiggle)
+        mushroomSoundVolume: 0.35, // gain of the soft wind one-shot played on touch (0 = silent)
         treeWindStrength: 0.01,
         treeWindSpeed: 0.65,
         treeWindGust: 1.0,
@@ -243,7 +250,11 @@ const painteryStyle = {
     },
     propRimParameters: {
         enabled: true,
-        color: '#84afff',
+        // A separate fresnel-rim colour per prop type (music stones use their own material).
+        stoneColor: '#7a80ff',
+        trunkColor: '#8f8ffd',
+        mushroomColor: '#84afff',
+        musicStoneColor: '#84afff',
         strength: 3,
         power: 4.4,
     },

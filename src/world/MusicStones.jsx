@@ -351,7 +351,13 @@ export default function MusicStones() {
         if (!staged && allDown) layoutRef.current = null
 
         const options = {
-            propRim: store.propRimParameters,
+            // Music stones get their OWN rim colour (single colour → all type slots in their material).
+            propRim: {
+                enabled: store.propRimParameters.enabled,
+                strength: store.propRimParameters.strength,
+                power: store.propRimParameters.power,
+                color: store.propRimParameters.musicStoneColor,
+            },
             refScale: getRefScale(state),
             circleCenterX: layout.cx,
             circleCenterZ: layout.cz,

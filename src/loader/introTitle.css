@@ -1,0 +1,33 @@
+/* Title block, top-centre of the loading / GO / intro screens. Above the loader cover (z 10000). */
+.intro-title {
+    position: fixed;
+    top: 16%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    text-align: center;
+    color: var(--sj-ui-primary);
+    font-family: 'Bebas Neue', cursive;
+    text-shadow: 0 2px 14px rgba(9, 8, 34, 0.85);
+    pointer-events: none;
+    user-select: none;
+    opacity: 0; /* fades IN during the intro travel (--visible), OUT when Start is pressed */
+    transition: opacity 2s ease;
+}
+
+.intro-title--visible {
+    opacity: 1;
+}
+
+.intro-title-name {
+    font-size: calc(5.5 * var(--ui-vmin) * var(--ui-scale));
+    letter-spacing: 0.2em;
+    line-height: 1;
+}
+
+.intro-title-sub {
+    margin-top: calc(0.6 * var(--ui-vmin) * var(--ui-scale));
+    font-size: calc(2 * var(--ui-vmin) * var(--ui-scale));
+    letter-spacing: 0.16em;
+    opacity: 0.82;
+}

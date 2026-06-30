@@ -9,7 +9,6 @@ import {
     startOwlSequence,
     setOwlPeak,
     setOwlConfig,
-    setWindGain,
     setCicadaGain,
     playMumble,
     playSad,
@@ -42,7 +41,6 @@ export default function AmbientController() {
 
         if (!inWorld) {
             // Loading / warmup / restart curtain → silence the looping layers.
-            setWindGain(0)
             setCicadaGain(0)
             setOwlPeak(0)
             prevPhaseRef.current = phase
@@ -56,12 +54,8 @@ export default function AmbientController() {
         const p = store.ambientSoundParameters
         const game = useSongGame.getState()
 
-        // A "dialogue" moment = the intro speech OR any time we're in a companion conversation /
-        // mini-game (active spans prompt → game → fail/flee). Wind ducks down then.
-        const dialogue = phase === PHASES.intro || game.active
         const walking = phase === PHASES.start || phase === PHASES.credits
 
-        setWindGain(dialogue ? p.windDialogueVolume : p.windVolume)
         setCicadaGain(p.cicadaVolume)
         setOwlPeak(p.owlVolume)
         setOwlConfig({ minGap: p.owlGapMin, maxGap: p.owlGapMax, fade: p.owlFade })
@@ -82,7 +76,7 @@ export default function AmbientController() {
         if (moving) {
             stepTimerRef.current -= dt
             if (stepTimerRef.current <= 0) {
-                playFootstep(p.footstepGrass ? 'grass' : 'plain', stepFootRef.current, p.footstepVolume)
+                playFootstep(stepFootRef.current, p.footstepVolume)
                 stepFootRef.current = (stepFootRef.current + 1) % 2
                 stepTimerRef.current = Math.max(0.08, p.footstepInterval)
             }

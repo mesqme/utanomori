@@ -7,7 +7,7 @@
 // sample-accurate. All three sources start at ONE shared audio time, so the layers stay perfectly in
 // sync (and loop seamlessly). Decoded buffers are cached so a restart replays instantly. (MP3 source
 // files — once decoded into a buffer the playback is identical to WAV, just a smaller download.)
-import { getAudioContext } from './songAudio.js'
+import { getAudioContext, getMasterGain } from './songAudio.js'
 import pianoFull from '../assets/audio/music/piano_full.mp3'
 import drumsFull from '../assets/audio/music/drums_full.mp3'
 import windsFull from '../assets/audio/music/winds_full.mp3'
@@ -57,7 +57,7 @@ export function startMusicTracks() {
             decoded.forEach(({ track, buffer }) => {
                 const gain = ctx.createGain()
                 gain.gain.value = 0 // the MusicController ramps it up
-                gain.connect(ctx.destination)
+                gain.connect(getMasterGain())
                 const src = ctx.createBufferSource()
                 src.buffer = buffer
                 src.loop = true // gapless

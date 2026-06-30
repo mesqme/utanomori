@@ -26,7 +26,7 @@ export default function Dialogue() {
             setVisible(true)
             // The hero sighs as the camera settles and the bubble opens (not at the intro start).
             const ambient = useStore.getState().ambientSoundParameters
-            playSigh(ambient.sighSound, ambient.sighVolume)
+            playSigh(ambient.sighVolume)
         }, INTRO_DIALOGUE_DELAY * 1000)
         return () => clearTimeout(timerRef.current)
     }, [phase])

@@ -39,7 +39,6 @@ export const FAIL_LINES = [
     'Augh! My poor delicate ears may never recover!',
     'No, no, NO — even the crows sing truer than that!',
     'You call THAT my melody? I shall hide where you cannot ruin it!',
-    'Sacrilege! I must flee before you play another!',
 ]
 
 export const CREDITS_LINES = [

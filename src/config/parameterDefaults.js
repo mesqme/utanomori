@@ -207,20 +207,16 @@ export const DEFAULT_MUSIC_PARAMETERS = {
 // constant bed (ducked during dialogues), cicadas a secondary bed, owls a random far/close pool,
 // plus per-character one-shots and a switchable footstep pair.
 export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
-    windVolume: 0.09, // wind during walking gameplay (always present, gentle)
-    windDialogueVolume: 0.05, // wind ducked right down during a conversation / mini-game / intro
-    cicadaVolume: 0.12, // secondary ambient bed
+    cicadaVolume: 0.12, // the ambient bed (the original cicada file)
     owlVolume: 0.5, // peak volume of each owl hoot in the random pool
     owlGapMin: 5, // min seconds of silence between owls
     owlGapMax: 16, // max seconds of silence between owls
     owlFade: 1.6, // fade in / out time (s) around each owl clip
-    footstepVolume: 0.02,
+    footstepVolume: 0.05,
     footstepInterval: 0.45, // seconds between steps while moving
-    footstepSpeedThreshold: 2.95, // hero speed (u/s) above which footsteps play
-    footstepGrass: true, // true = grassy footstep pair, false = plain footstep pair
+    footstepSpeedThreshold: 2.95, // hero speed (u/s) above which footsteps play (grass pair)
     mumbleVolume: 0.38, // capucine_mumble — companion conversation
     sadVolume: 0.42, // capucin_sad — companion runs away after a missed song
-    sighSound: 2, // which sigh plays on the hero's intro dialogue (0..3 = sigh_01..04)
     sighVolume: 0.9, // intro-dialogue sigh volume
 }
 

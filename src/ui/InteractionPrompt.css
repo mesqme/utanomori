@@ -1,7 +1,16 @@
-.party-counter {
+/* Top-left HUD row: the melody counter + the sound on/off toggle, side by side. */
+.top-left-hud {
     position: absolute;
     top: 20px;
     left: 20px;
+    display: flex;
+    align-items: stretch;
+    gap: calc(0.8 * var(--ui-vmin) * var(--ui-scale));
+    z-index: 100;
+    pointer-events: none;
+}
+
+.party-counter {
     padding: calc(0.7 * var(--ui-vmin) * var(--ui-scale)) calc(1.6 * var(--ui-vmin) * var(--ui-scale));
     border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: var(--ui-radius);
@@ -9,9 +18,44 @@
     color: var(--sj-ui-primary);
     font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.14em;
-    z-index: 100;
     pointer-events: none;
     user-select: none;
+    display: flex;
+    align-items: center;
+}
+
+/* Sound on/off button — same panel skin as the counter. */
+.sound-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 calc(0.9 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
+    line-height: 1;
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    transition: background 0.12s, transform 0.12s;
+}
+
+.sound-toggle-icon {
+    display: block;
+    width: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
+    height: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
+    color: var(--sj-ui-primary);
+}
+
+.sound-toggle:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.sound-toggle:active {
+    background: var(--sj-ui-panel-active);
+    transform: scale(0.96);
 }
 
 .interaction-prompt {

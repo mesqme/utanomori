@@ -64,9 +64,17 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uCharSeeThrough: { value: new Float32Array(5 * 4) },
             uCharSeeThroughCount: { value: 0 },
             uPropRimEnabled: { value: 1 },
-            uPropRimColor: { value: new THREE.Color('#cfc2ff') },
+            uPropRimColorStone: { value: new THREE.Color('#cfc2ff') },
+            uPropRimColorTrunk: { value: new THREE.Color('#cfc2ff') },
+            uPropRimColorMushroom: { value: new THREE.Color('#cfc2ff') },
             uPropRimStrength: { value: 0.7 },
             uPropRimPower: { value: 2.5 },
+            // Stone bottom gradient (applies only to scattered stones; vStone gates it).
+            uStoneGradientEnabled: { value: 0 },
+            uStoneGradientDark: { value: 0.45 },
+            uStoneGradientColor: { value: new THREE.Color('#161335') },
+            uStoneGradientColorStrength: { value: 0.5 },
+            uStoneGradientHeight: { value: 0.65 },
             ...edgeUniforms,
         },
         toneMapped,
@@ -95,9 +103,26 @@ export function updatePropStylizedMaterial(material, options) {
     if (options.propRim) {
         const r = options.propRim
         u.uPropRimEnabled.value = r.enabled ? 1 : 0
-        u.uPropRimColor.value.set(r.color)
         u.uPropRimStrength.value = r.strength
         u.uPropRimPower.value = r.power
+        if (r.color != null) {
+            // Single colour → all three slots (the music stones use one material + one colour).
+            u.uPropRimColorStone.value.set(r.color)
+            u.uPropRimColorTrunk.value.set(r.color)
+            u.uPropRimColorMushroom.value.set(r.color)
+        } else {
+            if (r.stoneColor) u.uPropRimColorStone.value.set(r.stoneColor)
+            if (r.trunkColor) u.uPropRimColorTrunk.value.set(r.trunkColor)
+            if (r.mushroomColor) u.uPropRimColorMushroom.value.set(r.mushroomColor)
+        }
+    }
+    if (options.stoneGradient) {
+        const s = options.stoneGradient
+        u.uStoneGradientEnabled.value = s.enabled ? 1 : 0
+        u.uStoneGradientDark.value = s.dark
+        u.uStoneGradientColor.value.set(s.color)
+        u.uStoneGradientColorStrength.value = s.colorStrength
+        u.uStoneGradientHeight.value = s.height
     }
     if (options.paintery) {
         u.uPainterySize.value = options.paintery.size // CSS-locked (dpr applied in the shader)

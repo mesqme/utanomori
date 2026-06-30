@@ -15,21 +15,21 @@ export const MUSIC_CHARACTERS = {
         soundCount: 4, // unique sounds → stone count
         melody: [0, 1, 2, 3], // piano_01..04
         rounds: roundsFor(4), // [2, 3, 4]
-        prompt: 'I am Kanade, the spirit of melody. Would you like to listen to my song?',
+        prompt: 'I am Kiri, the spirit of the morning mist. Would you like to listen to my song?',
     },
     drums: {
         track: 'drums',
         soundCount: 3,
         melody: [0, 1, 2, 0, 1], // drums_01,02,03,01,02
         rounds: roundsFor(5), // [3, 4, 5]
-        prompt: 'I am Hibiki, the spirit of rhythm. Would you like to listen to my song?',
+        prompt: 'I am Miki, the spirit of the old trees. Would you like to listen to my song?',
     },
     winds: {
         track: 'winds',
         soundCount: 6,
         melody: [0, 1, 2, 3, 4, 5, 1], // winds_01..06, winds_02
         rounds: roundsFor(7), // [5, 6, 7]
-        prompt: 'I am Kazane, the spirit of breath and air. Would you like to listen to my song?',
+        prompt: 'I am Tori, the spirit of the birds. Would you like to listen to my song?',
     },
 }
 

@@ -129,3 +129,19 @@
         opacity: 1;
     }
 }
+
+/* Gentle "better with headphones" hint, low on the loading / GO screen. */
+.loader-headphones {
+    position: absolute;
+    left: 50%;
+    bottom: 9%;
+    transform: translateX(-50%);
+    color: var(--sj-ui-primary);
+    font-family: 'Bebas Neue', cursive;
+    font-size: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
+    letter-spacing: 0.14em;
+    opacity: 0.72;
+    white-space: nowrap;
+    pointer-events: none;
+    user-select: none;
+}

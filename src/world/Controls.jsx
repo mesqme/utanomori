@@ -102,6 +102,11 @@ const LEVA_SECTION_PATHS = Object.freeze({
         stoneSize: 'stoneSize',
         stoneYOffset: 'stoneYOffset',
         stoneTint: 'stoneTint',
+        stoneGradientEnabled: 'stoneGradientEnabled',
+        stoneGradientDark: 'stoneGradientDark',
+        stoneGradientColor: 'stoneGradientColor',
+        stoneGradientColorStrength: 'stoneGradientColorStrength',
+        stoneGradientHeight: 'stoneGradientHeight',
         mushroomSize: 'mushroomSize',
         mushroomYOffset: 'mushroomYOffset',
         mushroomCapColor: 'mushroomCapColor',
@@ -117,6 +122,8 @@ const LEVA_SECTION_PATHS = Object.freeze({
         mushroomWiggleAngle: 'mushroomWiggleAngle',
         mushroomWiggleSpeed: 'mushroomWiggleSpeed',
         mushroomWiggleDecay: 'mushroomWiggleDecay',
+        mushroomLitBoost: 'mushroomLitBoost',
+        mushroomSoundVolume: 'mushroomSoundVolume',
         grassFadeDistance: 'grassFadeDistance',
         grassLean: 'grassLean',
         painterly: 'painterlyEnabled',
@@ -257,7 +264,10 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     'Props Edge': {
         enabled: 'enabled',
-        color: 'color',
+        stoneColor: 'stoneColor',
+        trunkColor: 'trunkColor',
+        mushroomColor: 'mushroomColor',
+        musicStoneColor: 'musicStoneColor',
         strength: 'strength',
         power: 'power',
     },
@@ -772,7 +782,10 @@ export default function Controls() {
     // Fresnel colour rim — applied to the hard-surface props (trunks / stones / mushrooms).
     useControls('Props.Props Edge', {
         enabled: { value: propRimParameters.enabled, onChange: setParam('propRimParameters', 'enabled') },
-        color: { value: propRimParameters.color, onChange: setParam('propRimParameters', 'color') },
+        stoneColor: { value: propRimParameters.stoneColor, onChange: setParam('propRimParameters', 'stoneColor') },
+        trunkColor: { value: propRimParameters.trunkColor, onChange: setParam('propRimParameters', 'trunkColor') },
+        mushroomColor: { value: propRimParameters.mushroomColor, onChange: setParam('propRimParameters', 'mushroomColor') },
+        musicStoneColor: { value: propRimParameters.musicStoneColor, onChange: setParam('propRimParameters', 'musicStoneColor') },
         strength: { value: propRimParameters.strength, min: 0, max: 3, step: 0.01, onChange: setParam('propRimParameters', 'strength') },
         power: { value: propRimParameters.power, min: 0.2, max: 8, step: 0.1, onChange: setParam('propRimParameters', 'power') },
     })
@@ -833,20 +846,16 @@ export default function Controls() {
     })
 
     useControls('Audio.Ambient SFX', {
-        windVolume: { value: ambientSoundParameters.windVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windVolume') },
-        windDialogueVolume: { value: ambientSoundParameters.windDialogueVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'windDialogueVolume') },
         cicadaVolume: { value: ambientSoundParameters.cicadaVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'cicadaVolume') },
         owlVolume: { value: ambientSoundParameters.owlVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'owlVolume') },
         owlGapMin: { value: ambientSoundParameters.owlGapMin, min: 0, max: 30, step: 0.5, onChange: setParam('ambientSoundParameters', 'owlGapMin') },
         owlGapMax: { value: ambientSoundParameters.owlGapMax, min: 1, max: 60, step: 0.5, onChange: setParam('ambientSoundParameters', 'owlGapMax') },
         owlFade: { value: ambientSoundParameters.owlFade, min: 0.1, max: 5, step: 0.1, onChange: setParam('ambientSoundParameters', 'owlFade') },
-        footstepGrass: { value: ambientSoundParameters.footstepGrass, onChange: setParam('ambientSoundParameters', 'footstepGrass') },
         footstepVolume: { value: ambientSoundParameters.footstepVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'footstepVolume') },
         footstepInterval: { value: ambientSoundParameters.footstepInterval, min: 0.12, max: 0.8, step: 0.01, onChange: setParam('ambientSoundParameters', 'footstepInterval') },
         footstepSpeedThreshold: { value: ambientSoundParameters.footstepSpeedThreshold, min: 0, max: 4, step: 0.05, onChange: setParam('ambientSoundParameters', 'footstepSpeedThreshold') },
         mumbleVolume: { value: ambientSoundParameters.mumbleVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'mumbleVolume') },
         sadVolume: { value: ambientSoundParameters.sadVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sadVolume') },
-        sighSound: { value: ambientSoundParameters.sighSound, options: { 'Sigh 1': 0, 'Sigh 2': 1, 'Sigh 3': 2, 'Sigh 4': 3 }, onChange: setParam('ambientSoundParameters', 'sighSound') },
         sighVolume: { value: ambientSoundParameters.sighVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sighVolume') },
     })
 
@@ -1342,6 +1351,11 @@ export default function Controls() {
         stoneSize: { value: objectParameters.stoneSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'stoneSize') },
         stoneYOffset: { value: objectParameters.stoneYOffset, min: -1, max: 2, step: 0.05, onChange: setParam('objectParameters', 'stoneYOffset') },
         stoneTint: { value: objectParameters.stoneTint, onChange: setParam('objectParameters', 'stoneTint') },
+        stoneGradientEnabled: { value: objectParameters.stoneGradientEnabled, label: 'stoneGradient', onChange: setParam('objectParameters', 'stoneGradientEnabled') },
+        stoneGradientDark: { value: objectParameters.stoneGradientDark, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'stoneGradientDark') },
+        stoneGradientColor: { value: objectParameters.stoneGradientColor, onChange: setParam('objectParameters', 'stoneGradientColor') },
+        stoneGradientColorStrength: { value: objectParameters.stoneGradientColorStrength, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'stoneGradientColorStrength') },
+        stoneGradientHeight: { value: objectParameters.stoneGradientHeight, min: 0.05, max: 1.5, step: 0.01, onChange: setParam('objectParameters', 'stoneGradientHeight') },
         mushroomSize: { value: objectParameters.mushroomSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'mushroomSize') },
         mushroomYOffset: { value: objectParameters.mushroomYOffset, min: -1, max: 2, step: 0.05, onChange: setParam('objectParameters', 'mushroomYOffset') },
         mushroomCapColor: { value: objectParameters.mushroomCapColor, onChange: setParam('objectParameters', 'mushroomCapColor') },
@@ -1357,6 +1371,8 @@ export default function Controls() {
         mushroomWiggleAngle: { value: objectParameters.mushroomWiggleAngle, min: 0, max: 1.2, step: 0.02, onChange: setParam('objectParameters', 'mushroomWiggleAngle') },
         mushroomWiggleSpeed: { value: objectParameters.mushroomWiggleSpeed, min: 1, max: 30, step: 0.5, onChange: setParam('objectParameters', 'mushroomWiggleSpeed') },
         mushroomWiggleDecay: { value: objectParameters.mushroomWiggleDecay, min: 0.5, max: 10, step: 0.1, onChange: setParam('objectParameters', 'mushroomWiggleDecay') },
+        mushroomLitBoost: { value: objectParameters.mushroomLitBoost, min: 0, max: 3, step: 0.05, onChange: setParam('objectParameters', 'mushroomLitBoost') },
+        mushroomSoundVolume: { value: objectParameters.mushroomSoundVolume, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'mushroomSoundVolume') },
         grassFadeDistance: { value: objectParameters.grassFadeDistance, min: 0, max: 5, step: 0.05, onChange: setParam('objectParameters', 'grassFadeDistance') },
         grassLean: { value: objectParameters.grassLean, min: 0, max: 2, step: 0.05, onChange: setParam('objectParameters', 'grassLean') },
         painterly: {

@@ -5,6 +5,7 @@ import Experience from './world/Experience.jsx'
 import { KeyboardControls } from '@react-three/drei'
 import { Leva } from 'leva'
 import Loader from './loader/Loader.jsx'
+import IntroTitle from './loader/IntroTitle.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
@@ -18,6 +19,10 @@ import Credits from './game/Credits.jsx'
 import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 
 applySoundJourneyCssVariables()
+
+// The Leva debug panel only shows when the URL hash is #debug (e.g. ...?/#debug). On the plain page
+// it's hidden. The controls still register + drive the scene; only the panel UI is hidden.
+const isDebug = typeof window !== 'undefined' && window.location.hash === '#debug'
 
 const root = ReactDOM.createRoot(document.querySelector('#root'))
 
@@ -47,7 +52,7 @@ root.render(
             >
                 <Experience />
             </Canvas>
-            <Leva collapsed theme={{ sizes: { rootWidth: '400px', controlWidth: '150px' } }} />
+            <Leva hidden={!isDebug} collapsed theme={{ sizes: { rootWidth: '400px', controlWidth: '150px' } }} />
             <ControlsIcons />
             <InteractionPrompt />
             <SongGame />
@@ -55,6 +60,7 @@ root.render(
         </KeyboardControls>
         <GameDirector />
         <Loader />
+        <IntroTitle />
         <LoaderDebugOverlay />
         <Dialogue />
         <FinaleDialogue />

@@ -20,6 +20,7 @@ import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js
 import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { resumeAudio } from '../game/songAudio.js'
+import { playMumble } from '../game/ambientSounds.js'
 import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 
 const INTERACT_RADIUS = 2.3
@@ -76,6 +77,8 @@ function TargetCreature({ target, creatureMaterial }) {
     // behind the hero (handled by the MusicController) once collected.
     useEffect(() => {
         if (stage !== 'success') return
+        // The freed spirit gives a happy mumble the moment the song is won.
+        playMumble(useStore.getState().ambientSoundParameters?.mumbleVolume ?? 0.9)
         const timer = setTimeout(() => {
             useCompanions.getState().collectTarget()
             useSongGame.getState().reset()

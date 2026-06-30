@@ -153,6 +153,7 @@ export default function Loader() {
                     {showStart && !showExit && <div className="loader-go-button">GO</div>}
                 </div>
             </div>
+            {(showLoading || showStart) && !showExit && <div className="loader-headphones">🎧 Better with headphones</div>}
         </div>
     )
 }
