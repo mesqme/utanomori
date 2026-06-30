@@ -12,7 +12,7 @@ export default {
             include: ['**/*.glsl', '**/*.vert', '**/*.frag'],
         }),
     ],
-    base: '/sound-journey/',
+    base: '/utanomori/', // served at mesq.me/utanomori/ — all asset URLs are prefixed with this
     assetsInclude: ['**/*.glb', '**/*.gltf'],
     server: {
         host: true, // Open to local network and display URL
