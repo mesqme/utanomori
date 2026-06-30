@@ -1,0 +1,7 @@
+services:
+  sound-journey:
+    image: ${IMAGE}
+    container_name: sound-journey
+    restart: always
+    ports:
+      - "127.0.0.1:13115:80"

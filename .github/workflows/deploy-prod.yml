@@ -1,0 +1,63 @@
+name: Deploy Prod
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Build and push image
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          IMAGE="ghcr.io/${{ github.repository }}:${GITHUB_REF_NAME}-${SHORT_SHA}"
+
+          docker build -t "${IMAGE}" .
+          docker push "${IMAGE}"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Export secrets to env
+        uses: oNaiPs/secrets-to-env-action@v1
+        with:
+          secrets: ${{ toJSON(secrets) }}
+          include: SSH_.*
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        run: |
+          SHORT_SHA="${GITHUB_SHA:0:7}"
+          export IMAGE="ghcr.io/${{ github.repository }}:${GITHUB_REF_NAME}-${SHORT_SHA}"
+
+          docker context rm -f digitallab 2>/dev/null || true
+          docker context create digitallab --docker "host=ssh://${SSH_USER}@${SSH_HOST}:${SSH_PORT}"
+          docker context use digitallab
+
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker compose -f docker-compose.yml pull
+          docker compose -f docker-compose.yml up -d
