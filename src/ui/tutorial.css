@@ -1,0 +1,101 @@
+/* One-time tutorial modal. Same 2D language as the speech bubble / buttons: dark translucent
+   panel, primary border, shared --ui-radius. A dim backdrop focuses the card and blocks stray
+   clicks on the scene until the frame is dismissed. */
+.tutorial-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 160;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 4vmin;
+    background: rgba(6, 4, 20, 0.5);
+    pointer-events: auto;
+    animation: tutorial-fade 0.25s ease-out;
+}
+
+/* Column stack: card, then (optionally) the button below it. When the button lives inside the
+   card it's just the card's last child — same gap either way. */
+.tutorial-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
+}
+
+.tutorial-card {
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
+    width: min(88vw, calc(46 * var(--ui-vmin) * var(--ui-scale)));
+    padding: var(--tut-pad, calc(2 * var(--ui-vmin) * var(--ui-scale)));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--tut-frame-radius, var(--ui-radius));
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    animation: tutorial-pop 0.3s ease-out;
+}
+
+.tutorial-image {
+    display: block;
+    width: 100%;
+    max-height: var(--tut-image-size, 44vh);
+    object-fit: cover;
+    border: var(--tut-image-border-width, var(--ui-border)) solid var(--sj-ui-primary);
+    border-radius: var(--tut-image-radius, var(--ui-radius));
+    user-select: none;
+}
+
+.tutorial-text {
+    margin: 0;
+    text-align: center;
+    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+}
+
+/* Identical to the dialogue Start / in-world "Yes" button. */
+.tutorial-button {
+    font-family: inherit;
+    padding: calc(0.8 * var(--ui-vmin) * var(--ui-scale)) calc(2.8 * var(--ui-vmin) * var(--ui-scale));
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
+    background: var(--sj-ui-panel);
+    color: var(--sj-ui-primary);
+    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
+    font-weight: normal;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.12s;
+}
+
+.tutorial-button:hover {
+    background: var(--sj-ui-panel-hover);
+}
+
+.tutorial-button:active {
+    background: var(--sj-ui-panel-active);
+    transform: scale(0.96);
+}
+
+@keyframes tutorial-fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes tutorial-pop {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

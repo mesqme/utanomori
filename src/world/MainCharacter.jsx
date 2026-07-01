@@ -7,6 +7,7 @@ import { gsap } from 'gsap'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
+import useTutorial from '../stores/useTutorial.jsx'
 import { sharedNoise2D } from './utils/worldNoise.js'
 import { getNearestRoadPoint, sampleRoadDirection } from './utils/roadField.js'
 import { createObjectFieldSampler } from './utils/objectField.js'
@@ -253,8 +254,8 @@ export default function MainCharacter() {
         const moveInput = moveInputRef.current
 
         if (phase === PHASES.start) {
-            // The song mini-game freezes the hero in place.
-            const frozen = useSongGame.getState().active
+            // The song mini-game — and any open tutorial tip — freezes the hero in place.
+            const frozen = useSongGame.getState().active || useTutorial.getState().frame !== 0
             const keys = frozen ? EMPTY_INPUT : getKeys()
             const controls = frozen ? EMPTY_INPUT : useStore.getState().controls
             const jumpPressed = Boolean(keys.jump || controls.jump)

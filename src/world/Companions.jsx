@@ -21,6 +21,7 @@ import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../mater
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { resumeAudio } from '../game/songAudio.js'
 import { playMumble } from '../game/ambientSounds.js'
+import useTutorial from '../stores/useTutorial.jsx'
 import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 
 const INTERACT_RADIUS = 2.3
@@ -406,6 +407,12 @@ export default function Companions() {
         if (!inStart) return
 
         const distance = Math.hypot(player.x - companions.target.x, player.z - companions.target.z)
+
+        // Tutorial: the first time a spirit crosses into the visible circle (fully opaque), explain
+        // the mini-game. showSpirit() self-guards, so it fires only once and only when idle.
+        if (distance <= getRevealRadius()) {
+            useTutorial.getState().showSpirit()
+        }
 
         if (distance > ABANDON_RADIUS) {
             const spawn = findHiddenSpawn(player)

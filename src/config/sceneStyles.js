@@ -327,6 +327,13 @@ const painteryStyle = {
         // Dialogue word-by-word reveal.
         wordStagger: 90, // ms between each word fading in
         wordFade: 420, // ms each word takes to fade + rise into place
+        // Tutorial tip cards (Tutorial.jsx).
+        tutorialImageSize: 54, // vh → --tut-image-size: how tall the image inside the card is
+        tutorialImageFrame: false, // bool → draw the border/frame around the image (off = borderless image)
+        tutorialFrameRadius: 40, // px → --tut-frame-radius: the card's corner rounding
+        tutorialImageRadius: 29, // px → --tut-image-radius: the image's corner rounding (separate from the card)
+        tutorialButtonOutside: true, // bool → place the button below the card instead of inside it
+        tutorialPadding: 3.0, // vmin·scale → --tut-pad: gap between the image/content and the card frame
         // DEBUG: force every UI overlay (bubble, prompt, HUD, countdown, chips…) on at once so the
         // values above can be dialed in live. Turn off (or remove UIPreview) when done.
         previewUI: false,

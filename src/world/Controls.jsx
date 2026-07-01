@@ -338,6 +338,12 @@ const LEVA_SECTION_PATHS = Object.freeze({
         'Credits buttons.creditsBtnOffset': 'creditsBtnOffset',
         'Dialogue reveal.wordStagger': 'wordStagger',
         'Dialogue reveal.wordFade': 'wordFade',
+        'Tutorial.tutorialImageSize': 'tutorialImageSize',
+        'Tutorial.tutorialImageFrame': 'tutorialImageFrame',
+        'Tutorial.tutorialFrameRadius': 'tutorialFrameRadius',
+        'Tutorial.tutorialImageRadius': 'tutorialImageRadius',
+        'Tutorial.tutorialPadding': 'tutorialPadding',
+        'Tutorial.tutorialButtonOutside': 'tutorialButtonOutside',
         previewUI: 'previewUI',
     },
 })
@@ -565,6 +571,13 @@ export default function Controls() {
         root.setProperty('--credits-btn-pad-y', vm(p.creditsBtnPadY ?? 1.2))
         root.setProperty('--credits-btn-pad-x', vm(p.creditsBtnPadX ?? 4.0))
         root.setProperty('--credits-btn-offset', `${p.creditsBtnOffset ?? 9}%`)
+        // Tutorial tip cards. Image size is a vh (independent of --ui-vmin so it reads as "% of screen
+        // height"); the image frame toggles by driving its border width to 0.
+        root.setProperty('--tut-image-size', `${p.tutorialImageSize ?? 44}vh`)
+        root.setProperty('--tut-image-border-width', `${(p.tutorialImageFrame ?? true) ? (p.borderWidth ?? 2) : 0}px`)
+        root.setProperty('--tut-frame-radius', `${p.tutorialFrameRadius ?? 14}px`)
+        root.setProperty('--tut-image-radius', `${p.tutorialImageRadius ?? 14}px`)
+        root.setProperty('--tut-pad', vm(p.tutorialPadding ?? 2.0))
     }, [gameUiParameters])
 
     useEffect(() => {
@@ -691,6 +704,17 @@ export default function Controls() {
             {
                 wordStagger: { value: gameUiParameters.wordStagger, min: 0, max: 300, step: 5, onChange: setParam('gameUiParameters', 'wordStagger') },
                 wordFade: { value: gameUiParameters.wordFade, min: 80, max: 1200, step: 10, onChange: setParam('gameUiParameters', 'wordFade') },
+            },
+            { collapsed: true }
+        ),
+        'Tutorial': folder(
+            {
+                tutorialImageSize: { value: gameUiParameters.tutorialImageSize, min: 15, max: 75, step: 1, label: 'imageSize (vh)', onChange: setParam('gameUiParameters', 'tutorialImageSize') },
+                tutorialImageFrame: { value: gameUiParameters.tutorialImageFrame, label: 'image frame', onChange: setParam('gameUiParameters', 'tutorialImageFrame') },
+                tutorialFrameRadius: { value: gameUiParameters.tutorialFrameRadius, min: 0, max: 40, step: 1, label: 'frameRadius (px)', onChange: setParam('gameUiParameters', 'tutorialFrameRadius') },
+                tutorialImageRadius: { value: gameUiParameters.tutorialImageRadius, min: 0, max: 40, step: 1, label: 'imageRadius (px)', onChange: setParam('gameUiParameters', 'tutorialImageRadius') },
+                tutorialPadding: { value: gameUiParameters.tutorialPadding, min: 0, max: 8, step: 0.1, label: 'image↔frame pad', onChange: setParam('gameUiParameters', 'tutorialPadding') },
+                tutorialButtonOutside: { value: gameUiParameters.tutorialButtonOutside, label: 'button outside', onChange: setParam('gameUiParameters', 'tutorialButtonOutside') },
             },
             { collapsed: true }
         ),

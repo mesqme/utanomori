@@ -26,7 +26,7 @@ export const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change.
 export const OBJECT_STYLE_VERSION = 9
 export const LOADER_DEBUG_VERSION = 6
-export const GAME_UI_VERSION = 14
+export const GAME_UI_VERSION = 16
 
 export const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
