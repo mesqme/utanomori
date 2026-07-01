@@ -4,6 +4,8 @@
 // (The old placeholder synth + spatial "voices" that used to live here were removed once real audio
 // replaced them — only getAudioContext / resumeAudio are still used.)
 
+import { DefaultLoadingManager } from 'three'
+
 let ctx = null
 let master = null
 let muted = false
@@ -77,4 +79,29 @@ export function setAudioVolume(value) {
 
 export function getAudioVolume() {
     return volume
+}
+
+// Fetch + decode an audio file into an AudioBuffer. decodeAudioData works on the still-suspended
+// context, so this can run during the loading screen. Safe no-op (resolves null) if WebAudio is
+// unavailable. With { tracked: true } it reports to THREE's default loading manager, so the file
+// counts on the loading bar (drei's useProgress, same as the GLBs/textures) → GO waits for it. Left
+// untracked (default) the file still downloads, but doesn't hold up GO — a "background" load.
+export function loadAudioBuffer(url, { tracked = false } = {}) {
+    const c = ensureContext()
+    if (!c) return Promise.resolve(null)
+    if (tracked) DefaultLoadingManager.itemStart(url)
+    return fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((ab) => c.decodeAudioData(ab))
+        .then((buffer) => {
+            if (tracked) DefaultLoadingManager.itemEnd(url)
+            return buffer
+        })
+        .catch(() => {
+            if (tracked) {
+                DefaultLoadingManager.itemError(url)
+                DefaultLoadingManager.itemEnd(url)
+            }
+            return null
+        })
 }

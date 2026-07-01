@@ -18,8 +18,15 @@ import FinaleDialogue from './game/FinaleDialogue.jsx'
 import SongGame from './game/SongGame.jsx'
 import Credits from './game/Credits.jsx'
 import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
+import { preloadCicadas } from './game/ambientSounds.js'
 
 applySoundJourneyCssVariables()
+
+// CRITICAL audio only: the base cicada ambient, kicked off at page load and counted on the loading bar
+// (registered with THREE's loading manager) so the scene is never silent at the start. Everything else
+// (music, game one-shots, other ambient) loads in the BACKGROUND once the bar completes — see Loader —
+// so it doesn't hold up GO, but starts early enough to be ready before it's needed.
+preloadCicadas()
 
 // The Leva debug panel only shows when the URL hash is #debug (e.g. ...?/#debug). On the plain page
 // it's hidden. The controls still register + drive the scene; only the panel UI is hidden.

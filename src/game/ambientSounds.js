@@ -7,7 +7,7 @@
 //     fades let the bedded ambience breathe)
 //   • capucine_mumble / capucin_sad — one-shots fired on conversation / flee
 //   • footsteps — one-shots fired on a cadence while the hero walks (plain OR grass pair)
-import { getAudioContext, getMasterGain } from './songAudio.js'
+import { getAudioContext, getMasterGain, loadAudioBuffer } from './songAudio.js'
 
 import cicadesUrl from '../assets/audio/sounds/cicades.mp3'
 import owlFarUrl from '../assets/audio/sounds/owlFar.mp3'
@@ -30,21 +30,60 @@ const URLS = {
 }
 
 const buffers = {} // name → AudioBuffer | undefined
-let loadStarted = false
+let cicadaLoadStarted = false
+let ambientLoadStarted = false
 
-export function preloadAmbientSounds() {
-    if (loadStarted) return
+const CICADA_CROSSFADE = 2.0 // seconds blended across the loop seam (22s clip → ~20s seamless loop)
+
+// Make a decoded buffer loop seamlessly: blend the last `crossfadeSec` onto the first `crossfadeSec`
+// with an equal-power fade, then drop that overlap. The wrap point then lands on CONSECUTIVE original
+// samples (no click), and the fade hides the join — ideal for a broadband drone like cicadas, whose
+// raw trim otherwise jumps abruptly at the loop point.
+function makeSeamlessLoop(ctx, buffer, crossfadeSec) {
+    const sr = buffer.sampleRate
+    const channels = buffer.numberOfChannels
+    const cross = Math.min(Math.floor(crossfadeSec * sr), Math.floor(buffer.length / 2))
+    if (cross <= 0) return buffer
+    const outLen = buffer.length - cross
+    const out = ctx.createBuffer(channels, outLen, sr)
+    for (let ch = 0; ch < channels; ch++) {
+        const src = buffer.getChannelData(ch)
+        const dst = out.getChannelData(ch)
+        for (let i = 0; i < outLen; i++) dst[i] = src[i]
+        for (let i = 0; i < cross; i++) {
+            const t = i / cross
+            const fadeIn = Math.sin(0.5 * Math.PI * t) // head grows in
+            const fadeOut = Math.cos(0.5 * Math.PI * t) // dropped tail fades out
+            dst[i] = src[i] * fadeIn + src[outLen + i] * fadeOut
+        }
+    }
+    return out
+}
+
+// CRITICAL: the base cicada ambient loop. Loaded up front and TRACKED on the loading bar (blocks GO),
+// so the scene is never silent at the start. Crossfaded into a seamless loop as it decodes.
+export function preloadCicadas() {
+    if (cicadaLoadStarted) return
     const c = getAudioContext()
     if (!c) return
-    loadStarted = true
+    cicadaLoadStarted = true
+    loadAudioBuffer(URLS.cicades, { tracked: true }).then((buf) => {
+        if (buf) buffers.cicades = makeSeamlessLoop(c, buf, CICADA_CROSSFADE)
+    })
+}
+
+// BACKGROUND: the remaining ambient one-shots (owls, mumble, sad, sigh, footsteps). Fired once loading
+// is done (see Loader) — untracked, so they download without holding up GO; they no-op until ready.
+export function preloadAmbientSounds() {
+    if (ambientLoadStarted) return
+    const c = getAudioContext()
+    if (!c) return
+    ambientLoadStarted = true
     for (const [name, url] of Object.entries(URLS)) {
-        fetch(url)
-            .then((r) => r.arrayBuffer())
-            .then((ab) => c.decodeAudioData(ab))
-            .then((buf) => {
-                buffers[name] = buf
-            })
-            .catch(() => {})
+        if (name === 'cicades') continue // critical → already loaded via preloadCicadas (on the bar)
+        loadAudioBuffer(url).then((buf) => {
+            if (buf) buffers[name] = buf
+        })
     }
 }
 

@@ -6,7 +6,7 @@ import useStore from '../stores/useStore'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
-import { startMusicTracks } from '../game/musicTracks.js'
+import { startMusicTracks, preloadMusicTracks } from '../game/musicTracks.js'
 import { preloadGameSounds } from '../game/gameSounds.js'
 import { preloadAmbientSounds } from '../game/ambientSounds.js'
 import { resumeAudio } from '../game/songAudio.js'
@@ -77,14 +77,24 @@ export default function Loader() {
         }
     }, [phase, active, percent, setPhase, debugMode])
 
-    const handleClick = () => {
+    // GO is showing (the critical assets are done) → begin the DEFERRED audio in the background: the
+    // music layers, the mini-game one-shots and the remaining ambient. These are untracked (off the
+    // loading bar), so they don't hold up GO, but they get the GO-dwell + intro + walk time to be ready
+    // before they're needed. (No-ops on a restart's second warmup — each has its own load guard.)
+    useEffect(() => {
         if (phase !== PHASES.warmup) return
-        // GO is the user gesture audio needs: kick off the three synched backing tracks (muted,
-        // looping) and decode the mini-game one-shots so they're ready when a companion sings.
-        resumeAudio()
-        startMusicTracks()
+        preloadMusicTracks()
         preloadGameSounds()
         preloadAmbientSounds()
+    }, [phase])
+
+    const handleClick = () => {
+        if (phase !== PHASES.warmup) return
+        // GO is the user gesture audio needs: resume the context and start the synched backing tracks
+        // (their buffers are already decoding from the warmup preload above; startMusicTracks falls back
+        // to decoding on the spot if GO is clicked before they finish).
+        resumeAudio()
+        startMusicTracks()
         // The bar simply fades to transparent; the camera intro starts at the same time.
         setIsExiting(true)
         setPhase(PHASES.intro)

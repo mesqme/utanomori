@@ -1,6 +1,6 @@
 // One-shot mini-game sounds (the per-character unique sounds). Loaded once into decoded
 // AudioBuffers on the shared context so they fire with no latency and can overlap.
-import { getAudioContext, getMasterGain } from './songAudio.js'
+import { getAudioContext, getMasterGain, loadAudioBuffer } from './songAudio.js'
 
 import piano01 from '../assets/audio/music/piano_01.mp3'
 import piano02 from '../assets/audio/music/piano_02.mp3'
@@ -34,13 +34,9 @@ export function preloadGameSounds() {
     for (const [track, urls] of Object.entries(SOUND_URLS)) {
         buffers[track] = new Array(urls.length).fill(null)
         urls.forEach((url, i) => {
-            fetch(url)
-                .then((r) => r.arrayBuffer())
-                .then((ab) => c.decodeAudioData(ab))
-                .then((buf) => {
-                    buffers[track][i] = buf
-                })
-                .catch(() => {})
+            loadAudioBuffer(url).then((buf) => {
+                if (buf) buffers[track][i] = buf
+            })
         })
     }
 }
