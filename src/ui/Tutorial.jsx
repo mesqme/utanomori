@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { useTexture } from '@react-three/drei'
 import './tutorial.css'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useTutorial from '../stores/useTutorial.jsx'
@@ -7,6 +8,14 @@ import { GAMEPLAY_ENTRY_DURATION } from '../game/gameConfig.js'
 import controlsImg from '../assets/textures/controls.jpg'
 import charPointerImg from '../assets/textures/char_pointer.jpg'
 import gameplayImg from '../assets/textures/gameplay.jpg'
+
+// Preload the tip images as part of the LOADING step. useTexture.preload registers them with drei's
+// default loading manager (same as the GLBs / painterly textures), so the loading bar waits for them
+// and the browser cache is warm before the first tip opens — no more network pop-in. They're shown as
+// plain DOM <img>, so these cached textures are pure cache-warmers; once every one-time tip has been
+// seen we dispose them (useTexture.clear), since the tips never reappear this session.
+const TUTORIAL_IMAGES = [controlsImg, charPointerImg, gameplayImg]
+useTexture.preload(TUTORIAL_IMAGES)
 
 // Wait for the camera to settle into the gameplay follow shot before the first frame opens.
 const INTRO_FRAME_DELAY = (GAMEPLAY_ENTRY_DURATION + 0.4) * 1000
@@ -40,6 +49,8 @@ export default function Tutorial() {
     const phase = usePhases((state) => state.phase)
     const frame = useTutorial((state) => state.frame)
     const setFrame = useTutorial((state) => state.setFrame)
+    const seenIntro = useTutorial((state) => state.seenIntro)
+    const seenSpirit = useTutorial((state) => state.seenSpirit)
     const buttonOutside = useStore((state) => state.gameUiParameters.tutorialButtonOutside)
 
     // Frames 1 → 2 open a beat after gameplay begins (once the camera has risen into place).
@@ -49,6 +60,11 @@ export default function Tutorial() {
         const timer = setTimeout(() => useTutorial.getState().showIntro(), INTRO_FRAME_DELAY)
         return () => clearTimeout(timer)
     }, [phase])
+
+    // Every one-time tip has been shown and nothing is open → free the cache-warmer textures.
+    useEffect(() => {
+        if (seenIntro && seenSpirit && frame === 0) useTexture.clear(TUTORIAL_IMAGES)
+    }, [seenIntro, seenSpirit, frame])
 
     const current = FRAMES[frame]
     if (!current) return null
