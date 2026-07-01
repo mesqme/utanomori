@@ -410,7 +410,7 @@ export default function Companions() {
 
         // Tutorial: the first time a spirit crosses into the visible circle (fully opaque), explain
         // the mini-game. showSpirit() self-guards, so it fires only once and only when idle.
-        if (distance <= getRevealRadius()) {
+        if (useStore.getState().gameUiParameters.tutorialEnabled && distance <= getRevealRadius()) {
             useTutorial.getState().showSpirit()
         }
 

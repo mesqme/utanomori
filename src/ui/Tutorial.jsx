@@ -5,6 +5,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useTutorial from '../stores/useTutorial.jsx'
 import useStore from '../stores/useStore.jsx'
 import { GAMEPLAY_ENTRY_DURATION } from '../game/gameConfig.js'
+import { DEFAULT_GAME_UI_PARAMETERS } from '../config/parameterDefaults.js'
 import controlsImg from '../assets/textures/controls.jpg'
 import charPointerImg from '../assets/textures/char_pointer.jpg'
 import gameplayImg from '../assets/textures/gameplay.jpg'
@@ -15,7 +16,9 @@ import gameplayImg from '../assets/textures/gameplay.jpg'
 // plain DOM <img>, so these cached textures are pure cache-warmers; once every one-time tip has been
 // seen we dispose them (useTexture.clear), since the tips never reappear this session.
 const TUTORIAL_IMAGES = [controlsImg, charPointerImg, gameplayImg]
-useTexture.preload(TUTORIAL_IMAGES)
+// Only warm the cache when the feature ships enabled (default off) — no point loading tip images the
+// player will never see. If you re-enable via Leva at runtime the first tip may pop-in once.
+if (DEFAULT_GAME_UI_PARAMETERS.tutorialEnabled) useTexture.preload(TUTORIAL_IMAGES)
 
 // Wait for the camera to settle into the gameplay follow shot before the first frame opens.
 const INTRO_FRAME_DELAY = (GAMEPLAY_ENTRY_DURATION + 0.4) * 1000
@@ -57,7 +60,9 @@ export default function Tutorial() {
     // showIntro() is self-guarding, so re-entering `start` on a restart never replays it.
     useEffect(() => {
         if (phase !== PHASES.start) return
-        const timer = setTimeout(() => useTutorial.getState().showIntro(), INTRO_FRAME_DELAY)
+        const timer = setTimeout(() => {
+            if (useStore.getState().gameUiParameters.tutorialEnabled) useTutorial.getState().showIntro()
+        }, INTRO_FRAME_DELAY)
         return () => clearTimeout(timer)
     }, [phase])
 

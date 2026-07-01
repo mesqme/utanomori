@@ -338,6 +338,7 @@ const LEVA_SECTION_PATHS = Object.freeze({
         'Credits buttons.creditsBtnOffset': 'creditsBtnOffset',
         'Dialogue reveal.wordStagger': 'wordStagger',
         'Dialogue reveal.wordFade': 'wordFade',
+        'Tutorial.tutorialEnabled': 'tutorialEnabled',
         'Tutorial.tutorialImageSize': 'tutorialImageSize',
         'Tutorial.tutorialImageFrame': 'tutorialImageFrame',
         'Tutorial.tutorialFrameRadius': 'tutorialFrameRadius',
@@ -709,6 +710,7 @@ export default function Controls() {
         ),
         'Tutorial': folder(
             {
+                tutorialEnabled: { value: gameUiParameters.tutorialEnabled, label: 'enabled', onChange: setParam('gameUiParameters', 'tutorialEnabled') },
                 tutorialImageSize: { value: gameUiParameters.tutorialImageSize, min: 15, max: 75, step: 1, label: 'imageSize (vh)', onChange: setParam('gameUiParameters', 'tutorialImageSize') },
                 tutorialImageFrame: { value: gameUiParameters.tutorialImageFrame, label: 'image frame', onChange: setParam('gameUiParameters', 'tutorialImageFrame') },
                 tutorialFrameRadius: { value: gameUiParameters.tutorialFrameRadius, min: 0, max: 40, step: 1, label: 'frameRadius (px)', onChange: setParam('gameUiParameters', 'tutorialFrameRadius') },

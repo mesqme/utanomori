@@ -50,7 +50,7 @@ export const CREDITS_LINES = [
     'mesq',
     ' ',
     '— Music —',
-    'Alexander Manin',
+    'Aleksander Manin',
     '\u00a0',
     '— Built with —',
     'Three.js · React Three Fiber',
@@ -63,7 +63,7 @@ export const CREDITS_LINES = [
     'through the forest.',
 ]
 
-export const CREDITS_SCROLL_DURATION = 18 // seconds for the credits to scroll past
+export const CREDITS_SCROLL_DURATION = 36 // seconds for the credits to scroll past (half speed → 2× the old 18s)
 
 // Cinematic restart: the reverse of the intro. Companions flee, the camera un-spirals up to the
 // top "hat" shot, the reveal shrinks, and the background/stars fade — then we land back in warmup.

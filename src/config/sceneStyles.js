@@ -328,6 +328,8 @@ const painteryStyle = {
         wordStagger: 90, // ms between each word fading in
         wordFade: 420, // ms each word takes to fade + rise into place
         // Tutorial tip cards (Tutorial.jsx).
+        tutorialEnabled: false, // master on/off — off = the tips are NEVER shown to the player (feature
+        //                          kept intact, just dormant). Flip on to preview / re-enable them.
         tutorialImageSize: 54, // vh → --tut-image-size: how tall the image inside the card is
         tutorialImageFrame: false, // bool → draw the border/frame around the image (off = borderless image)
         tutorialFrameRadius: 40, // px → --tut-frame-radius: the card's corner rounding
