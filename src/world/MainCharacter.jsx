@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useGLTF, useKeyboardControls, useTexture } from '@react-three/drei'
-import { forwardRef, useState, useEffect, useRef, useMemo, useCallback } from 'react'
+import { forwardRef, useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react'
 import * as THREE from 'three'
 import { gsap } from 'gsap'
 
@@ -115,6 +115,7 @@ export default function MainCharacter() {
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const seeThroughSlotRef = useRef(-1) // hero's slot in the shared character see-through buffer (grass + props)
     const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 before the game (same clock as the grain)
+    const readyFramesRef = useRef(0) // counts the first rendered frames → signals sceneReady (loader anti-blink)
     const [isMoving, setIsMoving] = useState(false)
 
     // The hero shares the character see-through buffer with the sheep, so the GRASS (and props) in
@@ -181,11 +182,16 @@ export default function MainCharacter() {
         }
     }, [characterParameters.modelScale, resetPosition])
 
-    useEffect(() => {
+    // useLayoutEffect (not useEffect): place the hero at its spawn BEFORE the first paint, so the very
+    // first rendered frame already has him under the camera (the hat shot) — never at the default origin
+    // off to the side, which showed as a blank hat for a frame when the loader lifted.
+    useLayoutEffect(() => {
         resetPosition()
     }, [resetPosition])
 
-    useEffect(() => {
+    // useLayoutEffect (before paint): set the hero's scale before the first frame draws, so he's never
+    // rendered at the raw/default GLB scale for a frame when the loader lifts.
+    useLayoutEffect(() => {
         if (!modelRef.current || scaleAnimationRef.current) return
         modelRef.current.scale.setScalar(characterParameters.modelScale)
     }, [characterParameters.modelScale])
@@ -236,6 +242,13 @@ export default function MainCharacter() {
 
     useFrame((state, delta) => {
         const safeDelta = Math.min(delta, 0.1)
+
+        // Once the hero has drawn a couple of frames, tell the loader the scene is ready so it can lift
+        // the curtain without revealing a blank/not-yet-drawn hero (this runs only after the GLBs mount).
+        if (readyFramesRef.current < 2) {
+            readyFramesRef.current += 1
+            if (readyFramesRef.current === 2) usePhases.getState().setSceneReady(true)
+        }
 
         // Painterly contrast reveals 0→full during the INTRO camera travel (same clock as the
         // texture/stars/glow reveal) — so before GO the hero's contrast is 0 and the brush "develops"
@@ -451,7 +464,11 @@ export default function MainCharacter() {
             cameraLerpSpeed = cameraRig.lerpSpeed
         }
 
-        const lerpFactor = Math.min(1, cameraLerpSpeed * safeDelta)
+        // The loading / warmup "hat" shot is STATIC — snap the camera exactly onto it (no easing) so
+        // when the loader curtain lifts there's no one-frame camera-settle blink. Easing resumes for
+        // the intro travel and gameplay follow.
+        const staticShot = phase === PHASES.loading || phase === PHASES.warmup
+        const lerpFactor = staticShot ? 1 : Math.min(1, cameraLerpSpeed * safeDelta)
         smoothedCameraPosition.lerp(cameraPosition, lerpFactor)
         smoothedCameraTarget.lerp(cameraTarget, lerpFactor)
         smoothedCircleCenter.lerp(visualPosition, lerpFactor)

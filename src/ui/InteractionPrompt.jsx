@@ -4,6 +4,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import useAudio from '../stores/useAudio.jsx'
+import useStore from '../stores/useStore.jsx'
 import { resumeAudio } from '../game/songAudio.js'
 
 export default function InteractionPrompt() {
@@ -16,6 +17,11 @@ export default function InteractionPrompt() {
     const volume = useAudio((state) => state.volume)
     const toggleMuted = useAudio((state) => state.toggleMuted)
     const setVolume = useAudio((state) => state.setVolume)
+    const highBrightness = useStore((state) => state.colorGradeParameters.highBrightnessMode)
+    const toggleBrightness = () =>
+        useStore.setState((state) => ({
+            colorGradeParameters: { ...state.colorGradeParameters, highBrightnessMode: !state.colorGradeParameters.highBrightnessMode },
+        }))
 
     const inGame = phase === PHASES.start
     // The sound control appears once there's sound to control — i.e. from GO onward (the backing tracks
@@ -112,6 +118,35 @@ export default function InteractionPrompt() {
                             title={`Volume ${Math.round(shownVolume * 100)}%`}
                         />
                     </div>
+                    <button
+                        className="sound-toggle brightness-toggle"
+                        onClick={(event) => {
+                            toggleBrightness()
+                            event.currentTarget.blur()
+                        }}
+                        aria-label={highBrightness ? 'Switch to low brightness' : 'Switch to high brightness'}
+                        title={highBrightness ? 'Brightness: normal' : 'Brightness: low (eye comfort)'}
+                    >
+                        <svg className="sound-toggle-icon" viewBox="0 0 24 24" aria-hidden="true">
+                            {highBrightness ? (
+                                <>
+                                    <circle cx="12" cy="12" r="4.2" fill="currentColor" />
+                                    <g stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                                        <line x1="12" y1="2.5" x2="12" y2="5" />
+                                        <line x1="12" y1="19" x2="12" y2="21.5" />
+                                        <line x1="2.5" y1="12" x2="5" y2="12" />
+                                        <line x1="19" y1="12" x2="21.5" y2="12" />
+                                        <line x1="5.3" y1="5.3" x2="7" y2="7" />
+                                        <line x1="17" y1="17" x2="18.7" y2="18.7" />
+                                        <line x1="5.3" y1="18.7" x2="7" y2="17" />
+                                        <line x1="17" y1="7" x2="18.7" y2="5.3" />
+                                    </g>
+                                </>
+                            ) : (
+                                <path fill="currentColor" d="M20 13.2A8 8 0 1 1 10.8 4a6.3 6.3 0 0 0 9.2 9.2z" />
+                            )}
+                        </svg>
+                    </button>
                 </div>
             )}
 

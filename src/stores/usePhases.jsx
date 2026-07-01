@@ -20,6 +20,10 @@ const usePhases = create((set) => ({
     phase: PHASES.loading,
     debugMode: false, // true = jump straight into gameplay; false = run the full cycle
     creditsShown: false, // guards against re-rolling credits after "Continue"
+    // Set true once the 3D scene has actually rendered a frame (MainCharacter's first useFrame). The
+    // loader waits for this before lifting, so the curtain never reveals a not-yet-drawn hero (blink).
+    sceneReady: false,
+    setSceneReady: (sceneReady) => set({ sceneReady }),
     setPhase: (phase) => set({ phase }),
     setDebugMode: (debugMode) => set({ debugMode }),
     setCreditsShown: (creditsShown) => set({ creditsShown }),

@@ -11,9 +11,11 @@ export const soundJourneyPalette = Object.freeze({
     grassPatchColors: ['#2294c4', '#7b64c9', '#d09a55', '#8ba45f'],
     grassPatchDebugColors: ['#2db9e8', '#a06be8', '#efb04e', '#79bd78'],
     uiPrimary: '#fff8ff',
-    loaderBackground: '#03021a',
+    // Dark navy loader curtain — matched to the graded scene background base (backgroundColor at
+    // gradient intensity 0, eyedropped from the rendered scene).
+    loaderBackground: '#010011',
     loaderHover: '#fff8ff',
-    loaderHero: '#9d1111',
+    loaderHero: '#af0a08',
     uiPanel: 'rgba(9, 8, 34, 0.42)',
     uiPanelHover: 'rgba(255, 248, 255, 0.18)',
     uiPanelActive: 'rgba(255, 248, 255, 0.34)',

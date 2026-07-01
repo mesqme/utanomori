@@ -12,12 +12,23 @@ import SharpenPass from './SharpenPass.js'
 // lives in the baked paintery texture, so there's no per-frame Kuwahara pass.
 export default function PainterlyPostProcessing() {
     const settings = useStore((state) => state.painterlyPostParameters)
+    const grade = useStore((state) => state.colorGradeParameters)
     const sharpenPass = useMemo(() => new SharpenPass(settings), [])
     const textureReveal = useRef(0)
 
+    // The active display grade = the selected preset (low = eye-safety look, high = normal display).
+    const activeGrade = useMemo(() => {
+        const hi = grade.highBrightnessMode
+        return {
+            saturation: hi ? grade.highSaturation : grade.lowSaturation,
+            warmth: hi ? grade.highWarmth : grade.lowWarmth,
+            brightness: hi ? grade.highBrightness : grade.lowBrightness,
+        }
+    }, [grade])
+
     useEffect(() => {
-        sharpenPass.update(settings)
-    }, [settings, sharpenPass])
+        sharpenPass.update({ ...settings, ...activeGrade })
+    }, [settings, activeGrade, sharpenPass])
 
     useEffect(() => () => sharpenPass.dispose(), [sharpenPass])
 
@@ -28,6 +39,7 @@ export default function PainterlyPostProcessing() {
 
         sharpenPass.update({
             ...settings,
+            ...activeGrade,
             luminanceNoise: (settings.luminanceNoise ?? 0) * reveal,
             chromaNoise: (settings.chromaNoise ?? 0) * reveal,
         })

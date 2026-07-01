@@ -6,7 +6,9 @@
     display: grid;
     place-items: center;
     font-family: 'Bebas Neue', sans-serif;
-    transition: background-color 0.16s ease;
+    /* The wrapper background fades FIRST (reveals the 3D scene), before the red disc — see loader-center.
+       (sceneReady already holds the loader up until the hero has actually drawn, so no time-delay needed.) */
+    transition: background-color 0.18s ease;
 }
 
 .loader-wrapper--exit {
@@ -79,7 +81,10 @@
     height: var(--sj-loader-size, 200px);
     border-radius: 50%;
     background-color: var(--sj-loader-hero);
-    transition: opacity 0.18s ease;
+    /* The red disc fades AFTER the wrapper background (delay = the wrapper's fade duration), so the disc
+       lingers over the centre until the scene is already revealed behind it — never exposing the dark
+       wrapper background where the hero should be (that gap was the blink). */
+    transition: opacity 0.18s ease, background-color 0.16s ease 0.18s;
     z-index: 1;
 }
 
@@ -105,29 +110,6 @@
     letter-spacing: 0.1em;
     font-stretch: condensed;
     user-select: none;
-}
-
-.loader-go-button {
-    font-size: var(--sj-loader-go-size, 52px);
-    letter-spacing: 0.04em;
-    color: var(--sj-ui-primary);
-    /* Match the speech-bubble text: normal-weight, normal-stretch Bebas (not the thin/condensed
-       loader-percent treatment), so the "GO/Start" CTA reads the same as the in-game dialogue. */
-    font-family: 'Bebas Neue', cursive;
-    font-weight: normal;
-    user-select: none;
-    pointer-events: none;
-    /* Fade in gently when GO appears (initial warmup, and after the restart curtain lifts). */
-    animation: loader-go-in 0.6s ease both;
-}
-
-@keyframes loader-go-in {
-    from {
-        opacity: 0;
-    }
-    to {
-        opacity: 1;
-    }
 }
 
 /* Gentle "better with headphones" hint, low on the loading / GO screen. */

@@ -389,6 +389,7 @@ export default function Controls() {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const colorGradeParameters = useStore((state) => state.colorGradeParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const introCameraParameters = useStore((state) => state.introCameraParameters)
     const replayIntro = useStore((state) => state.replayIntro)
@@ -2407,6 +2408,30 @@ export default function Controls() {
         lookHold: { value: treeEyesParameters.lookHold, min: 0.05, max: 0.8, step: 0.05, onChange: setParam('treeEyesParameters', 'lookHold') },
         lookAmount: { value: treeEyesParameters.lookAmount, min: 0, max: 0.15, step: 0.005, onChange: setParam('treeEyesParameters', 'lookAmount') },
         lookChance: { value: treeEyesParameters.lookChance, min: 0, max: 1, step: 0.05, onChange: setParam('treeEyesParameters', 'lookChance') },
+    })
+
+    useControls('Game.Color Grade', {
+        highBrightnessMode: {
+            value: colorGradeParameters.highBrightnessMode,
+            label: '☀ HIGH brightness',
+            onChange: setParam('colorGradeParameters', 'highBrightnessMode'),
+        },
+        'LOW (eye-safety)': folder(
+            {
+                lowSaturation: { value: colorGradeParameters.lowSaturation, min: 0, max: 2, step: 0.01, onChange: setParam('colorGradeParameters', 'lowSaturation') },
+                lowWarmth: { value: colorGradeParameters.lowWarmth, min: -0.3, max: 0.3, step: 0.005, onChange: setParam('colorGradeParameters', 'lowWarmth') },
+                lowBrightness: { value: colorGradeParameters.lowBrightness, min: 0.5, max: 1.5, step: 0.01, onChange: setParam('colorGradeParameters', 'lowBrightness') },
+            },
+            { collapsed: true }
+        ),
+        'HIGH (normal display)': folder(
+            {
+                highSaturation: { value: colorGradeParameters.highSaturation, min: 0, max: 2, step: 0.01, onChange: setParam('colorGradeParameters', 'highSaturation') },
+                highWarmth: { value: colorGradeParameters.highWarmth, min: -0.3, max: 0.3, step: 0.005, onChange: setParam('colorGradeParameters', 'highWarmth') },
+                highBrightness: { value: colorGradeParameters.highBrightness, min: 0.5, max: 1.5, step: 0.01, onChange: setParam('colorGradeParameters', 'highBrightness') },
+            },
+            { collapsed: false }
+        ),
     })
 
     useControls('Game.Camera Debug', {

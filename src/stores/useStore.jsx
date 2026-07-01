@@ -10,6 +10,7 @@ import {
     LOADER_DEBUG_VERSION,
     GAME_UI_VERSION,
     DEFAULT_CAMERA_PARAMETERS,
+    DEFAULT_COLOR_GRADE_PARAMETERS,
     DEFAULT_LOADER_DEBUG_PARAMETERS,
     DEFAULT_LANTERN_FIRE_PARAMETERS,
     DEFAULT_LANTERN_GRASS_PARAMETERS,
@@ -119,6 +120,7 @@ const createStore = () =>
              * Camera debug parameters
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+            colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS },
             loaderDebugParameters: { ...DEFAULT_LOADER_DEBUG_PARAMETERS },
             lanternFireParameters: { ...DEFAULT_LANTERN_FIRE_PARAMETERS },
             lanternGrassParameters: { ...DEFAULT_LANTERN_GRASS_PARAMETERS },
@@ -259,6 +261,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
+        colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS, ...state.colorGradeParameters },
         loaderDebugParameters: applyLoaderDebugDefaults ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS } : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },
         lanternFireParameters: { ...DEFAULT_LANTERN_FIRE_PARAMETERS, ...state.lanternFireParameters },
         lanternGrassParameters: { ...DEFAULT_LANTERN_GRASS_PARAMETERS, ...state.lanternGrassParameters },

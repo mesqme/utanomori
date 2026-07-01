@@ -9,6 +9,12 @@ uniform float chromaNoise;
 uniform float sensorNoiseScale;
 uniform float noiseSeed;
 
+// Display color grade (two presets switched on the CPU: high = the normal-brightness-display look
+// (desaturated + warmed), low = a gentler eye-comfort look). Identity (no grade) = 1 / 0 / 1.
+uniform float uSaturation;
+uniform float uWarmth;
+uniform float uBrightness;
+
 varying vec2 vUv;
 
 // Pattern-free hash (Dave Hoskins) — clean, structure-free grain.
@@ -32,6 +38,14 @@ void main() {
         vec3 sharpened = center * 5.0 - neighbors;
         color = mix(center, sharpened, strength);
     }
+
+    // Display color grade — applied before grain so the grain stays the untouched top layer. Identity
+    // (1 / 0 / 1) is a no-op. brightness scales, saturation pulls toward luma, warmth pushes red up and
+    // blue down (counteracts the too-blue / too-saturated look on a normal-brightness display).
+    color *= uBrightness;
+    float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    color = mix(vec3(luma), color, uSaturation);
+    color *= vec3(1.0 + uWarmth, 1.0, 1.0 - uWarmth);
 
     // Film grain — the final layer of the pipeline (nothing filters it afterwards).
     if (sensorNoiseEnabled == 1 && (luminanceNoise > 0.0 || chromaNoise > 0.0)) {

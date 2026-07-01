@@ -23,6 +23,9 @@ export default class SharpenPass extends Pass {
                 chromaNoise: { value: settings.chromaNoise },
                 sensorNoiseScale: { value: settings.sensorNoiseScale },
                 noiseSeed: { value: settings.noiseSeed },
+                uSaturation: { value: settings.saturation ?? 1 },
+                uWarmth: { value: settings.warmth ?? 0 },
+                uBrightness: { value: settings.brightness ?? 1 },
             },
             depthTest: false,
             depthWrite: false,
@@ -41,6 +44,9 @@ export default class SharpenPass extends Pass {
         u.chromaNoise.value = settings.chromaNoise
         u.sensorNoiseScale.value = settings.sensorNoiseScale
         u.noiseSeed.value = settings.noiseSeed
+        u.uSaturation.value = settings.saturation ?? 1
+        u.uWarmth.value = settings.warmth ?? 0
+        u.uBrightness.value = settings.brightness ?? 1
     }
 
     render(renderer, inputBuffer, outputBuffer) {

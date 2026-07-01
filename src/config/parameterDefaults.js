@@ -36,6 +36,21 @@ export const DEFAULT_CAMERA_PARAMETERS = {
     debugTargetYOffset: 0.4,
 }
 
+// Two display color-grade presets, applied in the final post pass (SharpenPass) and switched by
+// highBrightnessMode (also the in-game ☀/☾ toggle). HIGH = the normal-brightness-display look: a
+// desaturate + warm that counters the too-blue / too-saturated cast the scene takes on there. LOW =
+// a gentler eye-comfort look (further desaturated + warmer + slightly brightened). Identity (no
+// grade) = sat 1 / warmth 0 / bright 1.
+export const DEFAULT_COLOR_GRADE_PARAMETERS = {
+    highBrightnessMode: true, // default = HIGH (normal-brightness display); toggle to LOW for the eye-safety look
+    lowSaturation: 0.51,
+    lowWarmth: 0.3,
+    lowBrightness: 1.2,
+    highSaturation: 0.88, // tuned on a normal display
+    highWarmth: 0.25,
+    highBrightness: 1.0,
+}
+
 export const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     enabled: false,
     targetX: 5.71,

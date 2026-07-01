@@ -13,7 +13,6 @@ import { resumeAudio } from '../game/songAudio.js'
 import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
-const RING_TRACK_COLOR = soundJourneyPalette.uiRingTrack
 const EXIT_HOLD_MS = 700 // covers the fade-out before the loader unmounts
 const CURTAIN_IN_MS = 600 // restart: let the loading cover fade fully in before snapping to origin
 const MIN_LOAD_TIME = 3 // seconds — the loader always fills smoothly for at least this long
@@ -23,6 +22,7 @@ export default function Loader() {
     const phase = usePhases((s) => s.phase)
     const setPhase = usePhases((s) => s.setPhase)
     const debugMode = usePhases((s) => s.debugMode)
+    const sceneReady = usePhases((s) => s.sceneReady)
     const loaderDebugParameters = useStore((s) => s.loaderDebugParameters)
     const fixedSizeStyle = useLoaderFixedSizeStyle(loaderDebugParameters)
 
@@ -70,12 +70,14 @@ export default function Loader() {
         return raw
     }, [displayed])
 
-    // When loading completes: debug → straight to gameplay, otherwise show GO (warmup).
+    // When loading completes: debug → straight to gameplay, otherwise show GO (warmup). Also wait for
+    // sceneReady — the scene has actually drawn a frame — so lifting the curtain never flashes a
+    // not-yet-rendered hero (the GLBs mount only when loading finishes, so this is a real one-off gap).
     useEffect(() => {
-        if (phase === PHASES.loading && !active && percent >= 100) {
+        if (phase === PHASES.loading && !active && percent >= 100 && sceneReady) {
             setPhase(debugMode ? PHASES.start : PHASES.warmup)
         }
-    }, [phase, active, percent, setPhase, debugMode])
+    }, [phase, active, percent, sceneReady, setPhase, debugMode])
 
     // GO is showing (the critical assets are done) → begin the DEFERRED audio in the background: the
     // music layers, the mini-game one-shots and the remaining ambient. These are untracked (off the
@@ -130,17 +132,15 @@ export default function Loader() {
 
     if (!showLoading && !showStart && !showExit && !showSettle) return null
 
-    // The unfilled track is fully transparent in warmup/exit (no semi-transparent ring behind
-    // the GO — only the live 3D shows).
-    const ringTrack = showStart || showExit ? 'transparent' : RING_TRACK_COLOR
+    // No unfilled track behind the ring in any phase — only the filled progress arc shows, with
+    // transparency everywhere else (no faint full-circle band behind the bar).
     const ringStyle = {
-        background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, ${ringTrack} ${percent * 3.6}deg)`,
+        background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, transparent ${percent * 3.6}deg)`,
     }
-    const loaderStyle = {
-        ...fixedSizeStyle,
-        '--sj-loader-background': loaderDebugParameters.cssColorA,
-        '--sj-loader-hero': loaderDebugParameters.cssColorB,
-    }
+    // The loader colours come from the palette (--sj-loader-background / --sj-loader-hero via
+    // applySoundJourneyCssVariables) — single source of truth. (Previously these were overridden
+    // inline from loaderDebugParameters.cssColorA/B, which silently masked the palette colour.)
+    const loaderStyle = { ...fixedSizeStyle }
 
     return (
         <div
@@ -159,8 +159,7 @@ export default function Loader() {
                     onMouseEnter={() => setHovered(true)}
                     onMouseLeave={() => setHovered(false)}
                 >
-                    {showLoading && !showExit && <div className="loader-percent">{percent}%</div>}
-                    {showStart && !showExit && <div className="loader-go-button">GO</div>}
+                    {showLoading && !showExit && <div className="loader-percent">{percent}</div>}
                 </div>
             </div>
             {(showLoading || showStart) && !showExit && <div className="loader-headphones">🎧 Better with headphones</div>}
