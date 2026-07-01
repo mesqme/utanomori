@@ -7,6 +7,12 @@
 let ctx = null
 let master = null
 let muted = false
+let volume = 1.0 // 0..1 master level from the on-screen slider (mute overrides it to silence)
+
+// Effective master gain: silence when muted or the slider is at 0, otherwise the slider level.
+function masterTarget() {
+    return muted || volume <= 0 ? 0.0001 : volume
+}
 
 function ensureContext() {
     if (typeof window === 'undefined') return null
@@ -18,7 +24,7 @@ function ensureContext() {
         // one knob mutes the whole experience (the on-screen sound toggle). 1.0 = full (sounds carry
         // their own levels); 0 = muted.
         master = ctx.createGain()
-        master.gain.value = muted ? 0.0001 : 1.0
+        master.gain.value = masterTarget()
         master.connect(ctx.destination)
         if (ctx.state === 'suspended') {
             const resume = () => {
@@ -54,9 +60,21 @@ export function getMasterGain() {
 export function setAudioMuted(value) {
     muted = value
     const c = ensureContext()
-    if (master && c) master.gain.setTargetAtTime(value ? 0.0001 : 1.0, c.currentTime, 0.02)
+    if (master && c) master.gain.setTargetAtTime(masterTarget(), c.currentTime, 0.02)
 }
 
 export function isAudioMuted() {
     return muted
+}
+
+// Master volume level (0..1) from the on-screen slider. Applied through the same master gain, so it
+// scales EVERYTHING; a manual mute still overrides it to silence.
+export function setAudioVolume(value) {
+    volume = Math.max(0, Math.min(1, value))
+    const c = ensureContext()
+    if (master && c) master.gain.setTargetAtTime(masterTarget(), c.currentTime, 0.02)
+}
+
+export function getAudioVolume() {
+    return volume
 }

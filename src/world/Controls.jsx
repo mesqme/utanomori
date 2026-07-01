@@ -318,6 +318,12 @@ const LEVA_SECTION_PATHS = Object.freeze({
         'Corners & frame.panelRadius': 'panelRadius',
         'Corners & frame.chipRadius': 'chipRadius',
         'Corners & frame.borderWidth': 'borderWidth',
+        'Sound HUD.soundControlSize': 'soundControlSize',
+        'Sound HUD.volFrameHeight': 'volFrameHeight',
+        'Sound HUD.volSliderHeight': 'volSliderHeight',
+        'Sound HUD.volSliderTrack': 'volSliderTrack',
+        'Sound HUD.volSliderThumb': 'volSliderThumb',
+        'Sound HUD.volEmptyOpacity': 'volEmptyOpacity',
         'Speech bubble.bubblePadX': 'bubblePadX',
         'Speech bubble.bubblePadY': 'bubblePadY',
         'Countdown.countSize': 'countSize',
@@ -551,8 +557,8 @@ export default function Controls() {
         root.setProperty('--ui-scale', String(p.uiScale ?? 1.3))
         root.setProperty('--ui-size-floor', `${p.sizeFloor ?? 6.5}px`)
         root.setProperty('--ui-size-ceil', `${p.sizeCeil ?? 10.8}px`)
-        root.setProperty('--ui-radius', `${p.panelRadius ?? 14}px`)
-        root.setProperty('--ui-radius-chip', `${p.chipRadius ?? 8}px`)
+        root.setProperty('--ui-radius', vm(p.panelRadius ?? 0.93))
+        root.setProperty('--ui-radius-chip', vm(p.chipRadius ?? 0.53))
         root.setProperty('--ui-border', `${p.borderWidth ?? 2}px`)
         root.setProperty('--ui-bubble-pad-y', vm(p.bubblePadY ?? 1.7))
         root.setProperty('--ui-bubble-pad-x', vm(p.bubblePadX ?? 2.5))
@@ -579,6 +585,13 @@ export default function Controls() {
         root.setProperty('--tut-frame-radius', `${p.tutorialFrameRadius ?? 14}px`)
         root.setProperty('--tut-image-radius', `${p.tutorialImageRadius ?? 14}px`)
         root.setProperty('--tut-pad', vm(p.tutorialPadding ?? 2.0))
+        // Top-left sound HUD.
+        root.setProperty('--hud-ctrl', vm(p.soundControlSize ?? 3.8))
+        root.setProperty('--vol-frame-h', vm(p.volFrameHeight ?? 10.5))
+        root.setProperty('--vol-h', vm(p.volSliderHeight ?? 9))
+        root.setProperty('--vol-track', vm(p.volSliderTrack ?? 0.5))
+        root.setProperty('--vol-thumb', vm(p.volSliderThumb ?? 1.3))
+        root.setProperty('--vol-empty', String(p.volEmptyOpacity ?? 0.25))
     }, [gameUiParameters])
 
     useEffect(() => {
@@ -652,11 +665,22 @@ export default function Controls() {
         ),
         'Corners & frame': folder(
             {
-                panelRadius: { value: gameUiParameters.panelRadius, min: 0, max: 40, step: 1, onChange: setParam('gameUiParameters', 'panelRadius') },
-                chipRadius: { value: gameUiParameters.chipRadius, min: 0, max: 20, step: 1, onChange: setParam('gameUiParameters', 'chipRadius') },
+                panelRadius: { value: gameUiParameters.panelRadius, min: 0, max: 4, step: 0.02, label: 'panelRadius (vmin)', onChange: setParam('gameUiParameters', 'panelRadius') },
+                chipRadius: { value: gameUiParameters.chipRadius, min: 0, max: 3, step: 0.02, label: 'chipRadius (vmin)', onChange: setParam('gameUiParameters', 'chipRadius') },
                 borderWidth: { value: gameUiParameters.borderWidth, min: 0, max: 6, step: 0.5, onChange: setParam('gameUiParameters', 'borderWidth') },
             },
             { collapsed: false }
+        ),
+        'Sound HUD': folder(
+            {
+                soundControlSize: { value: gameUiParameters.soundControlSize, min: 2, max: 6, step: 0.05, label: 'button/counter size', onChange: setParam('gameUiParameters', 'soundControlSize') },
+                volFrameHeight: { value: gameUiParameters.volFrameHeight, min: 3, max: 20, step: 0.1, label: 'frame height', onChange: setParam('gameUiParameters', 'volFrameHeight') },
+                volSliderHeight: { value: gameUiParameters.volSliderHeight, min: 3, max: 18, step: 0.1, label: 'bar length', onChange: setParam('gameUiParameters', 'volSliderHeight') },
+                volSliderTrack: { value: gameUiParameters.volSliderTrack, min: 0.1, max: 2, step: 0.05, label: 'bar width', onChange: setParam('gameUiParameters', 'volSliderTrack') },
+                volSliderThumb: { value: gameUiParameters.volSliderThumb, min: 0.4, max: 3, step: 0.05, label: 'thumb size', onChange: setParam('gameUiParameters', 'volSliderThumb') },
+                volEmptyOpacity: { value: gameUiParameters.volEmptyOpacity, min: 0, max: 1, step: 0.01, label: 'empty opacity', onChange: setParam('gameUiParameters', 'volEmptyOpacity') },
+            },
+            { collapsed: true }
         ),
         'Speech bubble': folder(
             {

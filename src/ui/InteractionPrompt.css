@@ -1,17 +1,28 @@
-/* Top-left HUD row: the melody counter + the sound on/off toggle, side by side. */
+/* Top-left HUD: sound button (always shown) with the vertical volume slider below it, and — during
+   gameplay — the melody counter to the button's right. A column so the slider hangs under the button. */
 .top-left-hud {
     position: absolute;
     top: 20px;
     left: 20px;
     display: flex;
-    align-items: stretch;
-    gap: calc(0.8 * var(--ui-vmin) * var(--ui-scale));
+    flex-direction: column;
+    align-items: flex-start;
+    gap: calc(0.7 * var(--ui-vmin) * var(--ui-scale));
     z-index: 100;
     pointer-events: none;
 }
 
+/* Button + counter, side by side, matched height. */
+.hud-top-row {
+    display: flex;
+    align-items: stretch;
+    gap: calc(0.8 * var(--ui-vmin) * var(--ui-scale));
+}
+
 .party-counter {
-    padding: calc(0.7 * var(--ui-vmin) * var(--ui-scale)) calc(1.6 * var(--ui-vmin) * var(--ui-scale));
+    box-sizing: border-box;
+    height: var(--hud-ctrl); /* same height as the square sound button → the two line up */
+    padding: 0 calc(1.6 * var(--ui-vmin) * var(--ui-scale));
     border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
@@ -24,22 +35,102 @@
     align-items: center;
 }
 
-/* Sound on/off button — same panel skin as the counter. */
+/* Sound on/off button — same panel skin as the counter. Square, its side = the counter height
+   (--hud-ctrl) so the two align, and the same width as the slider panel below it. */
 .sound-toggle {
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 calc(0.9 * var(--ui-vmin) * var(--ui-scale));
+    width: var(--hud-ctrl);
+    height: var(--hud-ctrl);
+    padding: 0;
     border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
     color: var(--sj-ui-primary);
-    font-size: calc(1.8 * var(--ui-vmin) * var(--ui-scale));
     line-height: 1;
     cursor: pointer;
     pointer-events: auto;
     user-select: none;
     transition: background 0.12s, transform 0.12s;
+}
+
+/* Vertical volume slider, in a matching panel directly under the button (same width). The slider is a
+   horizontal range rotated -90° (predictable to style), absolutely centred so its rotation doesn't
+   affect the panel's layout. */
+.volume-slider-wrap {
+    box-sizing: border-box;
+    position: relative;
+    width: var(--hud-ctrl);
+    height: var(--vol-frame-h); /* frame height — independent of the bar length inside */
+    border: var(--ui-border) solid var(--sj-ui-primary);
+    border-radius: var(--ui-radius);
+    background: var(--sj-ui-panel);
+    pointer-events: auto;
+}
+
+.volume-slider {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--vol-h); /* pre-rotation LENGTH → becomes the vertical extent */
+    height: var(--vol-thumb); /* pre-rotation thickness → enough to hold the thumb */
+    transform: translate(-50%, -50%) rotate(-90deg); /* min→bottom, max→top */
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent; /* no coloured tap flash on mobile */
+}
+
+.volume-slider:focus {
+    outline: none;
+}
+
+/* WebKit/Blink: no native "progress" element, so fake the fill with a gradient split at --vol
+   (0..1, set from React). Filled = solid white; the empty part is the same bar at --vol-empty opacity. */
+.volume-slider::-webkit-slider-runnable-track {
+    height: var(--vol-track);
+    border-radius: 999px;
+    background: linear-gradient(
+        to right,
+        var(--sj-ui-primary) 0 calc(var(--vol, 1) * 100%),
+        color-mix(in srgb, var(--sj-ui-primary) calc(var(--vol-empty, 0.25) * 100%), transparent) calc(var(--vol, 1) * 100%) 100%
+    );
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: var(--vol-thumb);
+    height: var(--vol-thumb);
+    margin-top: calc((var(--vol-track) - var(--vol-thumb)) / 2); /* centre the thumb on the thin bar */
+    border: none;
+    border-radius: 999px;
+    background: var(--sj-ui-primary); /* white thumb */
+}
+
+/* Firefox: native filled "progress" + semi-transparent track give the same look. */
+.volume-slider::-moz-range-track {
+    height: var(--vol-track);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--sj-ui-primary) calc(var(--vol-empty, 0.25) * 100%), transparent);
+}
+
+.volume-slider::-moz-range-progress {
+    height: var(--vol-track);
+    border-radius: 999px;
+    background: var(--sj-ui-primary);
+}
+
+.volume-slider::-moz-range-thumb {
+    width: var(--vol-thumb);
+    height: var(--vol-thumb);
+    border: none;
+    border-radius: 999px;
+    background: var(--sj-ui-primary);
 }
 
 .sound-toggle-icon {

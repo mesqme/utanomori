@@ -22,8 +22,10 @@
     --ui-size-floor: 6.5px;
     --ui-size-ceil: 10.8px;
     --ui-vmin: clamp(var(--ui-size-floor), 1vmin, var(--ui-size-ceil));
-    --ui-radius: 14px; /* panels, bubbles, banners, buttons, counter, round */
-    --ui-radius-chip: 8px; /* small key chips: E, ESC, WASD */
+    /* Corners are ALSO sized in vmin·scale (like the boxes) so they keep the same proportion to the
+       frame at any window size — fixed-px corners looked oversized on small windows. */
+    --ui-radius: calc(0.93 * var(--ui-vmin) * var(--ui-scale)); /* panels, bubbles, buttons, counter (≈14px @ Full-HD) */
+    --ui-radius-chip: calc(0.53 * var(--ui-vmin) * var(--ui-scale)); /* small key chips: E, ESC, WASD (≈8px @ Full-HD) */
     --ui-border: 2px; /* panel border thickness */
     /* Box dimensions are sized in `vmin * --ui-scale` (just like the text) so the WHOLE UI keeps the
        same proportion at any resolution — fixed-px boxes were what drifted out of sync on resize.
@@ -48,6 +50,13 @@
     --credits-btn-pad-y: calc(1.2 * var(--ui-vmin) * var(--ui-scale));
     --credits-btn-pad-x: calc(4 * var(--ui-vmin) * var(--ui-scale));
     --credits-btn-offset: 9%;
+    /* Top-left sound HUD (button + vertical volume slider). All vmin·scale so they track the window. */
+    --hud-ctrl: calc(3.8 * var(--ui-vmin) * var(--ui-scale)); /* sound button square = counter height = slider panel width */
+    --vol-frame-h: calc(12 * var(--ui-vmin) * var(--ui-scale)); /* slider panel/frame height */
+    --vol-h: calc(8.8 * var(--ui-vmin) * var(--ui-scale)); /* volume BAR length inside the frame */
+    --vol-track: calc(0.5 * var(--ui-vmin) * var(--ui-scale)); /* volume bar thickness */
+    --vol-thumb: calc(1 * var(--ui-vmin) * var(--ui-scale)); /* volume thumb size */
+    --vol-empty: 0.21; /* opacity of the unfilled part of the bar */
 }
 
 html,

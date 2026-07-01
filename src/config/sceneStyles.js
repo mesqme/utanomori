@@ -300,9 +300,10 @@ const painteryStyle = {
         bubbleWidth: 1500, // max width (px) of the speech bubble
         bubblePadY: 1.7, // vmin·scale → --ui-bubble-pad-y: speech-bubble vertical padding
         bubblePadX: 2.5, // vmin·scale → --ui-bubble-pad-x: speech-bubble horizontal padding
-        // Unified corner rounding (the "complete mess" of mixed radii is gone — two tokens now):
-        panelRadius: 14, // px → --ui-radius: panels, bubbles, banners, buttons, counter, round
-        chipRadius: 8, // px → --ui-radius-chip: the little key chips (E, ESC, WASD)
+        // Unified corner rounding. Now in vmin·scale (like the boxes) so the corners keep the SAME
+        // proportion to the frame at any window size — fixed px corners looked oversized on small windows.
+        panelRadius: 0.93, // vmin·scale → --ui-radius: panels, bubbles, banners, buttons, counter (≈14px @ Full-HD)
+        chipRadius: 0.53, // vmin·scale → --ui-radius-chip: the little key chips (E, ESC, WASD) (≈8px @ Full-HD)
         borderWidth: 2, // px → --ui-border: panel border thickness
         // 3·2·1 countdown — now a square frame. Sized in vmin·scale so it tracks the page like text.
         countSize: 3.2, // vmin·scale → --ui-count-size: the digit font-size
@@ -327,6 +328,13 @@ const painteryStyle = {
         // Dialogue word-by-word reveal.
         wordStagger: 90, // ms between each word fading in
         wordFade: 420, // ms each word takes to fade + rise into place
+        // Top-left sound HUD (InteractionPrompt): sizes in vmin·scale so they track the window.
+        soundControlSize: 3.8, // --hud-ctrl: the sound button's square side = the melody counter's height = the slider panel width
+        volFrameHeight: 12.0, // --vol-frame-h: height of the slider PANEL/frame (independent of the bar length below)
+        volSliderHeight: 8.8, // --vol-h: length of the vertical volume BAR inside the frame
+        volSliderTrack: 0.5, // --vol-track: thickness of the volume bar (the filled/empty track)
+        volSliderThumb: 1.0, // --vol-thumb: size of the draggable thumb
+        volEmptyOpacity: 0.21, // --vol-empty: opacity (0..1) of the UNfilled part of the bar (0 = invisible, 1 = solid)
         // Tutorial tip cards (Tutorial.jsx).
         tutorialEnabled: false, // master on/off — off = the tips are NEVER shown to the player (feature
         //                          kept intact, just dormant). Flip on to preview / re-enable them.
