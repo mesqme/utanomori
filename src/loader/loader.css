@@ -73,6 +73,22 @@
     display: none;
 }
 
+/* Rounded end-caps for the progress arc — dots (⌀ = ring width) centred on the ring centreline;
+   the inline transform (Loader.jsx) rotates each to the arc's start / current-end angle. */
+.loader-ring-cap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--sj-loader-ring-edge, 11px);
+    height: var(--sj-loader-ring-edge, 11px);
+    margin: calc(-0.5 * var(--sj-loader-ring-edge, 11px));
+    border-radius: 50%;
+    background-color: var(--sj-ui-primary);
+    transform-origin: center;
+    z-index: 3;
+    pointer-events: none;
+}
+
 .loader-center {
     position: absolute;
     display: grid;

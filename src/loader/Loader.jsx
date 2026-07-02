@@ -142,6 +142,13 @@ export default function Loader() {
     // inline from loaderDebugParameters.cssColorA/B, which silently masked the palette colour.)
     const loaderStyle = { ...fixedSizeStyle }
 
+    // Rounded caps for the progress arc: a dot on the arc's SOLID band (⌀ = ring-edge, i.e. the band
+    // minus its ~1px feathered inner edge, so the cap sits flush and doesn't read thicker) at the arc's
+    // start (-90°, matching the conic `from`) and its moving end (-90° + percent·3.6°).
+    const capStyle = (angleDeg) => ({
+        transform: `rotate(${angleDeg}deg) translateY(calc((var(--sj-loader-ring-edge, 11px) - var(--sj-loader-size, 200px)) / 2))`,
+    })
+
     return (
         <div
             className={`loader-wrapper ${showStart ? 'loader-wrapper--warmup' : ''} ${showExit ? 'loader-wrapper--exit' : ''} ${
@@ -153,6 +160,12 @@ export default function Loader() {
                 <div className="loader-ring" style={ringStyle}>
                     <div className="loader-ring-inner" />
                 </div>
+                {showLoading && !showExit && (
+                    <>
+                        <div className="loader-ring-cap" style={capStyle(-90)} />
+                        <div className="loader-ring-cap" style={capStyle(-90 + percent * 3.6)} />
+                    </>
+                )}
                 <div
                     className={`loader-center ${showStart ? 'loader-center--clickable' : ''}`}
                     onClick={handleClick}
