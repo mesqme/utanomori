@@ -5,10 +5,12 @@
 // pure rise, no extra turn. The hero faces this side (see MainCharacter menu-facing) so the
 // orbit lands looking at its face.
 export const CAMERA_TOP_SHOT = { angle: 0, distance: 2, height: 15.1, targetYOffset: 0.4 }
-export const CAMERA_FRONT_SHOT = { angle: Math.PI * 2, distance: 11.5, height: 2.3, targetYOffset: 0.4 }
-// Orbit equivalent of the gameplay follow shot (offset 0,10,12 / target y 0.25). Same angle
-// as the dialogue shot, so the hand-off to gameplay is just a rise, not a turn.
-export const CAMERA_FOLLOW_ORBIT = { angle: Math.PI * 2, distance: 12, height: 10, targetYOffset: 0.25 }
+// Intro dialogue shot. distance/height come live from cameraParameters (front*); the angle/target here.
+export const CAMERA_FRONT_SHOT = { angle: Math.PI * 2, distance: 14.2, height: 4.3, targetYOffset: 0.4 }
+// Orbit equivalent of the gameplay follow shot (offset 0,11.4,14.6 / target y 0.25 — distance/height
+// come live from cameraParameters). Same angle as the dialogue shot, so the hand-off to gameplay
+// is just a rise, not a turn.
+export const CAMERA_FOLLOW_ORBIT = { angle: Math.PI * 2, distance: 14.6, height: 11.4, targetYOffset: 0.25 }
 export const CAMERA_BASE_FOV = 45
 export const CAMERA_REFERENCE_HEIGHT = 1080
 

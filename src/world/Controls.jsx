@@ -873,11 +873,8 @@ export default function Controls() {
         scaleInDuration: { value: musicStoneParameters.scaleInDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'scaleInDuration') },
         scaleOutDuration: { value: musicStoneParameters.scaleOutDuration, min: 0.1, max: 2, step: 0.05, onChange: setParam('musicStoneParameters', 'scaleOutDuration') },
         grassFade: { value: musicStoneParameters.grassFade, min: 0, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'grassFade') },
-        cameraHeight: { value: musicStoneParameters.cameraHeight, min: 3, max: 30, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraHeight') },
-        cameraDistance: { value: musicStoneParameters.cameraDistance, min: 0, max: 20, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraDistance') },
+        // cameraHeight/cameraDistance + dialogueCamera* live in Game → Camera Distance (all camera distances in one place).
         cameraLerp: { value: musicStoneParameters.cameraLerp, min: 0.5, max: 10, step: 0.1, onChange: setParam('musicStoneParameters', 'cameraLerp') },
-        dialogueCameraHeight: { value: musicStoneParameters.dialogueCameraHeight, min: 0.5, max: 12, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueCameraHeight') },
-        dialogueCameraDistance: { value: musicStoneParameters.dialogueCameraDistance, min: 2, max: 18, step: 0.5, onChange: setParam('musicStoneParameters', 'dialogueCameraDistance') },
         dialogueTargetY: { value: musicStoneParameters.dialogueTargetY, min: 0, max: 4, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueTargetY') },
         pointerColor: { value: musicStoneParameters.pointerColor, onChange: setParam('musicStoneParameters', 'pointerColor') },
         pointerRadius: { value: musicStoneParameters.pointerRadius, min: 0, max: 6, step: 0.05, onChange: setParam('musicStoneParameters', 'pointerRadius') },
@@ -2432,6 +2429,73 @@ export default function Controls() {
             },
             { collapsed: false }
         ),
+    })
+
+    useControls('Game.Camera Distance', {
+        followDistance: {
+            value: cameraParameters.followDistance,
+            label: 'walk distance',
+            min: 6,
+            max: 32,
+            step: 0.1,
+            onChange: setParam('cameraParameters', 'followDistance'),
+        },
+        followHeight: {
+            value: cameraParameters.followHeight,
+            label: 'walk height',
+            min: 4,
+            max: 28,
+            step: 0.1,
+            onChange: setParam('cameraParameters', 'followHeight'),
+        },
+        frontDistance: {
+            value: cameraParameters.frontDistance,
+            label: 'intro-talk dist',
+            min: 6,
+            max: 32,
+            step: 0.1,
+            onChange: setParam('cameraParameters', 'frontDistance'),
+        },
+        frontHeight: {
+            value: cameraParameters.frontHeight,
+            label: 'intro-talk height',
+            min: 0.5,
+            max: 16,
+            step: 0.1,
+            onChange: setParam('cameraParameters', 'frontHeight'),
+        },
+        minigameDistance: {
+            value: musicStoneParameters.cameraDistance,
+            label: 'minigame dist',
+            min: 4,
+            max: 30,
+            step: 0.5,
+            onChange: setParam('musicStoneParameters', 'cameraDistance'),
+        },
+        minigameHeight: {
+            value: musicStoneParameters.cameraHeight,
+            label: 'minigame height',
+            min: 2,
+            max: 30,
+            step: 0.5,
+            onChange: setParam('musicStoneParameters', 'cameraHeight'),
+        },
+        talkDistance: {
+            value: musicStoneParameters.dialogueCameraDistance,
+            label: 'char-talk dist',
+            min: 2,
+            max: 20,
+            step: 0.5,
+            onChange: setParam('musicStoneParameters', 'dialogueCameraDistance'),
+        },
+        talkHeight: {
+            value: musicStoneParameters.dialogueCameraHeight,
+            label: 'char-talk height',
+            min: 0.5,
+            max: 14,
+            step: 0.1,
+            onChange: setParam('musicStoneParameters', 'dialogueCameraHeight'),
+        },
     })
 
     useControls('Game.Camera Debug', {

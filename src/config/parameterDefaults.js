@@ -34,6 +34,14 @@ export const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbitDistance: 18.9,
     debugOrbitHeight: 15.1,
     debugTargetYOffset: 0.4,
+    // Gameplay "walking" follow offset behind + above the hero. The intro→gameplay hand-off orbit
+    // (CAMERA_FOLLOW_ORBIT) is driven off these too, so they stay matched.
+    followDistance: 14.6,
+    followHeight: 11.4,
+    // The intro dialogue shot (CAMERA_FRONT_SHOT) where the intro travel lands + holds for the
+    // opening speech.
+    frontDistance: 14.2,
+    frontHeight: 4.3,
 }
 
 // Two display color-grade presets, applied in the final post pass (SharpenPass) and switched by
@@ -185,12 +193,12 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     scaleOutDuration: 0.4, // seconds for the stones to sink on teardown
     grassFade: 0.6, // grass fade band beyond each stone's radius (currently dormant)
     cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
-    cameraDistance: 13, // distance back from the companion
+    cameraDistance: 15, // distance back from the companion
     cameraLerp: 3.6, // how smoothly the camera moves / returns
     // "Dialogue camera": a closer framing on the music character used for any interaction speech
     // (the prompt + the fail speech). Shares the stones azimuth so prompt↔stones is a clean pull.
-    dialogueCameraHeight: 2.6, // camera height for the close-up speech framing
-    dialogueCameraDistance: 7, // distance back from the character during speech
+    dialogueCameraHeight: 5.1, // camera height for the close-up speech framing
+    dialogueCameraDistance: 8.5, // distance back from the character during speech
     dialogueTargetY: 1.2, // look-at height (the character's head) during speech
     // Pointer (the shared arrow): during playback it snaps to the singing note; during input it
     // follows the mouse freely around the arc and snaps onto a stone only while its proxy is hovered.

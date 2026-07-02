@@ -34,6 +34,8 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
     cameraRig.lerpSpeed = 9
     applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
 
+    // Live front (dialogue) shot distance/height from the store (CAMERA_FRONT_SHOT holds angle/target).
+    const cam = useStore.getState().cameraParameters
     const startAngle = cameraRig.angle
     const baseHeight = loaderCameraHeight
     const spiralStart = params.riseDuration
@@ -67,7 +69,7 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
         cameraRig,
         {
             angle: startAngle + Math.PI * 2,
-            height: CAMERA_FRONT_SHOT.height,
+            height: cam.frontHeight,
             targetYOffset: CAMERA_FRONT_SHOT.targetYOffset,
             duration: params.spiralDuration,
             ease: INTRO_TRAVEL_EASE,
@@ -82,7 +84,7 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
     )
     timeline.to(
         cameraRig,
-        { distance: CAMERA_FRONT_SHOT.distance, duration: params.spiralDuration * 0.5, ease: 'power2.inOut' },
+        { distance: cam.frontDistance, duration: params.spiralDuration * 0.5, ease: 'power2.inOut' },
         spiralStart + params.spiralDuration * 0.5
     )
 
@@ -101,7 +103,9 @@ function runRestartTravel({ introTweenRef, loaderCameraHeight }) {
     cameraRig.centerX = null
     cameraRig.centerZ = null
     cameraRig.lerpSpeed = 9
-    applyShot(CAMERA_FOLLOW_ORBIT) // start matching the follow view, then lift away
+    // Start matching the (live) follow view, then lift away — keeps the teardown seamless with walking.
+    const cam = useStore.getState().cameraParameters
+    applyShot({ ...CAMERA_FOLLOW_ORBIT, distance: cam.followDistance, height: cam.followHeight })
 
     introTweenRef.current = gsap.to(cameraRig, {
         angle: CAMERA_FOLLOW_ORBIT.angle - Math.PI * 2, // un-spin 360° (reverse of the intro)
@@ -126,6 +130,8 @@ export default function GameDirector() {
     const found = useCompanions((state) => state.found)
     const loaderCameraHeight = useStore((state) => state.loaderDebugParameters.cameraHeight)
     const introReplayNonce = useStore((state) => state.introReplayNonce)
+    const frontDistance = useStore((state) => state.cameraParameters.frontDistance)
+    const frontHeight = useStore((state) => state.cameraParameters.frontHeight)
     const setPhase = usePhases((state) => state.setPhase)
     const setCreditsShown = usePhases((state) => state.setCreditsShown)
     const introTweenRef = useRef(null)
@@ -164,10 +170,11 @@ export default function GameDirector() {
                 // rise/pull-back up to the over-the-shoulder view — no orbit around the hero.
                 cameraRig.mode = 'orbit'
                 cameraRig.lerpSpeed = 14
+                const cam = useStore.getState().cameraParameters
                 introTweenRef.current = gsap.to(cameraRig, {
                     angle: CAMERA_FOLLOW_ORBIT.angle,
-                    distance: CAMERA_FOLLOW_ORBIT.distance,
-                    height: CAMERA_FOLLOW_ORBIT.height,
+                    distance: cam.followDistance,
+                    height: cam.followHeight,
                     targetYOffset: CAMERA_FOLLOW_ORBIT.targetYOffset,
                     duration: GAMEPLAY_ENTRY_DURATION,
                     ease: 'power2.inOut',
@@ -212,6 +219,16 @@ export default function GameDirector() {
             clearTimeout(restartTimerRef.current)
         }
     }, [phase, loaderCameraHeight, setPhase])
+
+    // Live-preview the intro DIALOGUE shot: once the travel has landed (still in the intro phase, its
+    // tween finished) the frontDistance/frontHeight sliders move the held camera without a replay. The
+    // travel itself still reads the values once at its start; this only nudges the static hold after.
+    useEffect(() => {
+        if (phase === PHASES.intro && !introTweenRef.current) {
+            cameraRig.distance = frontDistance
+            cameraRig.height = frontHeight
+        }
+    }, [phase, frontDistance, frontHeight])
 
     // "Redo the animation" (Leva) → replay the intro travel live from the current state.
     useEffect(() => {

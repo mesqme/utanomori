@@ -34,7 +34,6 @@ import { characterHead } from './utils/characterHead.js'
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT
 const CHARACTER_TURN_SPEED = 12.0
-const CAMERA_POSITION_OFFSET = new THREE.Vector3(0, 10, 12)
 const CAMERA_TARGET_OFFSET = new THREE.Vector3(0, 0.25, 0)
 const CAMERA_LERP_SPEED = 5.0
 const CHARACTER_INITIAL_XZ = new THREE.Vector2(0, 0)
@@ -456,8 +455,12 @@ export default function MainCharacter() {
             cameraTarget.set(targetX, visualPosition.y + cameraRig.targetYOffset, targetZ)
             cameraLerpSpeed = cameraRig.lerpSpeed
         } else {
-            cameraPosition.copy(visualPosition)
-            cameraPosition.add(CAMERA_POSITION_OFFSET)
+            // Gameplay follow ("walking"): offset behind + above the hero, live from cameraParameters.
+            cameraPosition.set(
+                visualPosition.x,
+                visualPosition.y + cameraParameters.followHeight,
+                visualPosition.z + cameraParameters.followDistance
+            )
 
             cameraTarget.copy(visualPosition)
             cameraTarget.add(CAMERA_TARGET_OFFSET)
