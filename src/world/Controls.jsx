@@ -4,6 +4,7 @@ import { button, folder, levaStore, useControls } from 'leva'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
+import { useIsMobile } from '../config/mobile.js'
 import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
 import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
@@ -389,6 +390,11 @@ export default function Controls() {
     const characterParameters = useStore((state) => state.characterParameters)
     const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
+    const joystickParameters = useStore((state) => state.joystickParameters)
+    const mobileCameraParameters = useStore((state) => state.mobileCameraParameters)
+    const mobileStoneParameters = useStore((state) => state.mobileStoneParameters)
+    const mobileUiParameters = useStore((state) => state.mobileUiParameters)
+    const mobile = useIsMobile()
     const colorGradeParameters = useStore((state) => state.colorGradeParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const introCameraParameters = useStore((state) => state.introCameraParameters)
@@ -555,9 +561,14 @@ export default function Controls() {
         // Sizes route through --ui-vmin (a floored vmin) so they re-evaluate live when --ui-scale or the
         // floor change, and never shrink past the floor at extreme aspect ratios.
         const vm = (n) => `calc(${n} * var(--ui-vmin) * var(--ui-scale))`
-        root.setProperty('--ui-scale', String(p.uiScale ?? 1.3))
-        root.setProperty('--ui-size-floor', `${p.sizeFloor ?? 6.5}px`)
-        root.setProperty('--ui-size-ceil', `${p.sizeCeil ?? 10.8}px`)
+        // Mobile bumps the whole DOM UI up (bigger touch targets), tunable via mobileUi.uiScale.
+        root.setProperty('--ui-scale', String(mobile ? mobileUiParameters.uiScale : p.uiScale ?? 1.3))
+        // Speech-bubble max width: fixed on desktop, but on mobile it scales with the UI + caps to the
+        // viewport so it doesn't overflow a narrow phone (the desktop 460px would).
+        root.setProperty('--dlg-width', mobile ? 'min(92vw, calc(30 * var(--ui-vmin) * var(--ui-scale)))' : '460px')
+        // Mobile uses its own floor/ceil (the desktop floor is too tall for a phone's small vmin).
+        root.setProperty('--ui-size-floor', `${mobile ? mobileUiParameters.sizeFloor : p.sizeFloor ?? 6.5}px`)
+        root.setProperty('--ui-size-ceil', `${mobile ? mobileUiParameters.sizeCeil : p.sizeCeil ?? 10.8}px`)
         root.setProperty('--ui-radius', vm(p.panelRadius ?? 0.93))
         root.setProperty('--ui-radius-chip', vm(p.chipRadius ?? 0.53))
         root.setProperty('--ui-border', `${p.borderWidth ?? 2}px`)
@@ -593,7 +604,20 @@ export default function Controls() {
         root.setProperty('--vol-track', vm(p.volSliderTrack ?? 0.5))
         root.setProperty('--vol-thumb', vm(p.volSliderThumb ?? 1.3))
         root.setProperty('--vol-empty', String(p.volEmptyOpacity ?? 0.25))
-    }, [gameUiParameters])
+        // Height the bottom-centre PORTRAIT joystick occupies (margin + stick + a gap) — bottom-centre
+        // UI (the "Talk to…" prompt) sits above this in portrait so they never overlap.
+        root.setProperty('--joy-clearance', `${(joystickParameters.marginY ?? 40) + (joystickParameters.size ?? 130) + 24}px`)
+        // Portrait-only touch UI positions (consumed inside `@media (orientation:portrait) and (pointer:coarse)`;
+        // inert on desktop). "Talk to…" prompt centre + the "Round n/3" banner's bottom offset.
+        root.setProperty('--prompt-x', `${mobileUiParameters.promptPortraitX ?? 50}%`)
+        root.setProperty('--prompt-y', `${mobileUiParameters.promptPortraitY ?? 50}%`)
+        root.setProperty('--round-y', `${mobileUiParameters.roundPortraitY ?? 16}%`)
+        // Landscape-only intro tuning (consumed in `@media (orientation:landscape) and (pointer:coarse)`).
+        root.setProperty('--dlg-width-landscape', `${mobileUiParameters.bubbleWidthLandscape ?? 560}px`)
+        root.setProperty('--name-top-landscape', `${mobileUiParameters.nameTopLandscape ?? 7}%`)
+        root.setProperty('--dlg-bottom-landscape', `${mobileUiParameters.bubbleBottomLandscape ?? 12}%`)
+        root.setProperty('--dlg-start-offset-landscape', `${mobileUiParameters.startOffsetLandscape ?? 0}px`)
+    }, [gameUiParameters, mobile, mobileUiParameters, joystickParameters])
 
     useEffect(() => {
         const params = defaultSceneStyle.seeThroughParameters
@@ -654,7 +678,7 @@ export default function Controls() {
     // The whole in-game UI skin (SpeechBubble + InteractionPrompt + SongGame HUD + key chips). Each
     // value is written to a CSS custom property on :root (see the effect below) so the DOM UI restyles
     // live. Toggle previewUI to splay every overlay on screen at once while dialing these in.
-    useControls('Game.Game UI', {
+    useControls('Desktop.UI', {
         'Text & scale': folder(
             {
                 uiScale: { value: gameUiParameters.uiScale, min: 0.5, max: 3, step: 0.05, onChange: setParam('gameUiParameters', 'uiScale') },
@@ -2431,7 +2455,65 @@ export default function Controls() {
         ),
     })
 
-    useControls('Game.Camera Distance', {
+    useControls('Mobile.UI', {
+        uiScale: { value: mobileUiParameters.uiScale, min: 0.5, max: 4, step: 0.05, onChange: setParam('mobileUiParameters', 'uiScale') },
+        sizeFloor: { value: mobileUiParameters.sizeFloor, min: 0, max: 12, step: 0.1, onChange: setParam('mobileUiParameters', 'sizeFloor') },
+        sizeCeil: { value: mobileUiParameters.sizeCeil, min: 4, max: 24, step: 0.1, onChange: setParam('mobileUiParameters', 'sizeCeil') },
+        promptPortraitX: { value: mobileUiParameters.promptPortraitX, min: 0, max: 100, step: 1, label: 'talk X (%)', onChange: setParam('mobileUiParameters', 'promptPortraitX') },
+        promptPortraitY: { value: mobileUiParameters.promptPortraitY, min: 0, max: 100, step: 1, label: 'talk Y (%)', onChange: setParam('mobileUiParameters', 'promptPortraitY') },
+        roundPortraitY: { value: mobileUiParameters.roundPortraitY, min: 0, max: 100, step: 1, label: 'round bottom (%)', onChange: setParam('mobileUiParameters', 'roundPortraitY') },
+        bubbleWidthLandscape: { value: mobileUiParameters.bubbleWidthLandscape, min: 200, max: 1600, step: 10, label: 'bubble W landscape', onChange: setParam('mobileUiParameters', 'bubbleWidthLandscape') },
+        nameTopLandscape: { value: mobileUiParameters.nameTopLandscape, min: 0, max: 45, step: 1, label: 'name top landscape (%)', onChange: setParam('mobileUiParameters', 'nameTopLandscape') },
+        bubbleBottomLandscape: { value: mobileUiParameters.bubbleBottomLandscape, min: 0, max: 80, step: 1, label: 'bubble bottom L (%)', onChange: setParam('mobileUiParameters', 'bubbleBottomLandscape') },
+        startOffsetLandscape: { value: mobileUiParameters.startOffsetLandscape, min: -200, max: 300, step: 2, label: 'start offset L (px)', onChange: setParam('mobileUiParameters', 'startOffsetLandscape') },
+    })
+
+    useControls('Mobile.Loader', {
+        loaderRadius: { value: mobileUiParameters.loaderRadius, min: 20, max: 160, step: 1, onChange: setParam('mobileUiParameters', 'loaderRadius') },
+        loaderRingWidth: { value: mobileUiParameters.loaderRingWidth, min: 2, max: 30, step: 0.5, onChange: setParam('mobileUiParameters', 'loaderRingWidth') },
+        loaderCameraHeight: { value: mobileUiParameters.loaderCameraHeight, min: 10, max: 80, step: 0.5, onChange: setParam('mobileUiParameters', 'loaderCameraHeight') },
+        loaderTargetX: { value: mobileUiParameters.loaderTargetX, min: -10, max: 20, step: 0.01, onChange: setParam('mobileUiParameters', 'loaderTargetX') },
+        loaderTargetZ: { value: mobileUiParameters.loaderTargetZ, min: -10, max: 10, step: 0.01, onChange: setParam('mobileUiParameters', 'loaderTargetZ') },
+    })
+
+    useControls('Mobile.Stones', {
+        lineWidth: { value: mobileStoneParameters.lineWidth, min: 1, max: 12, step: 0.1, onChange: setParam('mobileStoneParameters', 'lineWidth') },
+        lineHeight: { value: mobileStoneParameters.lineHeight, min: 0, max: 8, step: 0.1, onChange: setParam('mobileStoneParameters', 'lineHeight') },
+        scale: { value: mobileStoneParameters.scale, min: 0.1, max: 2, step: 0.02, onChange: setParam('mobileStoneParameters', 'scale') },
+        arrowDrop: { value: mobileStoneParameters.arrowDrop, min: 0, max: 6, step: 0.05, onChange: setParam('mobileStoneParameters', 'arrowDrop') },
+        colGap: { value: mobileStoneParameters.colGap, label: 'grid col gap', min: 0.5, max: 6, step: 0.1, onChange: setParam('mobileStoneParameters', 'colGap') },
+        rowGap: { value: mobileStoneParameters.rowGap, label: 'grid row gap', min: 0.5, max: 6, step: 0.1, onChange: setParam('mobileStoneParameters', 'rowGap') },
+        gridHeight: { value: mobileStoneParameters.gridHeight, label: 'grid height', min: 0, max: 8, step: 0.1, onChange: setParam('mobileStoneParameters', 'gridHeight') },
+        gridScale: { value: mobileStoneParameters.gridScale, label: 'grid scale', min: 0.1, max: 2, step: 0.02, onChange: setParam('mobileStoneParameters', 'gridScale') },
+    })
+
+    useControls('Mobile.Camera', {
+        followDistance: { value: mobileCameraParameters.followDistance, label: 'walk distance', min: 6, max: 40, step: 0.1, onChange: setParam('mobileCameraParameters', 'followDistance') },
+        followHeight: { value: mobileCameraParameters.followHeight, label: 'walk height', min: 4, max: 34, step: 0.1, onChange: setParam('mobileCameraParameters', 'followHeight') },
+        frontDistance: { value: mobileCameraParameters.frontDistance, label: 'intro-talk dist', min: 6, max: 40, step: 0.1, onChange: setParam('mobileCameraParameters', 'frontDistance') },
+        frontHeight: { value: mobileCameraParameters.frontHeight, label: 'intro-talk height', min: 0.5, max: 20, step: 0.1, onChange: setParam('mobileCameraParameters', 'frontHeight') },
+        cameraDistance: { value: mobileCameraParameters.cameraDistance, label: 'minigame dist', min: 4, max: 40, step: 0.5, onChange: setParam('mobileCameraParameters', 'cameraDistance') },
+        cameraHeight: { value: mobileCameraParameters.cameraHeight, label: 'minigame height', min: 2, max: 34, step: 0.5, onChange: setParam('mobileCameraParameters', 'cameraHeight') },
+        dialogueCameraDistance: { value: mobileCameraParameters.dialogueCameraDistance, label: 'char-talk dist', min: 2, max: 26, step: 0.5, onChange: setParam('mobileCameraParameters', 'dialogueCameraDistance') },
+        dialogueCameraHeight: { value: mobileCameraParameters.dialogueCameraHeight, label: 'char-talk height', min: 0.5, max: 20, step: 0.1, onChange: setParam('mobileCameraParameters', 'dialogueCameraHeight') },
+    })
+
+    useControls('Mobile.Joystick', {
+        side: { value: joystickParameters.side, options: ['left', 'right'], onChange: setParam('joystickParameters', 'side') },
+        size: { value: joystickParameters.size, min: 60, max: 260, step: 2, onChange: setParam('joystickParameters', 'size') },
+        knobSize: { value: joystickParameters.knobSize, min: 24, max: 140, step: 2, onChange: setParam('joystickParameters', 'knobSize') },
+        marginX: { value: joystickParameters.marginX, min: 0, max: 200, step: 2, onChange: setParam('joystickParameters', 'marginX') },
+        marginY: { value: joystickParameters.marginY, min: 0, max: 200, step: 2, onChange: setParam('joystickParameters', 'marginY') },
+        opacity: { value: joystickParameters.opacity, min: 0.1, max: 1, step: 0.05, onChange: setParam('joystickParameters', 'opacity') },
+        deadzone: { value: joystickParameters.deadzone, min: 0, max: 0.5, step: 0.01, onChange: setParam('joystickParameters', 'deadzone') },
+        // max > 1 on purpose: the default 1.01 DISABLES run (mag caps at 1.0). A max of 1 would make
+        // Leva clamp the initial value to 1.0 on registration → run re-engages at full stick push.
+        runThreshold: { value: joystickParameters.runThreshold, min: 0.5, max: 1.2, step: 0.01, onChange: setParam('joystickParameters', 'runThreshold') },
+        baseColor: { value: joystickParameters.baseColor, onChange: setParam('joystickParameters', 'baseColor') },
+        knobColor: { value: joystickParameters.knobColor, onChange: setParam('joystickParameters', 'knobColor') },
+    })
+
+    useControls('Desktop.Camera', {
         followDistance: {
             value: cameraParameters.followDistance,
             label: 'walk distance',

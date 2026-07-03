@@ -72,6 +72,30 @@ body,
     background: var(--sj-loader-background);
     /* One UI font everywhere (matches the loader / credits). Swap here to retheme all text. */
     font-family: 'Bebas Neue', cursive;
+    /* Touch hygiene — this is a game, not a document. Kills the accidental zooms/selections that
+       break gameplay on touch devices:
+       · touch-action none → no browser pan/pinch/double-tap-zoom gestures anywhere (pointer events
+         still fire; nothing in the game scrolls — the credits auto-roll). Debug caveat: the Leva
+         panel's internal list can't touch-scroll, which is fine (it's #debug-only, mouse-first).
+       · user-select / -webkit-touch-callout none → no text selection, no iOS long-press magnifier
+         loupe or copy callout when holding buttons / the joystick.
+       · tap-highlight transparent → no grey flash box on taps.
+       · overscroll-behavior none → no rubber-band bounce dragging the whole page. */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+}
+
+/* Leva debug panel above the loader curtain (z 10000), so its controls stay usable during the
+   loading/GO screens (tuning the mobile loader ring/camera needs this). Debug-only in practice —
+   Leva doesn't render without #debug. The wrapper only makes a stacking context; the panel inside
+   keeps its own fixed top-right placement. */
+#leva__root {
+    position: fixed;
+    z-index: 10001;
 }
 
 /**

@@ -71,6 +71,83 @@ export const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     cssColorB: '#9d1111',
 }
 
+// Mobile-only camera distances (isMobile → resolvedCameraDistances). Same fields as the desktop
+// Camera Distance controls but tuned for the phone framing; applied only when the mobile experience
+// is active (touch device or the previewMobile debug toggle).
+export const DEFAULT_MOBILE_CAMERA_PARAMETERS = {
+    followDistance: 17.4, // gameplay walk
+    followHeight: 13.7,
+    frontDistance: 19.2, // intro dialogue
+    frontHeight: 4.6,
+    cameraDistance: 24, // mini-game stone view
+    cameraHeight: 5.2,
+    dialogueCameraDistance: 10, // music-character talk
+    dialogueCameraHeight: 6.2,
+}
+
+// Mobile UI tweaks: the overall DOM UI scale (bigger on a phone) + a smaller loading ring, with the
+// initial hat-shot camera zoomed out to match the smaller ring (the ring must keep covering the hat).
+export const DEFAULT_MOBILE_UI_PARAMETERS = {
+    uiScale: 2.45, // multiplies --ui-scale on the mobile experience (desktop uses gameUi.uiScale)
+    // --ui-vmin = clamp(sizeFloor, 1vmin, sizeCeil). The desktop floor (6.5px) is too tall for a phone
+    // (props the whole UI up); 0 lets the intro bubble / button / title scale down with the small vmin.
+    sizeFloor: 0,
+    sizeCeil: 10.8,
+    loaderRadius: 83, // loading-ring radius on mobile (desktop is loaderDebug.circleRadius ~106)
+    loaderRingWidth: 12.5, // loading-ring thickness on mobile
+    loaderCameraHeight: 22.8, // zoom the initial top-down hat shot out so the smaller ring still covers it
+    // Camera look-at for the hat shot on mobile (its own so the desktop illusion isn't nudged — the
+    // slightly different height/aspect projects the hat to a slightly different spot). Desktop uses
+    // loaderDebugParameters.targetX/Z.
+    loaderTargetX: 5.71,
+    loaderTargetZ: 0.06,
+    // Portrait-only placement (%, viewport-relative) for touch UI that can't share the desktop spots.
+    // "Talk to…" interaction prompt: centred by default (clear of the bottom joystick).
+    promptPortraitX: 50, // % from left, centred on this point
+    promptPortraitY: 64, // % from top, centred on this point
+    // "Round n/3" banner: dropped near the bottom (≈ the joystick zone) instead of the top-left counter.
+    roundPortraitY: 20, // % from the bottom edge
+    // Landscape-only intro layout: the short viewport crams the title and the speech bubble together
+    // over the hero. Narrow the bubble (uses less width) and raise the title (further from the bubble).
+    bubbleWidthLandscape: 570, // px — speech-bubble max width on landscape phones
+    nameTopLandscape: 7, // % from the top — the intro title's vertical position on landscape phones
+    bubbleBottomLandscape: 5, // % from the bottom — vertical position of the bubble block on landscape
+    startOffsetLandscape: -4, // px — extra gap above the Start button (down = +, up toward bubble = −)
+}
+
+// Mobile mini-game stone layout — landscape: a horizontal LINE (not the desktop rainbow arc) with
+// the guide arrow rising from below; portrait ("lazy" hold): a 2-COLUMN grid (3 rows for 6 stones,
+// an odd last stone centred) with the arrow pointing at the target stone from its outer side.
+export const DEFAULT_MOBILE_STONE_PARAMETERS = {
+    lineWidth: 5.8, // landscape: half-width of the line (stones span -lineWidth … +lineWidth)
+    lineHeight: 1.8, // height of the line / the grid's BOTTOM row (above yOffset + hoverHeight)
+    scale: 0.55, // stone size on mobile (bigger = easier tap target)
+    arrowDrop: 1.75, // arrow gap: below the stone (landscape line) / beside it (portrait grid)
+    colGap: 1.9, // portrait: half-distance between the two grid columns
+    rowGap: 2.7, // portrait: vertical distance between grid rows
+    gridHeight: 2.9, // portrait: vertical CENTRE of the grid (above yOffset + hoverHeight)
+    gridScale: 0.71, // portrait: stone size (own value so the grid can differ from the landscape line)
+}
+
+// On-screen mobile joystick (Joystick.jsx) — replaces the keyboard arrows / on-screen d-pad on the
+// mobile experience (isMobile). Drives the hero's move direction (analog angle, full walk speed;
+// edge push = run).
+export const DEFAULT_JOYSTICK_PARAMETERS = {
+    size: 130, // base diameter (px)
+    knobSize: 58, // knob diameter (px)
+    marginX: 120, // px from the chosen side edge (landscape corner placement; portrait is bottom-centre)
+    marginY: 70, // px from the bottom edge (raised so the stick sits under a comfortable thumb reach)
+    side: 'left', // 'left' | 'right' — which corner it sits in
+    opacity: 0.5, // base + knob opacity
+    deadzone: 0.16, // fraction of the radius ignored before the hero moves (0..1)
+    // Push magnitude (0..1) past which the hero RUNS (RUN_SPEED 5.5) instead of walks (WALK_SPEED 4.0).
+    // >1 disables run so the joystick caps at walk speed = the keyboard/d-pad max (they were unequal:
+    // edge-push ran at 5.5 while the mobile controls only walk). Lower it (e.g. 0.9) to re-enable run.
+    runThreshold: 1.01,
+    baseColor: '#fff8ff',
+    knobColor: '#fff8ff',
+}
+
 // Lantern fire + glow: a flickering flame placed in the hollow middle of the lantern (whose
 // origin sits at the TOP) and a semi-transparent, paintery-edged glow circle around it. Both
 // follow the lantern's world position (state.lanternPosition). All offsets/sizes are tunable

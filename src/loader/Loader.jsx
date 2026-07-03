@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import usePhases, { PHASES } from '../stores/usePhases'
 import useStore from '../stores/useStore'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { useIsMobile } from '../config/mobile.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
 import { startMusicTracks, preloadMusicTracks } from '../game/musicTracks.js'
@@ -24,7 +25,12 @@ export default function Loader() {
     const debugMode = usePhases((s) => s.debugMode)
     const sceneReady = usePhases((s) => s.sceneReady)
     const loaderDebugParameters = useStore((s) => s.loaderDebugParameters)
-    const fixedSizeStyle = useLoaderFixedSizeStyle(loaderDebugParameters)
+    const mobileUi = useStore((s) => s.mobileUiParameters)
+    const mobile = useIsMobile()
+    // Mobile: a smaller loading ring (the hat-shot camera is zoomed out to match — see mobileUi).
+    const fixedSizeStyle = useLoaderFixedSizeStyle(
+        mobile ? { ...loaderDebugParameters, circleRadius: mobileUi.loaderRadius, ringWidth: mobileUi.loaderRingWidth } : loaderDebugParameters
+    )
 
     const [displayed, setDisplayed] = useState(0)
     const [isExiting, setIsExiting] = useState(false)

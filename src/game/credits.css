@@ -81,6 +81,25 @@
     pointer-events: none;
 }
 
+/* Portrait touch: the horizontal Continue · title · Restart row is too wide for a phone, so stack it
+   vertically and CLUSTER the three around screen centre (justify-content: center + a gap) rather than
+   spreading them to the edges. The title is the middle item, so it lands dead-centre with Continue and
+   Restart flanking it symmetrically. Placed AFTER the base .credits-choice-title so this flex:none
+   wins source order — otherwise the base flex:1 keeps the title growing and pins the buttons to the
+   edges. */
+@media (orientation: portrait) and (pointer: coarse) {
+    .credits-choice {
+        flex-direction: column;
+        justify-content: center;
+        gap: 6vh;
+        padding: 0;
+    }
+
+    .credits-choice-title {
+        flex: none;
+    }
+}
+
 /* Exactly the Start button's font (the speech-bubble .dialogue-start: inherited Bebas, normal
    weight, 0.04em tracking), just a larger CTA size for the end screen. */
 .credits-button {

@@ -8,6 +8,7 @@ import Loader from './loader/Loader.jsx'
 import IntroTitle from './loader/IntroTitle.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'
+import Joystick from './ui/Joystick.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
 import Tutorial from './ui/Tutorial.jsx'
 import UIPreview from './ui/UIPreview.jsx'
@@ -21,6 +22,13 @@ import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 import { preloadCicadas } from './game/ambientSounds.js'
 
 applySoundJourneyCssVariables()
+
+// iOS Safari ignores user-scalable=no — its proprietary gesture events are the reliable way to stop
+// pinch-zoom mid-game (double-tap zoom is already killed by touch-action: none in style.css).
+// No-ops on browsers that don't fire gesture* events.
+for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    document.addEventListener(type, (event) => event.preventDefault(), { passive: false })
+}
 
 // CRITICAL audio only: the base cicada ambient, kicked off at page load and counted on the loading bar
 // (registered with THREE's loading manager) so the scene is never silent at the start. Everything else
@@ -62,6 +70,7 @@ root.render(
             </Canvas>
             <Leva hidden={!isDebug} collapsed theme={{ sizes: { rootWidth: '400px', controlWidth: '150px' } }} />
             <ControlsIcons />
+            <Joystick />
             <InteractionPrompt />
             <SongGame />
             <Tutorial />

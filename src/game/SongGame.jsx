@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 import useSongGame from '../stores/useSongGame.jsx'
 import useStore from '../stores/useStore.jsx'
+import { useIsMobile } from '../config/mobile.js'
 import { getMusicCharacter } from '../config/musicCharacters.js'
 import SpeechBubble from './SpeechBubble.jsx'
 import { playSound } from './gameSounds.js'
@@ -108,6 +109,8 @@ export default function SongGame() {
         return () => clearTimeout(t)
     }, [stage])
 
+    const mobile = useIsMobile()
+
     // ESC leaves the mini-game (the target stays so you can try again).
     useEffect(() => {
         if (!active) return
@@ -133,16 +136,23 @@ export default function SongGame() {
                   ? `${input.length} / ${length}`
                   : ''
 
+    // The round banner belongs to the game itself — hide it while a speech bubble is up (the pre-game
+    // "Are you ready?" prompt and the fail line), so "Round n/3" only appears once we've actually begun.
+    const showRound = stage !== 'prompt' && stage !== 'failSpeech'
+
     return (
         <div className="song-game">
-            <div className="song-round">
-                Round {round + 1} / {roundCount}
-                {status ? ` · ${status}` : ''}
-            </div>
+            {showRound && (
+                <div className="song-round">
+                    Round {round + 1} / {roundCount}
+                    {status ? ` · ${status}` : ''}
+                </div>
+            )}
 
             {canExit && (
                 <button className="song-exit" onClick={() => useSongGame.getState().reset()} aria-label="Exit">
-                    Exit <span className="song-key"><span>ESC</span></span>
+                    Exit
+                    {!mobile && <span className="song-key"><span>ESC</span></span>}
                 </button>
             )}
 

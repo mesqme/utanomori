@@ -3,6 +3,7 @@ import { useKeyboardControls } from '@react-three/drei'
 import './ControlsIcons.css'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
+import { useIsMobile } from '../config/mobile.js'
 
 function ControlKey({ controlName, children, className = '' }) {
     const buttonRef = useRef()
@@ -56,7 +57,9 @@ function ControlKey({ controlName, children, className = '' }) {
 
 export default function ControlsIcons() {
     const phase = usePhases((state) => state.phase)
-    const visible = phase === PHASES.start
+    const mobile = useIsMobile()
+    // The joystick replaces this d-pad on the mobile experience.
+    const visible = phase === PHASES.start && !mobile
     if (!visible) return null
 
     return (

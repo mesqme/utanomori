@@ -4,6 +4,7 @@ import { gsap } from 'gsap'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useStore from '../stores/useStore.jsx'
+import { resolvedCameraDistances, resolvedLoaderCameraHeight, isMobile } from '../config/mobile.js'
 import { cameraRig } from './cameraRig.js'
 import {
     CAMERA_TOP_SHOT,
@@ -34,8 +35,8 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
     cameraRig.lerpSpeed = 9
     applyShot({ ...CAMERA_TOP_SHOT, height: loaderCameraHeight })
 
-    // Live front (dialogue) shot distance/height from the store (CAMERA_FRONT_SHOT holds angle/target).
-    const cam = useStore.getState().cameraParameters
+    // Live front (dialogue) shot distance/height (mobile or desktop; CAMERA_FRONT_SHOT holds angle/target).
+    const cam = resolvedCameraDistances()
     const startAngle = cameraRig.angle
     const baseHeight = loaderCameraHeight
     const spiralStart = params.riseDuration
@@ -104,7 +105,7 @@ function runRestartTravel({ introTweenRef, loaderCameraHeight }) {
     cameraRig.centerZ = null
     cameraRig.lerpSpeed = 9
     // Start matching the (live) follow view, then lift away — keeps the teardown seamless with walking.
-    const cam = useStore.getState().cameraParameters
+    const cam = resolvedCameraDistances()
     applyShot({ ...CAMERA_FOLLOW_ORBIT, distance: cam.followDistance, height: cam.followHeight })
 
     introTweenRef.current = gsap.to(cameraRig, {
@@ -128,10 +129,14 @@ export default function GameDirector() {
     const debugMode = usePhases((state) => state.debugMode)
     const creditsShown = usePhases((state) => state.creditsShown)
     const found = useCompanions((state) => state.found)
-    const loaderCameraHeight = useStore((state) => state.loaderDebugParameters.cameraHeight)
+    const desktopLoaderCameraHeight = useStore((state) => state.loaderDebugParameters.cameraHeight)
+    const mobileLoaderCameraHeight = useStore((state) => state.mobileUiParameters.loaderCameraHeight)
+    const loaderCameraHeight = isMobile() ? mobileLoaderCameraHeight : desktopLoaderCameraHeight
     const introReplayNonce = useStore((state) => state.introReplayNonce)
     const frontDistance = useStore((state) => state.cameraParameters.frontDistance)
     const frontHeight = useStore((state) => state.cameraParameters.frontHeight)
+    const mobileFrontDistance = useStore((state) => state.mobileCameraParameters.frontDistance)
+    const mobileFrontHeight = useStore((state) => state.mobileCameraParameters.frontHeight)
     const setPhase = usePhases((state) => state.setPhase)
     const setCreditsShown = usePhases((state) => state.setCreditsShown)
     const introTweenRef = useRef(null)
@@ -170,7 +175,7 @@ export default function GameDirector() {
                 // rise/pull-back up to the over-the-shoulder view — no orbit around the hero.
                 cameraRig.mode = 'orbit'
                 cameraRig.lerpSpeed = 14
-                const cam = useStore.getState().cameraParameters
+                const cam = resolvedCameraDistances()
                 introTweenRef.current = gsap.to(cameraRig, {
                     angle: CAMERA_FOLLOW_ORBIT.angle,
                     distance: cam.followDistance,
@@ -225,17 +230,18 @@ export default function GameDirector() {
     // travel itself still reads the values once at its start; this only nudges the static hold after.
     useEffect(() => {
         if (phase === PHASES.intro && !introTweenRef.current) {
-            cameraRig.distance = frontDistance
-            cameraRig.height = frontHeight
+            const rc = resolvedCameraDistances()
+            cameraRig.distance = rc.frontDistance
+            cameraRig.height = rc.frontHeight
         }
-    }, [phase, frontDistance, frontHeight])
+    }, [phase, frontDistance, frontHeight, mobileFrontDistance, mobileFrontHeight])
 
     // "Redo the animation" (Leva) → replay the intro travel live from the current state.
     useEffect(() => {
         if (introReplayNonce === 0) return
         runIntroTravel({
             introTweenRef,
-            loaderCameraHeight: useStore.getState().loaderDebugParameters.cameraHeight,
+            loaderCameraHeight: resolvedLoaderCameraHeight(),
             params: useStore.getState().introCameraParameters,
             isReplay: true,
         })

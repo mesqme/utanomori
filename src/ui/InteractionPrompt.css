@@ -209,3 +209,33 @@
         transform: translateX(-50%) translateY(0);
     }
 }
+
+/* Portrait touch: the joystick sits bottom-CENTRE, so move the prompt off the bottom to a tunable
+   spot (default screen centre, driven by --prompt-x/y from Mobile.UI). Because the base position is
+   now translate(-50%, -50%), the pop-in + :active transforms need portrait variants that KEEP the
+   -50% Y — otherwise the element flashes low (translateY-only keyframe) then snaps to centre. Placed
+   last so it wins source order over the base :active rule. */
+@media (orientation: portrait) and (pointer: coarse) {
+    .interaction-prompt {
+        top: var(--prompt-y, 50%);
+        left: var(--prompt-x, 50%);
+        bottom: auto;
+        transform: translate(-50%, -50%);
+        animation: interaction-pop-center 0.18s ease-out;
+    }
+
+    .interaction-prompt:active {
+        transform: translate(-50%, -50%) scale(0.96);
+    }
+}
+
+@keyframes interaction-pop-center {
+    from {
+        opacity: 0;
+        transform: translate(-50%, calc(-50% + 8px));
+    }
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}

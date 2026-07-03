@@ -22,6 +22,8 @@ import {
 } from './utils/characterSeeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
+import { joystickInput, EMPTY_JOYSTICK } from '../ui/joystickInput.js'
+import { resolvedCameraDistances, resolvedLoaderCameraHeight, resolvedLoaderTarget } from '../config/mobile.js'
 import { CAMERA_TOP_SHOT } from '../game/gameConfig.js'
 import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import { PAINTERY_TEXTURE_IDS, PAINTERY_TEXTURE_URL_LIST } from '../config/painteryTextures.js'
@@ -60,12 +62,11 @@ const _stEdge = new THREE.Vector3()
 const _stRight = new THREE.Vector3()
 
 function getLoaderDebugTarget() {
-    const { targetX, targetZ } = useStore.getState().loaderDebugParameters
-    return { x: targetX, z: targetZ }
+    return resolvedLoaderTarget()
 }
 
 function getLoaderCameraHeight() {
-    return useStore.getState().loaderDebugParameters.cameraHeight ?? CAMERA_TOP_SHOT.height
+    return resolvedLoaderCameraHeight() ?? CAMERA_TOP_SHOT.height
 }
 
 function getTopCameraPosition(target, y = 0) {
@@ -270,14 +271,21 @@ export default function MainCharacter() {
             const frozen = useSongGame.getState().active || useTutorial.getState().frame !== 0
             const keys = frozen ? EMPTY_INPUT : getKeys()
             const controls = frozen ? EMPTY_INPUT : useStore.getState().controls
+            const joy = frozen ? EMPTY_JOYSTICK : joystickInput
             const jumpPressed = Boolean(keys.jump || controls.jump)
-            const maxSpeed = keys.run ? RUN_SPEED : WALK_SPEED
+            const maxSpeed = keys.run || joy.run ? RUN_SPEED : WALK_SPEED
 
             moveInput.set(0, 0, 0)
             if (keys.forward || controls.forward) moveInput.z -= 1
             if (keys.backward || controls.backward) moveInput.z += 1
             if (keys.leftward || controls.leftward) moveInput.x -= 1
             if (keys.rightward || controls.rightward) moveInput.x += 1
+            // Mobile joystick: a unit direction (screen right → +x, screen down → +z) added to the
+            // discrete keys/d-pad, then normalised + scaled by maxSpeed below (full walk speed).
+            if (joy.active) {
+                moveInput.x += joy.x
+                moveInput.z += joy.z
+            }
 
             if (moveInput.lengthSq() > 0) {
                 moveInput.normalize().multiplyScalar(maxSpeed)
@@ -444,8 +452,9 @@ export default function MainCharacter() {
         } else if (cameraRig.mode === 'orbit') {
             // Game-cycle shot (loading top view / intro travel).
             const useLoaderTarget = phase === PHASES.loading || phase === PHASES.warmup || phase === PHASES.intro
-            const targetX = useLoaderTarget ? loaderDebugParameters.targetX : cameraRig.centerX ?? visualPosition.x
-            const targetZ = useLoaderTarget ? loaderDebugParameters.targetZ : cameraRig.centerZ ?? visualPosition.z
+            const loaderTarget = useLoaderTarget ? resolvedLoaderTarget() : null
+            const targetX = loaderTarget ? loaderTarget.x : cameraRig.centerX ?? visualPosition.x
+            const targetZ = loaderTarget ? loaderTarget.z : cameraRig.centerZ ?? visualPosition.z
 
             cameraPosition.set(
                 targetX + Math.sin(cameraRig.angle) * cameraRig.distance,
@@ -455,11 +464,13 @@ export default function MainCharacter() {
             cameraTarget.set(targetX, visualPosition.y + cameraRig.targetYOffset, targetZ)
             cameraLerpSpeed = cameraRig.lerpSpeed
         } else {
-            // Gameplay follow ("walking"): offset behind + above the hero, live from cameraParameters.
+            // Gameplay follow ("walking"): offset behind + above the hero. Distances resolve to the
+            // mobile set on the mobile experience, else the desktop cameraParameters.
+            const rc = resolvedCameraDistances()
             cameraPosition.set(
                 visualPosition.x,
-                visualPosition.y + cameraParameters.followHeight,
-                visualPosition.z + cameraParameters.followDistance
+                visualPosition.y + rc.followHeight,
+                visualPosition.z + rc.followDistance
             )
 
             cameraTarget.copy(visualPosition)

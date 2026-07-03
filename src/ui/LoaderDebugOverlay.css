@@ -44,15 +44,40 @@
 
 .loader-debug-panel {
     position: fixed;
-    right: 20px;
-    bottom: 20px;
-    width: 168px;
+    right: calc(16px + env(safe-area-inset-right, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    width: 184px;
     padding: 12px;
     border-radius: 6px;
-    background: rgba(7, 2, 42, 0.72);
+    background: rgba(7, 2, 42, 0.82);
     color: var(--sj-ui-primary);
     pointer-events: auto;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+}
+
+/* Touch −/+ rows for the mobile ring / camera params (Leva is fiddly on a phone). */
+.loader-debug-rows {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.loader-debug-row {
+    display: grid;
+    grid-template-columns: 1fr 44px 44px;
+    align-items: center;
+    gap: 6px;
+}
+
+.loader-debug-row span {
+    font-size: 15px;
+    letter-spacing: 0.06em;
+}
+
+.loader-debug-row .loader-debug-button {
+    height: 40px;
+    font-size: 22px;
 }
 
 .loader-debug-title {

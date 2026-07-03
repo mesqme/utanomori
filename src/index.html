@@ -3,7 +3,10 @@
     <head>
         <meta charset="UTF-8" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <!-- maximum-scale + user-scalable kill accidental pinch/double-tap zoom on touch devices
+             (iOS ignores user-scalable but honours the rest + our touch-action CSS); viewport-fit
+             lets the scene extend under notches (safe-area insets pad the joystick). -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
         <title>🌀 Utanomori 🌀</title>
         <!-- Dark base so the very first paint matches the loader (keep in sync with

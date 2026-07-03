@@ -5,6 +5,7 @@ import useCompanions, { MAX_PARTY } from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import useAudio from '../stores/useAudio.jsx'
 import useStore from '../stores/useStore.jsx'
+import { useIsMobile } from '../config/mobile.js'
 import { resumeAudio } from '../game/songAudio.js'
 
 export default function InteractionPrompt() {
@@ -23,11 +24,13 @@ export default function InteractionPrompt() {
             colorGradeParameters: { ...state.colorGradeParameters, highBrightnessMode: !state.colorGradeParameters.highBrightnessMode },
         }))
 
+    const mobile = useIsMobile()
     const inGame = phase === PHASES.start
     // The sound control appears once there's sound to control — i.e. from GO onward (the backing tracks
     // start on the GO gesture, which leaves warmup for intro). So it shows in intro/start/finale/credits/
-    // restarting, but not on the loading or GO/warmup screens, nor behind the resettling curtain.
-    const showSound = phase !== PHASES.loading && phase !== PHASES.warmup && phase !== PHASES.resettling
+    // restarting, but not on the loading or GO/warmup screens, nor behind the resettling curtain. On
+    // mobile the sound bar + brightness toggle are dropped; only the party counter stays (below).
+    const showSound = !mobile && phase !== PHASES.loading && phase !== PHASES.warmup && phase !== PHASES.resettling
     const showPrompt = inGame && target && targetInRange && !songActive
     const complete = found.length >= MAX_PARTY
     const silent = muted || volume <= 0
@@ -150,9 +153,17 @@ export default function InteractionPrompt() {
                 </div>
             )}
 
+            {/* Mobile keeps only the party counter (the sound bar + brightness toggle are dropped above). */}
+            {mobile && inGame && (
+                <div className="top-left-hud">
+                    <div className="party-counter">{complete ? 'ALL MELODIES FOUND' : `MELODIES ${found.length} / ${MAX_PARTY}`}</div>
+                </div>
+            )}
+
             {showPrompt && (
                 <button className="interaction-prompt" onClick={startSong}>
-                    Talk to {target.label} <span className="interaction-key"><span>E</span></span>
+                    Talk to {target.label}
+                    {!mobile && <span className="interaction-key"><span>E</span></span>}
                 </button>
             )}
         </>

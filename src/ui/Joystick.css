@@ -1,0 +1,25 @@
+.joystick-base {
+    position: fixed;
+    z-index: 200;
+    border-radius: 50%;
+    border: 2px solid var(--joy-base-color, #fff8ff);
+    background: rgba(255, 255, 255, 0.08);
+    display: grid;
+    place-items: center;
+    /* Stop the browser from scrolling / zooming while dragging the stick. */
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.joystick-knob {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--joy-knob-color, #fff8ff);
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}

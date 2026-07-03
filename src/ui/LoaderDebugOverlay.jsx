@@ -1,67 +1,101 @@
 import useStore from '../stores/useStore.jsx'
+import { useIsMobile } from '../config/mobile.js'
 import { useLoaderFixedSizeStyle } from '../loader/useLoaderFixedSizeStyle.js'
 import './LoaderDebugOverlay.css'
 
-function nudgeTarget(dx, dz) {
-    let nextX = 0
-    let nextZ = 0
-
-    useStore.setState((state) => {
-        nextX = state.loaderDebugParameters.targetX + dx
-        nextZ = state.loaderDebugParameters.targetZ + dz
-
-        return {
-            loaderDebugParameters: {
-                ...state.loaderDebugParameters,
-                targetX: nextX,
-                targetZ: nextZ,
-            },
-        }
-    })
-
-    console.info(`Loader debug camera target x=${nextX.toFixed(3)} z=${nextZ.toFixed(3)}`)
+// Nudge the camera look-at (where the hat sits). Mobile has its own target so the desktop alignment
+// isn't disturbed.
+function nudgeTarget(mobile, dx, dz) {
+    const group = mobile ? 'mobileUiParameters' : 'loaderDebugParameters'
+    const xKey = mobile ? 'loaderTargetX' : 'targetX'
+    const zKey = mobile ? 'loaderTargetZ' : 'targetZ'
+    useStore.setState((state) => ({
+        [group]: {
+            ...state[group],
+            [xKey]: +(state[group][xKey] + dx).toFixed(3),
+            [zKey]: +(state[group][zKey] + dz).toFixed(3),
+        },
+    }))
 }
 
+// Bump one numeric store param (used for the mobile ring/camera rows, which live in mobileUiParameters,
+// or the desktop equivalents in loaderDebugParameters).
+function bump(group, key, delta, precision = 2) {
+    useStore.setState((state) => ({
+        [group]: { ...state[group], [key]: +(state[group][key] + delta).toFixed(precision) },
+    }))
+}
+
+// On-screen loader alignment tool — align the CSS loading ring with the 3D top-down hat shot. Enabled
+// via loaderDebugParameters.enabled (Leva). Adapts to whichever loader is live: mobile (smaller ring,
+// mobileUi params) or desktop (loaderDebug params). Touch-friendly so it works on a real phone where
+// the Leva panel is fiddly.
 export default function LoaderDebugOverlay() {
-    const params = useStore((state) => state.loaderDebugParameters)
-    const fixedSizeStyle = useLoaderFixedSizeStyle(params)
+    const loaderParams = useStore((state) => state.loaderDebugParameters)
+    const mobileUi = useStore((state) => state.mobileUiParameters)
+    const mobile = useIsMobile()
 
-    if (!params.enabled) return null
+    // The group + keys that hold the live loader RING size + hat-shot camera height.
+    const group = mobile ? 'mobileUiParameters' : 'loaderDebugParameters'
+    const radiusKey = mobile ? 'loaderRadius' : 'circleRadius'
+    const ringKey = mobile ? 'loaderRingWidth' : 'ringWidth'
+    const camKey = mobile ? 'loaderCameraHeight' : 'cameraHeight'
+    const radius = mobile ? mobileUi.loaderRadius : loaderParams.circleRadius
+    const ringWidth = mobile ? mobileUi.loaderRingWidth : loaderParams.ringWidth
+    const cameraHeight = mobile ? mobileUi.loaderCameraHeight : loaderParams.cameraHeight
+    const targetX = mobile ? mobileUi.loaderTargetX : loaderParams.targetX
+    const targetZ = mobile ? mobileUi.loaderTargetZ : loaderParams.targetZ
 
-    const targetX = params.targetX
-    const targetZ = params.targetZ
-    const step = params.nudgeStep
+    // Hook must run every render — call it before the early return.
+    const fixedSizeStyle = useLoaderFixedSizeStyle(mobile ? { ...loaderParams, circleRadius: radius, ringWidth } : loaderParams)
+
+    if (!loaderParams.enabled) return null
+
+    const step = loaderParams.nudgeStep
 
     return (
         <div className="loader-debug-overlay" style={fixedSizeStyle}>
             <div className="loader-debug-ring" />
 
-            <div className="loader-debug-swatches" aria-hidden="true">
-                <div className="loader-debug-swatch" style={{ backgroundColor: params.cssColorA }} />
-                <div className="loader-debug-swatch" style={{ backgroundColor: params.cssColorB }} />
-            </div>
-
             <div className="loader-debug-panel">
-                <div className="loader-debug-title">Loader Match</div>
+                <div className="loader-debug-title">{mobile ? 'Loader · mobile' : 'Loader Match'}</div>
                 <div className="loader-debug-readout">
                     x {targetX.toFixed(3)}
                     <br />z {targetZ.toFixed(3)}
-                    <br />y {params.cameraHeight.toFixed(2)}
-                    <br />r {params.circleRadius.toFixed(1)} / w {params.ringWidth.toFixed(1)}
+                    <br />cam {cameraHeight.toFixed(1)} · r {radius.toFixed(1)} / w {ringWidth.toFixed(1)}
                 </div>
+
                 <div className="loader-debug-pad">
-                    <button type="button" className="loader-debug-button loader-debug-button--up" onClick={() => nudgeTarget(0, -step)} aria-label="Nudge target up">
+                    <button type="button" className="loader-debug-button loader-debug-button--up" onClick={() => nudgeTarget(mobile, 0, -step)} aria-label="Nudge target up">
                         ^
                     </button>
-                    <button type="button" className="loader-debug-button loader-debug-button--left" onClick={() => nudgeTarget(-step, 0)} aria-label="Nudge target left">
+                    <button type="button" className="loader-debug-button loader-debug-button--left" onClick={() => nudgeTarget(mobile, -step, 0)} aria-label="Nudge target left">
                         &lt;
                     </button>
-                    <button type="button" className="loader-debug-button loader-debug-button--right" onClick={() => nudgeTarget(step, 0)} aria-label="Nudge target right">
+                    <button type="button" className="loader-debug-button loader-debug-button--right" onClick={() => nudgeTarget(mobile, step, 0)} aria-label="Nudge target right">
                         &gt;
                     </button>
-                    <button type="button" className="loader-debug-button loader-debug-button--down" onClick={() => nudgeTarget(0, step)} aria-label="Nudge target down">
+                    <button type="button" className="loader-debug-button loader-debug-button--down" onClick={() => nudgeTarget(mobile, 0, step)} aria-label="Nudge target down">
                         v
                     </button>
+                </div>
+
+                <div className="loader-debug-rows">
+                    <div className="loader-debug-row">
+                        <span>cam</span>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, camKey, -0.5)}>−</button>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, camKey, 0.5)}>+</button>
+                    </div>
+                    <div className="loader-debug-row">
+                        <span>radius</span>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, radiusKey, -1)}>−</button>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, radiusKey, 1)}>+</button>
+                    </div>
+                    <div className="loader-debug-row">
+                        <span>ring</span>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, ringKey, -0.5)}>−</button>
+                        <button type="button" className="loader-debug-button" onClick={() => bump(group, ringKey, 0.5)}>+</button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -29,6 +29,32 @@
     animation: dialogue-pop 0.3s ease-out;
 }
 
+/* Landscape touch: intro layout tuning (all via Mobile.UI). The short viewport crowds the bubble +
+   Start button over the hero. */
+@media (orientation: landscape) and (pointer: coarse) {
+    /* Centre by spanning the full width (left/right 0) instead of left:50% shrink-to-fit — the latter
+       silently caps the anchor to ~half the viewport, which was blocking the bubble past ~500px.
+       Also lets the whole block sit at a tunable height. */
+    .dialogue-anchor {
+        left: 0;
+        right: 0;
+        width: auto;
+        transform: none;
+        bottom: var(--dlg-bottom-landscape, 12%);
+    }
+
+    /* Own tunable width (max-width set directly, so it overrides the inline --dlg-width SpeechBubble
+       writes). Now free to grow to the full viewport width. */
+    .dialogue-bubble {
+        max-width: var(--dlg-width-landscape, 560px);
+    }
+
+    /* Nudge the Start button independently of the bubble (extra gap above it; negative pulls it up). */
+    .dialogue-start {
+        margin-top: var(--dlg-start-offset-landscape, 0px);
+    }
+}
+
 .dialogue-text {
     /* font-family intentionally inherits — pick the dialogue font here later. */
     margin: 0;

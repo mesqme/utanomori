@@ -18,6 +18,7 @@ import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH 
 import { musicStonePointer } from './utils/musicStonePointer.js'
 import { clearAllMusicStones } from './utils/musicStoneField.js'
 import { cameraRig } from '../game/cameraRig.js'
+import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.js'
 import { playSound } from '../game/gameSounds.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 
@@ -34,6 +35,11 @@ const COUNT_MAX = 7 // we keep up to 7 meshes; the active game uses the first `c
 const STAGED = new Set(['setup', 'countdown', 'playback', 'input', 'roundClear', 'success', 'fail'])
 const REVEAL_FACTOR_ALWAYS = 1000 // focal element → never fade at the reveal-circle edge
 const POINTER_APPEAR_TIME = 0.14 // seconds the pointer scales back from 0 when it pops to a new note
+// Touch has no hover, so a tap drives both the pointer and a one-shot scale "pop" (below). A short
+// debounce swallows accidental double-taps — the melody never needs two presses this close together.
+const TAP_PULSE_TIME = 0.26 // seconds for the tap scale up-then-down pop
+const TAP_PULSE_BOOST = 0.22 // peak extra scale at the middle of the pop
+const TAP_DEBOUNCE = 0.2 // seconds; a second press within this window is ignored
 const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 
 export default function MusicStones() {
@@ -104,6 +110,12 @@ export default function MusicStones() {
     // pops note-to-note (scales from 0 at each new note), it does not rotate or follow the cursor.
     const pointerTargetRef = useRef(-1) // stone the pointer currently sits at
     const pointerAppearRef = useRef(0) // 0..1 scale-in after a snap to a new note
+    // Touch (no hover): the last tapped stone aims the pointer, a per-stone pulse gives the tap its
+    // scale pop, and a single timestamp debounces accidental double-taps.
+    const tapTargetRef = useRef(-1)
+    const tapPulseRef = useRef(new Array(COUNT_MAX).fill(0)) // 1 → 0 pop (decays over TAP_PULSE_TIME); fired on tap AND on each played note during playback
+    const lastPressRef = useRef(0) // time of the last accepted press
+    const lastPressIndexRef = useRef(-1) // which stone it was (debounce is per-stone, see onClick)
     const pointerTargetPos = useMemo(() => new THREE.Vector3(), [])
     const ptrRadial = useMemo(() => new THREE.Vector3(), [])
     const ptrForward = useMemo(() => new THREE.Vector3(), [])
@@ -138,6 +150,28 @@ export default function MusicStones() {
         // the sole camera owner, so we never fight its shot from here (this is what broke the old
         // finale: a stale stones-framing kept overriding it post-game).
         const layout = layoutRef.current
+        const rc = resolvedCameraDistances() // mobile-aware minigame + talk distances
+        // Mobile: landscape = horizontal LINE + arrow from below; portrait = 2-column GRID + arrow
+        // from the stone's outer side (all from mobileStoneParameters).
+        const mobile = isMobile()
+        const portrait = mobile && isPortrait()
+        const ms = useStore.getState().mobileStoneParameters
+        // Portrait grid geometry for a stone index. COLUMN-major: the first half of the colours fill
+        // the left column top→bottom, the rest fill the right column — so colours read down a column,
+        // not across rows. Each column is centred vertically around gridHeight (a short column stays
+        // balanced). Shared by the stone placement, the camera look-at and the arrow.
+        const gridCols = 2
+        const rowsPerCol = layoutRef.current ? Math.ceil(layoutRef.current.count / gridCols) : 1
+        const gridPos = (index, total) => {
+            const col = Math.floor(index / rowsPerCol) // 0 → left, 1 → right
+            const rowInCol = index % rowsPerCol
+            const colCount = col === 0 ? Math.min(total, rowsPerCol) : total - rowsPerCol
+            return {
+                h: (col === 0 ? -1 : 1) * ms.colGap,
+                v: ms.gridHeight + ((colCount - 1) / 2 - rowInCol) * ms.rowGap, // centred per column
+                col,
+            }
+        }
         const speechStage = (game.stage === 'prompt' || game.stage === 'failSpeech') && !!game.companion
         if (usePhases.getState().phase === PHASES.start) {
             if (speechStage) {
@@ -145,8 +179,8 @@ export default function MusicStones() {
                 cameraRig.centerX = game.companion.x
                 cameraRig.centerZ = game.companion.z
                 cameraRig.angle = 0
-                cameraRig.height = p.dialogueCameraHeight
-                cameraRig.distance = p.dialogueCameraDistance
+                cameraRig.height = rc.talkHeight
+                cameraRig.distance = rc.talkDistance
                 cameraRig.targetYOffset = p.dialogueTargetY
                 cameraRig.lerpSpeed = p.cameraLerp
             } else if (layout) {
@@ -154,9 +188,15 @@ export default function MusicStones() {
                 cameraRig.centerX = layout.cx
                 cameraRig.centerZ = layout.cz
                 cameraRig.angle = 0
-                cameraRig.height = p.cameraHeight
-                cameraRig.distance = p.cameraDistance
-                cameraRig.targetYOffset = p.hoverHeight + p.radius * 0.5
+                cameraRig.height = rc.minigameHeight
+                cameraRig.distance = rc.minigameDistance
+                // Look at the stones' vertical centre: grid centre (portrait), the line (landscape),
+                // or the rainbow's mid-height (desktop).
+                cameraRig.targetYOffset = portrait
+                    ? p.hoverHeight + ms.gridHeight
+                    : mobile
+                      ? p.hoverHeight + ms.lineHeight
+                      : p.hoverHeight + p.radius * 0.5
                 cameraRig.lerpSpeed = p.cameraLerp
             } else if (cameraRig.centerX !== null) {
                 cameraRig.mode = 'follow'
@@ -166,10 +206,12 @@ export default function MusicStones() {
             }
         }
 
-        // Flash the matching stone when a new sound plays.
+        // Flash + scale-pop the matching stone when a new sound plays (the character demonstrating the
+        // melody) — the same pop as a tap, to emphasise each played note.
         if (game.activeNote !== prevNoteRef.current) {
             if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < COUNT_MAX) {
                 flashRef.current[game.activeNote] = 1
+                tapPulseRef.current[game.activeNote] = 1
             }
             prevNoteRef.current = game.activeNote
         }
@@ -180,6 +222,7 @@ export default function MusicStones() {
             clearMusicStoneSeeThrough()
             musicStonePointer.active = false
             pointerTargetRef.current = -1
+            tapTargetRef.current = -1
             for (let i = 0; i < COUNT_MAX; i++) {
                 if (meshRefs.current[i]) meshRefs.current[i].visible = false
                 if (proxyRefs.current[i]) proxyRefs.current[i].visible = false
@@ -210,6 +253,7 @@ export default function MusicStones() {
                 // Not part of this character's set.
                 scaleRef.current[i] = 0
                 hoverScaleRef.current[i] = 0
+                tapPulseRef.current[i] = 0
                 mesh.visible = false
                 if (proxyRefs.current[i]) proxyRefs.current[i].visible = false
                 continue
@@ -225,17 +269,38 @@ export default function MusicStones() {
 
             flashRef.current[i] = Math.max(0, flashRef.current[i] - dt / Math.max(0.02, p.flashDuration))
 
-            // Hover visual (enlarge + brighten) only while the player repeats (input).
-            const hovered = inputStage && hoverRef.current[i]
+            // Hover visual (enlarge + brighten) only while the player repeats (input). Desktop-only —
+            // touch has no hover (and any stray touch-hover would stick), so mobile uses the tap pulse.
+            const hovered = inputStage && !mobile && hoverRef.current[i]
             hoverScaleRef.current[i] = THREE.MathUtils.damp(hoverScaleRef.current[i], hovered ? 1 : 0, 12, dt)
 
+            // Tap pop: a one-shot scale up-then-down after a tap (the mobile stand-in for hover-enlarge;
+            // also gives desktop clicks a little kick). sin(0→π) as the timer runs 1→0 = smooth up/down.
+            let tapPulse = 0
+            if (tapPulseRef.current[i] > 0) {
+                tapPulseRef.current[i] = Math.max(0, tapPulseRef.current[i] - dt / TAP_PULSE_TIME)
+                tapPulse = Math.sin((1 - tapPulseRef.current[i]) * Math.PI) * TAP_PULSE_BOOST
+            }
+
             const appear = easeOut(s)
-            const meshScale = appear * p.scale * (1 + hoverScaleRef.current[i] * (p.hoverScale ?? 0.18))
+            const stoneScale = portrait ? ms.gridScale : mobile ? ms.scale : p.scale
+            const meshScale = appear * stoneScale * (1 + hoverScaleRef.current[i] * (p.hoverScale ?? 0.18) + tapPulse)
             mesh.visible = meshScale > 0.0001
 
-            const theta = Math.PI * (1 - i / span) // i=0 → left end, i=count-1 → right end
-            const hOff = Math.cos(theta) * p.radius
-            const vOff = Math.sin(theta) * p.radius
+            let hOff
+            let vOff
+            if (portrait) {
+                const g = gridPos(i, count) // 2-column grid, read top-left → down
+                hOff = g.h
+                vOff = g.v
+            } else if (mobile) {
+                hOff = (2 * (i / span) - 1) * ms.lineWidth // evenly spaced, -lineWidth → +lineWidth
+                vOff = ms.lineHeight // flat horizontal line
+            } else {
+                const theta = Math.PI * (1 - i / span) // i=0 → left end, i=count-1 → right end
+                hOff = Math.cos(theta) * p.radius
+                vOff = Math.sin(theta) * p.radius
+            }
             const appearDrift = (1 - appear) * 0.6
 
             // Idle motion: a vertical bob (bobAmount) AND/OR a gentle in-place rotation wobble
@@ -285,12 +350,20 @@ export default function MusicStones() {
         // via lastPress). When nothing is hovered it rests on the last note.
         let desiredTarget = -1
         if (game.stage === 'playback') {
+            // Clear the tap target so a fresh input round starts with the pointer on the last sung note
+            // (not last round's tap), then aim at the note currently singing.
+            tapTargetRef.current = -1
             if (game.activeNote != null && game.activeNote >= 0 && game.activeNote < count) desiredTarget = game.activeNote
         } else if (inputStage) {
-            for (let i = 0; i < count; i++) {
-                if (hoverRef.current[i]) {
-                    desiredTarget = i
-                    break
+            if (mobile) {
+                // No hover on touch: the pointer is transferred to whichever stone was last tapped.
+                if (tapTargetRef.current >= 0 && tapTargetRef.current < count) desiredTarget = tapTargetRef.current
+            } else {
+                for (let i = 0; i < count; i++) {
+                    if (hoverRef.current[i]) {
+                        desiredTarget = i
+                        break
+                    }
                 }
             }
         }
@@ -305,19 +378,56 @@ export default function MusicStones() {
             pointerAppearRef.current = Math.min(1, pointerAppearRef.current + dt / POINTER_APPEAR_TIME)
             musicStonePointer.appear = pointerAppearRef.current
 
-            const ang = Math.PI * (1 - pointerTarget / span)
-            ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
-            pointerTargetPos.set(
-                layout.cx + ptrRadial.x * p.pointerRadius,
-                groundY + p.yOffset + p.hoverHeight + ptrRadial.y * p.pointerRadius,
-                layout.cz + ptrRadial.z * p.pointerRadius
-            )
-            musicStonePointer.position.copy(pointerTargetPos)
             state.camera.getWorldDirection(ptrForward)
-            ptrInPlane.copy(ptrRadial).addScaledVector(ptrForward, -ptrRadial.dot(ptrForward)).normalize()
-            ptrY.copy(ptrForward).negate()
-            ptrX.copy(ptrInPlane).negate()
-            ptrZ.crossVectors(ptrX, ptrY)
+            if (portrait) {
+                // Grid: sit on the target stone's INNER side (the centre gap between the two columns)
+                // and point OUTWARD at it — left column ← arrow to its right pointing left, right
+                // column mirrored. Never crosses the other column. Arrow forward = local -X.
+                const g = gridPos(pointerTarget, count)
+                const innerSign = g.col === 0 ? 1 : -1 // arrow sits toward the centre
+                const hArrow = g.h + innerSign * ms.arrowDrop
+                pointerTargetPos.set(
+                    layout.cx + rightX * hArrow,
+                    groundY + p.yOffset + p.hoverHeight + g.v,
+                    layout.cz + rightZ * hArrow
+                )
+                musicStonePointer.position.copy(pointerTargetPos)
+                ptrX.set(innerSign * rightX, 0, innerSign * rightZ) // local -X → outward, toward the stone
+                ptrY.copy(ptrForward).negate()
+                ptrY.addScaledVector(ptrX, -ptrY.dot(ptrX)) // orthogonalize → the flat side faces the camera
+                if (ptrY.lengthSq() < 1e-4) ptrY.set(0, 1, 0)
+                ptrY.normalize()
+                ptrZ.crossVectors(ptrX, ptrY)
+            } else if (mobile) {
+                // Rise from BELOW the target line-stone and point straight UP at it (arrow forward =
+                // local -X). Faces the camera (its plane normal = camera-facing, kept horizontal).
+                const hOffT = (2 * (pointerTarget / span) - 1) * ms.lineWidth
+                pointerTargetPos.set(
+                    layout.cx + rightX * hOffT,
+                    groundY + p.yOffset + p.hoverHeight + ms.lineHeight - ms.arrowDrop,
+                    layout.cz + rightZ * hOffT
+                )
+                musicStonePointer.position.copy(pointerTargetPos)
+                ptrX.set(0, -1, 0) // local -X → world up (the arrow points up)
+                ptrY.copy(ptrForward).negate()
+                ptrY.y = 0
+                if (ptrY.lengthSq() < 1e-4) ptrY.set(0, 0, 1)
+                ptrY.normalize()
+                ptrZ.crossVectors(ptrX, ptrY)
+            } else {
+                const ang = Math.PI * (1 - pointerTarget / span)
+                ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
+                pointerTargetPos.set(
+                    layout.cx + ptrRadial.x * p.pointerRadius,
+                    groundY + p.yOffset + p.hoverHeight + ptrRadial.y * p.pointerRadius,
+                    layout.cz + ptrRadial.z * p.pointerRadius
+                )
+                musicStonePointer.position.copy(pointerTargetPos)
+                ptrInPlane.copy(ptrRadial).addScaledVector(ptrForward, -ptrRadial.dot(ptrForward)).normalize()
+                ptrY.copy(ptrForward).negate()
+                ptrX.copy(ptrInPlane).negate()
+                ptrZ.crossVectors(ptrX, ptrY)
+            }
             ptrBasis.makeBasis(ptrX, ptrY, ptrZ)
             musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
         }
@@ -411,6 +521,16 @@ export default function MusicStones() {
                         const g = useSongGame.getState()
                         if (g.stage !== 'input') return
                         event.stopPropagation()
+                        // Debounce accidental double-taps (touch bounce) PER STONE: a repeat tap on the
+                        // SAME stone within TAP_DEBOUNCE is dropped (the melody never has the same note
+                        // twice in a row, so this is safe), while two different stones tapped fast both
+                        // register normally.
+                        const now = performance.now() / 1000
+                        if (i === lastPressIndexRef.current && now - lastPressRef.current < TAP_DEBOUNCE) return
+                        lastPressRef.current = now
+                        lastPressIndexRef.current = i
+                        tapTargetRef.current = i // aim the pointer at the tapped stone (no hover on touch)
+                        tapPulseRef.current[i] = 1 // scale pop feedback
                         flashRef.current[i] = 1
                         playSound(g.track, g.stoneSounds[i]) // this stone's unique sound
                         g.pressNote(i)
