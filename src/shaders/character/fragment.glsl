@@ -1,4 +1,7 @@
 uniform vec3 uBaseColor;
+// Outgoing theme's base colour (masked theme transitions) — the hero / sheep recolour sweeps with
+// the portal edge like the world instead of snapping at the click.
+uniform vec3 uBaseColorOld;
 uniform int uDebugMode;
 uniform int uPainterlyEnabled;
 uniform sampler2D uPainterlyTexture;
@@ -33,6 +36,8 @@ uniform float uPupilNoiseScale;
 uniform float uPupilNoiseStrength;
 uniform float uEyeEdgeSoftness;
 uniform float uEyeBlink;
+
+#include ../lib/themeMask.glsl
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
@@ -107,7 +112,7 @@ vec3 drawEyes(vec3 baseColor, vec2 uv1) {
 
 void main() {
     float painterlyValue = 0.5;
-    vec3 baseColor = uBaseColor;
+    vec3 baseColor = mix(uBaseColorOld, uBaseColor, themeMaskNewness());
     if (uUseBaseTexture == 1) {
         baseColor = texture2D(uBaseTexture, vUv).rgb;
     }

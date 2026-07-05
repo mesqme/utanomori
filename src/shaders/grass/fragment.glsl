@@ -2,6 +2,7 @@ uniform float uPixelSize;
 uniform int uDitherMode;
 uniform int uFadeMode;
 uniform vec3 uBackgroundColor;
+uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
 uniform int uDebugBorders;
 uniform int uDebugPatchColors;
 uniform float uBaseBrightness;
@@ -27,8 +28,14 @@ uniform float uPainteryBleed;
 uniform vec3 uLanternGrassColor;
 uniform float uLanternGrassAlpha;
 uniform float uLanternGrassColorAmount;
+uniform float uGrassGlobalAlpha; // whole-field fade (0 on the loading/GO screens → 1 after GO)
+uniform float uBaseBrightnessOld; // outgoing theme's brightness (masked theme transitions)
+uniform vec3 uLightenColorOld; // outgoing theme's trail-lighten colour
+
+#include ../lib/themeMask.glsl
 
 varying vec3 vColor;
+varying vec3 vColorOld;
 varying vec4 vGrassData;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
@@ -166,7 +173,13 @@ void main() {
 
   vec3 lighting = diffuseLighting * 0.2 + ambientLighting * 0.8;
 
-  vec3 color = vColor.xyz * lighting * uBaseBrightness;
+  // Masked theme transition: blend the outgoing palette toward the live one per fragment (the
+  // whole field keeps moving on both sides of the portal/wipe edge). Inactive → tmNew = 1.
+  float tmNew = themeMaskNewness();
+  vec3 themedColor = mix(vColorOld, vColor, tmNew);
+  float themedBrightness = mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
+
+  vec3 color = themedColor * lighting * themedBrightness;
 
   if (uDebugPatchColors == 1) {
     color = vPatchDebugColor;
@@ -192,8 +205,9 @@ void main() {
   );
   color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
-  // Lighten/darken layer — mix toward the layer colour by its influence × amount.
-  color = mix(color, uLightenColor, clamp(vTrampleLighten * uLightenAmount, 0.0, 1.0));
+  // Lighten/darken layer — mix toward the layer colour by its influence × amount (the colour
+  // itself follows the theme-transition mask like everything else).
+  color = mix(color, mix(uLightenColorOld, uLightenColor, tmNew), clamp(vTrampleLighten * uLightenAmount, 0.0, 1.0));
 
   // Dissolve layer — semi-transparent (alpha) or dithered cut-out.
   float grassAlpha = 1.0;
@@ -224,8 +238,11 @@ void main() {
 
   float borderFade = 1.0 - vGrassData.w;
 
+  // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
+  // grass doesn't snap toward the new sky at the click.
+  vec3 fadeBg = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
   if (uFadeMode == 1) {
-      color = mix(color, uBackgroundColor, borderFade);
+      color = mix(color, fadeBg, borderFade);
   }
 
   // Only dither styles configured to use the legacy border fade.
@@ -243,7 +260,7 @@ void main() {
   // across blades) with a gentle world drift. Matches the ground's portal edge.
   if (uFadeMode == 2 && borderFade > 0.0) {
       float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
-      color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
+      color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
       if (borderFade > painteryBrush) discard;
   }
 
@@ -252,6 +269,10 @@ void main() {
     color = mix(color, uLanternGrassColor, vLanternInfluence * uLanternGrassColorAmount);
     grassAlpha *= 1.0 - vLanternInfluence * uLanternGrassAlpha;
   }
+
+  // Whole-field fade (loading/GO screens → gameplay). Fully hidden → skip the blend entirely.
+  if (uGrassGlobalAlpha < 0.004) discard;
+  grassAlpha *= uGrassGlobalAlpha;
 
   gl_FragColor = vec4(color, grassAlpha);
 

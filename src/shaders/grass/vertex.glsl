@@ -64,8 +64,24 @@ uniform float uGrassFadeOffset;
 attribute vec3 aInstancePosition;
 attribute vec2 aPatchCenter;
 attribute vec4 aPatchData;
-attribute vec3 aPatchColor;
+attribute vec2 aPatchColorData; // x = tint family (0..3 → uGrassTint*), y = tone
 attribute vec3 aPatchDebugColor;
+
+// The grass palette as UNIFORMS (the bake stores only each blade's family + tone), so recolouring
+// the field — day/night themes, Leva drags — is a uniform write, not an attribute rebuild.
+uniform vec3 uGrassBaseColor;
+uniform vec3 uGrassTintCyan;
+uniform vec3 uGrassTintViolet;
+uniform vec3 uGrassTintYellow;
+uniform vec3 uGrassTintGreen;
+uniform float uGrassTintStrength; // 0.5 + patchColorVariation * 0.5 (computed CPU-side)
+// The OUTGOING theme's palette during a masked theme transition (the fragment mixes old→new by
+// the screen-space themeMask; identical to the new palette when no transition runs).
+uniform vec3 uGrassBaseColorOld;
+uniform vec3 uGrassTintCyanOld;
+uniform vec3 uGrassTintVioletOld;
+uniform vec3 uGrassTintYellowOld;
+uniform vec3 uGrassTintGreenOld;
 attribute float aRoadMask;
 attribute float aObjectSuppress; // 1 = inside a stone/tree safe radius → no grass; fades to 0
 attribute vec2 aObjectLean; // direction × strength to lean away from the nearest stone/tree
@@ -88,6 +104,7 @@ varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
+varying vec3 vColorOld; // the outgoing theme's blade colour (masked theme transitions)
 
 #include includes.glsl
 
@@ -249,7 +266,19 @@ void main() {
   gl_Position = projectionMatrix * mvPosition;
   gl_Position.w = grassHeightMask < grassMinHeight ? 0.0 : gl_Position.w;
 
-  vColor = aPatchColor;
+  // Same math the CPU bake used: mix(base, familyTint, strength) × tone. Computed for BOTH the
+  // live palette and the outgoing one (masked theme transitions blend them per fragment).
+  float tintFamily = aPatchColorData.x;
+  vec3 patchTint = tintFamily < 0.5 ? uGrassTintCyan
+      : tintFamily < 1.5 ? uGrassTintViolet
+      : tintFamily < 2.5 ? uGrassTintYellow
+      : uGrassTintGreen;
+  vColor = mix(uGrassBaseColor, patchTint, uGrassTintStrength) * aPatchColorData.y;
+  vec3 patchTintOld = tintFamily < 0.5 ? uGrassTintCyanOld
+      : tintFamily < 1.5 ? uGrassTintVioletOld
+      : tintFamily < 2.5 ? uGrassTintYellowOld
+      : uGrassTintGreenOld;
+  vColorOld = mix(uGrassBaseColorOld, patchTintOld, uGrassTintStrength) * aPatchColorData.y;
   vNormal = normalize(vec3(facingDirection.x * -zSide, 0.2, facingDirection.y * -zSide));
   vWorldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
   vGrassData = vec4(x, heightPercent, xSide, grassMask);

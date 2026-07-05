@@ -14,6 +14,7 @@ import { createObjectFieldSampler } from './utils/objectField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { themeMask } from './utils/themeMask.js'
 import {
     claimCharacterSeeThroughSlot,
     releaseCharacterSeeThroughSlot,
@@ -254,12 +255,25 @@ export default function MainCharacter() {
         // texture/stars/glow reveal) — so before GO the hero's contrast is 0 and the brush "develops"
         // in as the camera flies down, instead of fading in while we're still on the loading screen.
         contrastRevealRef.current = updatePhaseTextureReveal(contrastRevealRef.current, phase, safeDelta)
-        const targetContrast = useStore.getState().characterMaterialParameters.painterlyContrast
-        const fadedContrast = targetContrast * contrastRevealRef.current
+        const characterParams = useStore.getState().characterMaterialParameters
+        const fadedContrast = characterParams.painterlyContrast * contrastRevealRef.current
         const stylizedMaterials = characterHead.materials
+        // Base colour + old colour are written together HERE, per frame, so they always hit the
+        // GPU as a consistent set with the shared mask uniforms. (Writing the colours in the React
+        // effect left a one-frame window where the new colour rendered before the mask activated —
+        // the hero flashed the new theme at the click.)
+        const oldHero = themeMask.active ? themeMask.old?.heroColors : null
         for (let i = 0; i < stylizedMaterials.length; i++) {
-            const u = stylizedMaterials[i].uniforms
-            if (u && u.uPainterlyContrast) u.uPainterlyContrast.value = fadedContrast
+            const material = stylizedMaterials[i]
+            const u = material.uniforms
+            if (!u) continue
+            if (u.uPainterlyContrast) u.uPainterlyContrast.value = fadedContrast
+            const materialId = material.userData.materialId
+            const materialSettings = characterParams.materials[materialId] ?? mainCharacterMaterialDefaults[materialId]
+            if (materialSettings && u.uBaseColor) {
+                u.uBaseColor.value.set(materialSettings.baseColor)
+                u.uBaseColorOld.value.set(oldHero?.[materialId] ?? materialSettings.baseColor)
+            }
         }
 
         const position = positionRef.current
@@ -583,7 +597,10 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             const painterlyTexture = painterlyTexturesById[stylizedSettings.painterlyTexture] ?? painterlyTexturesById.paintaryAlpha
 
             if (!stylizedMaterialsRef.current.has(materialKey)) {
-                stylizedMaterialsRef.current.set(materialKey, createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture))
+                const material = createCharacterStylizedMaterial(sourceMaterial, materialSettings, stylizedSettings, painterlyTexture)
+                // The per-frame colour/mask sync (useFrame) needs to know which slot this is.
+                material.userData.materialId = slot?.materialId
+                stylizedMaterialsRef.current.set(materialKey, material)
             }
 
             return stylizedMaterialsRef.current.get(materialKey)
@@ -624,10 +641,13 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
             const materialSettings = characterMaterialParameters.materials[slot?.materialId] ?? mainCharacterMaterialDefaults[slot?.materialId]
             if (!materialSettings) return
 
+            // During a masked theme transition the hero recolours with the sweeping edge, so pass
+            // the outgoing theme's colour for this slot (identity when no transition runs).
+            const oldBaseColor = themeMask.active ? themeMask.old?.heroColors?.[slot?.materialId] : null
             const objectMaterials = Array.isArray(object.material) ? object.material : [object.material]
             objectMaterials.forEach((material) => {
                 if (!material?.uniforms?.uBaseColor) return
-                updateCharacterStylizedMaterial(material, materialSettings, characterMaterialParameters, selectedPainterlyTexture)
+                updateCharacterStylizedMaterial(material, materialSettings, characterMaterialParameters, selectedPainterlyTexture, oldBaseColor)
             })
         })
     }, [characterMaterialParameters, materialSlotsByMeshName, selectedPainterlyTexture])

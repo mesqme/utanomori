@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { getTrampleData } from '../world/utils/trampleField.js'
 import { getMusicStoneData } from '../world/utils/musicStoneField.js'
@@ -68,12 +69,34 @@ export default function useGrassMaterial({
                     uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
                     uPainteryBleed: { value: borderParameters.painteryBleed },
                     uBackgroundColor: { value: new THREE.Color(backgroundColor) },
+                    uBackgroundColorOld: { value: new THREE.Color(backgroundColor) },
                     uTime: { value: 0 },
                     uGrassSegments: { value: grassParameters.segmentsCount },
                     uGrassChunkSize: { value: chunkSize },
                     uGrassWidth: { value: grassParameters.width },
                     uGrassHeight: { value: grassParameters.height },
                     uBaseBrightness: { value: grassBaseBrightness },
+                    // The grass palette (the bake stores per-blade family + tone only) — recolouring
+                    // is a uniform write, no field rebuild.
+                    uGrassBaseColor: { value: new THREE.Color(grassParameters.colorBase) },
+                    uGrassTintCyan: { value: new THREE.Color(grassPatchParameters.tintColorCyan) },
+                    uGrassTintViolet: { value: new THREE.Color(grassPatchParameters.tintColorViolet) },
+                    uGrassTintYellow: { value: new THREE.Color(grassPatchParameters.tintColorYellow) },
+                    uGrassTintGreen: { value: new THREE.Color(grassPatchParameters.tintColorGreen) },
+                    uGrassTintStrength: { value: 0.5 + (grassPatchParameters.patchColorVariation ?? 0.28) * 0.5 },
+                    // Whole-field fade: 0 on the loading/GO screens (no top-down grass in the hover
+                    // preview), driven up to 1 by Terrain once GO is pressed.
+                    uGrassGlobalAlpha: { value: 0 },
+                    // Outgoing-theme palette + the screen-space transition mask (Terrain.jsx drives
+                    // these per frame during a masked theme switch).
+                    uGrassBaseColorOld: { value: new THREE.Color(grassParameters.colorBase) },
+                    uGrassTintCyanOld: { value: new THREE.Color(grassPatchParameters.tintColorCyan) },
+                    uGrassTintVioletOld: { value: new THREE.Color(grassPatchParameters.tintColorViolet) },
+                    uGrassTintYellowOld: { value: new THREE.Color(grassPatchParameters.tintColorYellow) },
+                    uGrassTintGreenOld: { value: new THREE.Color(grassPatchParameters.tintColorGreen) },
+                    uBaseBrightnessOld: { value: grassBaseBrightness },
+                    uLightenColorOld: { value: new THREE.Color(grassParameters.lightenColor ?? '#cdeebf') },
+                    ...themeMaskUniforms,
                     uLeanFactor: { value: grassParameters.leanFactor },
                     uCameraFacingStrength: { value: grassPatchParameters.cameraFacingStrength },
                     uOrientationVariation: { value: grassPatchParameters.orientationVariation },
@@ -184,6 +207,12 @@ export default function useGrassMaterial({
         u.uGrassWidth.value = grassParameters.width
         u.uGrassHeight.value = grassParameters.height
         u.uBaseBrightness.value = grassBaseBrightness
+        u.uGrassBaseColor.value.set(grassParameters.colorBase)
+        u.uGrassTintCyan.value.set(grassPatchParameters.tintColorCyan)
+        u.uGrassTintViolet.value.set(grassPatchParameters.tintColorViolet)
+        u.uGrassTintYellow.value.set(grassPatchParameters.tintColorYellow)
+        u.uGrassTintGreen.value.set(grassPatchParameters.tintColorGreen)
+        u.uGrassTintStrength.value = 0.5 + (grassPatchParameters.patchColorVariation ?? 0.28) * 0.5
         u.uLeanFactor.value = grassParameters.leanFactor
         u.uCameraFacingStrength.value = grassPatchParameters.cameraFacingStrength
         u.uOrientationVariation.value = grassPatchParameters.orientationVariation

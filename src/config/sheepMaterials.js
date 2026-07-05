@@ -3,7 +3,8 @@
 // (orange = body, white = wool/mask, brown = legs/horns), so a mesh's material.name maps straight
 // to a colour. Only baseColor is consumed by the stylized material (painterly settings are shared).
 export const sheepCharacterDefaults = Object.freeze({
-    piano: { orange: '#b938a5', white: '#efe7f7', brown: '#e096cf' },
+    // Legs/horns (brown) are the SAME tan on all three companions, in every theme.
+    piano: { orange: '#b938a5', white: '#efe7f7', brown: '#cda66b' },
     drums: { orange: '#259eda', white: '#e7eaf7', brown: '#cda66b' },
-    winds: { orange: '#8db92f', white: '#eef7e7', brown: '#9fc385' },
+    winds: { orange: '#8db92f', white: '#eef7e7', brown: '#cda66b' },
 })

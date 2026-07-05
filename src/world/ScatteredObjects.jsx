@@ -10,6 +10,7 @@ import { musicStoneSeeThrough } from './utils/musicStoneSeeThrough.js'
 import { characterSeeThrough } from './utils/characterSeeThrough.js'
 import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { themeMask } from './utils/themeMask.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { createEyePlaneMaterial, updateEyePlaneMaterial } from '../materials/EyePlaneMaterial.js'
@@ -235,6 +236,21 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 colorStrength: state.objectParameters.stoneGradientColorStrength ?? 0.5,
                 height: state.objectParameters.stoneGradientHeight ?? 0.65,
             },
+            // Per-type colours + variations are UNIFORMS (the instances carry only the
+            // theme-independent part) — recolouring props never rebuilds the pool.
+            typeColors: {
+                treeColor: state.objectParameters.treeColor ?? '#575ac2',
+                treeTrunkColor: state.objectParameters.treeTrunkColor ?? '#877fb9',
+                stoneTint: state.objectParameters.stoneTint ?? '#ffffff',
+                mushroomCapColor: state.objectParameters.mushroomCapColor ?? '#c4452f',
+                mushroomLegColor: state.objectParameters.mushroomLegColor ?? '#ecdcc4',
+                treeColorVariation: state.objectParameters.treeColorVariation ?? 0,
+                stoneColorVariation: state.objectParameters.stoneColorVariation ?? 0,
+                mushroomColorVariation: state.objectParameters.mushroomColorVariation ?? 0,
+                mushroomLegColorVariation: state.objectParameters.mushroomLegColorVariation ?? 0.25,
+            },
+            // Outgoing-theme values during a live masked theme transition (null = identity).
+            themeMaskOld: themeMask.active ? themeMask.old : null,
             refScale: getRefScale(frameState),
             circleCenterX: revealCircle.centerX,
             circleCenterZ: revealCircle.centerZ,
@@ -286,6 +302,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                     gust: state.objectParameters.treeWindGust ?? 0.5,
                 },
                 eyes: state.treeEyesParameters,
+                themeMaskOld: themeMask.active ? themeMask.old : null,
                 seeThrough,
                 stoneSeeThrough: musicStoneSeeThrough,
                 charSeeThrough: characterSeeThrough,
@@ -362,6 +379,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
     const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
     const generationKeyRef = useRef(null)
 
+    // NOTE: colours + colour variations are deliberately NOT in this key — they're shader uniforms
+    // (typeColors above), so recolouring props (day/night themes, Leva colour drags) never rebuilds
+    // the pool. Only placement/geometry params belong here.
     const objectGenerationKey = [
         objectParameters.enabled,
         objectParameters.worldSeed,
@@ -373,19 +393,10 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         objectParameters.minObjectSpacing,
         objectParameters.treeSize,
         objectParameters.treeYOffset,
-        objectParameters.treeColor,
-        objectParameters.treeTrunkColor,
         objectParameters.stoneSize,
         objectParameters.stoneYOffset,
-        objectParameters.stoneTint,
         objectParameters.mushroomSize,
         objectParameters.mushroomYOffset,
-        objectParameters.mushroomCapColor,
-        objectParameters.mushroomLegColor,
-        objectParameters.stoneColorVariation,
-        objectParameters.mushroomColorVariation,
-        objectParameters.mushroomLegColorVariation,
-        objectParameters.treeColorVariation,
         treeEyesPlanesPerTree,
     ].join('|')
     const roadGenerationKey = [
@@ -440,18 +451,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
             const stoneYOffset = objectParameters.stoneYOffset ?? 0
             const mushroomSize = objectParameters.mushroomSize ?? 1.0
             const mushroomYOffset = objectParameters.mushroomYOffset ?? 0
-            const treeColorObj = new THREE.Color(objectParameters.treeColor ?? '#6f8f4a')
-            const treeTrunkObj = new THREE.Color(objectParameters.treeTrunkColor ?? '#6b4a2f')
-            const stoneTintObj = new THREE.Color(objectParameters.stoneTint ?? '#ffffff')
-            const mushroomCapObj = new THREE.Color(objectParameters.mushroomCapColor ?? '#c4452f')
-            const mushroomLegObj = new THREE.Color(objectParameters.mushroomLegColor ?? '#ecdcc4')
-            // Per-instance colour variation factor, separate per prop type.
-            const stoneColorVariation = objectParameters.stoneColorVariation ?? 0
-            const mushroomColorVariation = objectParameters.mushroomColorVariation ?? 0
-            // How much of the mushroom colour variation reaches the LEG (0 = legs all the same, 1 =
-            // legs vary as much as caps). Keeps the colour play mostly on the caps.
-            const mushroomLegColorVariation = objectParameters.mushroomLegColorVariation ?? 0.25
-            const treeColorVariation = objectParameters.treeColorVariation ?? 0
+            // (Type colours + per-instance variation are shader uniforms now — nothing colour-
+            // related is baked here beyond the stone GLB variant colour × placement tone.)
 
             for (const chunk of activeChunks) {
                 if (chunkInstances.has(chunk.key)) continue
@@ -495,30 +496,12 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                         const addedIds = []
                         const addedMushroomColors = [] // [capColor, legColor] — captured for the touch light-up
                         for (const prototypeId of prototypeIds) {
-                            const meta = pool.prototypeMeta[prototypeId]
-                            if (isStone) {
-                                color.copy(pool.prototypeColors[prototypeId] ?? WHITE).multiply(stoneTintObj)
-                            } else if (isMushroom) {
-                                color.copy(meta?.part === 'cap' ? mushroomCapObj : mushroomLegObj)
-                            } else if (isTree) {
-                                color.copy(meta?.part === 'bush' ? treeColorObj : treeTrunkObj)
-                            } else if (meta?.foliage) {
-                                color.copy(treeColorObj)
-                            } else {
-                                color.copy(pool.prototypeColors[prototypeId] ?? WHITE)
-                            }
+                            // The batched instance colour carries ONLY the theme-independent part:
+                            // the stone's GLB variant colour (white for trees/mushrooms) × the
+                            // placement tone. The per-TYPE theme colour + the per-instance jitter
+                            // apply in the shader (uType* uniforms), so recolouring never rebuilds.
+                            color.copy(isStone ? pool.prototypeColors[prototypeId] ?? WHITE : WHITE)
                             color.multiplyScalar(instance.colorTone)
-                            // Per-instance per-channel tint variation of the same base colour (like the
-                            // sheep scales), with its own factor per prop type.
-                            let variation = isStone ? stoneColorVariation : isMushroom ? mushroomColorVariation : isTree ? treeColorVariation : 0
-                            // Dampen the variation on the mushroom leg so the colour play stays on the cap.
-                            if (isMushroom && meta?.part === 'leg') variation *= mushroomLegColorVariation
-                            if (variation > 0 && instance.colorJitter) {
-                                const j = instance.colorJitter
-                                color.r *= THREE.MathUtils.clamp(1 + j[0] * variation, 0.25, 1.75)
-                                color.g *= THREE.MathUtils.clamp(1 + j[1] * variation, 0.25, 1.75)
-                                color.b *= THREE.MathUtils.clamp(1 + j[2] * variation, 0.25, 1.75)
-                            }
                             const instanceId = pool.addInstance(prototypeId, dummy.matrix, color)
                             if (instanceId !== -1) {
                                 ids.push(instanceId)

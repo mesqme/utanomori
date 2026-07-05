@@ -85,13 +85,14 @@ export default function Joystick() {
         centreKnob()
     }
 
-    // Landscape: parked in the chosen corner (side + marginX). Portrait ("lazy" one-hand hold):
-    // bottom-CENTRE, under the resting thumb. Margins add the safe-area insets so the stick never
-    // hides behind an iPhone home indicator / notch edge.
+    // Landscape: parked in the chosen corner (side + marginX/marginY). Portrait ("lazy" one-hand
+    // hold): bottom-CENTRE, raised by its own marginYPortrait. Margins add the safe-area insets so
+    // the stick never hides behind an iPhone home indicator / notch edge.
+    const bottomMargin = portrait ? params.marginYPortrait ?? params.marginY : params.marginY
     const baseStyle = {
         width: `${params.size}px`,
         height: `${params.size}px`,
-        bottom: `calc(${params.marginY}px + env(safe-area-inset-bottom, 0px))`,
+        bottom: `calc(${bottomMargin}px + env(safe-area-inset-bottom, 0px))`,
         ...(portrait
             ? { left: '50%', marginLeft: `${-params.size / 2}px` }
             : {

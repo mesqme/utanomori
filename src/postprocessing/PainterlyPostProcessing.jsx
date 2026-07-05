@@ -5,6 +5,7 @@ import { Bloom, EffectComposer, SMAA } from '@react-three/postprocessing'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
 import { updateNoiseReveal } from '../game/visualReveal.js'
+import { themeMask } from '../world/utils/themeMask.js'
 import SharpenPass from './SharpenPass.js'
 
 // Post chain: scene (no MSAA) → optional bloom → SMAA (final-image AA) → SharpenPass
@@ -32,16 +33,22 @@ export default function PainterlyPostProcessing() {
 
     useEffect(() => () => sharpenPass.dispose(), [sharpenPass])
 
-    useFrame((_, delta) => {
+    useFrame((frameState, delta) => {
         const phase = usePhases.getState().phase
         textureReveal.current = updateNoiseReveal(textureReveal.current, phase, delta)
         const reveal = textureReveal.current
 
+        // Masked theme transition: the outgoing grade + the screen-space mask, so the grade sweeps
+        // with the portal/wipe edge instead of snapping across the whole screen at the click.
+        const old = themeMask.active ? themeMask.old : null
         sharpenPass.update({
             ...settings,
             ...activeGrade,
             luminanceNoise: (settings.luminanceNoise ?? 0) * reveal,
             chromaNoise: (settings.chromaNoise ?? 0) * reveal,
+            oldSaturation: old?.gradeSaturation,
+            oldWarmth: old?.gradeWarmth,
+            oldBrightness: old?.gradeBrightness,
         })
     })
 

@@ -5,6 +5,8 @@ precision highp float;
 
 uniform float uTime;
 uniform vec3 uEyeColor;
+// Outgoing theme's iris colour (masked theme transitions) — the eyes recolour with the sweep.
+uniform vec3 uEyeColorOld;
 uniform vec3 uPupilColor;
 uniform float uEyeRadius;
 uniform float uEyeSpacing;
@@ -48,6 +50,8 @@ varying float vPropMask;
 varying float vPhase;
 varying vec3 vWorldNormal;
 varying vec3 vWorldPos;
+
+#include ../lib/themeMask.glsl
 
 // How much to fade the eye where a see-through subject sits behind this plane (matches prop/fragment).
 float seeThroughAmount(vec2 center, float radiusPx, float depth) {
@@ -131,6 +135,7 @@ void main() {
 
     float alpha = emask * vPropMask * facing * (1.0 - clamp(stAmount, 0.0, 1.0));
     if (alpha < 0.01) discard;
-    gl_FragColor = vec4(mix(uEyeColor, uPupilColor, pmask), alpha);
+    vec3 irisColor = mix(uEyeColorOld, uEyeColor, themeMaskNewness());
+    gl_FragColor = vec4(mix(irisColor, uPupilColor, pmask), alpha);
     #include <colorspace_fragment>
 }

@@ -7,7 +7,7 @@ import * as THREE from 'three'
 // Normalise a geometry to ONE attribute layout: position, normal, uv, aFoliage. Copy only
 // those (zero-fill uv when missing, recompute normals if absent). aFoliage tags tree leaves
 // so the fragment gives them the painterly edge; everything else (stones) gets the fresnel rim.
-export function toCanonicalGeometry(source, foliage, seeThrough = 0, wind = 0) {
+export function toCanonicalGeometry(source, foliage, seeThrough = 0, wind = 0, part = 0) {
     const geometry = new THREE.BufferGeometry()
     geometry.setAttribute('position', source.getAttribute('position').clone())
     if (source.index) geometry.setIndex(source.index.clone())
@@ -29,6 +29,11 @@ export function toCanonicalGeometry(source, foliage, seeThrough = 0, wind = 0) {
     const windFlag = new Float32Array(count)
     if (wind) windFlag.fill(1)
     geometry.setAttribute('aWind', new THREE.BufferAttribute(windFlag, 1))
+    // aPart: 1 = mushroom LEG (the fragment picks the leg colour + dampened variation for it);
+    // 0 everywhere else. Present on every prototype so the BatchedMesh layout stays consistent.
+    const partFlag = new Float32Array(count)
+    if (part) partFlag.fill(1)
+    geometry.setAttribute('aPart', new THREE.BufferAttribute(partFlag, 1))
     // aHeight: 0 at this geometry's bottom → 1 at its top (normalised over its own y-bbox), so the
     // stone fragment can darken the base regardless of the variant's size. Present on every prototype
     // (consistent BatchedMesh layout); only stones actually use it.
@@ -114,7 +119,7 @@ export function createMushroomGeometries(capNode, legNode) {
     leg.translate(ox, oy, oz)
 
     const capCanonical = toCanonicalGeometry(cap, false)
-    const legCanonical = toCanonicalGeometry(leg, false)
+    const legCanonical = toCanonicalGeometry(leg, false, 0, 0, 1) // aPart=1 → leg colour in the shader
     cap.dispose()
     leg.dispose()
     return { cap: capCanonical, leg: legCanonical }

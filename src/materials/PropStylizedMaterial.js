@@ -6,6 +6,7 @@ import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { edgeUniforms, registerEdgeMaterial } from './edgeUniforms.js'
 import { screenPainteryUniforms } from '../world/utils/screenPaintery.js'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // Stylized prop material — the character's unlit + triplanar-painterly look, but
 // extended with the BatchedMesh chunks so it batches with per-instance colour, plus
@@ -30,6 +31,7 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPainterlyColorStrength: { value: 0 },
             uPainterlyBrightnessVariation: { value: 0.5 },
             uBackgroundColor: { value: new THREE.Color(soundJourneyPalette.background) },
+            uBackgroundColorOld: { value: new THREE.Color(soundJourneyPalette.background) },
             uPropFadeMode: { value: 1 },
             uPixelSize: { value: 1 },
             uPainterySize: { value: 167 },
@@ -69,6 +71,32 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPropRimColorMushroom: { value: new THREE.Color('#cfc2ff') },
             uPropRimStrength: { value: 0.7 },
             uPropRimPower: { value: 2.5 },
+            // Per-TYPE prop colours (scattered props only): the batched instance colour carries the
+            // theme-independent part; these uniforms recolour trees/stones/mushrooms live — no rebuild.
+            uTypeColorsEnabled: { value: 0 },
+            uTypeTreeColor: { value: new THREE.Color('#ffffff') },
+            uTypeTrunkColor: { value: new THREE.Color('#ffffff') },
+            uTypeStoneColor: { value: new THREE.Color('#ffffff') },
+            uTypeMushroomCapColor: { value: new THREE.Color('#ffffff') },
+            uTypeMushroomLegColor: { value: new THREE.Color('#ffffff') },
+            uTypeTreeVariation: { value: 0 },
+            uTypeStoneVariation: { value: 0 },
+            uTypeMushroomVariation: { value: 0 },
+            uTypeMushroomLegVariation: { value: 0.25 },
+            // Outgoing theme (masked theme transitions) + the screen-space mask itself.
+            uTypeTreeColorOld: { value: new THREE.Color('#ffffff') },
+            uTypeTrunkColorOld: { value: new THREE.Color('#ffffff') },
+            uTypeStoneColorOld: { value: new THREE.Color('#ffffff') },
+            uTypeMushroomCapColorOld: { value: new THREE.Color('#ffffff') },
+            uTypeMushroomLegColorOld: { value: new THREE.Color('#ffffff') },
+            uTypeTreeVariationOld: { value: 0 },
+            uTypeStoneVariationOld: { value: 0 },
+            uTypeMushroomVariationOld: { value: 0 },
+            uStoneGradientColorOld: { value: new THREE.Color('#161335') },
+            uPropRimColorStoneOld: { value: new THREE.Color('#cfc2ff') },
+            uPropRimColorTrunkOld: { value: new THREE.Color('#cfc2ff') },
+            uPropRimColorMushroomOld: { value: new THREE.Color('#cfc2ff') },
+            ...themeMaskUniforms,
             // Stone bottom gradient (applies only to scattered stones; vStone gates it).
             uStoneGradientEnabled: { value: 0 },
             uStoneGradientDark: { value: 0.45 },
@@ -93,6 +121,8 @@ export function updatePropStylizedMaterial(material, options) {
     u.uPropFadeOffset.value = options.fadeOffset
     const refScale = options.refScale ?? 1
     u.uBackgroundColor.value.set(options.backgroundColor)
+    // Border-fade target during a masked theme transition — the outgoing sky, identity otherwise.
+    u.uBackgroundColorOld.value.set(options.themeMaskOld?.bgColor ?? options.backgroundColor)
     u.uPropFadeMode.value = fadeModeToInt(options.fadeMode)
     u.uPixelSize.value = options.pixelSize * refScale
     u.uPainterlyEnabled.value = options.painterlyEnabled ? 1 : 0
@@ -110,6 +140,11 @@ export function updatePropStylizedMaterial(material, options) {
             u.uPropRimColorStone.value.set(r.color)
             u.uPropRimColorTrunk.value.set(r.color)
             u.uPropRimColorMushroom.value.set(r.color)
+            // Outgoing rim during a masked theme transition — identity (= live colour) otherwise.
+            const oldRim = options.themeMaskOld?.rimMusicStone ?? r.color
+            u.uPropRimColorStoneOld.value.set(oldRim)
+            u.uPropRimColorTrunkOld.value.set(oldRim)
+            u.uPropRimColorMushroomOld.value.set(oldRim)
         } else {
             if (r.stoneColor) u.uPropRimColorStone.value.set(r.stoneColor)
             if (r.trunkColor) u.uPropRimColorTrunk.value.set(r.trunkColor)
@@ -123,6 +158,42 @@ export function updatePropStylizedMaterial(material, options) {
         u.uStoneGradientColor.value.set(s.color)
         u.uStoneGradientColorStrength.value = s.colorStrength
         u.uStoneGradientHeight.value = s.height
+    }
+    // Per-type prop colours + variations (only ScatteredObjects passes this; other users of the
+    // material — music stones, companions — keep their own colour paths).
+    if (options.typeColors) {
+        const t = options.typeColors
+        u.uTypeColorsEnabled.value = 1
+        u.uTypeTreeColor.value.set(t.treeColor)
+        u.uTypeTrunkColor.value.set(t.treeTrunkColor)
+        u.uTypeStoneColor.value.set(t.stoneTint)
+        u.uTypeMushroomCapColor.value.set(t.mushroomCapColor)
+        u.uTypeMushroomLegColor.value.set(t.mushroomLegColor)
+        u.uTypeTreeVariation.value = t.treeColorVariation
+        u.uTypeStoneVariation.value = t.stoneColorVariation
+        u.uTypeMushroomVariation.value = t.mushroomColorVariation
+        u.uTypeMushroomLegVariation.value = t.mushroomLegColorVariation
+        // Outgoing theme during a masked transition — identity (= live values) otherwise.
+        const old = options.themeMaskOld
+        u.uTypeTreeColorOld.value.set(old?.treeColor ?? t.treeColor)
+        u.uTypeTrunkColorOld.value.set(old?.trunkColor ?? t.treeTrunkColor)
+        u.uTypeStoneColorOld.value.set(old?.stoneTint ?? t.stoneTint)
+        u.uTypeMushroomCapColorOld.value.set(old?.mushroomCap ?? t.mushroomCapColor)
+        u.uTypeMushroomLegColorOld.value.set(old?.mushroomLeg ?? t.mushroomLegColor)
+        u.uTypeTreeVariationOld.value = old?.treeVariation ?? t.treeColorVariation
+        u.uTypeStoneVariationOld.value = old?.stoneVariation ?? t.stoneColorVariation
+        u.uTypeMushroomVariationOld.value = old?.mushroomVariation ?? t.mushroomColorVariation
+        if (options.stoneGradient) u.uStoneGradientColorOld.value.set(old?.stoneGradientColor ?? options.stoneGradient.color)
+        if (options.propRim) {
+            u.uPropRimColorStoneOld.value.set(old?.rimStone ?? options.propRim.stoneColor)
+            u.uPropRimColorTrunkOld.value.set(old?.rimTrunk ?? options.propRim.trunkColor)
+            u.uPropRimColorMushroomOld.value.set(old?.rimMushroom ?? options.propRim.mushroomColor)
+        }
+        // Shared edge uniforms (leaves silhouette colour) — one set reaches every edge material.
+        if (old?.edgeColor) u.uEdgeColorOld.value.set(old.edgeColor)
+        else u.uEdgeColorOld.value.copy(u.uEdgeColor.value)
+    } else {
+        u.uTypeColorsEnabled.value = 0
     }
     if (options.paintery) {
         u.uPainterySize.value = options.paintery.size // CSS-locked (dpr applied in the shader)

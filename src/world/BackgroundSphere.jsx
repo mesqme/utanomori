@@ -8,6 +8,7 @@ import usePhases from '../stores/usePhases.jsx'
 import { createBackgroundMaterial, updateBackgroundMaterial } from '../materials/BackgroundMaterial.js'
 import { getWorldLockScale } from './utils/screenScale.js'
 import { screenPainteryUniforms, updateScreenPaintery } from './utils/screenPaintery.js'
+import { themeMask } from './utils/themeMask.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import { BACKGROUND_TEXTURE_URL_LIST, backgroundTextureIndex } from '../config/surfaceTextures.js'
 
@@ -78,6 +79,8 @@ export default function BackgroundSphere() {
             textureBrightness: (params.textureBrightness ?? params.colorIntensity ?? 0.4) * textureAmount,
             textureMixIntensity: params.textureMixIntensity ?? params.colorMixIntensity ?? 0.0,
             starBrightness: (params.starBrightness ?? 1.2) * textureAmount,
+            // Outgoing-theme sky during a live masked theme transition (null = identity).
+            themeMaskOld: themeMask.active ? themeMask.old : null,
         })
     })
 

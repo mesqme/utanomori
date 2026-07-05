@@ -3,6 +3,7 @@ import { Pass } from 'postprocessing'
 
 import fullscreenVertexShader from '../shaders/postprocessing/fullscreen.vert'
 import sharpenFragmentShader from '../shaders/postprocessing/sharpen.frag'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // Final pass of the painterly pipeline: an optional cheap sharpen, then the film
 // grain applied last so nothing (kuwahara, bloom, AA) filters the grain afterwards.
@@ -26,6 +27,11 @@ export default class SharpenPass extends Pass {
                 uSaturation: { value: settings.saturation ?? 1 },
                 uWarmth: { value: settings.warmth ?? 0 },
                 uBrightness: { value: settings.brightness ?? 1 },
+                // Outgoing theme's grade + the transition mask (PainterlyPostProcessing drives these).
+                uSaturationOld: { value: settings.saturation ?? 1 },
+                uWarmthOld: { value: settings.warmth ?? 0 },
+                uBrightnessOld: { value: settings.brightness ?? 1 },
+                ...themeMaskUniforms,
             },
             depthTest: false,
             depthWrite: false,
@@ -47,6 +53,10 @@ export default class SharpenPass extends Pass {
         u.uSaturation.value = settings.saturation ?? 1
         u.uWarmth.value = settings.warmth ?? 0
         u.uBrightness.value = settings.brightness ?? 1
+        // Outgoing grade during a masked theme transition — identity (= live) otherwise.
+        u.uSaturationOld.value = settings.oldSaturation ?? u.uSaturation.value
+        u.uWarmthOld.value = settings.oldWarmth ?? u.uWarmth.value
+        u.uBrightnessOld.value = settings.oldBrightness ?? u.uBrightness.value
     }
 
     render(renderer, inputBuffer, outputBuffer) {

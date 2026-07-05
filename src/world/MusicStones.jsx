@@ -14,6 +14,7 @@ import { revealCircle } from './utils/revealCircle.js'
 import { getRefScale } from './utils/screenScale.js'
 import { getGroundY } from './utils/groundHeight.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { themeMask } from './utils/themeMask.js'
 import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './utils/musicStoneSeeThrough.js'
 import { musicStonePointer } from './utils/musicStonePointer.js'
 import { clearAllMusicStones } from './utils/musicStoneField.js'
@@ -468,6 +469,8 @@ export default function MusicStones() {
                 power: store.propRimParameters.power,
                 color: store.propRimParameters.musicStoneColor,
             },
+            // Outgoing rim colour during a masked theme transition (the note colours aren't themed).
+            themeMaskOld: themeMask.active ? themeMask.old : null,
             refScale: getRefScale(state),
             circleCenterX: layout.cx,
             circleCenterZ: layout.cz,

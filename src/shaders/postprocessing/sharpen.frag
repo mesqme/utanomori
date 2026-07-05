@@ -14,6 +14,13 @@ uniform float noiseSeed;
 uniform float uSaturation;
 uniform float uWarmth;
 uniform float uBrightness;
+// Outgoing theme's grade (masked theme transitions): the grade sweeps with the portal/wipe edge
+// instead of snapping across the whole screen at the click.
+uniform float uSaturationOld;
+uniform float uWarmthOld;
+uniform float uBrightnessOld;
+
+#include ../lib/themeMask.glsl
 
 varying vec2 vUv;
 
@@ -42,10 +49,12 @@ void main() {
     // Display color grade — applied before grain so the grain stays the untouched top layer. Identity
     // (1 / 0 / 1) is a no-op. brightness scales, saturation pulls toward luma, warmth pushes red up and
     // blue down (counteracts the too-blue / too-saturated look on a normal-brightness display).
-    color *= uBrightness;
+    float tmNew = themeMaskNewness();
+    color *= mix(uBrightnessOld, uBrightness, tmNew);
     float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    color = mix(vec3(luma), color, uSaturation);
-    color *= vec3(1.0 + uWarmth, 1.0, 1.0 - uWarmth);
+    color = mix(vec3(luma), color, mix(uSaturationOld, uSaturation, tmNew));
+    float warmth = mix(uWarmthOld, uWarmth, tmNew);
+    color *= vec3(1.0 + warmth, 1.0, 1.0 - warmth);
 
     // Film grain — the final layer of the pipeline (nothing filters it afterwards).
     if (sensorNoiseEnabled == 1 && (luminanceNoise > 0.0 || chromaNoise > 0.0)) {

@@ -2,9 +2,15 @@
 #extension GL_OES_standard_derivatives : enable
 #endif
 
-uniform vec3 uBaseColor;        
+uniform vec3 uBaseColor;
 uniform vec3 uBackgroundColor;
+uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
 uniform float uBaseBrightness;
+// Outgoing theme (masked theme transitions — the ground keeps moving on both sides of the edge).
+uniform vec3 uBaseColorOld;
+uniform float uBaseBrightnessOld;
+
+#include ../lib/themeMask.glsl
 uniform vec3 uCircleCenter;    
 uniform float uPatchSize;  
 uniform float uCircleRadiusFactor;
@@ -24,6 +30,7 @@ uniform sampler2D uGroundTexture;
 uniform int uGroundTextureEnabled;
 uniform float uGroundTextureScale;
 uniform float uGroundTextureContrast;
+uniform float uGroundTextureContrastOld; // outgoing theme's value (masked transitions)
 uniform int uRoadEnabled;
 uniform float uRoadWidth;
 uniform float uRoadSoftness;
@@ -153,12 +160,14 @@ void main() {
       }
   }
 
-  vec3 color = uBaseColor * uBaseBrightness;
+  // Masked theme transition: outgoing → live palette per fragment (inactive → tmNew = 1).
+  float tmNew = themeMaskNewness();
+  vec3 color = mix(uBaseColorOld, uBaseColor, tmNew) * mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
   if (uGroundTextureEnabled == 1) {
       vec3 groundSample = texture2D(uGroundTexture, worldXZ * uGroundTextureScale).rgb;
       float groundValue = dot(groundSample, vec3(0.299, 0.587, 0.114));
       float groundVariation = (groundValue - 0.5) * 2.0;
-      color *= 1.0 + groundVariation * uGroundTextureContrast;
+      color *= 1.0 + groundVariation * mix(uGroundTextureContrastOld, uGroundTextureContrast, tmNew);
   }
   color = clamp(color, 0.0, 1.0);
 
@@ -200,8 +209,11 @@ void main() {
       color *= 1.0 - sh.w * uShadowDarkness * shadowMask;
   }
 
+  // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
+  // edge of the ground doesn't snap toward the new sky at the click.
+  vec3 fadeBg = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
   if (uFadeMode == 1) {
-      color = mix(color, uBackgroundColor, t);
+      color = mix(color, fadeBg, t);
   }
 
   // Paintery edge — a seamless brush (alpha) texture used as the dissolve threshold,
@@ -215,7 +227,7 @@ void main() {
       vec2 painteryUv = worldXZ * uPainteryDrift;
       float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
       painteryBrush = mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
-      color = mix(color, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, t));
+      color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, t));
       if (t > painteryBrush) discard;
   }
 

@@ -10,6 +10,7 @@ import ScatteredObjects from './ScatteredObjects.jsx'
 import GrassTrail from './GrassTrail.jsx'
 import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { themeMask, updateThemeMask } from './utils/themeMask.js'
 import { characterSeeThrough } from './utils/characterSeeThrough.js'
 import { useBakedPainteryTexture } from './utils/useBakedPainteryTexture.js'
 import { getRefScale } from './utils/screenScale.js'
@@ -40,6 +41,9 @@ export default function Terrain() {
     const radiusAnimationRef = useRef(null)
     const prevPhaseRef = useRef(PHASES.loading)
     const circleRadiusRef = useRef(START_CIRCLE_RADIUS)
+    // Grass global fade: 0 on the loading/GO screens (the hover preview shows ground + props but no
+    // grass — top-down grass reads badly), fading up to 1 once GO is pressed.
+    const grassAlphaRef = useRef(0)
     const pendingChunksRef = useRef([])
     const desiredChunkKeysRef = useRef(new Set())
     const pruneChunksRef = useRef(false)
@@ -203,6 +207,37 @@ export default function Terrain() {
             const rate = hovering ? WARMUP_HOVER_LERP : WARMUP_FADE_LERP
             const t = Math.min(1, (delta || 0.016) * rate)
             setCircleRadius(THREE.MathUtils.lerp(circleRadiusRef.current, target, t))
+        }
+
+        // Grass global fade: invisible on the loading / GO screens (top-down grass looked wrong in
+        // the hover preview), fading in once GO is pressed (intro onward). Resettling hides behind
+        // the loader curtain, so snapping back to 0 there is invisible.
+        {
+            const hideGrass = phase === PHASES.loading || phase === PHASES.warmup || phase === PHASES.resettling
+            const t = Math.min(1, (delta || 0.016) * (hideGrass ? 6 : 1.4))
+            grassAlphaRef.current = THREE.MathUtils.lerp(grassAlphaRef.current, hideGrass ? 0 : 1, t)
+            grassMaterial.uniforms.uGrassGlobalAlpha.value = grassAlphaRef.current
+        }
+
+        // Live masked theme transition: ONE update drives the shared mask uniforms for EVERY themed
+        // material (they all spread themeMaskUniforms), plus the outgoing-theme values on the two
+        // ground materials (identity when inactive — old falls back to the live values).
+        {
+            updateThemeMask(frameState.gl, state.themeTransitionParameters)
+            const old = themeMask.active ? themeMask.old : null
+            terrainMaterial.uniforms.uBaseColorOld.value.set(old?.terrainColor ?? state.terrainParameters.color)
+            terrainMaterial.uniforms.uBaseBrightnessOld.value = old?.terrainBrightness ?? state.terrainParameters.baseBrightness
+            terrainMaterial.uniforms.uGroundTextureContrastOld.value = old?.terrainTextureContrast ?? state.terrainParameters.groundTextureContrast
+            grassMaterial.uniforms.uGrassBaseColorOld.value.set(old?.grassBase ?? state.grassParameters.colorBase)
+            grassMaterial.uniforms.uGrassTintCyanOld.value.set(old?.tintCyan ?? state.grassPatchParameters.tintColorCyan)
+            grassMaterial.uniforms.uGrassTintVioletOld.value.set(old?.tintViolet ?? state.grassPatchParameters.tintColorViolet)
+            grassMaterial.uniforms.uGrassTintYellowOld.value.set(old?.tintYellow ?? state.grassPatchParameters.tintColorYellow)
+            grassMaterial.uniforms.uGrassTintGreenOld.value.set(old?.tintGreen ?? state.grassPatchParameters.tintColorGreen)
+            grassMaterial.uniforms.uBaseBrightnessOld.value = old?.grassBrightness ?? state.grassParameters.baseBrightness
+            grassMaterial.uniforms.uLightenColorOld.value.set(old?.lightenColor ?? state.grassParameters.lightenColor ?? '#cdeebf')
+            // The border-fade target (the sky colour) is themed too — keep the far edge on the mask.
+            terrainMaterial.uniforms.uBackgroundColorOld.value.set(old?.bgColor ?? state.backgroundParameters.backgroundColor)
+            grassMaterial.uniforms.uBackgroundColorOld.value.set(old?.bgColor ?? state.backgroundParameters.backgroundColor)
         }
 
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)

@@ -7,6 +7,7 @@ uniform vec3 uPainterlyColor;
 uniform float uPainterlyColorStrength;
 uniform float uPainterlyBrightnessVariation;
 uniform vec3 uBackgroundColor;
+uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
 uniform int uPropFadeMode; // 0 = dither, 1 = colour, 2 = paintery
 uniform float uPixelSize;
 uniform float uPainterySize;
@@ -57,6 +58,36 @@ uniform vec3 uStoneGradientColor;
 uniform float uStoneGradientColorStrength;
 uniform float uStoneGradientHeight;
 
+// Per-TYPE prop colours as uniforms (scattered-props material only — uTypeColorsEnabled). The
+// batched per-instance colour carries only the theme-INDEPENDENT part (stone GLB variant colour ×
+// placement tone); the type colour + per-instance jitter apply here, so recolouring trees/stones/
+// mushrooms is a uniform write — no BatchedMesh rebuild (the day/night switch stays hitch-free).
+uniform int uTypeColorsEnabled;
+uniform vec3 uTypeTreeColor; // bush / canopy
+uniform vec3 uTypeTrunkColor;
+uniform vec3 uTypeStoneColor; // the stoneTint
+uniform vec3 uTypeMushroomCapColor;
+uniform vec3 uTypeMushroomLegColor;
+uniform float uTypeTreeVariation;
+uniform float uTypeStoneVariation;
+uniform float uTypeMushroomVariation;
+uniform float uTypeMushroomLegVariation; // how much of the mushroom variation reaches the leg
+// Outgoing theme (masked theme transitions — props keep moving on both sides of the edge).
+uniform vec3 uTypeTreeColorOld;
+uniform vec3 uTypeTrunkColorOld;
+uniform vec3 uTypeStoneColorOld;
+uniform vec3 uTypeMushroomCapColorOld;
+uniform vec3 uTypeMushroomLegColorOld;
+uniform float uTypeTreeVariationOld;
+uniform float uTypeStoneVariationOld;
+uniform float uTypeMushroomVariationOld;
+uniform vec3 uStoneGradientColorOld;
+uniform vec3 uPropRimColorStoneOld;
+uniform vec3 uPropRimColorTrunkOld;
+uniform vec3 uPropRimColorMushroomOld;
+
+#include ../lib/themeMask.glsl
+
 #include <common>
 #include <color_pars_fragment>
 
@@ -70,6 +101,8 @@ varying float vFoliage;
 varying float vSeeThrough; // 1 = trees (fade when occluding); 0 = stones/mushrooms (stay solid)
 varying float vHeight;
 varying float vStone;
+varying float vPart;
+varying vec3 vTypeJitter; // per-instance colour jitter, computed in the VERTEX (stable, no crawl)
 
 #include ../lib/paintedEdge.glsl
 
@@ -161,6 +194,35 @@ void main() {
         finalColor = vColor;
     #endif
 
+    // Masked theme transition mask (1 when inactive) — blends outgoing → live theme values below.
+    float tmNew = themeMaskNewness();
+
+    // Scattered props: the batched colour holds only the theme-independent part (stone GLB variant
+    // colour × placement tone). Apply the per-TYPE theme colour + the per-instance jitter here —
+    // same formula the CPU bake used: clamp(1 + jitter · variation, 0.25, 1.75) per channel.
+    if (uTypeColorsEnabled == 1) {
+        vec3 typeColor;
+        float variation;
+        if (vStone > 0.5) {
+            typeColor = mix(uTypeStoneColorOld, uTypeStoneColor, tmNew);
+            variation = mix(uTypeStoneVariationOld, uTypeStoneVariation, tmNew);
+        } else if (vFoliage > 0.5) {
+            typeColor = mix(uTypeTreeColorOld, uTypeTreeColor, tmNew);
+            variation = mix(uTypeTreeVariationOld, uTypeTreeVariation, tmNew);
+        } else if (vSeeThrough > 0.5) {
+            typeColor = mix(uTypeTrunkColorOld, uTypeTrunkColor, tmNew);
+            variation = mix(uTypeTreeVariationOld, uTypeTreeVariation, tmNew);
+        } else if (vPart > 0.5) {
+            typeColor = mix(uTypeMushroomLegColorOld, uTypeMushroomLegColor, tmNew);
+            variation = mix(uTypeMushroomVariationOld, uTypeMushroomVariation, tmNew) * uTypeMushroomLegVariation;
+        } else {
+            typeColor = mix(uTypeMushroomCapColorOld, uTypeMushroomCapColor, tmNew);
+            variation = mix(uTypeMushroomVariationOld, uTypeMushroomVariation, tmNew);
+        }
+        vec3 jitterFactor = clamp(vec3(1.0) + vTypeJitter * variation, 0.25, 1.75);
+        finalColor *= typeColor * jitterFactor;
+    }
+
     if (uPainterlyEnabled == 1) {
         float painterlyValue = samplePainterlyTexture(vObjectPosition * uPainterlyScale, normalize(vObjectNormal));
         painterlyValue = clamp((painterlyValue - 0.5) * uPainterlyContrast + 0.5, 0.0, 1.0);
@@ -174,17 +236,20 @@ void main() {
     if (uStoneGradientEnabled == 1 && vStone > 0.5) {
         float up = smoothstep(0.0, max(uStoneGradientHeight, 0.001), vHeight); // 0 = bottom → 1 = top
         finalColor *= mix(uStoneGradientDark, 1.0, up); // darken the base
-        finalColor = mix(finalColor, uStoneGradientColor, (1.0 - up) * uStoneGradientColorStrength); // tint the base
+        vec3 gradientColor = mix(uStoneGradientColorOld, uStoneGradientColor, tmNew);
+        finalColor = mix(finalColor, gradientColor, (1.0 - up) * uStoneGradientColorStrength); // tint the base
     }
 
-    // Reveal-circle fade — colour, dithered, or paintery, matching the world.
+    // Reveal-circle fade — colour, dithered, or paintery, matching the world. The fade target is
+    // the SKY colour, which is themed — mix it by the mask so the border band doesn't snap.
+    vec3 fadeBg = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
     float fade = 1.0 - vPropMask;
     if (uPropFadeMode == 1) {
         if (vPropMask <= 0.001) discard;
-        finalColor = mix(uBackgroundColor, finalColor, vPropMask);
+        finalColor = mix(fadeBg, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
         float painteryBrush = samplePainteryBrush(vWorldXZ);
-        finalColor = mix(finalColor, uBackgroundColor, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));
+        finalColor = mix(finalColor, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));
         if (fade > painteryBrush) discard;
     } else {
         if (fade >= 0.999 || (fade > 0.0 && bayerDither(gl_FragCoord.xy, uPixelSize) < fade)) discard;
@@ -194,10 +259,12 @@ void main() {
     if (vFoliage > 0.5) {
         // Tree leaves keep the painterly dither/alpha silhouette edge.
         float edgeBrush = samplePainterlyTexture(vObjectPosition * uEdgeNoiseScale, normalize(vObjectNormal));
-        edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush);
+        edgeAlpha = paintedEdgeAlpha(finalColor, vWorldNormal, vWorldPos, edgeBrush, tmNew);
     } else {
         // Trunks / stones / mushrooms get a fresnel colour rim instead (opaque) — colour per type.
-        vec3 rimColor = vStone > 0.5 ? uPropRimColorStone : (vSeeThrough > 0.5 ? uPropRimColorTrunk : uPropRimColorMushroom);
+        vec3 rimColor = vStone > 0.5 ? mix(uPropRimColorStoneOld, uPropRimColorStone, tmNew)
+            : (vSeeThrough > 0.5 ? mix(uPropRimColorTrunkOld, uPropRimColorTrunk, tmNew)
+                                 : mix(uPropRimColorMushroomOld, uPropRimColorMushroom, tmNew));
         finalColor = applyPropRim(finalColor, rimColor, vWorldNormal, vWorldPos);
     }
 

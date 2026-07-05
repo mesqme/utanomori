@@ -67,8 +67,39 @@ export const DEFAULT_LOADER_DEBUG_PARAMETERS = {
     circleRadius: 106,
     ringWidth: 15.5,
     cameraHeight: 18,
-    cssColorA: '#03021a',
-    cssColorB: '#9d1111',
+}
+
+// Which named colour preset each group is currently on (Colors folder in Leva). Presets live in
+// config/colorPresets.js; selecting one writes its colours into the real param groups — these
+// only remember the selection so the dropdowns read back correctly.
+export const DEFAULT_COLOR_PRESET_PARAMETERS = {
+    theme: 'Night Forest',
+    grass: 'Violet Night',
+    stones: 'Periwinkle',
+    trees: 'Indigo Canopy',
+}
+
+// How the day/night switch (and the Leva theme dropdown) transitions between themes.
+// 'Fade' crossfades every changing value; 'Portal' grows a torn-edged circle from the screen centre
+// revealing the new look inside; 'Wipe' sweeps a torn border right → left; 'Dissolve' erodes the
+// whole old frame at once (the rust-like brush-threshold effect the ground border uses).
+export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
+    mode: 'Portal', // 'Fade' | 'Portal' | 'Wipe' | 'Dissolve' | 'Instant'
+    duration: 3.0, // seconds
+    // Progress curve. 'Fast start' responds the instant you click and eases out at the end;
+    // 'Slow start' is the cinematic ramp-up (feels laggy on click); 'Smooth' is between.
+    easing: 'Fast start', // 'Fast start' | 'Smooth' | 'Slow start' | 'Linear'
+    // The Portal/Wipe/Dissolve edge is a THRESHOLD against a noise field (exactly the ground
+    // border's paintery fade): within `band` around the front, pixels flip old→new where the local
+    // noise beats the progression; `bleed` soft-mixes near the threshold.
+    edgeStyle: 'Paintery', // 'Paintery' (the brush texture) | 'Perlin' (procedural noise)
+    band: 0.8, // width of the torn transition band (screen fraction) — wide = the whole sweep is brush-eaten
+    bleed: 0.0, // soft blend width inside the band (0 = hard paintery cutout)
+    textureScale: 0.65, // Paintery style: brush tiling in screen space (small = big strokes)
+    perlinScale: 6.5, // Perlin style: noise frequency
+    perlinDetail: 1, // Perlin style: octaves (1 = soft blobs → 5 = crunchy)
+    // (Grass + prop colours are shader uniforms — every theme value crossfades per frame, and no
+    // mode triggers an instance rebuild.)
 }
 
 // Mobile-only camera distances (isMobile → resolvedCameraDistances). Same fields as the desktop
@@ -135,10 +166,11 @@ export const DEFAULT_MOBILE_STONE_PARAMETERS = {
 export const DEFAULT_JOYSTICK_PARAMETERS = {
     size: 130, // base diameter (px)
     knobSize: 58, // knob diameter (px)
-    marginX: 120, // px from the chosen side edge (landscape corner placement; portrait is bottom-centre)
-    marginY: 70, // px from the bottom edge (raised so the stick sits under a comfortable thumb reach)
+    marginX: 48, // LANDSCAPE: px from the chosen side edge (portrait is bottom-centre, no X margin)
+    marginY: 28, // LANDSCAPE: px from the bottom edge (the corner placement sits low)
+    marginYPortrait: 70, // PORTRAIT: px from the bottom edge (raised under the resting thumb)
     side: 'left', // 'left' | 'right' — which corner it sits in
-    opacity: 0.5, // base + knob opacity
+    opacity: 0.25, // base + knob opacity (both orientations)
     deadzone: 0.16, // fraction of the radius ignored before the hero moves (0..1)
     // Push magnitude (0..1) past which the hero RUNS (RUN_SPEED 5.5) instead of walks (WALK_SPEED 4.0).
     // >1 disables run so the joystick caps at walk speed = the keyboard/d-pad max (they were unequal:
@@ -279,7 +311,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     dialogueTargetY: 1.2, // look-at height (the character's head) during speech
     // Pointer (the shared arrow): during playback it snaps to the singing note; during input it
     // follows the mouse freely around the arc and snaps onto a stone only while its proxy is hovered.
-    pointerColor: '#ffffff',
     // Size is taken from the walking target arrow (arrowParameters.scale) — it's the same arrow.
     pointerRadius: 1.75, // arrow distance from the rainbow centre (the half-circle's centre)
     // See-through: during the game, the bottom side stones act like the hero — trees in front of

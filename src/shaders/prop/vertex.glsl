@@ -16,6 +16,7 @@ attribute float aFoliage; // 1 on tree-leaf vertices → painterly edge; 0 elsew
 attribute float aSeeThrough; // 1 = this prop see-throughs (trees + stones); 0 = solid (mushrooms)
 attribute float aWind; // 1 = sways in the wind (trees); 0 = static (stones, mushrooms)
 attribute float aHeight; // 0 = prototype's bottom → 1 = its top (for the stone bottom-darken gradient)
+attribute float aPart; // 1 = mushroom LEG (leg colour + dampened variation); 0 elsewhere
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
@@ -27,6 +28,11 @@ varying float vFoliage;
 varying float vSeeThrough;
 varying float vHeight;
 varying float vStone; // 1 only for scattered stones (aSeeThrough=1, aWind=0, aFoliage=0)
+varying float vPart;
+// Per-instance colour jitter, computed HERE (exact per-vertex math — a fragment-side hash of an
+// interpolated seed flickered during camera motion: sub-pixel interpolation noise × the big hash
+// multiplier amplified into visible colour crawl).
+varying vec3 vTypeJitter;
 
 void main() {
     #include <color_vertex>
@@ -39,11 +45,24 @@ void main() {
     vSeeThrough = aSeeThrough;
     vHeight = aHeight;
     vStone = (aSeeThrough > 0.5 && aWind < 0.5 && aFoliage < 0.5) ? 1.0 : 0.0;
+    vPart = aPart;
 
     // Apply the BatchedMesh per-instance matrix to reach world space.
     vec4 batchedPosition = vec4(position, 1.0);
     #ifdef USE_BATCHING
         batchedPosition = batchingMatrix * batchedPosition;
+        // Per-instance colour jitter from the instance's placement (matrix translation) —
+        // deterministic per prop, theme-independent; a tree's trunk+bush / a mushroom's cap+leg
+        // share a matrix → share the jitter, like the old CPU bake.
+        vec2 jitterSeed = (modelMatrix * (batchingMatrix * vec4(0.0, 0.0, 0.0, 1.0))).xz;
+        vec3 jitterQ = vec3(
+            dot(jitterSeed, vec2(127.1, 311.7)),
+            dot(jitterSeed, vec2(269.5, 183.3)),
+            dot(jitterSeed, vec2(419.2, 371.9))
+        );
+        vTypeJitter = fract(sin(jitterQ) * 43758.5453) * 2.0 - 1.0;
+    #else
+        vTypeJitter = vec3(0.0);
     #endif
 
     vec4 worldPosition = modelMatrix * batchedPosition;

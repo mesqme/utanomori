@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import backgroundVertexShader from '../shaders/background/vertex.glsl'
 import backgroundFragmentShader from '../shaders/background/fragment.glsl'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // Layered night sky: base colour gradient + paintery texture variation + stars.
 function starStyleToInt(style) {
@@ -26,6 +27,14 @@ export function createBackgroundMaterial(painteryTexture) {
             uGradientIntensity: { value: 1 },
             uGradientHeight: { value: 0.12 },
             uGradientPower: { value: 1.4 },
+            // Outgoing theme (masked theme transitions) + the screen-space mask itself.
+            uBackgroundColorOld: { value: new THREE.Color('#2a2358') },
+            uGradientTopColorOld: { value: new THREE.Color('#44336c') },
+            uHorizonColorOld: { value: new THREE.Color('#3f6ea8') },
+            uGradientIntensityOld: { value: 1 },
+            uStarsEnabledOld: { value: 1 },
+            uStarColorOld: { value: new THREE.Color('#fff8ff') },
+            ...themeMaskUniforms,
             // Layer 2 — paintery texture
             uTextureEnabled: { value: true },
             uColorMode: { value: 0 },
@@ -70,6 +79,15 @@ export function updateBackgroundMaterial(material, options) {
     u.uGradientIntensity.value = options.gradientIntensity ?? 1
     u.uGradientHeight.value = options.gradientHeight ?? 0.12
     u.uGradientPower.value = options.gradientPower ?? 1.4
+
+    // Outgoing theme during a masked theme transition (identity when inactive).
+    const old = options.themeMaskOld
+    u.uBackgroundColorOld.value.set(old?.bgColor ?? options.backgroundColor ?? '#2a2358')
+    u.uGradientTopColorOld.value.set(old?.gradTop ?? options.gradientTopColor ?? '#44336c')
+    u.uHorizonColorOld.value.set(old?.horizon ?? options.horizonColor ?? '#3f6ea8')
+    u.uGradientIntensityOld.value = old?.gradIntensity ?? options.gradientIntensity ?? 1
+    u.uStarsEnabledOld.value = (old ? old.starsEnabled : options.starsEnabled !== false) ? 1 : 0
+    u.uStarColorOld.value.set(old?.starColor ?? options.starColor ?? '#fff8ff')
 
     // Layer 2 — paintery texture
     u.uTextureEnabled.value = options.textureEnabled !== false

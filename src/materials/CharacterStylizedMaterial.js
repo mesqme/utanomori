@@ -4,6 +4,7 @@ import characterVertexShader from '../shaders/character/vertex.glsl'
 import characterInstancedVertexShader from '../shaders/character/instancedVertex.glsl'
 import characterFragmentShader from '../shaders/character/fragment.glsl'
 import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // 1×1 white fallback so materials that don't use a base texture still have a valid sampler bound
 // (avoids "no texture bound" warnings); it's never sampled (uUseBaseTexture stays 0 for them).
@@ -30,6 +31,9 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
         fragmentShader: characterFragmentShader,
         uniforms: {
             uBaseColor: { value: new THREE.Color(materialSettings?.baseColor ?? fallbackColor) },
+            // Outgoing theme's base colour + the transition mask (masked theme switches).
+            uBaseColorOld: { value: new THREE.Color(materialSettings?.baseColor ?? fallbackColor) },
+            ...themeMaskUniforms,
             uDebugMode: { value: settings.debugMode },
             uPainterlyEnabled: { value: settings.painterlyEnabled ? 1 : 0 },
             uPainterlyTexture: { value: painterlyTexture },
@@ -77,11 +81,14 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
     return material
 }
 
-export function updateCharacterStylizedMaterial(material, materialSettings, stylizedSettings, painterlyTexture) {
+// `oldBaseColor` — the outgoing theme's colour for this slot during a masked theme transition
+// (null/undefined = identity, i.e. no visible mix).
+export function updateCharacterStylizedMaterial(material, materialSettings, stylizedSettings, painterlyTexture, oldBaseColor) {
     const settings = getSettings(stylizedSettings)
     const uniforms = material.uniforms
 
     uniforms.uBaseColor.value.set(materialSettings.baseColor)
+    uniforms.uBaseColorOld.value.set(oldBaseColor ?? materialSettings.baseColor)
     uniforms.uDebugMode.value = settings.debugMode
     uniforms.uPainterlyEnabled.value = settings.painterlyEnabled ? 1 : 0
     uniforms.uPainterlyTexture.value = painterlyTexture

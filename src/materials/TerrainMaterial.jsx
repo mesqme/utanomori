@@ -4,6 +4,7 @@ import * as THREE from 'three'
 import terrainVertexShader from '../shaders/terrain/vertex.glsl'
 import terrainFragmentShader from '../shaders/terrain/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 import { getGroundShadowData } from '../world/utils/groundShadowField.js'
 
 // Edge fade modes shared across the world: 0 = Dither, 1 = Color, 2 = Paintery.
@@ -44,6 +45,12 @@ export default function useTerrainMaterial({
                 uBaseColor: { value: new THREE.Color(terrainColor) },
                 uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                 uBaseBrightness: { value: terrainBaseBrightness },
+                // Outgoing theme + the transition mask (Terrain.jsx drives these per frame).
+                uBaseColorOld: { value: new THREE.Color(terrainColor) },
+                uBaseBrightnessOld: { value: terrainBaseBrightness },
+                uBackgroundColorOld: { value: new THREE.Color(backgroundColor) },
+                uGroundTextureContrastOld: { value: groundTextureContrast },
+                ...themeMaskUniforms,
                 uCircleCenter: { value: new THREE.Vector3() },
                 uPatchSize: { value: chunkSize },
                 uCircleRadiusFactor: { value: initialCircleRadius },

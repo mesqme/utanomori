@@ -8,6 +8,9 @@ export const edgeUniforms = {
     uEdgeEnabled: { value: 1 },
     uEdgeMode: { value: 1 }, // 0 = alpha blend, 1 = dither (alpha test)
     uEdgeColor: { value: new THREE.Color('#2a2342') },
+    // Outgoing theme's edge colour (masked theme transitions) — set by the props' update path;
+    // materials without the mask use the 4-arg paintedEdgeAlpha overload and never read it.
+    uEdgeColorOld: { value: new THREE.Color('#2a2342') },
     uEdgeTint: { value: 0.6 },
     uEdgeWidth: { value: 2.0 },
     uEdgeBias: { value: 0.05 },

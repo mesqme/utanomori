@@ -60,7 +60,6 @@ const painteryStyle = {
         leanEnd: 0.67,
         leanRate: 0.8,
         leanAmount: 0.52,
-        baseColor: '#6aa1a1',
     },
     grassPatchParameters: {
         worldSeed: 9187,

@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import useStore from '../stores/useStore.jsx'
 import { revealCircle } from './utils/revealCircle.js'
 import { seeThrough } from './utils/seeThrough.js'
+import { themeMask } from './utils/themeMask.js'
 import {
     claimCharacterSeeThroughSlot,
     releaseCharacterSeeThroughSlot,
@@ -231,12 +232,15 @@ export default function SheepCreature({ definition, moving = false }) {
         }
     }, [clone, animations])
 
-    // Re-stylize when the Sheep controls change (this companion's own colour set).
+    // Re-stylize when the Sheep controls change (this companion's own colour set). During a masked
+    // theme transition (this effect fires exactly then — the theme patches the store) the outgoing
+    // colour rides along, so the sheep recolour sweeps with the portal edge instead of snapping.
     useEffect(() => {
         const charMats = sheepMaterialParameters.characters[music] ?? sheepMaterialParameters.characters.piano
+        const oldMats = themeMask.active ? themeMask.old?.sheepColors?.[music] : null
         materialsRef.current.forEach(({ material, groupId }) => {
             const settings = charMats[groupId] ?? { baseColor: '#ffffff' }
-            updateCharacterStylizedMaterial(material, settings, sheepMaterialParameters, painterlyTexture)
+            updateCharacterStylizedMaterial(material, settings, sheepMaterialParameters, painterlyTexture, oldMats?.[groupId])
             material.uniforms.uBaseColor.value.set(settings.baseColor)
         })
     }, [sheepMaterialParameters, painterlyTexture, music])
@@ -253,6 +257,24 @@ export default function SheepCreature({ definition, moving = false }) {
     useFrame((state, delta) => {
         const dt = Math.min(delta, 0.1)
         const p = useStore.getState().sheepParameters
+
+        // Base colour + old colour are written together HERE, per frame, so they always hit the
+        // GPU as a consistent set with the shared mask uniforms — writing the colours only in the
+        // React effect left a one-frame window where the new theme colour rendered before the mask
+        // activated (the sheep flashed at the click). The mask-face material is skipped — its
+        // colour comes from a texture, not the theme.
+        const sheepChars = useStore.getState().sheepMaterialParameters.characters
+        const charMats = sheepChars[music] ?? sheepChars.piano
+        const oldMats = themeMask.active ? themeMask.old?.sheepColors?.[music] : null
+        const themedMaterials = materialsRef.current
+        for (let i = 0; i < themedMaterials.length; i++) {
+            const { material, groupId } = themedMaterials[i]
+            const settings = charMats?.[groupId]
+            if (settings?.baseColor) {
+                material.uniforms.uBaseColor.value.set(settings.baseColor)
+                material.uniforms.uBaseColorOld.value.set(oldMats?.[groupId] ?? settings.baseColor)
+            }
+        }
 
         // idle ↔ run crossfade
         const { idle, run } = actionsRef.current

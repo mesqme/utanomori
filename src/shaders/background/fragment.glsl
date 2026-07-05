@@ -3,6 +3,14 @@ uniform vec3 uBackgroundColor; // flat pre-intro colour and final texture mix co
 uniform vec3 uGradientTopColor; // top / zenith gradient colour
 uniform vec3 uHorizonColor; // horizon / lower gradient colour
 uniform float uGradientIntensity; // 0 = flat base colour, 1 = full vertical gradient
+// Outgoing theme (masked theme transitions — the sky keeps moving on both sides of the edge).
+uniform vec3 uBackgroundColorOld;
+uniform vec3 uGradientTopColorOld;
+uniform vec3 uHorizonColorOld;
+uniform float uGradientIntensityOld;
+uniform float uStarsEnabledOld; // 0/1
+
+#include ../lib/themeMask.glsl
 uniform float uGradientHeight; // sky direction.y where the horizon colour sits
 uniform float uGradientPower; // gradient curve
 
@@ -29,6 +37,7 @@ uniform float uStarBrightness;
 uniform float uStarTwinkleSpeed;
 uniform float uStarRays;
 uniform vec3 uStarColor;
+uniform vec3 uStarColorOld; // outgoing theme's star tint (masked transitions)
 uniform float uStarsFadeStart; // sky direction.y where the star field begins
 uniform float uStarsFadeWidth; // span over which density ramps from ~0 to full
 
@@ -91,11 +100,19 @@ float softPoint(vec2 delta, float size) {
 void main() {
     vec3 dir = normalize(vDir);
 
+    // Masked theme transition: the sky blends outgoing → live palette per fragment (tmNew = 1
+    // when no transition runs), so the portal/wipe edge crosses the sky too.
+    float tmNew = themeMaskNewness();
+    vec3 bgColor = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
+    vec3 topColor = mix(uGradientTopColorOld, uGradientTopColor, tmNew);
+    vec3 horizonColor = mix(uHorizonColorOld, uHorizonColor, tmNew);
+    float gradIntensity = mix(uGradientIntensityOld, uGradientIntensity, tmNew);
+
     // ----- Layer 1: base vertical gradient -----
     float h = clamp((dir.y - uGradientHeight) / max(1.0 - uGradientHeight, 1e-3), 0.0, 1.0);
     h = pow(h, uGradientPower);
-    vec3 gradientColor = mix(uHorizonColor, uGradientTopColor, h);
-    vec3 color = mix(uBackgroundColor, gradientColor, clamp(uGradientIntensity, 0.0, 1.0));
+    vec3 gradientColor = mix(horizonColor, topColor, h);
+    vec3 color = mix(bgColor, gradientColor, clamp(gradIntensity, 0.0, 1.0));
 
     // ----- Layer 2: paintery texture colour variation (screen space) -----
     if (uTextureEnabled) {
@@ -107,12 +124,16 @@ void main() {
             color *= 1.0 + (brush - 0.5) * 2.0 * uTextureBrightness;
         }
         if (uColorMode != 0) {
-            color = mix(color, uBackgroundColor, clamp(brush * uTextureMixIntensity, 0.0, 1.0));
+            color = mix(color, bgColor, clamp(brush * uTextureMixIntensity, 0.0, 1.0));
         }
     }
 
     // ----- Layer 3: stars + constellations -----
-    if (uStarsEnabled) {
+    // Stars render if EITHER side of a masked transition has them; their brightness follows the
+    // mask so they dissolve across the portal/wipe edge (e.g. night stars fading inside the day).
+    float starsOn = mix(uStarsEnabledOld, uStarsEnabled ? 1.0 : 0.0, tmNew);
+    vec3 starColor = mix(uStarColorOld, uStarColor, tmNew);
+    if (starsOn > 0.001) {
         float lon = atan(dir.z, dir.x);
         float lat = asin(clamp(dir.y, -1.0, 1.0));
         vec2 sky = vec2(lon, lat) * uStarCells;
@@ -169,15 +190,15 @@ void main() {
                 if (uStarStyle == 1) {
                     float temp = hash21(id + 3.0);
                     vec3 tint = mix(vec3(0.72, 0.82, 1.0), vec3(1.0, 0.92, 0.82), temp);
-                    starAccum += uStarColor * tint * softPoint(delta, uStarSize) * brightness * twinkle;
+                    starAccum += starColor * tint * softPoint(delta, uStarSize) * brightness * twinkle;
                 } else {
                     vec2 r = screenAlign(delta, dSkyX, dSkyY, jdet);
-                    starAccum += uStarColor * sparkle(r, uStarSize, uStarRays) * brightness * twinkle;
+                    starAccum += starColor * sparkle(r, uStarSize, uStarRays) * brightness * twinkle;
                 }
             }
         }
-        color += starAccum * uStarBrightness;
-        color += uStarColor * lines * uConstellationBrightness;
+        color += starAccum * uStarBrightness * starsOn;
+        color += starColor * lines * uConstellationBrightness * starsOn;
     }
 
     gl_FragColor = vec4(color, 1.0);

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 import eyePlaneVertexShader from '../shaders/eyePlane/vertex.glsl'
 import eyePlaneFragmentShader from '../shaders/eyePlane/fragment.glsl'
+import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // Material for the tree eye planes (one eye pair per UV-square, instanced per tree via a BatchedMesh).
 // Transparent decal (depthWrite off + a slight polygon offset so it sits just in front of the
@@ -29,6 +30,9 @@ export function createEyePlaneMaterial() {
             uWindSpeed: { value: 1 },
             uWindGust: { value: 0.5 },
             uEyeColor: { value: new THREE.Color('#f0e24a') },
+            // Outgoing theme's iris colour + the transition mask (masked theme switches).
+            uEyeColorOld: { value: new THREE.Color('#f0e24a') },
+            ...themeMaskUniforms,
             uPupilColor: { value: new THREE.Color('#120d09') },
             uEyeRadius: { value: 0.2 },
             uEyeSpacing: { value: 0.5 },
@@ -81,6 +85,8 @@ export function updateEyePlaneMaterial(material, options) {
     const e = options.eyes
     if (e) {
         u.uEyeColor.value.set(e.eyeColor)
+        // Outgoing theme during a masked transition — identity (= live colour) otherwise.
+        u.uEyeColorOld.value.set(options.themeMaskOld?.treeEyeColor ?? e.eyeColor)
         u.uPupilColor.value.set(e.pupilColor)
         u.uEyeRadius.value = e.eyeRadius
         u.uEyeSpacing.value = e.eyeSpacing

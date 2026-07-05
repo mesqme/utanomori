@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { useKeyboardControls, useTexture } from '@react-three/drei'
+import { useKeyboardControls } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
@@ -13,16 +13,12 @@ import CharacterFeedback from './CharacterFeedback.jsx'
 import TargetArrow from './TargetArrow.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
 import { getGroundY } from './utils/groundHeight.js'
-import { getRevealRadius, revealCircle } from './utils/revealCircle.js'
-import { getRefScale } from './utils/screenScale.js'
+import { getRevealRadius } from './utils/revealCircle.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
 import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
-import { createCompanionEyeMaterial, updateCompanionEyeMaterial } from '../materials/CompanionEyeMaterial.js'
-import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { resumeAudio } from '../game/songAudio.js'
 import { playMumble } from '../game/ambientSounds.js'
 import useTutorial from '../stores/useTutorial.jsx'
-import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 
 const INTERACT_RADIUS = 2.3
 const ABANDON_RADIUS = 30
@@ -58,7 +54,7 @@ function findHiddenSpawn(player) {
 // groundShadowField — opacity that the old transparent decal used).
 const GROUND_SHADOW_STRENGTH = 0.3
 
-function TargetCreature({ target, creatureMaterial }) {
+function TargetCreature({ target }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const fleeRef = useRef(0)
@@ -161,7 +157,7 @@ function TargetCreature({ target, creatureMaterial }) {
     )
 }
 
-function Follower({ definition, index, creatureMaterial }) {
+function Follower({ definition, index }) {
     const groupRef = useRef(null)
     const creatureRef = useRef(null)
     const positionRef = useRef(new THREE.Vector3())
@@ -306,24 +302,6 @@ export default function Companions() {
     const found = useCompanions((state) => state.found)
     const [subscribeKeys] = useKeyboardControls()
 
-    const painterlyTexture = useTexture(paintaryAlphaUrl)
-    useMemo(() => {
-        painterlyTexture.wrapS = THREE.RepeatWrapping
-        painterlyTexture.wrapT = THREE.RepeatWrapping
-        painterlyTexture.colorSpace = THREE.NoColorSpace
-        painterlyTexture.needsUpdate = true
-    }, [painterlyTexture])
-
-    // Shared stylized material for every creature — sphere body with shader-drawn
-    // eyes, painterly stylization, and the reveal-circle / paintery fade.
-    const creatureMaterial = useMemo(() => createCompanionEyeMaterial(painterlyTexture), [painterlyTexture])
-
-    useEffect(() => {
-        return () => {
-            creatureMaterial.dispose()
-        }
-    }, [creatureMaterial])
-
     // Reset the party only on a fresh loop (warmup/loading) — keep it through the
     // intro and credits so the followers can trail the auto-running hero.
     useEffect(() => {
@@ -356,28 +334,8 @@ export default function Companions() {
         }
     }, [subscribeKeys])
 
-    useFrame((rootState) => {
+    useFrame(() => {
         const store = useStore.getState()
-        updateCompanionEyeMaterial(creatureMaterial, {
-            refScale: getRefScale(rootState),
-            time: rootState.clock.elapsedTime,
-            circleCenterX: revealCircle.centerX,
-            circleCenterZ: revealCircle.centerZ,
-            radiusFactor: revealCircle.radiusFactor,
-            chunkSize: revealCircle.chunkSize,
-            fadeOffset: store.objectParameters.fadeOffset,
-            backgroundColor: store.backgroundParameters.backgroundColor,
-            fadeMode: store.borderParameters.fadeMode,
-            pixelSize: store.ditheringParameters.pixelSize,
-            painterlyEnabled: store.objectParameters.painterlyEnabled,
-            paintery: {
-                size: store.borderParameters.painterySize,
-                screenBlend: store.borderParameters.painteryScreenBlend,
-                drift: store.borderParameters.painteryDrift,
-                layer2Scale: store.borderParameters.painteryLayer2Scale,
-                bleed: store.borderParameters.painteryBleed,
-            },
-        })
 
         // Pre-place the FIRST music character during warmup/intro so its sheep warms up (skeleton
         // clone + shader compile + texture upload) BEFORE gameplay — it spawns ≥15u away and stays
@@ -426,9 +384,9 @@ export default function Companions() {
 
     return (
         <>
-            {target && <TargetCreature key={target.key} target={target} creatureMaterial={creatureMaterial} />}
+            {target && <TargetCreature key={target.key} target={target} />}
             {found.map((member, index) => (
-                <Follower key={member.key} definition={member} index={index} creatureMaterial={creatureMaterial} />
+                <Follower key={member.key} definition={member} index={index} />
             ))}
             <TargetArrow />
         </>
