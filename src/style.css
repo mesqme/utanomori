@@ -1,10 +1,6 @@
-@font-face {
-    font-family: 'Bebas Neue';
-    src: url('/bebas-neue-v9-latin-regular.woff') format('woff');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
+/* Bebas Neue's @font-face lives in index.html (with a preload) so the static pre-loader's "0" and
+   the earliest text already have it — declaring it AGAIN here would silently win the family
+   resolution (last declaration wins) and bypass the preloaded file. One declaration only. */
 
 /* Shared UI design tokens (driven live by the "Game UI" Leva folder — Controls.jsx writes these on
    the root). The in-game text is sized in `vmin` so it stays the same PROPORTION of the screen at any
@@ -70,8 +66,10 @@ body,
     /* Dark loader colour (NOT the lighter scene clear colour) so nothing flashes light-purple
        before the canvas/loader paints. */
     background: var(--sj-loader-background);
-    /* One UI font everywhere (matches the loader / credits). Swap here to retheme all text. */
-    font-family: 'Bebas Neue', cursive;
+    /* One UI font everywhere (matches the loader / credits). Swap here to retheme all text.
+       Fallbacks are neutral condensed faces — NOT cursive, which mapped to a comic-style font
+       during the (now preloaded, self-hosted) font's brief load window. */
+    font-family: 'Bebas Neue', Impact, sans-serif;
     /* Touch hygiene — this is a game, not a document. Kills the accidental zooms/selections that
        break gameplay on touch devices:
        · touch-action none → no browser pan/pinch/double-tap-zoom gestures anywhere (pointer events
@@ -108,7 +106,7 @@ body,
     width: 100%;
     height: 100%;
     pointer-events: none;
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', Impact, sans-serif;
 }
 
 /**

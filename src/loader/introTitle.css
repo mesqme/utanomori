@@ -7,7 +7,7 @@
     z-index: 10001;
     text-align: center;
     color: var(--sj-ui-primary);
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', Impact, sans-serif;
     text-shadow: 0 2px 14px rgba(9, 8, 34, 0.85);
     pointer-events: none;
     user-select: none;

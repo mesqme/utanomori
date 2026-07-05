@@ -1,16 +1,15 @@
-import { useProgress } from '@react-three/drei'
+// ENTRY-CHUNK component: must not (transitively) import three.js — no drei, no useStore, no audio
+// modules. Progress + tunable params arrive via the useLoaderShell mirror (fed by App.jsx's
+// ShellBridge once the lazy chunk loads); audio triggers go through the loaderBridge registry.
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import usePhases, { PHASES } from '../stores/usePhases'
-import useStore from '../stores/useStore'
+import useLoaderShell from '../stores/useLoaderShell.jsx'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
-import { useIsMobile } from '../config/mobile.js'
+import { useIsMobile } from '../config/device.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
-import { startMusicTracks, preloadMusicTracks } from '../game/musicTracks.js'
-import { preloadGameSounds } from '../game/gameSounds.js'
-import { preloadAmbientSounds } from '../game/ambientSounds.js'
-import { resumeAudio } from '../game/songAudio.js'
+import { loaderAudio } from '../game/loaderBridge.js'
 import './loader.css'
 
 const RING_COLOR = soundJourneyPalette.uiPrimary
@@ -19,14 +18,28 @@ const CURTAIN_IN_MS = 600 // restart: let the loading cover fade fully in before
 const MIN_LOAD_TIME = 3 // seconds — the loader always fills smoothly for at least this long
 
 export default function Loader() {
-    const { active, progress } = useProgress()
+    const active = useLoaderShell((s) => s.active)
+    const progress = useLoaderShell((s) => s.progress)
+    const shellReady = useLoaderShell((s) => s.ready)
     const phase = usePhases((s) => s.phase)
     const setPhase = usePhases((s) => s.setPhase)
     const debugMode = usePhases((s) => s.debugMode)
     const sceneReady = usePhases((s) => s.sceneReady)
-    const loaderDebugParameters = useStore((s) => s.loaderDebugParameters)
-    const mobileUi = useStore((s) => s.mobileUiParameters)
+    const loaderDebugParameters = useLoaderShell((s) => s.loaderDebugParameters)
+    const mobileUi = useLoaderShell((s) => s.mobileUiParameters)
     const mobile = useIsMobile()
+
+    // The static index.html pre-loader (pure HTML/CSS, painted before ANY JS) shows this same
+    // screen with an indeterminate spinner. Once the app chunk is up and real progress flows
+    // (shellReady), fade it out — this React loader is already rendered underneath it.
+    useEffect(() => {
+        if (!shellReady) return undefined
+        const staticLoader = document.getElementById('static-loader')
+        if (!staticLoader) return undefined
+        staticLoader.style.opacity = '0'
+        const timeout = window.setTimeout(() => staticLoader.remove(), 500)
+        return () => window.clearTimeout(timeout)
+    }, [shellReady])
     // Mobile: a smaller loading ring (the hat-shot camera is zoomed out to match — see mobileUi).
     const fixedSizeStyle = useLoaderFixedSizeStyle(
         mobile ? { ...loaderDebugParameters, circleRadius: mobileUi.loaderRadius, ringWidth: mobileUi.loaderRingWidth } : loaderDebugParameters
@@ -91,18 +104,19 @@ export default function Loader() {
     // before they're needed. (No-ops on a restart's second warmup — each has its own load guard.)
     useEffect(() => {
         if (phase !== PHASES.warmup) return
-        preloadMusicTracks()
-        preloadGameSounds()
-        preloadAmbientSounds()
+        loaderAudio.preloadMusicTracks?.()
+        loaderAudio.preloadGameSounds?.()
+        loaderAudio.preloadAmbientSounds?.()
     }, [phase])
 
     const handleClick = () => {
         if (phase !== PHASES.warmup) return
         // GO is the user gesture audio needs: resume the context and start the synched backing tracks
         // (their buffers are already decoding from the warmup preload above; startMusicTracks falls back
-        // to decoding on the spot if GO is clicked before they finish).
-        resumeAudio()
-        startMusicTracks()
+        // to decoding on the spot if GO is clicked before they finish). Called through the bridge —
+        // the app chunk is guaranteed loaded by warmup (the loading bar can't finish without it).
+        loaderAudio.resumeAudio?.()
+        loaderAudio.startMusicTracks?.()
         // The bar simply fades to transparent; the camera intro starts at the same time.
         setIsExiting(true)
         setPhase(PHASES.intro)
@@ -179,6 +193,22 @@ export default function Loader() {
                     onMouseLeave={() => setHovered(false)}
                 >
                     {showLoading && !showExit && <div className="loader-percent">{percent}</div>}
+                    {/* GO cue: the game's target arrow as a DOM element (matches the ring colour
+                        exactly — no post-grade tint). The path is the REAL arrow.glb silhouette,
+                        traced from its top view (the shape the hat shot would show): a wide chevron
+                        with a notched base, bevel-rounded corners. Points UP at rest, CSS-rotates
+                        to point DOWN on hover. Stays mounted through the exit so it fades WITH the disc. */}
+                    {(showStart || showExit) && (
+                        <svg className="loader-go-arrow" viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                                d="M11.91 3.58 L12.58 3.65 L13.05 3.86 L14.08 4.65 L16.46 7.68 L19.00 11.53 L22.20 16.85 L22.43 17.79 L22.31 18.44 L21.87 19.07 L21.15 19.68 L19.98 20.26 L19.07 20.40 L18.58 20.19 L13.75 14.99 L12.75 14.24 L12.19 14.08 L11.37 14.17 L10.23 14.99 L6.10 19.54 L5.40 20.19 L4.98 20.38 L4.35 20.38 L2.95 19.75 L2.11 19.07 L1.66 18.44 L1.57 17.60 L1.78 16.85 L2.39 15.69 L7.52 7.68 L9.90 4.65 L10.74 3.95 L11.39 3.65 L11.88 3.60 Z"
+                                fill="currentColor"
+                                stroke="currentColor"
+                                strokeWidth="0.6"
+                                strokeLinejoin="round"
+                            />
+                        </svg>
+                    )}
                 </div>
             </div>
             {(showLoading || showStart) && !showExit && <div className="loader-headphones">🎧 Better with headphones</div>}

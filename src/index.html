@@ -9,23 +9,165 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
         <title>🌀 Utanomori 🌀</title>
-        <!-- Dark base so the very first paint matches the loader (keep in sync with
-             soundJourneyPalette.loaderBackground), not the lighter scene clear colour. -->
-        <style>
-            html,
-            body {
-                background: #010011;
-            }
-        </style>
         <!-- Favicon (in public/) -->
         <link rel="icon" href="/favicon.ico" type="image/x-icon" sizes="any" />
         <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" href="/favicon.ico" />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet" />
+
+        <!-- Bebas Neue is SELF-HOSTED (public/fonts — an internal asset, no Google Fonts dependency)
+             + preloaded: the 17KB woff (the SAME v9 file the game has always rendered with) lands
+             within the first seconds, before any text is on screen, so the ugly fallback-font flash
+             (FOUT) is effectively gone. display=swap keeps text visible if the font somehow lags;
+             the fallbacks below are neutral, not cursive. This is the ONLY @font-face for the family
+             (a second one in style.css would win the family resolution and bypass the preload).
+             NOTE the two different URL forms: vite REBASES root-absolute URLs in tag attributes
+             (href → /utanomori/fonts/…) but does NOT touch inline <style> css, which therefore
+             needs the explicit %BASE_URL% placeholder. Using %BASE_URL% in the href would double
+             the base. -->
+        <link rel="preload" href="/fonts/bebas-neue-v9-latin-regular.woff" as="font" type="font/woff" crossorigin />
+        <style>
+            @font-face {
+                font-family: 'Bebas Neue';
+                font-style: normal;
+                font-weight: 400;
+                font-display: swap;
+                src: url('%BASE_URL%fonts/bebas-neue-v9-latin-regular.woff') format('woff');
+            }
+
+            /* Dark base so the very first paint matches the loader (keep in sync with
+               soundJourneyPalette.loaderBackground), not the lighter scene clear colour. */
+            html,
+            body {
+                background: #010011;
+            }
+
+            /* STATIC pre-loader — pure HTML/CSS, painted the moment this document arrives, BEFORE any
+               JavaScript downloads or runs. It replicates the React loading screen (dark cover + red
+               hero disc + ring, colours/sizes in sync with soundJourneyPalette + loaderDebugParameters)
+               with an indeterminate spinning arc, so the multi-MB bundle download never shows a blank
+               page. The React Loader renders beneath it (z 10000) and fades this out (Loader.jsx) once
+               the app chunk is up and the real progress bar takes over. */
+            #static-loader {
+                position: fixed;
+                inset: 0;
+                background: #010011;
+                z-index: 10001;
+                display: grid;
+                place-items: center;
+                opacity: 1;
+                transition: opacity 0.45s ease;
+                pointer-events: none;
+            }
+
+            #static-loader .stack {
+                display: grid;
+                place-items: center;
+            }
+
+            #static-loader .disc {
+                grid-area: 1 / 1;
+                width: 212px;
+                height: 212px;
+                border-radius: 50%;
+                background: #af0a08;
+            }
+
+            /* The spinning group: a SHORT arc segment with round dot end-caps (the same look as the
+               real progress bar's arc + caps), orbiting the ring. The wrapper spins; the arc + its
+               two caps are static inside it. */
+            #static-loader .spin {
+                grid-area: 1 / 1;
+                width: 212px;
+                height: 212px;
+                display: grid;
+                place-items: center;
+                animation: static-loader-spin 1.4s linear infinite;
+            }
+
+            #static-loader .arc {
+                grid-area: 1 / 1;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: conic-gradient(from -90deg, #fff8ff 70deg, transparent 70deg);
+                -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 15.5px), #000 calc(100% - 14.5px));
+                mask: radial-gradient(farthest-side, transparent calc(100% - 15.5px), #000 calc(100% - 14.5px));
+            }
+
+            /* Rounded end-caps: dots (⌀ = the arc band) on the ring centreline at the arc's two ends
+               (the conic starts at -90° and spans 70°) — mirrors .loader-ring-cap. */
+            #static-loader .cap {
+                grid-area: 1 / 1;
+                width: 14.5px;
+                height: 14.5px;
+                border-radius: 50%;
+                background: #fff8ff;
+            }
+
+            #static-loader .cap-start {
+                transform: rotate(-90deg) translateY(calc((14.5px - 212px) / 2));
+            }
+
+            #static-loader .cap-end {
+                transform: rotate(-20deg) translateY(calc((14.5px - 212px) / 2));
+            }
+
+            /* "0" in the ring centre — the React loader's eased percent count takes over from it. */
+            #static-loader .num {
+                grid-area: 1 / 1;
+                font-family: 'Bebas Neue', Impact, sans-serif;
+                font-size: 48px;
+                letter-spacing: 0.1em;
+                color: #fff8ff;
+                user-select: none;
+            }
+
+            @keyframes static-loader-spin {
+                from {
+                    transform: rotate(0deg);
+                }
+                to {
+                    transform: rotate(360deg);
+                }
+            }
+
+            /* Mobile experience uses a smaller ring (keep in sync with mobileUiParameters.loaderRadius
+               83 / loaderRingWidth 12.5). */
+            @media (pointer: coarse) {
+                #static-loader .disc,
+                #static-loader .spin {
+                    width: 166px;
+                    height: 166px;
+                }
+                #static-loader .arc {
+                    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 12.5px), #000 calc(100% - 11.5px));
+                    mask: radial-gradient(farthest-side, transparent calc(100% - 12.5px), #000 calc(100% - 11.5px));
+                }
+                #static-loader .cap {
+                    width: 11.5px;
+                    height: 11.5px;
+                }
+                #static-loader .cap-start {
+                    transform: rotate(-90deg) translateY(calc((11.5px - 166px) / 2));
+                }
+                #static-loader .cap-end {
+                    transform: rotate(-20deg) translateY(calc((11.5px - 166px) / 2));
+                }
+            }
+        </style>
     </head>
     <body>
+        <div id="static-loader">
+            <div class="stack">
+                <div class="disc"></div>
+                <div class="spin">
+                    <div class="arc"></div>
+                    <div class="cap cap-start"></div>
+                    <div class="cap cap-end"></div>
+                </div>
+                <div class="num">0</div>
+            </div>
+        </div>
         <div id="root"></div>
         <script type="module" src="./index.jsx"></script>
     </body>

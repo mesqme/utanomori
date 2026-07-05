@@ -1,3 +1,5 @@
 node_modules
 .DS_Store
 dist
+# Local Claude Code tooling (preview launch config etc.) — stays local, not on GitHub
+.claude/

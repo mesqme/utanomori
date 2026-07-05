@@ -128,6 +128,58 @@
     user-select: none;
 }
 
+/* GO cue: the target-arrow silhouette in the ring centre (same slot the percent number used). Same
+   UI-primary colour as the ring (a DOM element, so no colour-grade tint). Points UP at rest and eases
+   a 180° turn to point DOWN while the circle is hovered — a "look here → go" nudge. */
+.loader-go-arrow {
+    width: calc(0.34 * var(--sj-loader-size, 200px));
+    height: calc(0.34 * var(--sj-loader-size, 200px));
+    color: var(--sj-ui-primary);
+    transform: rotate(0deg);
+    /* `translate` is separate from `transform` (and applies in the PARENT's space, after the
+       rotation) so the press-dip below always moves visually DOWN, whichever way the arrow points. */
+    translate: 0 0;
+    transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), translate 0.12s ease;
+    will-change: transform;
+    user-select: none;
+    /* Fade in when the bar completes (100% → GO) — the animation only touches opacity, so it never
+       fights the rotate/dip transitions above. */
+    animation: loader-arrow-in 0.6s ease both;
+}
+
+@keyframes loader-arrow-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.loader-center:hover .loader-go-arrow {
+    transform: rotate(180deg);
+}
+
+/* Touch experience: there is no hover, so the arrow points DOWN (the "press here" state) from the
+   moment it appears — the tap then plays only the press dip + the fade-out, like desktop's click. */
+@media (pointer: coarse) {
+    .loader-go-arrow {
+        transform: rotate(180deg);
+    }
+}
+
+/* Press feedback: the arrow dips down while the pointer is held, like a real button being pushed. */
+.loader-center--clickable:active .loader-go-arrow {
+    translate: 0 calc(0.025 * var(--sj-loader-size, 200px));
+}
+
+/* GO pressed (exit fade): the wrapper turns pointer-events off, which drops :hover — without this
+   pin the arrow would visibly start turning back UP while fading out. Keep it pointing down
+   (touch already rests at 180°, so there it just fades in place). */
+.loader-wrapper--exit .loader-go-arrow {
+    transform: rotate(180deg);
+}
+
 /* Gentle "better with headphones" hint, low on the loading / GO screen. */
 .loader-headphones {
     position: absolute;
@@ -135,7 +187,7 @@
     bottom: 9%;
     transform: translateX(-50%);
     color: var(--sj-ui-primary);
-    font-family: 'Bebas Neue', cursive;
+    font-family: 'Bebas Neue', Impact, sans-serif;
     font-size: calc(1.7 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.14em;
     opacity: 0.72;
