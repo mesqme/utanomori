@@ -24,8 +24,7 @@ export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the rise into gameplay
 export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble starts as it settles
 export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 
-export const DIALOGUE_TEXT =
-    'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
+export const DIALOGUE_TEXT = 'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
 
 // Finale: shown once the party is complete (PHASES.finale), before the credits roll. The hero speaks
 // the closing line; the confirm button ("Say goodbye") rolls the credits.
@@ -52,7 +51,7 @@ export const CREDITS_LINES = [
     'mesq',
     ' ',
     '— Music —',
-    'Aleksander Manin',
+    'Aleksandr Manin',
     '\u00a0',
     '— Built with —',
     'Three.js · React Three Fiber',
