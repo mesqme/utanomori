@@ -104,7 +104,7 @@ export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
 
 // Mobile-only camera distances (isMobile → resolvedCameraDistances). Same fields as the desktop
 // Camera Distance controls but tuned for the phone framing; applied only when the mobile experience
-// is active (touch device or the previewMobile debug toggle).
+// is active (touch / coarse-pointer device — Chrome device mode flips it live, see config/device.js).
 export const DEFAULT_MOBILE_CAMERA_PARAMETERS = {
     followDistance: 17.4, // gameplay walk
     followHeight: 13.7,

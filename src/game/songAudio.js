@@ -65,20 +65,12 @@ export function setAudioMuted(value) {
     if (master && c) master.gain.setTargetAtTime(masterTarget(), c.currentTime, 0.02)
 }
 
-export function isAudioMuted() {
-    return muted
-}
-
 // Master volume level (0..1) from the on-screen slider. Applied through the same master gain, so it
 // scales EVERYTHING; a manual mute still overrides it to silence.
 export function setAudioVolume(value) {
     volume = Math.max(0, Math.min(1, value))
     const c = ensureContext()
     if (master && c) master.gain.setTargetAtTime(masterTarget(), c.currentTime, 0.02)
-}
-
-export function getAudioVolume() {
-    return volume
 }
 
 // Fetch + decode an audio file into an AudioBuffer. decodeAudioData works on the still-suspended

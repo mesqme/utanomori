@@ -27,10 +27,6 @@ export function clearTrampler(slot) {
     data[slot * 4 + 3] = 0
 }
 
-export function resetTramplers() {
-    data.fill(0)
-}
-
 // The shared buffer is wired straight into the grass material uniform, so mutating
 // it in place is enough — three re-uploads it each frame.
 export function getTrampleData() {

@@ -38,10 +38,6 @@ export function registerEdgeMaterial(material) {
     return material
 }
 
-export function unregisterEdgeMaterial(material) {
-    edgeMaterials.delete(material)
-}
-
 export function updateEdgeUniforms(params) {
     edgeUniforms.uEdgeEnabled.value = params.enabled ? 1 : 0
     edgeUniforms.uEdgeMode.value = params.mode === 'Alpha' ? 0 : 1
