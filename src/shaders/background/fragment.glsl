@@ -41,11 +41,6 @@ uniform vec3 uStarColorOld; // outgoing theme's star tint (masked transitions)
 uniform float uStarsFadeStart; // sky direction.y where the star field begins
 uniform float uStarsFadeWidth; // span over which density ramps from ~0 to full
 
-// Constellations (sparse seeds, each a short random walk joining bright stars)
-uniform bool uConstellationsEnabled;
-uniform float uConstellationDensity; // share of cells that seed a constellation (keep low)
-uniform float uConstellationBrightness; // line glow
-uniform float uConstellationWidth; // line thickness (cell units)
 
 varying vec3 vDir;
 
@@ -58,14 +53,6 @@ float hash21(vec2 p) {
 vec2 hash22(vec2 p) {
     float n = hash21(p);
     return vec2(n, hash21(p + n));
-}
-
-// Distance from point p to the segment a-b.
-float segDist(vec2 p, vec2 a, vec2 b) {
-    vec2 pa = p - a;
-    vec2 ba = b - a;
-    float t = clamp(dot(pa, ba) / max(dot(ba, ba), 1e-6), 0.0, 1.0);
-    return length(pa - ba * t);
 }
 
 // Density fade by latitude, per cell row so stars don't flicker as the fragment moves.
@@ -128,7 +115,7 @@ void main() {
         }
     }
 
-    // ----- Layer 3: stars + constellations -----
+    // ----- Layer 3: stars -----
     // Stars render if EITHER side of a masked transition has them; their brightness follows the
     // mask so they dissolve across the portal/wipe edge (e.g. night stars fading inside the day).
     float starsOn = mix(uStarsEnabledOld, uStarsEnabled ? 1.0 : 0.0, tmNew);
@@ -147,7 +134,6 @@ void main() {
         jdet = abs(jdet) < 1e-6 ? (jdet < 0.0 ? -1e-6 : 1e-6) : jdet;
 
         vec3 starAccum = vec3(0.0);
-        float lines = 0.0;
 
         for (int yy = -1; yy <= 1; yy++) {
             for (int xx = -1; xx <= 1; xx++) {
@@ -159,28 +145,8 @@ void main() {
                 vec2 starPos = neighbor + 0.2 + hash22(id + 1.0) * 0.6;
                 vec2 delta = cellLocal - starPos;
 
-                bool isNode = uConstellationsEnabled && hash21(id + 41.0) < uConstellationDensity;
-
-                // Constellation lines: join this node to up to two of its present neighbour
-                // stars, so segments always connect real stars and shapes stay clean.
-                if (isNode) {
-                    int made = 0;
-                    for (int dy = -1; dy <= 1; dy++) {
-                        for (int dx = -1; dx <= 1; dx++) {
-                            if (made >= 2 || (dx == 0 && dy == 0)) continue;
-                            vec2 off = vec2(float(dx), float(dy));
-                            vec2 idB = id + off;
-                            if (hash21(idB) > uStarDensity * latitudeFade(idB.y)) continue;
-                            vec2 partnerPos = (neighbor + off) + 0.2 + hash22(idB + 1.0) * 0.6;
-                            lines += smoothstep(uConstellationWidth, 0.0, segDist(cellLocal, starPos, partnerPos));
-                            made++;
-                        }
-                    }
-                }
-
                 float brightness = hash21(id + 7.0);
                 brightness *= brightness; // bias toward faint stars
-                if (isNode) brightness = mix(brightness, 1.0, 0.6); // endpoints a bit brighter
 
                 // Desynced twinkle: per-star rate AND phase, sharpened into sparse flares.
                 float tRate = uStarTwinkleSpeed * mix(0.4, 1.4, hash21(id + 27.3));
@@ -198,7 +164,6 @@ void main() {
             }
         }
         color += starAccum * uStarBrightness * starsOn;
-        color += starColor * lines * uConstellationBrightness * starsOn;
     }
 
     gl_FragColor = vec4(color, 1.0);

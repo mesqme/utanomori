@@ -212,10 +212,6 @@ const painteryStyle = {
         starColor: '#ffffff',
         starsFadeStart: -0.9,
         starsFadeWidth: 0.57,
-        constellationsEnabled: false,
-        constellationDensity: 0.36,
-        constellationBrightness: 2.02,
-        constellationWidth: 0.1,
         rotationEnabled: true,
         rotationSpeed: -0.003,
         textureYawParallax: 1000, // CSS px/radian: horizontal cloud drift vs camera yaw (signed)
