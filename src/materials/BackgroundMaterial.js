@@ -59,11 +59,6 @@ export function createBackgroundMaterial(painteryTexture) {
             uStarColor: { value: new THREE.Color('#fff8ff') },
             uStarsFadeStart: { value: -0.05 },
             uStarsFadeWidth: { value: 0.45 },
-            // Constellations
-            uConstellationsEnabled: { value: false },
-            uConstellationDensity: { value: 0.02 },
-            uConstellationBrightness: { value: 0.6 },
-            uConstellationWidth: { value: 0.04 },
         },
     })
 }
@@ -113,10 +108,4 @@ export function updateBackgroundMaterial(material, options) {
     u.uStarColor.value.set(options.starColor ?? '#fff8ff')
     u.uStarsFadeStart.value = options.starsFadeStart ?? -0.05
     u.uStarsFadeWidth.value = options.starsFadeWidth ?? 0.45
-
-    // Constellations
-    u.uConstellationsEnabled.value = options.constellationsEnabled === true
-    u.uConstellationDensity.value = options.constellationDensity ?? 0.02
-    u.uConstellationBrightness.value = options.constellationBrightness ?? 0.6
-    u.uConstellationWidth.value = options.constellationWidth ?? 0.04
 }
