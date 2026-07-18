@@ -161,5 +161,4 @@ export const objectFieldDefaults = Object.freeze({
     treeWindStrength: 0.01, // bend amount (× height², so small values; tune on the fine slider)
     treeWindSpeed: 0.65, // sway speed
     treeWindGust: 1.0, // 0 = steady sin sway, 1 = strong gusty / abrupt amplitude swings
-    debugAnchors: false,
 })

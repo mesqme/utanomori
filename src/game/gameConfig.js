@@ -22,7 +22,6 @@ export const INTRO_TRAVEL_EASE = 'power1.inOut' // spiral-angle ease (gentle in/
 export const INTRO_TRAVEL_DURATION = 3.5 // default rise (0.7) + spiral (2.8)
 export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the rise into gameplay
 export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble starts as it settles
-export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 
 export const DIALOGUE_TEXT = 'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
 

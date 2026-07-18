@@ -11,16 +11,7 @@ export const NOTES = Object.freeze([
     { name: 'B', color: '#b072e6' },
 ])
 
-// C4 … B4 (Hz).
-export const NOTE_FREQUENCIES = Object.freeze([261.63, 293.66, 329.63, 349.23, 392.0, 440.0, 493.88])
-
-// Round lengths — the full song is 6 notes; round N "sings" the first 4 / 5 / 6.
-export const ROUND_LENGTHS = Object.freeze([4, 5, 6])
 export const SONG_LENGTH = 6
-
-// Shared tempo (seconds per beat). The looping song and the in-game playback both use
-// it so they feel like the same melody at the same speed.
-export const SONG_BEAT = 0.4
 
 const CHORD_TONES = [0, 2, 4] // C E G — the C-major triad (all 7 notes are the C scale)
 const RHYTHM_BAG = [0.5, 1, 1, 1, 1.5, 2] // beats per note

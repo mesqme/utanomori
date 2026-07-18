@@ -146,7 +146,6 @@ const painteryStyle = {
         treeWindStrength: 0.01,
         treeWindSpeed: 0.65,
         treeWindGust: 1.0,
-        debugAnchors: false,
         painterlyEnabled: true,
         painterlyScale: 0.13,
         painterlyContrast: 0.35,
