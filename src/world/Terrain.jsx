@@ -254,14 +254,12 @@ export default function Terrain() {
         revealCircle.centerZ = state.smoothedCircleCenter.z
         revealCircle.chunkSize = chunkSize
 
-        // Bake the resolution factor into the screen-space sizes so the paintery edge
-        // and dithering stay consistent across 1080p / 4k.
+        // Bake the resolution factor into the screen-space sizes so the dithering stays
+        // consistent across 1080p / 4k. (The paintery border brush is world-anchored, so it
+        // needs no per-resolution size here — only the props use the screen-space variant.)
         const refScale = getRefScale(frameState)
-        const painterySize = state.borderParameters.painterySize * refScale
         const pixelSize = state.ditheringParameters.pixelSize * refScale
-        terrainMaterial.uniforms.uPainterySize.value = painterySize
         terrainMaterial.uniforms.uPixelSize.value = pixelSize
-        grassMaterial.uniforms.uPainterySize.value = painterySize
         grassMaterial.uniforms.uPixelSize.value = pixelSize
 
         const ballPosition = state.ballPosition

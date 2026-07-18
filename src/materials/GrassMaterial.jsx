@@ -63,8 +63,6 @@ export default function useGrassMaterial({
                     uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
                     uFadeMode: { value: fadeModeToInt(borderFadeMode) },
                     uPainteryTexture: { value: painteryTexture },
-                    uPainterySize: { value: borderParameters.painterySize },
-                    uPainteryScreenBlend: { value: borderParameters.painteryScreenBlend },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
                     uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
                     uPainteryBleed: { value: borderParameters.painteryBleed },
@@ -97,7 +95,6 @@ export default function useGrassMaterial({
                     uBaseBrightnessOld: { value: grassBaseBrightness },
                     uLightenColorOld: { value: new THREE.Color(grassParameters.lightenColor ?? '#cdeebf') },
                     ...themeMaskUniforms,
-                    uLeanFactor: { value: grassParameters.leanFactor },
                     uCameraFacingStrength: { value: grassPatchParameters.cameraFacingStrength },
                     uOrientationVariation: { value: grassPatchParameters.orientationVariation },
                     uRoadGrassMinScale: { value: roadParameters.grassMinScale },
@@ -196,8 +193,6 @@ export default function useGrassMaterial({
         u.uPixelSize.value = pixelSize
         u.uDitherMode.value = ditherModeValue
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
-        u.uPainterySize.value = borderParameters.painterySize
-        u.uPainteryScreenBlend.value = borderParameters.painteryScreenBlend
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
         u.uPainteryBleed.value = borderParameters.painteryBleed
@@ -213,7 +208,6 @@ export default function useGrassMaterial({
         u.uGrassTintYellow.value.set(grassPatchParameters.tintColorYellow)
         u.uGrassTintGreen.value.set(grassPatchParameters.tintColorGreen)
         u.uGrassTintStrength.value = 0.5 + (grassPatchParameters.patchColorVariation ?? 0.28) * 0.5
-        u.uLeanFactor.value = grassParameters.leanFactor
         u.uCameraFacingStrength.value = grassPatchParameters.cameraFacingStrength
         u.uOrientationVariation.value = grassPatchParameters.orientationVariation
         u.uRoadGrassMinScale.value = roadParameters.enabled ? roadParameters.grassMinScale : 1

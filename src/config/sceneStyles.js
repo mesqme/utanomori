@@ -27,7 +27,6 @@ const painteryStyle = {
         height: 1.25,
         colorBase: '#028600',
         baseBrightness: 2,
-        leanFactor: 0,
         trampleEnabled: true,
         trailStrength: 0.7,
         dissolveEnabled: true,

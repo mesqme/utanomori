@@ -3,7 +3,6 @@ uniform float uGrassSegments;
 uniform float uGrassChunkSize;
 uniform float uGrassWidth;
 uniform float uGrassHeight;
-uniform float uLeanFactor;
 uniform float uCameraFacingStrength;
 uniform float uOrientationVariation;
 uniform float uRoadGrassMinScale;
@@ -244,7 +243,7 @@ void main() {
   vec2 radialDelta = worldXZ - aPatchCenter;
   vec2 radialDirection = length(radialDelta) > 0.0001 ? normalize(radialDelta) : vec2(0.0);
   float bendProfile = heightPercent * heightPercent;
-  float radialLean = max(0.0, aPatchData.z * (1.0 + uLeanFactor * 0.5));
+  float radialLean = max(0.0, aPatchData.z);
   vec2 radialOffset = radialDirection * radialLean * height * bendProfile;
 
   vec2 windUv = worldXZ * uWindScale * 0.1 + vec2(uTime * uWindSpeed * 0.1);

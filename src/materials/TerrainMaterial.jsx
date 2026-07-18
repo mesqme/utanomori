@@ -58,8 +58,6 @@ export default function useTerrainMaterial({
                 uGroundFadeOffset: { value: borderGroundFadeOffset },
                 uFadeMode: { value: fadeModeToInt(borderFadeMode) },
                 uPainteryTexture: { value: painteryTexture },
-                uPainterySize: { value: borderParameters.painterySize },
-                uPainteryScreenBlend: { value: borderParameters.painteryScreenBlend },
                 uPainteryDrift: { value: borderParameters.painteryDrift },
                 uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
                 uPainteryBleed: { value: borderParameters.painteryBleed },
@@ -107,8 +105,6 @@ export default function useTerrainMaterial({
         u.uGroundOffset.value = borderGroundOffset
         u.uGroundFadeOffset.value = borderGroundFadeOffset
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
-        u.uPainterySize.value = borderParameters.painterySize
-        u.uPainteryScreenBlend.value = borderParameters.painteryScreenBlend
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
         u.uPainteryBleed.value = borderParameters.painteryBleed

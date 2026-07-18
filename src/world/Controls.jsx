@@ -122,7 +122,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         height: 'height',
         baseColor: 'colorBase',
         baseBrightness: 'baseBrightness',
-        lean: 'leanFactor',
     },
     Patches: {
         worldSeed: 'worldSeed',
@@ -863,7 +862,6 @@ export default function Controls() {
         height: { value: grassParameters.height, min: 0.05, max: 3, step: 0.01, onChange: setParam('grassParameters', 'height') },
         baseColor: { value: grassParameters.colorBase, onChange: setParam('grassParameters', 'colorBase') },
         baseBrightness: { value: grassParameters.baseBrightness, min: 0, max: 2, step: 0.01, onChange: setParam('grassParameters', 'baseBrightness') },
-        lean: { value: grassParameters.leanFactor, min: 0, max: 2, step: 0.01, onChange: setParam('grassParameters', 'leanFactor') },
     })
 
     useControls('Grass.Patches', {
