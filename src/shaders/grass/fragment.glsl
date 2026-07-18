@@ -19,8 +19,6 @@ uniform float uLightenAmount;
 uniform float uDissolveAmount;
 uniform float uDissolveMode; // 0 = alpha, 1 = dither
 uniform sampler2D uPainteryTexture;
-uniform float uPainterySize;
-uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
@@ -109,15 +107,6 @@ bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
     return threshold < fadeLevel;
 }
 
-float inverseLerp(float v, float minValue, float maxValue) {
-  return (v - minValue) / (maxValue - minValue);
-}
-
-float remap(float v, float inMin, float inMax, float outMin, float outMax) {
-  float t = inverseLerp(v, inMin, inMax);
-  return mix(outMin, outMax, t);
-}
-
 float saturateValue(float x) {
   return clamp(x, 0.0, 1.0);
 }
@@ -149,7 +138,6 @@ float samplePainteryBrush(vec2 worldXZ) {
 
 void main() {
   float grassX = vGrassData.x;
-  float grassY = vGrassData.y;
 
   vec3 normal = normalize(vNormal);
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
