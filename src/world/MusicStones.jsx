@@ -17,7 +17,6 @@ import { seeThrough } from './utils/seeThrough.js'
 import { themeMask } from './utils/themeMask.js'
 import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './utils/musicStoneSeeThrough.js'
 import { musicStonePointer } from './utils/musicStonePointer.js'
-import { clearAllMusicStones } from './utils/musicStoneField.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.js'
 import { playSound } from '../game/gameSounds.js'
@@ -88,7 +87,6 @@ export default function MusicStones() {
         })
         proxyGeometry.dispose()
         proxyMaterial.dispose()
-        clearAllMusicStones()
         clearMusicStoneSeeThrough()
         musicStonePointer.active = false
     }, [stones, proxyGeometry, proxyMaterial])
@@ -219,7 +217,6 @@ export default function MusicStones() {
 
         // No layout (idle): everything sunk → hide, clear state, leave the camera.
         if (!layout) {
-            clearAllMusicStones()
             clearMusicStoneSeeThrough()
             musicStonePointer.active = false
             pointerTargetRef.current = -1

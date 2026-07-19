@@ -31,7 +31,7 @@ export const STONE_VARIANTS = Object.freeze([
 /**
  * The seven music-stone meshes from stones.glb, used only by the song mini-game (one per
  * note). `diameter` is the measured safe diameter (world units) → safe radius = diameter/2,
- * which drives the dynamic grass clearing around each rising stone (see MusicStones).
+ * which sizes each stone's see-through disc + hover proxy (see MusicStones).
  * `circle` is the matching `musicStone_0X_circle` mesh — a ring authored AROUND the stone
  * that flashes green/red as the correct/incorrect press feedback (baked with the stone's
  * offset + parented to it so it stays aligned).
