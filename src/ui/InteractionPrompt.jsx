@@ -22,7 +22,7 @@ export default function InteractionPrompt() {
     // Day/night switch: swaps the whole colour THEME (Night Forest ↔ Daylight, see colorPresets).
     // Moon = night (the default), sun = day. Any other theme picked in Leva counts as "night", so
     // the first press always lands on Daylight and the next brings the default night back. The
-    // switch animates per themeTransitionParameters (Fade / Portal / Wipe).
+    // switch animates through the portal transition (themeTransitionParameters).
     const isDay = useStore((state) => state.colorPresetParameters.theme === 'Daylight')
     const toggleDayNight = () =>
         startThemeTransition(isDay ? 'Night Forest' : 'Daylight', useStore.getState().themeTransitionParameters)
