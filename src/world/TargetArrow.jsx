@@ -7,7 +7,6 @@ import useStore from '../stores/useStore.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
-import { getGroundY } from './utils/groundHeight.js'
 import { musicStonePointer } from './utils/musicStonePointer.js'
 import arrowModelUrl from '../assets/models/arrow.glb'
 
@@ -124,12 +123,12 @@ export default function TargetArrow() {
             // Far state: floating in front of the hero, flat, pointing at the target.
             const fx = hero.x + dx * arrow.distance
             const fz = hero.z + dz * arrow.distance
-            _frontPos.set(fx, getGroundY(fx, fz) + arrow.yOffset, fz)
+            _frontPos.set(fx, arrow.yOffset, fz)
             _frontEuler.set(0, heading, 0)
             _frontQuat.setFromEuler(_frontEuler)
 
             // Overhead state: high above the companion, tipped to point straight down (-X → -Y).
-            _overheadPos.set(display.x, getGroundY(display.x, display.z) + arrow.overheadHeight, display.z)
+            _overheadPos.set(display.x, arrow.overheadHeight, display.z)
             _overheadEuler.set(0, heading, Math.PI / 2)
             _overheadQuat.setFromEuler(_overheadEuler)
 

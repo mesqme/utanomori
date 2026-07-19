@@ -8,7 +8,6 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import useTutorial from '../stores/useTutorial.jsx'
-import { sharedNoise2D } from './utils/worldNoise.js'
 import { getNearestRoadPoint, sampleRoadDirection } from './utils/roadField.js'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { recordTrail, resetTrail } from './utils/companionTrail.js'
@@ -130,11 +129,6 @@ export default function MainCharacter() {
     }, [])
 
 
-    const getGroundY = useCallback((x, z) => {
-        const terrainParameters = useStore.getState().terrainParameters
-        return sharedNoise2D(x * terrainParameters.scale, z * terrainParameters.scale) * terrainParameters.amplitude
-    }, [])
-
     const setModelTransform = useCallback(() => {
         if (!modelRef.current) return
 
@@ -148,7 +142,7 @@ export default function MainCharacter() {
         const roadSpawn = getNearestRoadPoint(CHARACTER_INITIAL_XZ.x, CHARACTER_INITIAL_XZ.y, roadParameters)
         const x = roadSpawn?.x ?? CHARACTER_INITIAL_XZ.x
         const z = roadSpawn?.z ?? CHARACTER_INITIAL_XZ.y
-        const y = getGroundY(x, z) + CHARACTER_CENTER_HEIGHT
+        const y = CHARACTER_CENTER_HEIGHT
 
         positionRef.current.set(x, y, z)
         velocityRef.current.set(0, 0, 0)
@@ -158,7 +152,7 @@ export default function MainCharacter() {
         setBallPosition(positionRef.current)
         smoothedCircleCenter.copy(positionRef.current)
         resetTrail(positionRef.current)
-    }, [getGroundY, setBallPosition, setModelTransform, smoothedCircleCenter])
+    }, [setBallPosition, setModelTransform, smoothedCircleCenter])
 
     const handleReset = useCallback(() => {
         resetPosition()
@@ -370,8 +364,7 @@ export default function MainCharacter() {
             }
         }
 
-        const groundY = getGroundY(position.x, position.z)
-        const groundedY = groundY + CHARACTER_CENTER_HEIGHT
+        const groundedY = CHARACTER_CENTER_HEIGHT
 
         if (phase === PHASES.start && !isGroundedRef.current) {
             velocity.y -= GRAVITY * safeDelta

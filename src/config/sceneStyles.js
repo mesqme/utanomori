@@ -10,8 +10,6 @@ const painteryStyle = {
         groundTextureEnabled: true,
         groundTextureName: 'ground', // ground-detail texture: 'ground' | 'paintaryAlpha'
         segments: 19,
-        scale: 0.08,
-        amplitude: 0,
         groundTextureScale: 0.05,
         groundTextureContrast: 0.45,
         chunkSize: 9,

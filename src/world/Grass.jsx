@@ -8,7 +8,7 @@ import { createRoadSampler } from './utils/roadField.js'
 import { createObjectFieldSampler } from './utils/objectField.js'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 
-export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude, grassMaterial }) {
+export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, grassMaterial }) {
     const grassParameters = useStore((s) => s.grassParameters)
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const roadParameters = useStore((s) => s.roadParameters)
@@ -115,7 +115,6 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
             const worldX = x + chunkX
             const worldZ = z + chunkZ
-            const y = noise2D ? noise2D(worldX * scale, worldZ * scale) * amplitude : 0
             patchSampler.sample(worldX, worldZ, patch)
             // Stones / trees: hard no-grass within the safe radius, then a fade band where
             // grass shortens (suppress) and leans away (lean). Roads keep their own mask.
@@ -123,7 +122,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             const roadMask = roadSampler.sampleMask(worldX, worldZ)
 
             positions[i * 3] = x
-            positions[i * 3 + 1] = y
+            positions[i * 3 + 1] = 0
             positions[i * 3 + 2] = z
             patchCenters[i * 2] = patch.centerX
             patchCenters[i * 2 + 1] = patch.centerZ
@@ -154,7 +153,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
         grassGeometry.setAttribute('aObjectLean', new THREE.InstancedBufferAttribute(objectLean, 2))
 
         return grassGeometry
-    }, [grassParameters.segmentsCount, grassParameters.count, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude])
+    }, [grassParameters.segmentsCount, grassParameters.count, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ])
 
     useEffect(() => {
         return () => {

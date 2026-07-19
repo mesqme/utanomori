@@ -12,7 +12,6 @@ import CompanionNotes from './CompanionNotes.jsx'
 import CharacterFeedback from './CharacterFeedback.jsx'
 import TargetArrow from './TargetArrow.jsx'
 import { sampleTrail } from './utils/companionTrail.js'
-import { getGroundY } from './utils/groundHeight.js'
 import { getRevealRadius } from './utils/revealCircle.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
 import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
@@ -119,15 +118,14 @@ function TargetCreature({ target }) {
             const dist = fleeRef.current * FLEE_SPEED
             const fx = target.x + dirX * dist
             const fz = target.z + dirZ * dist
-            group.position.set(fx, getGroundY(fx, fz), fz)
+            group.position.set(fx, 0, fz)
             group.rotation.y = dampAngle(group.rotation.y, Math.atan2(dirX, dirZ), HEADING_DAMP, dt)
         } else {
             // Stay put facing the player (gameplay, prompt, the game, and the fail ❗ / speech).
             fleeRef.current = 0
-            const groundY = getGroundY(target.x, target.z)
-            group.position.set(target.x, groundY, target.z)
+            group.position.set(target.x, 0, target.z)
             group.rotation.y = Math.atan2(player.x - target.x, player.z - target.z)
-            setTrampler(TRAMPLE_SLOT_TARGET, target.x, groundY, target.z)
+            setTrampler(TRAMPLE_SLOT_TARGET, target.x, 0, target.z)
         }
 
         if (creatureRef.current) {
@@ -209,7 +207,7 @@ function Follower({ definition, index }) {
             const dist = flee.t * RESTART_FLEE_SPEED
             const fx = flee.x + flee.dx * dist
             const fz = flee.z + flee.dz * dist
-            group.position.set(fx, getGroundY(fx, fz), fz)
+            group.position.set(fx, 0, fz)
             group.rotation.y = Math.atan2(flee.dx, flee.dz)
             if (creatureRef.current) creatureRef.current.position.y = Math.abs(Math.sin(state.clock.elapsedTime * 9 + index)) * 0.18
             setMoving((current) => (current ? current : true))
@@ -230,7 +228,7 @@ function Follower({ definition, index }) {
 
         const position = positionRef.current
         if (!initializedRef.current) {
-            position.set(definition.x, getGroundY(definition.x, definition.z), definition.z)
+            position.set(definition.x, 0, definition.z)
             previousRef.current.copy(position)
             initializedRef.current = true
         }
@@ -261,11 +259,10 @@ function Follower({ definition, index }) {
 
         // Group sits on the ground; jump arc + bob live on the inner creature so the
         // shadow stays planted and the trampler reports the ground position.
-        const groundY = getGroundY(position.x, position.z)
-        group.position.set(position.x, groundY, position.z)
+        group.position.set(position.x, 0, position.z)
 
         if (creatureRef.current) {
-            const jump = Math.max(0, position.y - groundY)
+            const jump = Math.max(0, position.y)
             const bob = Math.sin(state.clock.elapsedTime * 10 + index) * Math.min(0.12, speed * 0.03)
             creatureRef.current.position.y = jump + bob
         }
@@ -276,7 +273,7 @@ function Follower({ definition, index }) {
         }
         group.rotation.y = headingRef.current
 
-        setTrampler(slot, position.x, groundY, position.z)
+        setTrampler(slot, position.x, 0, position.z)
         setGroundShadow(slot, position.x, position.z, (definition.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
 
         // Hidden until positioned + the reveal-fade settles — avoids the one-frame snap-to-trail flash.
