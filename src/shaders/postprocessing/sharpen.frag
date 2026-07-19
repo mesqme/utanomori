@@ -1,8 +1,5 @@
 uniform sampler2D inputBuffer;
-uniform vec2 texelSize;
 uniform vec2 resolution;
-uniform int enabled;
-uniform float strength;
 uniform int sensorNoiseEnabled;
 uniform float luminanceNoise;
 uniform float chromaNoise;
@@ -32,19 +29,7 @@ float hash(vec2 p) {
 }
 
 void main() {
-    vec3 center = texture2D(inputBuffer, vUv).rgb;
-    vec3 color = center;
-
-    // Optional sharpen — runs before grain so the grain stays the untouched top layer.
-    if (enabled == 1) {
-        vec3 neighbors =
-            texture2D(inputBuffer, vUv + vec2(texelSize.x, 0.0)).rgb +
-            texture2D(inputBuffer, vUv - vec2(texelSize.x, 0.0)).rgb +
-            texture2D(inputBuffer, vUv + vec2(0.0, texelSize.y)).rgb +
-            texture2D(inputBuffer, vUv - vec2(0.0, texelSize.y)).rgb;
-        vec3 sharpened = center * 5.0 - neighbors;
-        color = mix(center, sharpened, strength);
-    }
+    vec3 color = texture2D(inputBuffer, vUv).rgb;
 
     // Display color grade — applied before grain so the grain stays the untouched top layer. Identity
     // (1 / 0 / 1) is a no-op. brightness scales, saturation pulls toward luma, warmth pushes red up and

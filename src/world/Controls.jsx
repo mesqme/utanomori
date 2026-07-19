@@ -307,8 +307,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         lumaNoise: 'luminanceNoise',
         chromaNoise: 'chromaNoise',
         sensorScale: 'sensorNoiseScale',
-        sharpen: 'sharpenEnabled',
-        sharpenStrength: 'sharpenStrength',
     },
     Dithering: {
         ditherMode: 'ditherMode',
@@ -1414,8 +1412,6 @@ export default function Controls() {
         lumaNoise: { value: painterlyPostParameters.luminanceNoise, min: 0, max: 0.2, step: 0.001, onChange: setParam('painterlyPostParameters', 'luminanceNoise') },
         chromaNoise: { value: painterlyPostParameters.chromaNoise, min: 0, max: 0.1, step: 0.001, onChange: setParam('painterlyPostParameters', 'chromaNoise') },
         sensorScale: { value: painterlyPostParameters.sensorNoiseScale, min: 1, max: 8, step: 1, onChange: setParam('painterlyPostParameters', 'sensorNoiseScale') },
-        sharpen: { value: painterlyPostParameters.sharpenEnabled, onChange: setParam('painterlyPostParameters', 'sharpenEnabled') },
-        sharpenStrength: { value: painterlyPostParameters.sharpenStrength, min: 0, max: 1, step: 0.01, onChange: setParam('painterlyPostParameters', 'sharpenStrength') },
     })
 
     useControls('Post.Brush Texture', {

@@ -220,8 +220,6 @@ const painteryStyle = {
         luminanceNoise: 0.02,
         chromaNoise: 0.02,
         sensorNoiseScale: 1,
-        sharpenEnabled: false,
-        sharpenStrength: 0.28,
     },
     edgeParameters: {
         enabled: true,

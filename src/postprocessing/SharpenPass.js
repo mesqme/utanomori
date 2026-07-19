@@ -5,8 +5,8 @@ import fullscreenVertexShader from '../shaders/postprocessing/fullscreen.vert'
 import sharpenFragmentShader from '../shaders/postprocessing/sharpen.frag'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
-// Final pass of the painterly pipeline: an optional cheap sharpen, then the film
-// grain applied last so nothing (kuwahara, bloom, AA) filters the grain afterwards.
+// Final pass of the painterly pipeline: the display color grade, then the film
+// grain applied last so nothing (AA) filters the grain afterwards.
 export default class SharpenPass extends Pass {
     constructor(settings) {
         super('PainterlySharpenPass')
@@ -15,10 +15,7 @@ export default class SharpenPass extends Pass {
             fragmentShader: sharpenFragmentShader,
             uniforms: {
                 inputBuffer: { value: null },
-                texelSize: { value: new THREE.Vector2(1, 1) },
                 resolution: { value: new THREE.Vector2(1, 1) },
-                enabled: { value: settings.sharpenEnabled ? 1 : 0 },
-                strength: { value: settings.sharpenStrength },
                 sensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
                 luminanceNoise: { value: settings.luminanceNoise },
                 chromaNoise: { value: settings.chromaNoise },
@@ -43,8 +40,6 @@ export default class SharpenPass extends Pass {
 
     update(settings) {
         const u = this.material.uniforms
-        u.enabled.value = settings.sharpenEnabled ? 1 : 0
-        u.strength.value = settings.sharpenStrength
         u.sensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
         u.luminanceNoise.value = settings.luminanceNoise
         u.chromaNoise.value = settings.chromaNoise
@@ -66,10 +61,7 @@ export default class SharpenPass extends Pass {
     }
 
     setSize(width, height) {
-        const safeWidth = Math.max(width, 1)
-        const safeHeight = Math.max(height, 1)
-        this.material.uniforms.texelSize.value.set(1 / safeWidth, 1 / safeHeight)
-        this.material.uniforms.resolution.value.set(safeWidth, safeHeight)
+        this.material.uniforms.resolution.value.set(Math.max(width, 1), Math.max(height, 1))
     }
 
     dispose() {
