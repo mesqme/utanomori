@@ -83,7 +83,6 @@ const painteryStyle = {
         tintColorViolet: '#2843eb',
         tintColorYellow: '#6e35ff',
         tintColorGreen: '#5130ff',
-        debugCenters: false,
         debugBorders: false,
         debugPatchColors: false,
     },
