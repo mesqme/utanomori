@@ -245,7 +245,6 @@ if (import.meta?.hot) {
         grassPatchParameters: {
             ...defaultSceneStyle.grassPatchParameters,
             ...(applyGrassStyleDefaults ? {} : state.grassPatchParameters),
-            debugCenters: false,
             debugBorders: false,
             debugPatchColors: false,
         },

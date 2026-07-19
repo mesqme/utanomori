@@ -3,7 +3,6 @@ import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import Grass from './Grass.jsx'
-import GrassPatchDebug from './GrassPatchDebug.jsx'
 import { createRoadSampler } from './utils/roadField.js'
 
 export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, grassMaterial }) {
@@ -39,27 +38,17 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
         <group position={[x * size, 0, z * size]}>
             <mesh geometry={geometry} material={terrainMaterial} rotation-x={-Math.PI / 2} />
             {grassEnabled && (
-                <>
-                    <Grass
-                        size={size}
-                        chunkX={x * size}
-                        chunkZ={z * size}
-                        chunkIndexX={x}
-                        chunkIndexZ={z}
-                        noise2D={noise2D}
-                        scale={terrainScale}
-                        amplitude={terrainAmplitude}
-                        grassMaterial={grassMaterial}
-                    />
-                    <GrassPatchDebug
-                        chunkX={x * size}
-                        chunkZ={z * size}
-                        size={size}
-                        noise2D={noise2D}
-                        scale={terrainScale}
-                        amplitude={terrainAmplitude}
-                    />
-                </>
+                <Grass
+                    size={size}
+                    chunkX={x * size}
+                    chunkZ={z * size}
+                    chunkIndexX={x}
+                    chunkIndexZ={z}
+                    noise2D={noise2D}
+                    scale={terrainScale}
+                    amplitude={terrainAmplitude}
+                    grassMaterial={grassMaterial}
+                />
             )}
         </group>
     )
