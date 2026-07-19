@@ -5,10 +5,6 @@ import backgroundFragmentShader from '../shaders/background/fragment.glsl'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
 
 // Layered night sky: base colour gradient + paintery texture variation + stars.
-function starStyleToInt(style) {
-    return style === 'Natural' ? 1 : 0
-}
-
 function colorModeToInt(mode) {
     return mode === 'Color Mix' ? 1 : mode === 'Both' ? 2 : 0
 }
@@ -48,7 +44,6 @@ export function createBackgroundMaterial(painteryTexture) {
             uTextureMixIntensity: { value: 0.0 },
             // Layer 3 — stars
             uStarsEnabled: { value: true },
-            uStarStyle: { value: 0 },
             uTime: { value: 0 },
             uStarCells: { value: 30 },
             uStarDensity: { value: 0.4 },
@@ -97,7 +92,6 @@ export function updateBackgroundMaterial(material, options) {
 
     // Layer 3 — stars (direction space → resolution independent, no refScale)
     u.uStarsEnabled.value = options.starsEnabled !== false
-    u.uStarStyle.value = starStyleToInt(options.starStyle)
     u.uTime.value = options.time ?? 0
     u.uStarCells.value = options.starCellSize ?? 30
     u.uStarDensity.value = options.starDensity ?? 0.4
