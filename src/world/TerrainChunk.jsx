@@ -5,14 +5,13 @@ import useStore from '../stores/useStore.jsx'
 import Grass from './Grass.jsx'
 import { createRoadSampler } from './utils/roadField.js'
 
-export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, grassMaterial }) {
-    const terrainParameters = useStore((s) => s.terrainParameters)
-    const terrainScale = terrainParameters.scale
-    const terrainAmplitude = terrainParameters.amplitude
-    const terrainSegments = terrainParameters.segments
+export default function TerrainChunk({ x, z, size, terrainMaterial, grassMaterial }) {
+    const terrainSegments = useStore((s) => s.terrainParameters.segments)
     const grassEnabled = useStore((s) => s.grassParameters.enabled)
     const roadParameters = useStore((s) => s.roadParameters)
 
+    // Flat plane; the subdivisions exist for the per-vertex aRoadDistance attribute
+    // (the fragment shader interpolates it to draw the road).
     const geometry = useMemo(() => {
         const geo = new THREE.PlaneGeometry(size, size, terrainSegments, terrainSegments)
         const posAttribute = geo.attributes.position
@@ -24,13 +23,12 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
         for (let i = 0; i < posAttribute.count; i++) {
             const worldX = posAttribute.getX(i) + chunkWorldX
             const worldZ = -posAttribute.getY(i) + chunkWorldZ
-            posAttribute.setZ(i, noise2D(worldX * terrainScale, worldZ * terrainScale) * terrainAmplitude)
             const roadDistance = roadSampler.sampleDistance(worldX, worldZ)
             roadDistances[i] = Number.isFinite(roadDistance) ? roadDistance : 100000
         }
         geo.setAttribute('aRoadDistance', new THREE.BufferAttribute(roadDistances, 1))
         return geo
-    }, [noise2D, size, x, z, terrainScale, terrainAmplitude, terrainSegments, roadParameters])
+    }, [size, x, z, terrainSegments, roadParameters])
 
     useEffect(() => () => geometry.dispose(), [geometry])
 
@@ -44,9 +42,6 @@ export default function TerrainChunk({ x, z, size, noise2D, terrainMaterial, gra
                     chunkZ={z * size}
                     chunkIndexX={x}
                     chunkIndexZ={z}
-                    noise2D={noise2D}
-                    scale={terrainScale}
-                    amplitude={terrainAmplitude}
                     grassMaterial={grassMaterial}
                 />
             )}

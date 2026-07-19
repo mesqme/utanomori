@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
-import { sharedNoise2D } from './utils/worldNoise.js'
 import { gsap } from 'gsap'
 import * as THREE from 'three'
 
@@ -52,8 +51,6 @@ export default function Terrain() {
     const chunkSize = useStore((s) => s.terrainParameters.chunkSize)
     const borderCircleRadius = useStore((s) => s.borderParameters.circleRadiusFactor)
     const introReplayNonce = useStore((s) => s.introReplayNonce)
-
-    const noise2D = sharedNoise2D
 
     const noiseTexture = useTexture(
         noiseTextureUrl,
@@ -315,12 +312,11 @@ export default function Terrain() {
                     x={chunk.x}
                     z={chunk.z}
                     size={chunkSize}
-                    noise2D={noise2D}
                     terrainMaterial={terrainMaterial}
                     grassMaterial={grassMaterial}
                 />
             ))}
-            <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} noise2D={noise2D} />
+            <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} />
             <GrassTrail grassMaterial={grassMaterial} />
         </group>
     )
