@@ -741,7 +741,6 @@ export default function Controls() {
         // How the theme switch animates (the in-game day/night button + the dropdown above).
         Transition: folder(
             {
-                mode: { value: themeTransitionParameters.mode, options: ['Fade', 'Portal', 'Wipe', 'Dissolve', 'Instant'], onChange: setParam('themeTransitionParameters', 'mode') },
                 duration: { value: themeTransitionParameters.duration, min: 0.2, max: 4, step: 0.05, onChange: setParam('themeTransitionParameters', 'duration') },
                 easing: { value: themeTransitionParameters.easing, options: ['Fast start', 'Smooth', 'Slow start', 'Linear'], onChange: setParam('themeTransitionParameters', 'easing') },
                 edgeStyle: { value: themeTransitionParameters.edgeStyle, options: ['Paintery', 'Perlin'], onChange: setParam('themeTransitionParameters', 'edgeStyle') },

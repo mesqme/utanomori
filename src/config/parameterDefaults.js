@@ -79,12 +79,10 @@ export const DEFAULT_COLOR_PRESET_PARAMETERS = {
     trees: 'Indigo Canopy',
 }
 
-// How the day/night switch (and the Leva theme dropdown) transitions between themes.
-// 'Fade' crossfades every changing value; 'Portal' grows a torn-edged circle from the screen centre
-// revealing the new look inside; 'Wipe' sweeps a torn border right → left; 'Dissolve' erodes the
-// whole old frame at once (the rust-like brush-threshold effect the ground border uses).
+// How the day/night switch (and the Leva theme dropdown) transitions between themes: the PORTAL —
+// a torn-edged circle grows from the screen centre revealing the new look inside, while the world
+// keeps moving on both sides of the edge.
 export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
-    mode: 'Portal', // 'Fade' | 'Portal' | 'Wipe' | 'Dissolve' | 'Instant'
     duration: 3.0, // seconds
     // Progress curve. 'Fast start' responds the instant you click and eases out at the end;
     // 'Slow start' is the cinematic ramp-up (feels laggy on click); 'Smooth' is between.
