@@ -337,9 +337,6 @@ const painteryStyle = {
         tutorialImageRadius: 29, // px → --tut-image-radius: the image's corner rounding (separate from the card)
         tutorialButtonOutside: true, // bool → place the button below the card instead of inside it
         tutorialPadding: 3.0, // vmin·scale → --tut-pad: gap between the image/content and the card frame
-        // DEBUG: force every UI overlay (bubble, prompt, HUD, countdown, chips…) on at once so the
-        // values above can be dialed in live. Turn off (or remove UIPreview) when done.
-        previewUI: false,
     },
     seeThroughParameters: {
         enabled: true,

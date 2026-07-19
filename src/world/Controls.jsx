@@ -386,7 +386,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         'Tutorial.tutorialImageRadius': 'tutorialImageRadius',
         'Tutorial.tutorialPadding': 'tutorialPadding',
         'Tutorial.tutorialButtonOutside': 'tutorialButtonOutside',
-        previewUI: 'previewUI',
     },
 })
 
@@ -1544,7 +1543,6 @@ export default function Controls() {
             },
             { collapsed: true }
         ),
-        previewUI: { value: gameUiParameters.previewUI, label: '🐞 preview all UI', onChange: setParam('gameUiParameters', 'previewUI') },
     })
 
     // ALL desktop camera distances in one place — gameplay walk, the two dialogue framings, and the
