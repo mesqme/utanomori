@@ -61,7 +61,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Stars: {
         starsEnabled: 'starsEnabled',
-        starStyle: 'starStyle',
         starCellSize: 'starCellSize',
         starDensity: 'starDensity',
         starSize: 'starSize',
@@ -789,7 +788,6 @@ export default function Controls() {
 
     useControls('World.Stars', {
         starsEnabled: { value: backgroundParameters.starsEnabled, onChange: setParam('backgroundParameters', 'starsEnabled') },
-        starStyle: { value: backgroundParameters.starStyle, options: ['Stylized', 'Natural'], onChange: setParam('backgroundParameters', 'starStyle') },
         starColor: { value: backgroundParameters.starColor, onChange: setParam('backgroundParameters', 'starColor') },
         starCellSize: { value: backgroundParameters.starCellSize, min: 8, max: 120, step: 1, onChange: setParam('backgroundParameters', 'starCellSize') },
         starDensity: { value: backgroundParameters.starDensity, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'starDensity') },

@@ -200,7 +200,6 @@ const painteryStyle = {
         textureBrightness: 4,
         textureMixIntensity: 1.04,
         starsEnabled: true,
-        starStyle: 'Stylized',
         starCellSize: 92,
         starDensity: 0.05,
         starSize: 0.08,
