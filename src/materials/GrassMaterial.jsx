@@ -7,7 +7,6 @@ import useStore from '../stores/useStore.jsx'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
 import { getTrampleData } from '../world/utils/trampleField.js'
-import { getMusicStoneData } from '../world/utils/musicStoneField.js'
 import { characterSeeThrough } from '../world/utils/characterSeeThrough.js'
 
 // Characters react the grass via four independent layers (dissolve / lighten /
@@ -53,7 +52,6 @@ export default function useGrassMaterial({
     const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
     const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
-    const musicStoneGrassFade = useStore((s) => s.musicStoneParameters?.grassFade ?? 0.6)
 
     const material = useMemo(
         () =>
@@ -114,11 +112,9 @@ export default function useGrassMaterial({
                     uTrampleEnabled: { value: 1 },
                     uTrailStrength: { value: grassParameters.trailStrength ?? 0.7 },
                     uTramplers: { value: getTrampleData() },
-                    uMusicStones: { value: getMusicStoneData() },
-                    uMusicStoneFade: { value: 0.6 },
                     // Music-character see-through: grass in front of a sheep clears so it shows through
                     // (the trample only presses the grass down at foot level). Shared buffer, mutated
-                    // by each SheepCreature each frame and re-uploaded — like uMusicStones / uTramplers.
+                    // by each SheepCreature each frame and re-uploaded — like uTramplers.
                     uCharSeeThrough: { value: characterSeeThrough.data },
                     uCharSeeThroughCount: { value: characterSeeThrough.count },
                     uUseTrailSource: { value: computeSourceUsage(grassParameters).useTrail },
@@ -211,7 +207,6 @@ export default function useGrassMaterial({
         u.uCameraFacingStrength.value = grassPatchParameters.cameraFacingStrength
         u.uOrientationVariation.value = grassPatchParameters.orientationVariation
         u.uRoadGrassMinScale.value = roadParameters.enabled ? roadParameters.grassMinScale : 1
-        u.uMusicStoneFade.value = musicStoneGrassFade
         u.uDebugBorders.value = grassPatchParameters.debugBorders ? 1 : 0
         u.uDebugPatchColors.value = grassPatchParameters.debugPatchColors ? 1 : 0
 

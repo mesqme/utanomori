@@ -298,7 +298,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     staggerDelay: 0.12, // delay between each stone's scale-in (left→right)
     scaleInDuration: 0.5, // seconds for one stone to rise
     scaleOutDuration: 0.4, // seconds for the stones to sink on teardown
-    grassFade: 0.6, // grass fade band beyond each stone's radius (currently dormant)
     cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
     cameraDistance: 15, // distance back from the companion
     cameraLerp: 3.6, // how smoothly the camera moves / returns
