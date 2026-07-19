@@ -296,7 +296,6 @@ export default function useGrassMaterial({
         borderParameters,
         pixelSize,
         ditherModeValue,
-        musicStoneGrassFade,
     ])
 
     useEffect(() => {

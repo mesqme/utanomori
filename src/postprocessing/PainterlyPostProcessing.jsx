@@ -9,7 +9,7 @@ import { themeMask } from '../world/utils/themeMask.js'
 import SharpenPass from './SharpenPass.js'
 
 // Post chain: scene (no MSAA) → SMAA (final-image AA) → SharpenPass
-// (optional sharpen + the film grain, applied last). The painterly abstraction now
+// (display color grade + the film grain, applied last). The painterly abstraction
 // lives in the baked paintery texture, so there's no per-frame Kuwahara pass.
 export default function PainterlyPostProcessing() {
     const settings = useStore((state) => state.painterlyPostParameters)
