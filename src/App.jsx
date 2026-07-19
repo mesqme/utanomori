@@ -11,7 +11,6 @@ import ControlsIcons from './ui/ControlsIcons.jsx'
 import Joystick from './ui/Joystick.jsx'
 import InteractionPrompt from './ui/InteractionPrompt.jsx'
 import Tutorial from './ui/Tutorial.jsx'
-import UIPreview from './ui/UIPreview.jsx'
 import LoaderDebugOverlay from './ui/LoaderDebugOverlay.jsx'
 import GameDirector from './game/GameDirector.jsx'
 import Dialogue from './game/Dialogue.jsx'
@@ -115,7 +114,6 @@ export default function App() {
                 <InteractionPrompt />
                 <SongGame />
                 <Tutorial />
-                <UIPreview />
             </KeyboardControls>
             <GameDirector />
             <IntroTitle />
