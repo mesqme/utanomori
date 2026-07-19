@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
 import { useEffect, useMemo, useRef } from 'react'
-import { Bloom, EffectComposer, SMAA } from '@react-three/postprocessing'
+import { EffectComposer, SMAA } from '@react-three/postprocessing'
 
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
@@ -8,7 +8,7 @@ import { updateNoiseReveal } from '../game/visualReveal.js'
 import { themeMask } from '../world/utils/themeMask.js'
 import SharpenPass from './SharpenPass.js'
 
-// Post chain: scene (no MSAA) → optional bloom → SMAA (final-image AA) → SharpenPass
+// Post chain: scene (no MSAA) → SMAA (final-image AA) → SharpenPass
 // (optional sharpen + the film grain, applied last). The painterly abstraction now
 // lives in the baked paintery texture, so there's no per-frame Kuwahara pass.
 export default function PainterlyPostProcessing() {
@@ -56,15 +56,6 @@ export default function PainterlyPostProcessing() {
 
     return (
         <EffectComposer multisampling={0}>
-            {settings.bloomEnabled && (
-                <Bloom
-                    intensity={settings.bloomIntensity}
-                    luminanceThreshold={settings.bloomThreshold}
-                    luminanceSmoothing={settings.bloomSmoothing}
-                    radius={settings.bloomRadius}
-                    mipmapBlur
-                />
-            )}
             <SMAA />
             <primitive object={sharpenPass} dispose={null} />
         </EffectComposer>
