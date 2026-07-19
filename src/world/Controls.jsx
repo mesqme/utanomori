@@ -1429,7 +1429,7 @@ export default function Controls() {
     // ======================================================================================
     // The whole in-game UI skin (SpeechBubble + InteractionPrompt + SongGame HUD + key chips). Each
     // value is written to a CSS custom property on :root (see the effect above) so the DOM UI restyles
-    // live. Toggle previewUI to splay every overlay on screen at once while dialing these in.
+    // live.
     useControls('Desktop.UI', {
         'Text & scale': folder(
             {

@@ -428,7 +428,7 @@ export default function MainCharacter() {
 
         if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits) {
             recordTrail(visualPosition)
-            setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, groundY, visualPosition.z)
+            setTrampler(TRAMPLE_SLOT_MAIN, visualPosition.x, 0, visualPosition.z)
         } else {
             clearTrampler(TRAMPLE_SLOT_MAIN)
         }
