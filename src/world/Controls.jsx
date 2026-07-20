@@ -1336,11 +1336,8 @@ export default function Controls() {
 
     useControls('Game.Intro Camera', {
         'redo the animation': button(() => replayIntro()),
-        riseHeight: { value: introCameraParameters.riseHeight, min: 0, max: 20, step: 0.1, onChange: setParam('introCameraParameters', 'riseHeight') },
-        riseDuration: { value: introCameraParameters.riseDuration, min: 0, max: 3, step: 0.05, onChange: setParam('introCameraParameters', 'riseDuration') },
         spiralDuration: { value: introCameraParameters.spiralDuration, min: 0.3, max: 8, step: 0.05, onChange: setParam('introCameraParameters', 'spiralDuration') },
         orbitDistance: { value: introCameraParameters.orbitDistance, min: 3, max: 40, step: 0.5, onChange: setParam('introCameraParameters', 'orbitDistance') },
-        revealReduce: { value: introCameraParameters.revealReduce, min: 0, max: 0.3, step: 0.005, onChange: setParam('introCameraParameters', 'revealReduce') },
     })
 
     // ======================================================================================

@@ -221,14 +221,11 @@ export const DEFAULT_LANTERN_GRASS_PARAMETERS = {
     colorAmount: 0.81, // how strongly to tint (0..1)
 }
 
-// Intro camera travel (GameDirector): optional rise → descending 360° spiral down to the
-// hero. Fully tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
+// Intro camera travel (GameDirector): a descending 360° spiral down to the hero. Fully
+// tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
 export const DEFAULT_INTRO_CAMERA_PARAMETERS = {
-    riseHeight: 0, // 0 = no initial rise; the spiral starts immediately
-    riseDuration: 0, // seconds of that initial rise (0 = skip straight to the spiral)
     spiralDuration: 4.55, // seconds of the descending 360° spiral down to the hero
     orbitDistance: 14, // peak camera radius mid-spiral (swells out, then pulls in)
-    revealReduce: 0.04, // how much the terrain/grass reveal shrinks during the rise
 }
 
 // A single arrow (arrow.glb, forward = local -X, origin behind it) floating in front of the

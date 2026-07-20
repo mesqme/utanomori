@@ -117,23 +117,22 @@ export default function Terrain() {
         revealCircle.radiusFactor = value
     }
 
-    // The intro reveal moves with the camera travel: the lit circle shrinks slightly while the
-    // camera rises, then opens out to full as it spirals down. Timed to the (tunable) intro
-    // durations so the two stay in sync; replayable via the "redo the animation" button.
+    // The intro reveal moves with the camera travel: the lit circle opens out to full as the
+    // camera spirals down. Timed to the (tunable) spiral duration so the two stay in sync;
+    // replayable via the "redo the animation" button.
     const runIntroReveal = () => {
         if (radiusAnimationRef.current) radiusAnimationRef.current.kill()
         const intro = useStore.getState().introCameraParameters
-        const startValue = circleRadiusRef.current
-        const reduced = Math.max(START_CIRCLE_RADIUS, startValue - intro.revealReduce)
-        const obj = { value: startValue }
-        const tl = gsap.timeline({
+        const obj = { value: circleRadiusRef.current }
+        radiusAnimationRef.current = gsap.to(obj, {
+            value: borderCircleRadius,
+            duration: Math.max(0.001, intro.spiralDuration),
+            ease: 'power2.out',
+            onUpdate: () => setCircleRadius(obj.value),
             onComplete: () => {
                 radiusAnimationRef.current = null
             },
         })
-        tl.to(obj, { value: reduced, duration: Math.max(0.001, intro.riseDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
-        tl.to(obj, { value: borderCircleRadius, duration: Math.max(0.001, intro.spiralDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
-        radiusAnimationRef.current = tl
     }
 
     // Cinematic restart: shrink the lit circle back to the tiny pre-start radius as the camera
@@ -166,7 +165,7 @@ export default function Terrain() {
 
     useEffect(() => {
         if (phase === PHASES.intro) {
-            // Reveal flows with the camera travel: shrink slightly on the rise, open on the spiral.
+            // Reveal flows with the camera travel: opens out to full over the spiral.
             runIntroReveal()
         } else if (phase === PHASES.restarting) {
             // Reverse: shrink the lit circle back down as the camera lifts to the top shot.
