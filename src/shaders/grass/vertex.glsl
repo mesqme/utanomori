@@ -64,7 +64,6 @@ attribute vec3 aInstancePosition;
 attribute vec2 aPatchCenter;
 attribute vec4 aPatchData;
 attribute vec2 aPatchColorData; // x = tint family (0..3 → uGrassTint*), y = tone
-attribute vec3 aPatchDebugColor;
 
 // The grass palette as UNIFORMS (the bake stores only each blade's family + tone), so recolouring
 // the field — day/night themes, Leva drags — is a uniform write, not an attribute rebuild.
@@ -95,8 +94,6 @@ varying vec3 vColor;
 varying vec4 vGrassData;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
-varying float vPatchBorderScale;
-varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
@@ -264,6 +261,4 @@ void main() {
   vNormal = normalize(vec3(facingDirection.x * -zSide, 0.2, facingDirection.y * -zSide));
   vWorldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
   vGrassData = vec4(x, heightPercent, xSide, grassMask);
-  vPatchBorderScale = aPatchData.w;
-  vPatchDebugColor = aPatchDebugColor;
 }

@@ -81,8 +81,6 @@ const painteryStyle = {
         tintColorViolet: '#2843eb',
         tintColorYellow: '#6e35ff',
         tintColorGreen: '#5130ff',
-        debugBorders: false,
-        debugPatchColors: false,
     },
     roadParameters: {
         enabled: true,

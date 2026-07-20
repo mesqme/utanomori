@@ -96,8 +96,6 @@ export default function useGrassMaterial({
                     uCameraFacingStrength: { value: grassPatchParameters.cameraFacingStrength },
                     uOrientationVariation: { value: grassPatchParameters.orientationVariation },
                     uRoadGrassMinScale: { value: roadParameters.grassMinScale },
-                    uDebugBorders: { value: grassPatchParameters.debugBorders ? 1 : 0 },
-                    uDebugPatchColors: { value: grassPatchParameters.debugPatchColors ? 1 : 0 },
 
                     uWindDirection: { value: windParameters.direction },
                     uWindScale: { value: windParameters.scale },
@@ -207,8 +205,6 @@ export default function useGrassMaterial({
         u.uCameraFacingStrength.value = grassPatchParameters.cameraFacingStrength
         u.uOrientationVariation.value = grassPatchParameters.orientationVariation
         u.uRoadGrassMinScale.value = roadParameters.enabled ? roadParameters.grassMinScale : 1
-        u.uDebugBorders.value = grassPatchParameters.debugBorders ? 1 : 0
-        u.uDebugPatchColors.value = grassPatchParameters.debugPatchColors ? 1 : 0
 
         u.uWindDirection.value = windParameters.direction
         u.uWindScale.value = windParameters.scale

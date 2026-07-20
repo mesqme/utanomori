@@ -3,8 +3,6 @@ uniform int uDitherMode;
 uniform int uFadeMode;
 uniform vec3 uBackgroundColor;
 uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
-uniform int uDebugBorders;
-uniform int uDebugPatchColors;
 uniform float uBaseBrightness;
 uniform sampler2D uNoiseTexture;
 uniform vec3 uLanternPosition;
@@ -37,8 +35,6 @@ varying vec3 vColorOld;
 varying vec4 vGrassData;
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
-varying float vPatchBorderScale;
-varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
@@ -168,13 +164,6 @@ void main() {
   float themedBrightness = mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
 
   vec3 color = themedColor * lighting * themedBrightness;
-
-  if (uDebugPatchColors == 1) {
-    color = vPatchDebugColor;
-  }
-  if (uDebugBorders == 1) {
-    color = mix(vec3(1.0, 0.08, 0.5), color, smoothstep(0.8, 0.98, vPatchBorderScale));
-  }
 
   vec2 lanternNoiseUv = vWorldPosition.xz * uLanternLightNoiseScale * 0.1;
   float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUv).r * 2.0 - 1.0;
