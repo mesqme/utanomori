@@ -3,7 +3,7 @@ import { Pass } from 'postprocessing'
 
 import fullscreenVertexShader from '../shaders/fullscreen/vertex.glsl'
 import sharpenFragmentShader from '../shaders/sharpen/fragment.glsl'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // Final pass of the painterly pipeline: the display color grade, then the film
 // grain applied last so nothing (AA) filters the grain afterwards.

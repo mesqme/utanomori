@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 
 import useStore from '../stores/useStore.jsx'
-import { characterHead } from './utils/characterHead.js'
+import { characterHead } from './state/characterHead.js'
 
 // Drives the cartoon eyes that are drawn directly in the head mesh's fragment shader (in the second
 // UV set, uv1 — see character/fragment.glsl, gated by uDrawEyes). Nothing renders here: each frame

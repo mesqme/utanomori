@@ -2,10 +2,10 @@ import { useEffect, useMemo } from 'react'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
-import { mulberry32 } from './utils/randomUtils.js'
-import { createGrassPatchSampler } from './utils/grassPatchField.js'
-import { createRoadSampler } from './utils/roadField.js'
-import { createObjectFieldSampler } from './utils/objectField.js'
+import { mulberry32 } from './fields/randomUtils.js'
+import { createGrassPatchSampler } from './fields/grassPatchField.js'
+import { createRoadSampler } from './fields/roadField.js'
+import { createObjectFieldSampler } from './fields/objectField.js'
 
 export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, grassMaterial }) {
     const grassParameters = useStore((s) => s.grassParameters)

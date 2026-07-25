@@ -8,18 +8,18 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import useTutorial from '../stores/useTutorial.jsx'
-import { getNearestRoadPoint, sampleRoadDirection } from './utils/roadField.js'
-import { createObjectFieldSampler } from './utils/objectField.js'
-import { recordTrail, resetTrail } from './utils/companionTrail.js'
-import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './utils/trampleField.js'
-import { seeThrough } from './utils/seeThrough.js'
-import { themeMask } from './utils/themeMask.js'
+import { getNearestRoadPoint, sampleRoadDirection } from './fields/roadField.js'
+import { createObjectFieldSampler } from './fields/objectField.js'
+import { recordTrail, resetTrail } from './state/companionTrail.js'
+import { setTrampler, clearTrampler, TRAMPLE_SLOT_MAIN } from './state/trampleField.js'
+import { seeThrough } from './state/seeThrough.js'
+import { themeMask } from './state/themeMask.js'
 import {
     claimCharacterSeeThroughSlot,
     releaseCharacterSeeThroughSlot,
     writeCharacterSeeThrough,
     clearCharacterSeeThrough,
-} from './utils/characterSeeThrough.js'
+} from './state/characterSeeThrough.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { updatePhaseTextureReveal } from '../game/visualReveal.js'
 import { joystickInput, EMPTY_JOYSTICK } from '../ui/joystickInput.js'
@@ -29,9 +29,9 @@ import mainCharacterUrl from '../assets/models/mainCharacter.glb'
 import { PAINTERY_TEXTURE_IDS, PAINTERY_TEXTURE_URL_LIST } from '../config/painteryTextures.js'
 import { mainCharacterMaterialDefaults, mainCharacterMaterialSlots } from '../config/mainCharacterMaterials.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
-import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
+import { setGroundShadow, clearGroundShadow } from './state/groundShadowField.js'
 import CharacterEyes from './CharacterEyes.jsx'
-import { characterHead } from './utils/characterHead.js'
+import { characterHead } from './state/characterHead.js'
 
 const CHARACTER_CENTER_HEIGHT = 0.0
 const CHARACTER_MODEL_BASE_Y_OFFSET = -CHARACTER_CENTER_HEIGHT

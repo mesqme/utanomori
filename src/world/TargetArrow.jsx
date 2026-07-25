@@ -7,7 +7,7 @@ import useStore from '../stores/useStore.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
-import { musicStonePointer } from './utils/musicStonePointer.js'
+import { musicStonePointer } from './state/musicStonePointer.js'
 import arrowModelUrl from '../assets/models/arrow.glb'
 
 const smoothstep = THREE.MathUtils.smoothstep

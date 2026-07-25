@@ -2,12 +2,12 @@ import { gsap } from 'gsap'
 
 import useStore from '../stores/useStore.jsx'
 import { GLOBAL_THEMES, applyGlobalTheme } from '../config/colorPresets.js'
-import { themeMask } from '../world/utils/themeMask.js'
+import { themeMask } from '../world/state/themeMask.js'
 
 // Smooth day/night (theme) switching — the PORTAL transition: a LIVE in-shader mask where a torn
 // paintery circle grows from the screen centre; inside it every themed material shows the new
 // palette, outside the old — and the world keeps moving on BOTH sides (no frozen frame).
-// See utils/themeMask.js. All theme-managed colours are UNIFORM-driven, so nothing rebuilds.
+// See world/state/themeMask.js. All theme-managed colours are UNIFORM-driven, so nothing rebuilds.
 
 // Progress curve of the sweep. 'Fast start' makes the switch respond the moment it's clicked
 // (a slow-in ease looked like a delay before anything happened).

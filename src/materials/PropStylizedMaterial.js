@@ -5,8 +5,8 @@ import propFragmentShader from '../shaders/prop/fragment.glsl'
 import { fadeModeToInt } from './fadeMode.js'
 import { palette } from '../config/palette.js'
 import { edgeUniforms, registerEdgeMaterial } from './edgeUniforms.js'
-import { screenPainteryUniforms } from '../world/utils/screenPaintery.js'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { screenPainteryUniforms } from '../world/state/screenPaintery.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // Stylized prop material — the character's unlit + triplanar-painterly look, but
 // extended with the BatchedMesh chunks so it batches with per-instance colour, plus

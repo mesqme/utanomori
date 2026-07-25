@@ -4,7 +4,7 @@ import characterVertexShader from '../shaders/character/vertex.glsl'
 import characterInstancedVertexShader from '../shaders/character/instancedVertex.glsl'
 import characterFragmentShader from '../shaders/character/fragment.glsl'
 import { characterStylizedDefaults } from '../config/stylizedMaterialDefaults.js'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // 1×1 white fallback so materials that don't use a base texture still have a valid sampler bound
 // (avoids "no texture bound" warnings); it's never sampled (uUseBaseTexture stays 0 for them).

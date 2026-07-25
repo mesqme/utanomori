@@ -4,10 +4,10 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 import { fadeModeToInt } from './fadeMode.js'
-import { getTrampleData } from '../world/utils/trampleField.js'
-import { characterSeeThrough } from '../world/utils/characterSeeThrough.js'
+import { getTrampleData } from '../world/state/trampleField.js'
+import { characterSeeThrough } from '../world/state/characterSeeThrough.js'
 
 // Characters react the grass via four independent layers (dissolve / lighten /
 // scale / lean), each reading the fading trail texture or a radius around the

@@ -5,15 +5,15 @@ import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.j
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
-import { revealCircle } from './utils/revealCircle.js'
-import { seeThrough } from './utils/seeThrough.js'
-import { themeMask } from './utils/themeMask.js'
+import { revealCircle } from './state/revealCircle.js'
+import { seeThrough } from './state/seeThrough.js'
+import { themeMask } from './state/themeMask.js'
 import {
     claimCharacterSeeThroughSlot,
     releaseCharacterSeeThroughSlot,
     writeCharacterSeeThrough,
     clearCharacterSeeThrough,
-} from './utils/characterSeeThrough.js'
+} from './state/characterSeeThrough.js'
 import { createCharacterStylizedMaterial, updateCharacterStylizedMaterial } from '../materials/CharacterStylizedMaterial.js'
 import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 import maskKanadeUrl from '../assets/textures/mask_kanade.png'

@@ -4,8 +4,8 @@ import * as THREE from 'three'
 import terrainVertexShader from '../shaders/terrain/vertex.glsl'
 import terrainFragmentShader from '../shaders/terrain/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
-import { getGroundShadowData } from '../world/utils/groundShadowField.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
+import { getGroundShadowData } from '../world/state/groundShadowField.js'
 import { fadeModeToInt } from './fadeMode.js'
 
 export default function useTerrainMaterial({
