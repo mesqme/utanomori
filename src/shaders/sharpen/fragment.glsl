@@ -17,7 +17,7 @@ uniform float uSaturationOld;
 uniform float uWarmthOld;
 uniform float uBrightnessOld;
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 
 varying vec2 vUv;
 

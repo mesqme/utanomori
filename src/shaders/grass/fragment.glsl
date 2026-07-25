@@ -27,7 +27,7 @@ uniform float uGrassGlobalAlpha; // whole-field fade (0 on the loading/GO screen
 uniform float uBaseBrightnessOld; // outgoing theme's brightness (masked theme transitions)
 uniform vec3 uLightenColorOld; // outgoing theme's trail-lighten colour
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 
 varying vec3 vColor;
 varying vec3 vColorOld;
@@ -45,41 +45,7 @@ uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 
 // --- Dither Functions ---
-// Bayer dither (8x8)
-float getBayerThreshold(vec2 fragCoord, float pixelSize) {
-    // Pixelate
-    vec2 pixelCoord = floor(fragCoord / pixelSize);
-
-    // 8x8 Bayer Matrix
-    int x = int(mod(pixelCoord.x, 8.0));
-    int y = int(mod(pixelCoord.y, 8.0));
-
-    // 8x8 Bayer threshold, computed arithmetically via the recursive 2x2 construction.
-    // (The old version filled a 64-element local int array and indexed it with a runtime value;
-    // that dynamically-indexed large local array makes ANGLE's Metal shader compiler throw an
-    // internal error at pipeline creation, so the ground/grass fail to render on macOS. This is
-    // exactly equivalent — it reproduces the same 0..63 Bayer matrix.)
-    float bx = float(x);
-    float by = float(y);
-    float v = 0.0;
-    float scale = 16.0;
-    for (int bit = 0; bit < 3; bit++) {
-        float p = pow(2.0, float(bit));
-        float xi = mod(floor(bx / p), 2.0);
-        float yi = mod(floor(by / p), 2.0);
-        v += (2.0 * xi + 3.0 * yi - 4.0 * xi * yi) * scale;
-        scale *= 0.25;
-    }
-    return v / 64.0;
-}
-
-
-// Check if pixel should be discarded.
-bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel) {
-    if (fadeLevel <= 0.0) return false;
-    if (fadeLevel >= 1.0) return true;
-    return getBayerThreshold(fragCoord, pixelSize) < fadeLevel;
-}
+#include ../includes/dither.glsl
 
 float saturateValue(float x) {
     return clamp(x, 0.0, 1.0);

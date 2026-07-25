@@ -37,7 +37,7 @@ uniform float uPupilNoiseStrength;
 uniform float uEyeEdgeSoftness;
 uniform float uEyeBlink;
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 
 varying vec3 vObjectPosition;
 varying vec3 vObjectNormal;
@@ -61,31 +61,7 @@ float samplePainterlyTexture(vec3 position, vec3 normalDirection) {
     return xProjection * blendWeights.x + yProjection * blendWeights.y + zProjection * blendWeights.z;
 }
 
-// --- Ashima 2D simplex noise (for the eye / pupil perlin borders) ---
-vec3 eyeMod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec2 eyeMod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
-vec3 eyePermute(vec3 x) { return eyeMod289(((x * 34.0) + 1.0) * x); }
-float eyeSnoise(vec2 v) {
-    const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
-    vec2 i = floor(v + dot(v, C.yy));
-    vec2 x0 = v - i + dot(i, C.xx);
-    vec2 i1 = (x0.x > x0.y) ? vec2(1.0, 0.0) : vec2(0.0, 1.0);
-    vec4 x12 = x0.xyxy + C.xxzz;
-    x12.xy -= i1;
-    i = eyeMod289(i);
-    vec3 p = eyePermute(eyePermute(i.y + vec3(0.0, i1.y, 1.0)) + i.x + vec3(0.0, i1.x, 1.0));
-    vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.0);
-    m = m * m; m = m * m;
-    vec3 x = 2.0 * fract(p * C.www) - 1.0;
-    vec3 h = abs(x) - 0.5;
-    vec3 ox = floor(x + 0.5);
-    vec3 a0 = x - ox;
-    m *= 1.79284291400159 - 0.85373472095314 * (a0 * a0 + h * h);
-    vec3 g;
-    g.x = a0.x * x0.x + h.x * x0.y;
-    g.yz = a0.yz * x12.xz + h.yz * x12.yw;
-    return 130.0 * dot(m, g);
-}
+#include ../includes/simplexNoise2d.glsl
 
 // Composite the two eyes (+ squished pupils + blink) onto the head colour, sampled in uv1.
 vec3 drawEyes(vec3 baseColor, vec2 uv1) {
@@ -95,7 +71,7 @@ vec3 drawEyes(vec3 baseColor, vec2 uv1) {
 
     vec2 epe = ep / vec2(max(uEyeRadius * uEyeAspect, 1e-3), max(uEyeRadius, 1e-3));
     float er = length(epe);
-    float eedge = 1.0 + eyeSnoise(epe * uEyeNoiseScale) * uEyeNoiseStrength;
+    float eedge = 1.0 + snoise(epe * uEyeNoiseScale) * uEyeNoiseStrength;
     float emask = 1.0 - smoothstep(eedge - uEyeEdgeSoftness, eedge, er);
 
     float ap = (1.0 - uEyeBlink) * uEyeRadius;
@@ -104,7 +80,7 @@ vec3 drawEyes(vec3 baseColor, vec2 uv1) {
 
     vec2 epp = (ep - vec2(uPupilOffsetX, uPupilOffsetY)) / vec2(max(uPupilWidth, 1e-3), max(uPupilHeight, 1e-3));
     float erp = length(epp);
-    float pedge = 1.0 + eyeSnoise(epp * uPupilNoiseScale + 11.3) * uPupilNoiseStrength;
+    float pedge = 1.0 + snoise(epp * uPupilNoiseScale + 11.3) * uPupilNoiseStrength;
     float pmask = 1.0 - smoothstep(pedge - uEyeEdgeSoftness, pedge, erp);
 
     return mix(baseColor, mix(uEyeColor, uPupilColor, pmask), emask);

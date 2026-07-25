@@ -99,7 +99,8 @@ varying float vTrampleLighten;
 varying float vLanternInfluence;
 varying vec3 vColorOld; // the outgoing theme's blade colour (masked theme transitions)
 
-#include includes.glsl
+#include ../includes/easeOut.glsl
+#include ../includes/hash3.glsl
 
 // Remap a raw [0,1] source value into a layer influence via start..end + a rate curve.
 float trampleRemap(float raw, float start, float end, float rate) {
