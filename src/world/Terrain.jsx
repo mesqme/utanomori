@@ -30,7 +30,6 @@ const START_CIRCLE_RADIUS = 0.07
 const WARMUP_HOVER_RADIUS = 0.45
 const WARMUP_HOVER_LERP = 6 // grow-in speed while hovering
 const WARMUP_FADE_LERP = 2.5 // slower fade-back when the pointer leaves
-const START_RADIUS_DELAY = 1.1
 const ACTIVE_CHUNK_RADIUS = 2
 
 export default function Terrain() {
