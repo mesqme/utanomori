@@ -3,7 +3,7 @@
 // ShellBridge once the lazy chunk loads); audio triggers go through the loaderBridge registry.
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import usePhases, { PHASES } from '../stores/usePhases'
+import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useLoaderShell from '../stores/useLoaderShell.jsx'
 import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 import { useIsMobile } from '../config/device.js'

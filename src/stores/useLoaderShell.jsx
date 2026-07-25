@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 
-import { DEFAULT_LOADER_DEBUG_PARAMETERS, DEFAULT_MOBILE_UI_PARAMETERS } from '../config/parameterDefaults.js'
+// Straight from loaderShellDefaults.js, NOT parameterDefaults.js: that module hard-links the whole
+// scene-style catalogue, which would ride into this (deliberately tiny, three-free) entry chunk.
+import { DEFAULT_LOADER_DEBUG_PARAMETERS, DEFAULT_MOBILE_UI_PARAMETERS } from '../config/loaderShellDefaults.js'
 
 // Mirror store for the Loader "shell". The Loader lives in the tiny ENTRY chunk (it must paint long
 // before the heavy 3D bundle arrives), so it can't import drei's useProgress or the main useStore —

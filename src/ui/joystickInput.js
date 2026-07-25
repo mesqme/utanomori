@@ -14,9 +14,3 @@ export function resetJoystick() {
 // A frozen snapshot for when input must be ignored (mini-game / tutorial) — MainCharacter swaps to
 // this instead of mutating the live singleton.
 export const EMPTY_JOYSTICK = Object.freeze({ x: 0, z: 0, active: false, run: false })
-
-// Touch / coarse-pointer device — the joystick auto-shows on these (joystickParameters.mode = 'auto').
-export function isTouchDevice() {
-    if (typeof window === 'undefined') return false
-    return (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || 'ontouchstart' in window || navigator.maxTouchPoints > 0
-}
