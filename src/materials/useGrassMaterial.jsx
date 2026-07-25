@@ -5,7 +5,7 @@ import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
-import { fadeModeToInt } from './TerrainMaterial.jsx'
+import { fadeModeToInt } from './fadeMode.js'
 import { getTrampleData } from '../world/utils/trampleField.js'
 import { characterSeeThrough } from '../world/utils/characterSeeThrough.js'
 

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import propVertexShader from '../shaders/prop/vertex.glsl'
 import propFragmentShader from '../shaders/prop/fragment.glsl'
-import { fadeModeToInt } from './TerrainMaterial.jsx'
+import { fadeModeToInt } from './fadeMode.js'
 import { palette } from '../config/palette.js'
 import { edgeUniforms, registerEdgeMaterial } from './edgeUniforms.js'
 import { screenPainteryUniforms } from '../world/utils/screenPaintery.js'

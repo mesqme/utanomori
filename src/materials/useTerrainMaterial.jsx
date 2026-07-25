@@ -6,11 +6,7 @@ import terrainFragmentShader from '../shaders/terrain/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
 import { getGroundShadowData } from '../world/utils/groundShadowField.js'
-
-// Edge fade modes shared across the world: 0 = Dither, 1 = Color, 2 = Paintery.
-export function fadeModeToInt(mode) {
-    return mode === 'Color' ? 1 : mode === 'Paintery' ? 2 : 0
-}
+import { fadeModeToInt } from './fadeMode.js'
 
 export default function useTerrainMaterial({
     chunkSize,
