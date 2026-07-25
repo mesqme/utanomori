@@ -7,7 +7,7 @@ import useAudio from '../stores/useAudio.jsx'
 import useStore from '../stores/useStore.jsx'
 import { useIsMobile } from '../config/mobile.js'
 import { startThemeTransition } from '../game/themeTransition.js'
-import { resumeAudio } from '../game/songAudio.js'
+import { resumeAudio } from '../audio/songAudio.js'
 
 export default function InteractionPrompt() {
     const phase = usePhases((state) => state.phase)

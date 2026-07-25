@@ -18,7 +18,7 @@ import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH 
 import { musicStonePointer } from './state/musicStonePointer.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.js'
-import { playSound } from '../game/gameSounds.js'
+import { playSound } from '../audio/gameSounds.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 
 // Coloured stones that stage the song mini-game in 3D: ONE stone per UNIQUE sound for the current

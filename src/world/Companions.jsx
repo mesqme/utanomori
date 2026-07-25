@@ -15,8 +15,8 @@ import { sampleTrail } from './state/companionTrail.js'
 import { getRevealRadius } from './state/revealCircle.js'
 import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './state/trampleField.js'
 import { setGroundShadow, clearGroundShadow } from './state/groundShadowField.js'
-import { resumeAudio } from '../game/songAudio.js'
-import { playMumble } from '../game/ambientSounds.js'
+import { resumeAudio } from '../audio/songAudio.js'
+import { playMumble } from '../audio/ambientSounds.js'
 import useTutorial from '../stores/useTutorial.jsx'
 
 const INTERACT_RADIUS = 2.3

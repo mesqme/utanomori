@@ -21,10 +21,10 @@ import useStore from './stores/useStore.jsx'
 import useLoaderShell from './stores/useLoaderShell.jsx'
 import { chainManagerHandler } from './loader/loadingManagerChain.js'
 import { registerLoaderAudio } from './game/loaderBridge.js'
-import { resumeAudio } from './game/songAudio.js'
-import { startMusicTracks, preloadMusicTracks } from './game/musicTracks.js'
-import { preloadGameSounds } from './game/gameSounds.js'
-import { preloadCicadas, preloadAmbientSounds } from './game/ambientSounds.js'
+import { resumeAudio } from './audio/songAudio.js'
+import { startMusicTracks, preloadMusicTracks } from './audio/musicTracks.js'
+import { preloadGameSounds } from './audio/gameSounds.js'
+import { preloadCicadas, preloadAmbientSounds } from './audio/ambientSounds.js'
 
 // The LAZY half of the app (see index.jsx): everything except the Loader — the 3D world, all the
 // game UI, and the audio engine. Loaded via React.lazy so the ENTRY chunk (the Loader) stays tiny

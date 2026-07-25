@@ -6,7 +6,7 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import useSongGame from '../stores/useSongGame.jsx'
 import { MUSIC_ORDER } from '../config/musicCharacters.js'
-import { getTrackVolume, setTrackVolume, musicTracksStarted, stopMusicTracks } from '../game/musicTracks.js'
+import { getTrackVolume, setTrackVolume, musicTracksStarted, stopMusicTracks } from '../audio/musicTracks.js'
 
 // Drives the six synched backing layers (started on GO): a FULL + a simplified PREVIEW per companion.
 // Each frame it picks a desired volume per layer and fades toward it:

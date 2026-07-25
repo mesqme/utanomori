@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useStore from '../stores/useStore.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
-import { playSigh } from './ambientSounds.js'
+import { playSigh } from '../audio/ambientSounds.js'
 import { INTRO_DIALOGUE_DELAY } from './gameConfig.js'
 import { DIALOGUE_TEXT } from './gameText.js'
 

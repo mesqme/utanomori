@@ -5,8 +5,8 @@ import useStore from '../stores/useStore.jsx'
 import { useIsMobile } from '../config/mobile.js'
 import { getMusicCharacter } from '../config/musicCharacters.js'
 import SpeechBubble from './SpeechBubble.jsx'
-import { playSound } from './gameSounds.js'
-import { resumeAudio } from './songAudio.js'
+import { playSound } from '../audio/gameSounds.js'
+import { resumeAudio } from '../audio/songAudio.js'
 import './songGame.css'
 
 const FAIL_EXCLAIM_TIME = 1.1 // seconds the ❗ burst shows (stones still up) before the speech
