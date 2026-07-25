@@ -4,7 +4,8 @@ import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useStore from '../stores/useStore.jsx'
 import SpeechBubble from './SpeechBubble.jsx'
 import { playSigh } from './ambientSounds.js'
-import { DIALOGUE_TEXT, INTRO_DIALOGUE_DELAY } from './gameConfig.js'
+import { INTRO_DIALOGUE_DELAY } from './gameConfig.js'
+import { DIALOGUE_TEXT } from './gameText.js'
 
 // Intro speech bubble, shown after the camera arcs to the hero's face. The bubble + word-by-word
 // reveal live in the shared SpeechBubble (same as every in-game character speech); this just gates

@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { getMusicCharacter } from '../config/musicCharacters.js'
-import { FAIL_LINES } from '../game/gameConfig.js'
+import { FAIL_LINES } from '../game/gameText.js'
 import useStore from './useStore.jsx'
 
 /**

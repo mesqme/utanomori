@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import propVertexShader from '../shaders/prop/vertex.glsl'
 import propFragmentShader from '../shaders/prop/fragment.glsl'
 import { fadeModeToInt } from './TerrainMaterial.jsx'
-import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { palette } from '../config/palette.js'
 import { edgeUniforms, registerEdgeMaterial } from './edgeUniforms.js'
 import { screenPainteryUniforms } from '../world/utils/screenPaintery.js'
 import { themeMaskUniforms } from '../world/utils/themeMask.js'
@@ -30,8 +30,8 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPainterlyColor: { value: new THREE.Color('#ffffff') },
             uPainterlyColorStrength: { value: 0 },
             uPainterlyBrightnessVariation: { value: 0.5 },
-            uBackgroundColor: { value: new THREE.Color(soundJourneyPalette.background) },
-            uBackgroundColorOld: { value: new THREE.Color(soundJourneyPalette.background) },
+            uBackgroundColor: { value: new THREE.Color(palette.background) },
+            uBackgroundColorOld: { value: new THREE.Color(palette.background) },
             uPropFadeMode: { value: 1 },
             uPixelSize: { value: 1 },
             uPainterySize: { value: 167 },

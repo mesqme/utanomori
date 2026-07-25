@@ -23,45 +23,7 @@ export const INTRO_TRAVEL_DURATION = 3.5 // pacing anchor for the dialogue/revea
 export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the rise into gameplay
 export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble starts as it settles
 
-export const DIALOGUE_TEXT = 'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
-
-// Finale: shown once the party is complete (PHASES.finale), before the credits roll. The hero speaks
-// the closing line; the confirm button ("Say goodbye") rolls the credits.
-export const FINALE_LINE = 'Thank you, kind stranger, you gathered my melody spirits and now I can continue my journey with my song.'
-export const FINALE_CONFIRM = 'Say goodbye'
 export const FINALE_DIALOGUE_DELAY = 0.6 // seconds after entering finale before the bubble opens
-
-// Funny-angry one-liners a music character blurts out when you play the wrong note, just before
-// it storms off to a new hiding place. One is picked at random per failure.
-export const FAIL_LINES = [
-    'Oh, my ears! I cannot withstand such an insult!',
-    'That note was a CRIME against music!',
-    'Augh! My poor delicate ears may never recover!',
-    'No, no, NO — even the crows sing truer than that!',
-    'You call THAT my melody? I shall hide where you cannot ruin it!',
-]
-
-export const CREDITS_LINES = [
-    'UTANOMORI',
-    '\u00a0',
-    'The forest of songs',
-    '\u00a0',
-    '— Code and Models —',
-    'mesq',
-    ' ',
-    '— Music —',
-    'Aleksandr Manin',
-    '\u00a0',
-    '— Built with —',
-    'Three.js · React Three Fiber',
-    '\u00a0',
-    '— Special thanks —',
-    'Kei Yotsuba — for the inspiration',
-    'Bruno Simon — for the journey',
-    ' ',
-    'Thank you for wandering',
-    'through the forest.',
-]
 
 export const CREDITS_SCROLL_DURATION = 36 // seconds for the credits to scroll past (half speed → 2× the old 18s)
 

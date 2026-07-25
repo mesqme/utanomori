@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
-import { CREDITS_LINES, CREDITS_SCROLL_DURATION } from './gameConfig.js'
+import { CREDITS_SCROLL_DURATION } from './gameConfig.js'
+import { CREDITS_LINES } from './gameText.js'
 import './credits.css'
 
 // End sequence: the hero auto-runs (handled in MainCharacter) while the credits

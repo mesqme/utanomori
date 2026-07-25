@@ -5,14 +5,14 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useLoaderShell from '../stores/useLoaderShell.jsx'
-import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
+import { palette } from '../config/palette.js'
 import { useIsMobile } from '../config/device.js'
 import { useLoaderFixedSizeStyle } from './useLoaderFixedSizeStyle.js'
 import { loaderInteraction } from './loaderInteraction.js'
 import { loaderAudio } from '../game/loaderBridge.js'
 import './loader.css'
 
-const RING_COLOR = soundJourneyPalette.uiPrimary
+const RING_COLOR = palette.uiPrimary
 const EXIT_HOLD_MS = 700 // covers the fade-out before the loader unmounts
 const CURTAIN_IN_MS = 600 // restart: let the loading cover fade fully in before snapping to origin
 const MIN_LOAD_TIME = 3 // seconds — the loader always fills smoothly for at least this long
@@ -158,7 +158,7 @@ export default function Loader() {
         background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, transparent ${percent * 3.6}deg)`,
     }
     // The loader colours come from the palette (--sj-loader-background / --sj-loader-hero via
-    // applySoundJourneyCssVariables) — single source of truth. (Previously these were overridden
+    // applyPaletteCssVariables) — single source of truth. (Previously these were overridden
     // inline from loaderDebugParameters.cssColorA/B, which silently masked the palette colour.)
     const loaderStyle = { ...fixedSizeStyle }
 

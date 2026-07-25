@@ -35,7 +35,7 @@
             }
 
             /* Dark base so the very first paint matches the loader (keep in sync with
-               soundJourneyPalette.loaderBackground), not the lighter scene clear colour. */
+               palette.loaderBackground), not the lighter scene clear colour. */
             html,
             body {
                 background: #010011;
@@ -43,7 +43,7 @@
 
             /* STATIC pre-loader — pure HTML/CSS, painted the moment this document arrives, BEFORE any
                JavaScript downloads or runs. It replicates the React loading screen (dark cover + red
-               hero disc + ring, colours/sizes in sync with soundJourneyPalette + loaderDebugParameters)
+               hero disc + ring, colours/sizes in sync with palette + loaderDebugParameters)
                with an indeterminate spinning arc, so the multi-MB bundle download never shows a blank
                page. The React Loader renders beneath it (z 10000) and fades this out (Loader.jsx) once
                the app chunk is up and the real progress bar takes over. */
