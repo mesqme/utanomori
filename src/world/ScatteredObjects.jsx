@@ -178,6 +178,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
     const { nodes: mushroomNodes } = useGLTF(mushroomsModelUrl)
     const { nodes: treeNodes } = useGLTF(treesModelUrl)
 
+    // Shared Texture instances (useTexture caches by URL) — see the note in Terrain.jsx before
+    // changing any filter/wrap write here.
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
         const texture = painterlyTextures[painteryTextureIndex(objectParameters.textureName)] ?? painterlyTextures[0]
@@ -217,6 +219,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
     }, [pool, painterlyTexture])
 
     useFrame((frameState, delta) => {
+        /**
+         * Prop material
+         */
         const state = useStore.getState()
         updatePropStylizedMaterial(pool.mesh.material, {
             propRim: {
@@ -283,6 +288,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
             },
         })
 
+        /**
+         * Eye planes
+         */
         // Tree eye planes share the tree's wind (whole-plane translation) + fade at the reveal edge.
         if (pool.eyePool) {
             updateEyePlaneMaterial(pool.eyePool.mesh.material, {
@@ -307,6 +315,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
             })
         }
 
+        /**
+         * Mushroom reaction
+         */
         // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
         // (re-composing base × a rotation around the leg-base origin). One-shot on each entry into
         // the trigger radius; restores the rest matrix once the wiggle settles.

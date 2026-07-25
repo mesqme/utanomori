@@ -255,9 +255,15 @@ export default function SheepCreature({ definition, moving = false }) {
     }, [sheepParameters.scaleColorVariation, applyScaleColors])
 
     useFrame((state, delta) => {
+        /**
+         * Frame setup
+         */
         const dt = Math.min(delta, 0.1)
         const p = useStore.getState().sheepParameters
 
+        /**
+         * Theme colours
+         */
         // Base colour + old colour are written together HERE, per frame, so they always hit the
         // GPU as a consistent set with the shared mask uniforms — writing the colours only in the
         // React effect left a one-frame window where the new theme colour rendered before the mask
@@ -276,6 +282,9 @@ export default function SheepCreature({ definition, moving = false }) {
             }
         }
 
+        /**
+         * Animation blend
+         */
         // idle ↔ run crossfade
         const { idle, run } = actionsRef.current
         const targetBlend = movingRef.current ? 1 : 0
@@ -287,6 +296,9 @@ export default function SheepCreature({ definition, moving = false }) {
         run?.setEffectiveTimeScale(p.runTimeScale)
         mixerRef.current?.update(delta)
 
+        /**
+         * Scale twist
+         */
         // Scales: twist each instance around its local Y by the motion bone's bounce. Read AFTER
         // mixer.update so the motion bone is in its posed position this frame.
         const scales = scalesRef.current
@@ -310,6 +322,9 @@ export default function SheepCreature({ definition, moving = false }) {
             scales.mesh.instanceMatrix.needsUpdate = true
         }
 
+        /**
+         * Reveal fade
+         */
         // Reveal-edge fade (per-object): fade toward the background past the lit circle.
         if (groupRef.current) {
             groupRef.current.getWorldPosition(tmpWorld)
@@ -328,6 +343,9 @@ export default function SheepCreature({ definition, moving = false }) {
                 maskMaterialRef.current.uniforms.uBackgroundColor.value.set(bg)
             }
 
+            /**
+             * See-through projection
+             */
             // See-through: project this companion to a screen disc so PROPS (and grass) in front of
             // it fade (the sheep itself stays opaque — the hole is punched in the trees/grass). Skip
             // when it's already fading out at the world edge or is off-screen / behind the camera.

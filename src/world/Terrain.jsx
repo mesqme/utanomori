@@ -79,6 +79,16 @@ export default function Terrain() {
     }, [groundTextures, groundTextureName])
 
     // Selectable source texture for the bake (drei preloads all six so swapping is instant).
+    //
+    // SHARED INSTANCES — the canonical note, referenced from the three other call sites.
+    // useTexture caches by URL, so Terrain, MainCharacter, ScatteredObjects and MusicStones all
+    // receive the SAME six Texture objects, and each of them mutates the one it picks. The wrap +
+    // colorSpace writes agree everywhere, but the filters do not: here we set Linear min/mag,
+    // MainCharacter sets LinearMipmapLinear min on all six. Both write the same object, so the
+    // component that renders LAST decides what the GPU actually gets. It happens to look right.
+    //
+    // Do NOT "clean this up" by unifying the four sites into one shared usePainteryTexture hook,
+    // and do NOT reorder Experience.jsx's children — either one changes which filter wins.
     const painteryTextureParameters = useStore((s) => s.painteryTextureParameters)
     const painteryTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painteryTexture = useMemo(() => {
@@ -194,6 +204,9 @@ export default function Terrain() {
     useFrame((frameState, delta) => {
         const state = useStore.getState()
 
+        /**
+         * Warmup hover reveal
+         */
         // Warmup: hovering the GO circle previews more of the world (the reveal circle grows
         // out from under the red hat), then fades back gently when the pointer leaves.
         if (phase === PHASES.warmup && !radiusAnimationRef.current) {
@@ -204,6 +217,9 @@ export default function Terrain() {
             setCircleRadius(THREE.MathUtils.lerp(circleRadiusRef.current, target, t))
         }
 
+        /**
+         * Grass fade
+         */
         // Grass global fade: invisible on the loading / GO screens (top-down grass looked wrong in
         // the hover preview), fading in once GO is pressed (intro onward). Resettling hides behind
         // the loader curtain, so snapping back to 0 there is invisible.
@@ -214,6 +230,9 @@ export default function Terrain() {
             grassMaterial.uniforms.uGrassGlobalAlpha.value = grassAlphaRef.current
         }
 
+        /**
+         * Theme mask
+         */
         // Live masked theme transition: ONE update drives the shared mask uniforms for EVERY themed
         // material (they all spread themeMaskUniforms), plus the outgoing-theme values on the two
         // ground materials (identity when inactive — old falls back to the live values).
@@ -235,6 +254,9 @@ export default function Terrain() {
             grassMaterial.uniforms.uBackgroundColorOld.value.set(old?.bgColor ?? state.backgroundParameters.backgroundColor)
         }
 
+        /**
+         * Frame uniforms
+         */
         terrainMaterial.uniforms.uCircleCenter.value.copy(state.smoothedCircleCenter)
         terrainMaterial.uniforms.uLanternPosition.value.copy(state.lanternPosition)
         grassMaterial.uniforms.uTime.value = frameState.clock.elapsedTime
@@ -249,6 +271,9 @@ export default function Terrain() {
         revealCircle.centerZ = state.smoothedCircleCenter.z
         revealCircle.chunkSize = chunkSize
 
+        /**
+         * Dithering scale
+         */
         // Bake the resolution factor into the screen-space sizes so the dithering stays
         // consistent across 1080p / 4k. (The paintery border brush is world-anchored, so it
         // needs no per-resolution size here — only the props use the screen-space variant.)
@@ -257,6 +282,9 @@ export default function Terrain() {
         terrainMaterial.uniforms.uPixelSize.value = pixelSize
         grassMaterial.uniforms.uPixelSize.value = pixelSize
 
+        /**
+         * Chunk grid
+         */
         const ballPosition = state.ballPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)
         const chunkX = Math.round(ballPosition.x / safeChunkSize)
@@ -289,6 +317,9 @@ export default function Terrain() {
             pruneChunksRef.current = true
         }
 
+        /**
+         * Chunk streaming
+         */
         // Stream one incoming edge chunk per frame. Existing edge chunks stay alive
         // until all replacements are ready, avoiding both a visible gap and one large
         // synchronous grass/object generation spike at every chunk boundary.

@@ -236,6 +236,9 @@ export default function MainCharacter() {
     }, [])
 
     useFrame((state, delta) => {
+        /**
+         * Ready gate
+         */
         const safeDelta = Math.min(delta, 0.1)
 
         // Once the hero has drawn a couple of frames, tell the loader the scene is ready so it can lift
@@ -245,6 +248,9 @@ export default function MainCharacter() {
             if (readyFramesRef.current === 2) usePhases.getState().setSceneReady(true)
         }
 
+        /**
+         * Character materials
+         */
         // Painterly contrast reveals 0→full during the INTRO camera travel (same clock as the
         // texture/stars/glow reveal) — so before GO the hero's contrast is 0 and the brush "develops"
         // in as the camera flies down, instead of fading in while we're still on the loading screen.
@@ -270,6 +276,9 @@ export default function MainCharacter() {
             }
         }
 
+        /**
+         * Controls
+         */
         const position = positionRef.current
         const velocity = velocityRef.current
         const moveInput = moveInputRef.current
@@ -346,6 +355,9 @@ export default function MainCharacter() {
         position.x += velocity.x * safeDelta
         position.z += velocity.z * safeDelta
 
+        /**
+         * Collision
+         */
         // Solid stones: push the hero out of any stone he walked into (gameplay only).
         if (phase === PHASES.start) {
             const objState = useStore.getState()
@@ -364,6 +376,9 @@ export default function MainCharacter() {
             }
         }
 
+        /**
+         * Ground and facing
+         */
         const groundedY = CHARACTER_CENTER_HEIGHT
 
         if (phase === PHASES.start && !isGroundedRef.current) {
@@ -412,6 +427,9 @@ export default function MainCharacter() {
             }
         }
 
+        /**
+         * Shadow and trail
+         */
         const visualPosition = visualPositionRef.current
         visualPosition.copy(position)
 
@@ -433,6 +451,9 @@ export default function MainCharacter() {
             clearTrampler(TRAMPLE_SLOT_MAIN)
         }
 
+        /**
+         * Camera
+         */
         const cameraPosition = cameraPositionRef.current
         const cameraTarget = cameraTargetRef.current
 
@@ -497,6 +518,9 @@ export default function MainCharacter() {
         state.camera.position.copy(smoothedCameraPosition)
         state.camera.lookAt(smoothedCameraTarget)
 
+        /**
+         * See-through
+         */
         // See-through hole: project the hero to framebuffer pixels so occluders in
         // front of him can fade away. Refresh the camera matrices first - R3F only
         // updates them at render time, i.e. after this callback.
@@ -557,6 +581,8 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     const lanternGlowOffsetRef = useRef(new THREE.Vector3())
     const lanternFlameAxisRef = useRef(new THREE.Vector3())
     const { nodes, animations } = useGLTF(mainCharacterUrl)
+    // These are the SAME Texture instances Terrain/ScatteredObjects/MusicStones get (useTexture
+    // caches by URL) and the filter writes below race with theirs — see the note in Terrain.jsx.
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexturesById = useMemo(() => {
         return Object.fromEntries(
@@ -703,6 +729,9 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
     }, [moving])
 
     useFrame((_, delta) => {
+        /**
+         * Animation blend
+         */
         const { idle, run } = actionsRef.current
         const targetBlend = movingRef.current ? 1 : 0
         const blendSpeed = movingRef.current ? characterParameters.runBlendInSpeed : characterParameters.runBlendOutSpeed
@@ -720,6 +749,9 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
 
         mixerRef.current?.update(delta)
 
+        /**
+         * Lantern anchors
+         */
         if (nodes.lantern_1) {
             nodes.lantern_1.getWorldPosition(lanternWorldPositionRef.current)
             setLanternPosition(lanternWorldPositionRef.current)
