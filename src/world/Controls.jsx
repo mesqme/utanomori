@@ -307,7 +307,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         sensorScale: 'sensorNoiseScale',
     },
     Dithering: {
-        ditherMode: 'ditherMode',
         pixelSize: 'pixelSize',
     },
     'Camera Debug': {
@@ -1417,7 +1416,6 @@ export default function Controls() {
     })
 
     useControls('Post.Dithering', {
-        ditherMode: { value: ditheringParameters.ditherMode, options: ['Diamond', 'Bayer'], onChange: setParam('ditheringParameters', 'ditherMode') },
         pixelSize: { value: ditheringParameters.pixelSize, min: 1, max: 10, step: 1, onChange: setParam('ditheringParameters', 'pixelSize') },
     })
 

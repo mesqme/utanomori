@@ -44,7 +44,6 @@ uniform float uLanternLightNoiseStrength;
 uniform float uLanternLightInnerBrightness;
 uniform float uLanternLightOuterDarkness;
 uniform float uPixelSize;
-uniform int uDitherMode;
 // Character ground shadows: [worldX, worldZ, radius, strength] per character (hero + companions).
 #define MAX_GROUND_SHADOWS 6
 uniform vec4 uGroundShadows[MAX_GROUND_SHADOWS];
@@ -67,15 +66,7 @@ vec3 getWorldAtBigPixelCenter(vec3 worldPos, vec2 fragCoord, float pixelSize) {
     return worldPos + dFdx(worldPos) * delta.x + dFdy(worldPos) * delta.y;
 }
 
-// 0. Diamond Dither
-float getDiamondThreshold(vec2 fragCoord, float pixelSize) {
-    vec2 uv = mod(fragCoord + 0.01, pixelSize);
-    vec2 centered = (uv / pixelSize) * 2.0 - 1.0;
-    float dist = abs(centered.x) + abs(centered.y);
-    return dist / 2.0;
-}
-
-// 1. Bayer Dither (8x8)
+// Bayer dither (8x8)
 float getBayerThreshold(vec2 fragCoord, float pixelSize) {
     // Pixelate
     vec2 pixelCoord = floor(fragCoord / pixelSize);
@@ -104,25 +95,11 @@ float getBayerThreshold(vec2 fragCoord, float pixelSize) {
 }
 
 
-// Check if pixel should be discarded
-// mode 0: Diamond
-// mode 1: Bayer
-bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
+// Check if pixel should be discarded.
+bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel) {
     if (fadeLevel <= 0.0) return false;
     if (fadeLevel >= 1.0) return true;
-
-    float threshold = 0.0;
-
-    if (mode == 0) {
-        // Diamond
-        threshold = getDiamondThreshold(fragCoord, pixelSize + 4.0);
-    }
-    else {
-        // Bayer
-        threshold = getBayerThreshold(fragCoord, pixelSize);
-    }
-
-    return threshold < fadeLevel;
+    return getBayerThreshold(fragCoord, pixelSize) < fadeLevel;
 }
 
 void main() {
@@ -152,7 +129,7 @@ void main() {
     if (uFadeMode == 0 && t > 0.0) {
         float fade = t;
 
-        if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
+        if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade)) {
             discard;
         }
     }

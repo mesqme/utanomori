@@ -49,14 +49,12 @@ export default function useGrassMaterial({
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
-    const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
     const material = useMemo(
         () =>
             new THREE.ShaderMaterial({
                 uniforms: {
                     uPixelSize: { value: pixelSize },
-                    uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
                     uFadeMode: { value: fadeModeToInt(borderFadeMode) },
                     uPainteryTexture: { value: painteryTexture },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
@@ -181,7 +179,6 @@ export default function useGrassMaterial({
     useEffect(() => {
         const u = material.uniforms
         u.uPixelSize.value = pixelSize
-        u.uDitherMode.value = ditherModeValue
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
@@ -283,7 +280,6 @@ export default function useGrassMaterial({
         borderFadeMode,
         borderParameters,
         pixelSize,
-        ditherModeValue,
     ])
 
     useEffect(() => {

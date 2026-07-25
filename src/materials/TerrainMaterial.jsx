@@ -37,7 +37,6 @@ export default function useTerrainMaterial({
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
-    const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
     const material = useMemo(() => {
         return new THREE.ShaderMaterial({
@@ -83,7 +82,6 @@ export default function useTerrainMaterial({
                 uLanternLightInnerBrightness: { value: lanternGroundLightParameters.innerBrightness },
                 uLanternLightOuterDarkness: { value: lanternGroundLightParameters.outerDarkness },
                 uPixelSize: { value: pixelSize },
-                uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
                 // Character ground shadows (hero + companions): shared [x, z, radius, strength] buffer,
                 // mutated each frame and re-uploaded — like uTramplers. Drawn into the opaque ground.
                 uGroundShadows: { value: getGroundShadowData() },
@@ -129,7 +127,6 @@ export default function useTerrainMaterial({
         u.uLanternLightInnerBrightness.value = lanternGroundLightParameters.innerBrightness
         u.uLanternLightOuterDarkness.value = lanternGroundLightParameters.outerDarkness
         u.uPixelSize.value = pixelSize
-        u.uDitherMode.value = ditherModeValue
         u.uShadowRadiusMul.value = shadowRadius
         u.uShadowSoftness.value = shadowSoftness
         u.uShadowDarkness.value = shadowDarkness
@@ -156,7 +153,6 @@ export default function useTerrainMaterial({
         roadParameters,
         lanternGroundLightParameters,
         pixelSize,
-        ditherModeValue,
     ])
 
     useEffect(() => {

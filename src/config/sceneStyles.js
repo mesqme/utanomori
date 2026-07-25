@@ -197,7 +197,6 @@ const painteryStyle = {
         painteryBleed: 0,
     },
     ditheringParameters: {
-        ditherMode: 'Bayer',
         pixelSize: 1,
     },
     backgroundParameters: {

@@ -1,5 +1,4 @@
 uniform float uPixelSize;
-uniform int uDitherMode;
 uniform int uFadeMode;
 uniform vec3 uBackgroundColor;
 uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
@@ -46,15 +45,7 @@ uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 
 // --- Dither Functions ---
-// 0. Diamond Dither
-float getDiamondThreshold(vec2 fragCoord, float pixelSize) {
-    vec2 uv = mod(fragCoord + 0.01, pixelSize);
-    vec2 centered = (uv / pixelSize) * 2.0 - 1.0;
-    float dist = abs(centered.x) + abs(centered.y);
-    return dist / 2.0;
-}
-
-// 1. Bayer Dither (8x8)
+// Bayer dither (8x8)
 float getBayerThreshold(vec2 fragCoord, float pixelSize) {
     // Pixelate
     vec2 pixelCoord = floor(fragCoord / pixelSize);
@@ -83,24 +74,11 @@ float getBayerThreshold(vec2 fragCoord, float pixelSize) {
 }
 
 
-// Check if pixel should be discarded
-// mode 0: Diamond
-// mode 1: Bayer
-bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
+// Check if pixel should be discarded.
+bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel) {
     if (fadeLevel <= 0.0) return false;
     if (fadeLevel >= 1.0) return true;
-
-    float threshold = 0.0;
-
-    if (mode == 0) {
-        // Diamond
-        threshold = getDiamondThreshold(fragCoord, pixelSize + 4.0);
-    }
-    else if (mode == 1) {
-        // Bayer
-        threshold = getBayerThreshold(fragCoord, pixelSize);
-    }
-    return threshold < fadeLevel;
+    return getBayerThreshold(fragCoord, pixelSize) < fadeLevel;
 }
 
 float saturateValue(float x) {
@@ -192,7 +170,7 @@ void main() {
     if (dissolve > 0.0) {
         if (uDissolveMode < 0.5) {
             grassAlpha = 1.0 - dissolve;
-        } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve, uDitherMode)) {
+        } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve)) {
             discard;
         }
     }
@@ -228,7 +206,7 @@ void main() {
         // vGrassData.y goes from 1 (opaque) to 0 (transparent)
         float fade = borderFade;
 
-        if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
+        if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade)) {
             discard;
         }
     }
