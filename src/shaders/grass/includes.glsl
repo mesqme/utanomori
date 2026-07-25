@@ -1,6 +1,6 @@
 // Used in viewspace thickening
 float easeOut(float x, float t) {
-  return 1.0 - pow(1.0 - x, t);
+    return 1.0 - pow(1.0 - x, t);
 }
 
 // The MIT License
@@ -11,13 +11,13 @@ float easeOut(float x, float t) {
 //
 // https://www.shadertoy.com/view/Xsl3Dl
 vec3 hash(
-  vec3 p // replace this by something better
+    vec3 p // replace this by something better
 ) {
-  p = vec3(
-    dot(p, vec3(127.1, 311.7, 74.7)),
-    dot(p, vec3(269.5, 183.3, 246.1)),
-    dot(p, vec3(113.5, 271.9, 124.6))
-  );
+    p = vec3(
+        dot(p, vec3(127.1, 311.7, 74.7)),
+        dot(p, vec3(269.5, 183.3, 246.1)),
+        dot(p, vec3(113.5, 271.9, 124.6))
+    );
 
-  return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
+    return -1.0 + 2.0 * fract(sin(p) * 43758.5453123);
 }
