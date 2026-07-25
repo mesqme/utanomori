@@ -14,7 +14,7 @@ import { themeMask } from './state/themeMask.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { createEyePlaneMaterial, updateEyePlaneMaterial } from '../materials/EyePlaneMaterial.js'
-import { playSound } from '../audio/gameSounds.js'
+import { updateMushroomReactions } from './utils/mushroomReaction.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import { buildPropPrototypes, pickEyePlaneIds } from './utils/propPrototypes.js'
 import stonesModelUrl from '../assets/models/stones.glb'
@@ -28,12 +28,6 @@ import treesModelUrl from '../assets/models/trees.glb'
 const MAX_OBJECT_INSTANCES = 4096
 const MAX_EYE_PLANE_INSTANCES = 2048
 const WHITE = new THREE.Color('#ffffff')
-// Reused temps for the mushroom "bend when the hero reaches it" wiggle (rotates the baked instance
-// around its leg-base origin — the geometry is grounded there — so cap + leg tip together).
-const _wiggleAxis = new THREE.Vector3()
-const _wiggleRot = new THREE.Matrix4()
-const _wiggleMat = new THREE.Matrix4()
-const _litColor = new THREE.Color() // reused temp for the mushroom touch "light up"
 
 export default function ScatteredObjects({ activeChunks, chunkSize }) {
     const objectParameters = useStore((s) => s.objectParameters)
@@ -83,6 +77,11 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
         const uniforms = pool?.mesh?.material?.uniforms
         if (uniforms?.uPainterlyTexture) uniforms.uPainterlyTexture.value = painterlyTexture
     }, [pool, painterlyTexture])
+
+    const chunkInstancesRef = useRef(new Map())
+    const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
+    const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
+    const generationKeyRef = useRef(null)
 
     useFrame((frameState, delta) => {
         /**
@@ -184,75 +183,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
         /**
          * Mushroom reaction
          */
-        // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
-        // (re-composing base × a rotation around the leg-base origin). One-shot on each entry into
-        // the trigger radius; restores the rest matrix once the wiggle settles.
-        const op = state.objectParameters
-        const maxAngle = op.mushroomWiggleAngle ?? 0.4
-        const litBoost = op.mushroomLitBoost ?? 0
-        const soundVolume = op.mushroomSoundVolume ?? 0
-        const wiggleOn = maxAngle > 0.0001
-        // Run the reaction loop if ANY of wiggle / light / sound is on, so the touch react still fires
-        // even when the bend is turned off.
-        if (wiggleOn || litBoost > 0 || soundVolume > 0) {
-            const dt = Math.min(delta, 0.05)
-            const hero = state.ballPosition
-            const radiusSq = (op.mushroomWiggleRadius ?? 1.2) ** 2
-            const speed = op.mushroomWiggleSpeed ?? 12
-            const decay = op.mushroomWiggleDecay ?? 3
-            for (const entries of chunkMushroomsRef.current.values()) {
-                for (const m of entries) {
-                    const dx = m.x - hero.x
-                    const dz = m.z - hero.z
-                    const distSq = dx * dx + dz * dz
-                    const within = distSq < radiusSq
-                    if (within && !m.inside) {
-                        const d = Math.sqrt(distSq) || 1
-                        m.dirX = dx / d // tip AWAY from the hero
-                        m.dirZ = dz / d
-                        m.phase = 0
-                        m.active = true
-                        // Soft wind one-shot on touch — one of Tori's (winds) melody sounds.
-                        if (soundVolume > 0) playSound('winds', Math.floor(Math.random() * 6), { gain: soundVolume })
-                    }
-                    m.inside = within
-                    if (!m.active) continue
-                    m.phase += dt
-                    const amp = Math.exp(-m.phase * decay)
-                    if (amp < 0.02) {
-                        m.active = false
-                        pool.setMatrix(m.capId, m.base)
-                        pool.setMatrix(m.legId, m.base)
-                        // Restore the base colours once the reaction settles.
-                        if (litBoost > 0 && m.capColor) {
-                            pool.setColor(m.capId, m.capColor)
-                            pool.setColor(m.legId, m.legColor)
-                        }
-                        continue
-                    }
-                    // Light up: brighten cap + leg, riding the reaction amplitude (fades as it settles).
-                    if (litBoost > 0 && m.capColor) {
-                        const brightness = 1 + amp * litBoost
-                        pool.setColor(m.capId, _litColor.copy(m.capColor).multiplyScalar(brightness))
-                        pool.setColor(m.legId, _litColor.copy(m.legColor).multiplyScalar(brightness))
-                    }
-                    if (wiggleOn) {
-                        const angle = Math.sin(m.phase * speed) * maxAngle * amp
-                        _wiggleAxis.set(m.dirZ, 0, -m.dirX) // horizontal axis ⟂ to the tip direction
-                        _wiggleRot.makeRotationAxis(_wiggleAxis, angle)
-                        _wiggleMat.multiplyMatrices(m.base, _wiggleRot)
-                        pool.setMatrix(m.capId, _wiggleMat)
-                        pool.setMatrix(m.legId, _wiggleMat)
-                    }
-                }
-            }
-        }
+        updateMushroomReactions(pool, chunkMushroomsRef.current, state.ballPosition, state.objectParameters, delta)
     })
-
-    const chunkInstancesRef = useRef(new Map())
-    const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
-    const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
-    const generationKeyRef = useRef(null)
 
     // NOTE: colours + colour variations are deliberately NOT in this key — they're shader uniforms
     // (typeColors above), so recolouring props (day/night themes, Leva colour drags) never rebuilds
