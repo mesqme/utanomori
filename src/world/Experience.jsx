@@ -14,22 +14,17 @@ import AmbientController from './AmbientController.jsx'
 import CameraProjection from './CameraProjection.jsx'
 import useStore from '../stores/useStore.jsx'
 import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.jsx'
+import { preserveManagerHandlers } from '../loader/loadingManagerChain.js'
 
 // The perf monitor is debug-only (#debug → Debug.General.perfMonitor, default off), so it is
 // loaded on first toggle instead of riding in the main bundle for every player.
 //
-// It must also be kept away from the loading manager: r3f-perf ships its own bundled copy of
-// drei's useProgress, whose module body plain-ASSIGNS DefaultLoadingManager.onStart/onProgress/
-// onLoad — evaluating it late would clobber the Loader's progress chain (see App.jsx, where that
-// exact mechanism once froze the bar). Snapshotting the handlers across the import keeps the
-// chain intact no matter when the monitor is switched on.
+// It must also be kept away from the loading manager: r3f-perf carries its own bundled copy of
+// drei's useProgress, whose module body assigns the manager's handler slots — evaluating it late
+// would cut the Loader's progress chain out of the singleton (loadingManagerChain.js explains the
+// mechanism). Snapshotting across the import keeps the chain intact whenever it is switched on.
 const Perf = lazy(async () => {
-    const saved = {
-        onStart: DefaultLoadingManager.onStart,
-        onProgress: DefaultLoadingManager.onProgress,
-        onLoad: DefaultLoadingManager.onLoad,
-        onError: DefaultLoadingManager.onError,
-    }
+    const restoreManagerHandlers = preserveManagerHandlers(DefaultLoadingManager)
     try {
         const { Perf: PerfMonitor } = await import('r3f-perf')
         return { default: PerfMonitor }
@@ -38,8 +33,8 @@ const Perf = lazy(async () => {
         // catches promises, not rejections, so an uncaught one would unmount the whole Canvas.
         return { default: () => null }
     } finally {
-        // finally, so a throw inside r3f-perf's module body can't leave the manager clobbered.
-        Object.assign(DefaultLoadingManager, saved)
+        // finally, so a throw inside r3f-perf's module body can't leave the chain severed.
+        restoreManagerHandlers()
     }
 })
 

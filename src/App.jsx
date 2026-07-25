@@ -19,6 +19,7 @@ import SongGame from './game/SongGame.jsx'
 import Credits from './game/Credits.jsx'
 import useStore from './stores/useStore.jsx'
 import useLoaderShell from './stores/useLoaderShell.jsx'
+import { chainManagerHandler } from './loader/loadingManagerChain.js'
 import { registerLoaderAudio } from './game/loaderBridge.js'
 import { resumeAudio } from './game/songAudio.js'
 import { startMusicTracks, preloadMusicTracks } from './game/musicTracks.js'
@@ -30,27 +31,19 @@ import { preloadCicadas, preloadAmbientSounds } from './game/ambientSounds.js'
 // and the loading screen appears within moments of the HTML, instead of after this whole bundle.
 
 // Asset-progress mirror for the Loader (entry chunk — it can't import three itself). NOT drei's
-// useProgress: BOTH @react-three/drei and r3f-perf ship their own bundled copy of that hook, and
-// each copy plain-ASSIGNS DefaultLoadingManager.onStart/onProgress/onLoad — last module to evaluate
-// wins the singleton, so which store actually receives progress depends on import order (this is
-// exactly how the loading bar silently froze at 0 after the entry split reshuffled the order).
-// Instead we CHAIN onto whatever handlers won — this module body runs AFTER all imports above have
-// evaluated, so our wrapper always ends up outermost and feeds the shell store directly. Attached
+// useProgress: both drei and r3f-perf ship their own bundled copy of that hook and each one
+// plain-ASSIGNS the manager's handler slots, so ownership comes down to import order (exactly how
+// the loading bar silently froze at 0 after the entry split reshuffled the graph — see
+// loadingManagerChain.js). Chaining instead means this module body, which runs AFTER every import
+// above has evaluated, always ends up outermost and feeds the shell store directly. Attached
 // BEFORE the first tracked load below so no event is missed.
-function chainManagerHandler(key, fn) {
-    const previous = DefaultLoadingManager[key]
-    DefaultLoadingManager[key] = (...args) => {
-        previous?.(...args)
-        fn(...args)
-    }
-}
-chainManagerHandler('onStart', (item, loaded, total) => {
+chainManagerHandler(DefaultLoadingManager, 'onStart', (item, loaded, total) => {
     useLoaderShell.setState({ ready: true, active: true, progress: total > 0 ? (loaded / total) * 100 : 0 })
 })
-chainManagerHandler('onProgress', (item, loaded, total) => {
+chainManagerHandler(DefaultLoadingManager, 'onProgress', (item, loaded, total) => {
     useLoaderShell.setState({ ready: true, active: true, progress: total > 0 ? (loaded / total) * 100 : 0 })
 })
-chainManagerHandler('onLoad', () => {
+chainManagerHandler(DefaultLoadingManager, 'onLoad', () => {
     useLoaderShell.setState({ ready: true, active: false, progress: 100 })
 })
 
