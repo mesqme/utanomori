@@ -88,7 +88,3 @@ export function sampleTrail(distanceBehind, out = {}) {
     out.headingZ = 0
     return out
 }
-
-export function getTrailLength() {
-    return totalDistance
-}

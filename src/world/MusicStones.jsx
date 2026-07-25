@@ -12,12 +12,10 @@ import { MUSIC_STONE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
 import { revealCircle } from './utils/revealCircle.js'
 import { getRefScale } from './utils/screenScale.js'
-import { getGroundY } from './utils/groundHeight.js'
 import { seeThrough } from './utils/seeThrough.js'
 import { themeMask } from './utils/themeMask.js'
 import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './utils/musicStoneSeeThrough.js'
 import { musicStonePointer } from './utils/musicStonePointer.js'
-import { clearAllMusicStones } from './utils/musicStoneField.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.js'
 import { playSound } from '../game/gameSounds.js'
@@ -88,7 +86,6 @@ export default function MusicStones() {
         })
         proxyGeometry.dispose()
         proxyMaterial.dispose()
-        clearAllMusicStones()
         clearMusicStoneSeeThrough()
         musicStonePointer.active = false
     }, [stones, proxyGeometry, proxyMaterial])
@@ -219,7 +216,6 @@ export default function MusicStones() {
 
         // No layout (idle): everything sunk → hide, clear state, leave the camera.
         if (!layout) {
-            clearAllMusicStones()
             clearMusicStoneSeeThrough()
             musicStonePointer.active = false
             pointerTargetRef.current = -1
@@ -236,7 +232,6 @@ export default function MusicStones() {
         const inRate = dt / Math.max(0.05, p.scaleInDuration)
         const outRate = dt / Math.max(0.05, p.scaleOutDuration)
 
-        const groundY = getGroundY(layout.cx, layout.cz)
         const rightX = Math.cos(cameraRig.angle)
         const rightZ = -Math.sin(cameraRig.angle)
         const span = Math.max(1, count - 1)
@@ -317,7 +312,7 @@ export default function MusicStones() {
 
             mesh.position.set(
                 layout.cx + rightX * hOff,
-                groundY + p.yOffset + p.hoverHeight + vOff - appearDrift + bob,
+                p.yOffset + p.hoverHeight + vOff - appearDrift + bob,
                 layout.cz + rightZ * hOff
             )
             mesh.rotation.set(Math.PI / 2 + wobbleTilt, rotations[i] + wobbleYaw, 0)
@@ -389,7 +384,7 @@ export default function MusicStones() {
                 const hArrow = g.h + innerSign * ms.arrowDrop
                 pointerTargetPos.set(
                     layout.cx + rightX * hArrow,
-                    groundY + p.yOffset + p.hoverHeight + g.v,
+                    p.yOffset + p.hoverHeight + g.v,
                     layout.cz + rightZ * hArrow
                 )
                 musicStonePointer.position.copy(pointerTargetPos)
@@ -405,7 +400,7 @@ export default function MusicStones() {
                 const hOffT = (2 * (pointerTarget / span) - 1) * ms.lineWidth
                 pointerTargetPos.set(
                     layout.cx + rightX * hOffT,
-                    groundY + p.yOffset + p.hoverHeight + ms.lineHeight - ms.arrowDrop,
+                    p.yOffset + p.hoverHeight + ms.lineHeight - ms.arrowDrop,
                     layout.cz + rightZ * hOffT
                 )
                 musicStonePointer.position.copy(pointerTargetPos)
@@ -420,7 +415,7 @@ export default function MusicStones() {
                 ptrRadial.set(rightX * Math.cos(ang), Math.sin(ang), rightZ * Math.cos(ang))
                 pointerTargetPos.set(
                     layout.cx + ptrRadial.x * p.pointerRadius,
-                    groundY + p.yOffset + p.hoverHeight + ptrRadial.y * p.pointerRadius,
+                    p.yOffset + p.hoverHeight + ptrRadial.y * p.pointerRadius,
                     layout.cz + ptrRadial.z * p.pointerRadius
                 )
                 musicStonePointer.position.copy(pointerTargetPos)

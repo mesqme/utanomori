@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { useTexture } from '@react-three/drei'
-import { sharedNoise2D } from './utils/worldNoise.js'
 import { gsap } from 'gsap'
 import * as THREE from 'three'
 
@@ -31,7 +30,6 @@ const START_CIRCLE_RADIUS = 0.07
 const WARMUP_HOVER_RADIUS = 0.45
 const WARMUP_HOVER_LERP = 6 // grow-in speed while hovering
 const WARMUP_FADE_LERP = 2.5 // slower fade-back when the pointer leaves
-const START_RADIUS_DELAY = 1.1
 const ACTIVE_CHUNK_RADIUS = 2
 
 export default function Terrain() {
@@ -52,8 +50,6 @@ export default function Terrain() {
     const chunkSize = useStore((s) => s.terrainParameters.chunkSize)
     const borderCircleRadius = useStore((s) => s.borderParameters.circleRadiusFactor)
     const introReplayNonce = useStore((s) => s.introReplayNonce)
-
-    const noise2D = sharedNoise2D
 
     const noiseTexture = useTexture(
         noiseTextureUrl,
@@ -120,23 +116,22 @@ export default function Terrain() {
         revealCircle.radiusFactor = value
     }
 
-    // The intro reveal moves with the camera travel: the lit circle shrinks slightly while the
-    // camera rises, then opens out to full as it spirals down. Timed to the (tunable) intro
-    // durations so the two stay in sync; replayable via the "redo the animation" button.
+    // The intro reveal moves with the camera travel: the lit circle opens out to full as the
+    // camera spirals down. Timed to the (tunable) spiral duration so the two stay in sync;
+    // replayable via the "redo the animation" button.
     const runIntroReveal = () => {
         if (radiusAnimationRef.current) radiusAnimationRef.current.kill()
         const intro = useStore.getState().introCameraParameters
-        const startValue = circleRadiusRef.current
-        const reduced = Math.max(START_CIRCLE_RADIUS, startValue - intro.revealReduce)
-        const obj = { value: startValue }
-        const tl = gsap.timeline({
+        const obj = { value: circleRadiusRef.current }
+        radiusAnimationRef.current = gsap.to(obj, {
+            value: borderCircleRadius,
+            duration: Math.max(0.001, intro.spiralDuration),
+            ease: 'power2.out',
+            onUpdate: () => setCircleRadius(obj.value),
             onComplete: () => {
                 radiusAnimationRef.current = null
             },
         })
-        tl.to(obj, { value: reduced, duration: Math.max(0.001, intro.riseDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
-        tl.to(obj, { value: borderCircleRadius, duration: Math.max(0.001, intro.spiralDuration), ease: 'power2.out', onUpdate: () => setCircleRadius(obj.value) })
-        radiusAnimationRef.current = tl
     }
 
     // Cinematic restart: shrink the lit circle back to the tiny pre-start radius as the camera
@@ -169,7 +164,7 @@ export default function Terrain() {
 
     useEffect(() => {
         if (phase === PHASES.intro) {
-            // Reveal flows with the camera travel: shrink slightly on the rise, open on the spiral.
+            // Reveal flows with the camera travel: opens out to full over the spiral.
             runIntroReveal()
         } else if (phase === PHASES.restarting) {
             // Reverse: shrink the lit circle back down as the camera lifts to the top shot.
@@ -254,14 +249,12 @@ export default function Terrain() {
         revealCircle.centerZ = state.smoothedCircleCenter.z
         revealCircle.chunkSize = chunkSize
 
-        // Bake the resolution factor into the screen-space sizes so the paintery edge
-        // and dithering stay consistent across 1080p / 4k.
+        // Bake the resolution factor into the screen-space sizes so the dithering stays
+        // consistent across 1080p / 4k. (The paintery border brush is world-anchored, so it
+        // needs no per-resolution size here — only the props use the screen-space variant.)
         const refScale = getRefScale(frameState)
-        const painterySize = state.borderParameters.painterySize * refScale
         const pixelSize = state.ditheringParameters.pixelSize * refScale
-        terrainMaterial.uniforms.uPainterySize.value = painterySize
         terrainMaterial.uniforms.uPixelSize.value = pixelSize
-        grassMaterial.uniforms.uPainterySize.value = painterySize
         grassMaterial.uniforms.uPixelSize.value = pixelSize
 
         const ballPosition = state.ballPosition
@@ -317,12 +310,11 @@ export default function Terrain() {
                     x={chunk.x}
                     z={chunk.z}
                     size={chunkSize}
-                    noise2D={noise2D}
                     terrainMaterial={terrainMaterial}
                     grassMaterial={grassMaterial}
                 />
             ))}
-            <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} noise2D={noise2D} />
+            <ScatteredObjects activeChunks={activeChunks} chunkSize={chunkSize} />
             <GrassTrail grassMaterial={grassMaterial} />
         </group>
     )

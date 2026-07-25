@@ -18,8 +18,6 @@ uniform float uGroundOffset;
 uniform float uGroundFadeOffset;
 uniform int uFadeMode;
 uniform sampler2D uPainteryTexture;
-uniform float uPainterySize;
-uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
@@ -56,7 +54,6 @@ uniform float uShadowDarkness;   // global strength multiplier
 
 // Varyings
 varying vec3 vWorldPosition;
-varying vec2 vUv;
 varying float vRoadDistance;
 
 // --- Dither Functions ---

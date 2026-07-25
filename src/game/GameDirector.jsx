@@ -22,10 +22,10 @@ const applyShot = (shot) => {
     cameraRig.targetYOffset = shot.targetYOffset
 }
 
-// The intro camera travel: from the top "hat" shot, RISE a touch, then a descending 360°
-// SPIRAL down to the dialogue framing (rotation + descent together). Fully driven by the
-// tunable store params so it can be replayed live ("redo the animation"). Optionally the
-// look-at point also spirals in XZ (out and back, Y unchanged).
+// The intro camera travel: from the top "hat" shot, a descending 360° SPIRAL down to the
+// dialogue framing (rotation + descent together). Fully driven by the tunable store params
+// so it can be replayed live ("redo the animation"). Optionally the look-at point also
+// spirals in XZ (out and back, Y unchanged).
 function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay }) {
     if (introTweenRef.current) {
         introTweenRef.current.kill()
@@ -38,8 +38,6 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
     // Live front (dialogue) shot distance/height (mobile or desktop; CAMERA_FRONT_SHOT holds angle/target).
     const cam = resolvedCameraDistances()
     const startAngle = cameraRig.angle
-    const baseHeight = loaderCameraHeight
-    const spiralStart = params.riseDuration
     const timeline = gsap.timeline({
         onComplete: () => {
             introTweenRef.current = null
@@ -58,14 +56,8 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
         },
     })
 
-    // 1) Rise a touch first (anticipation / "go up").
-    timeline.to(
-        cameraRig,
-        { height: baseHeight + params.riseHeight, duration: params.riseDuration, ease: 'power2.out' },
-        0
-    )
-    // 2) Descending 360° spiral — angle sweeps a whole turn while the height drops to the
-    //    dialogue shot (rotation + descent together).
+    // Descending 360° spiral — angle sweeps a whole turn while the height drops to the
+    // dialogue shot (rotation + descent together).
     timeline.to(
         cameraRig,
         {
@@ -75,18 +67,18 @@ function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay })
             duration: params.spiralDuration,
             ease: INTRO_TRAVEL_EASE,
         },
-        spiralStart
+        0
     )
     // Radius swells outward, then pulls into the character.
     timeline.to(
         cameraRig,
         { distance: params.orbitDistance, duration: params.spiralDuration * 0.5, ease: 'power1.out' },
-        spiralStart
+        0
     )
     timeline.to(
         cameraRig,
         { distance: cam.frontDistance, duration: params.spiralDuration * 0.5, ease: 'power2.inOut' },
-        spiralStart + params.spiralDuration * 0.5
+        params.spiralDuration * 0.5
     )
 
     introTweenRef.current = timeline

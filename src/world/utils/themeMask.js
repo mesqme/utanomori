@@ -5,10 +5,9 @@ import { PAINTERY_TEXTURE_URLS } from '../../config/painteryTextures.js'
 // Shared state of the LIVE (in-shader) theme transition — see shaders/lib/themeMask.glsl. While
 // active, every themed material mixes its OLD values (the `old` snapshot, captured at switch time)
 // toward the live store values by the per-fragment screen-space mask, so the whole world keeps
-// moving during a Portal / Wipe / Dissolve switch. Driven by game/themeTransition.js.
+// moving during the Portal switch. Driven by game/themeTransition.js.
 export const themeMask = {
     active: false,
-    shape: 0, // 0 = portal, 1 = wipe, 2 = dissolve
     progress: 0, // 0 → 1 (gsap-tweened)
     old: null, // snapshot of the themed values the dual materials need (see captureThemeSnapshot)
 }
@@ -25,7 +24,6 @@ brushTexture.colorSpace = THREE.NoColorSpace
 // and a new themed material only needs the spread to be transition-correct.
 export const themeMaskUniforms = {
     uThemeMaskActive: { value: 0 },
-    uThemeMaskShape: { value: 0 },
     uThemeMaskStyle: { value: 0 },
     uThemeMaskProgress: { value: 1 },
     uThemeMaskResolution: { value: new THREE.Vector2(1, 1) },
@@ -42,7 +40,6 @@ export const themeMaskUniforms = {
 export function updateThemeMask(gl, params) {
     themeMaskUniforms.uThemeMaskActive.value = themeMask.active ? 1 : 0
     if (!themeMask.active) return
-    themeMaskUniforms.uThemeMaskShape.value = themeMask.shape
     themeMaskUniforms.uThemeMaskStyle.value = params.edgeStyle === 'Perlin' ? 1 : 0
     themeMaskUniforms.uThemeMaskProgress.value = themeMask.progress
     gl.getDrawingBufferSize(themeMaskUniforms.uThemeMaskResolution.value)

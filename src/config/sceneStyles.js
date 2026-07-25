@@ -10,8 +10,6 @@ const painteryStyle = {
         groundTextureEnabled: true,
         groundTextureName: 'ground', // ground-detail texture: 'ground' | 'paintaryAlpha'
         segments: 19,
-        scale: 0.08,
-        amplitude: 0,
         groundTextureScale: 0.05,
         groundTextureContrast: 0.45,
         chunkSize: 9,
@@ -27,7 +25,6 @@ const painteryStyle = {
         height: 1.25,
         colorBase: '#028600',
         baseBrightness: 2,
-        leanFactor: 0,
         trampleEnabled: true,
         trailStrength: 0.7,
         dissolveEnabled: true,
@@ -84,9 +81,6 @@ const painteryStyle = {
         tintColorViolet: '#2843eb',
         tintColorYellow: '#6e35ff',
         tintColorGreen: '#5130ff',
-        debugCenters: false,
-        debugBorders: false,
-        debugPatchColors: false,
     },
     roadParameters: {
         enabled: true,
@@ -146,7 +140,6 @@ const painteryStyle = {
         treeWindStrength: 0.01,
         treeWindSpeed: 0.65,
         treeWindGust: 1.0,
-        debugAnchors: false,
         painterlyEnabled: true,
         painterlyScale: 0.13,
         painterlyContrast: 0.35,
@@ -202,7 +195,6 @@ const painteryStyle = {
         textureBrightness: 4,
         textureMixIntensity: 1.04,
         starsEnabled: true,
-        starStyle: 'Stylized',
         starCellSize: 92,
         starDensity: 0.05,
         starSize: 0.08,
@@ -212,10 +204,6 @@ const painteryStyle = {
         starColor: '#ffffff',
         starsFadeStart: -0.9,
         starsFadeWidth: 0.57,
-        constellationsEnabled: false,
-        constellationDensity: 0.36,
-        constellationBrightness: 2.02,
-        constellationWidth: 0.1,
         rotationEnabled: true,
         rotationSpeed: -0.003,
         textureYawParallax: 1000, // CSS px/radian: horizontal cloud drift vs camera yaw (signed)
@@ -228,13 +216,6 @@ const painteryStyle = {
         luminanceNoise: 0.02,
         chromaNoise: 0.02,
         sensorNoiseScale: 1,
-        bloomEnabled: false,
-        bloomIntensity: 0,
-        bloomThreshold: 0.34,
-        bloomSmoothing: 0.36,
-        bloomRadius: 0.5,
-        sharpenEnabled: false,
-        sharpenStrength: 0.28,
     },
     edgeParameters: {
         enabled: true,
@@ -343,9 +324,6 @@ const painteryStyle = {
         tutorialImageRadius: 29, // px → --tut-image-radius: the image's corner rounding (separate from the card)
         tutorialButtonOutside: true, // bool → place the button below the card instead of inside it
         tutorialPadding: 3.0, // vmin·scale → --tut-pad: gap between the image/content and the card frame
-        // DEBUG: force every UI overlay (bubble, prompt, HUD, countdown, chips…) on at once so the
-        // values above can be dialed in live. Turn off (or remove UIPreview) when done.
-        previewUI: false,
     },
     seeThroughParameters: {
         enabled: true,

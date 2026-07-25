@@ -8,8 +8,6 @@ export const soundJourneyPalette = Object.freeze({
     hero: '#c93a2d',
     lantern: '#ff9a35',
     fresnel: '#7658ff',
-    grassPatchColors: ['#2294c4', '#7b64c9', '#d09a55', '#8ba45f'],
-    grassPatchDebugColors: ['#2db9e8', '#a06be8', '#efb04e', '#79bd78'],
     uiPrimary: '#fff8ff',
     // Dark navy loader curtain — matched to the graded scene background base (backgroundColor at
     // gradient intensity 0, eyedropped from the rendered scene).

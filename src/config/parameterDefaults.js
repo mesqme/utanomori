@@ -79,12 +79,10 @@ export const DEFAULT_COLOR_PRESET_PARAMETERS = {
     trees: 'Indigo Canopy',
 }
 
-// How the day/night switch (and the Leva theme dropdown) transitions between themes.
-// 'Fade' crossfades every changing value; 'Portal' grows a torn-edged circle from the screen centre
-// revealing the new look inside; 'Wipe' sweeps a torn border right → left; 'Dissolve' erodes the
-// whole old frame at once (the rust-like brush-threshold effect the ground border uses).
+// How the day/night switch (and the Leva theme dropdown) transitions between themes: the PORTAL —
+// a torn-edged circle grows from the screen centre revealing the new look inside, while the world
+// keeps moving on both sides of the edge.
 export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
-    mode: 'Portal', // 'Fade' | 'Portal' | 'Wipe' | 'Dissolve' | 'Instant'
     duration: 3.0, // seconds
     // Progress curve. 'Fast start' responds the instant you click and eases out at the end;
     // 'Slow start' is the cinematic ramp-up (feels laggy on click); 'Smooth' is between.
@@ -104,7 +102,7 @@ export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
 
 // Mobile-only camera distances (isMobile → resolvedCameraDistances). Same fields as the desktop
 // Camera Distance controls but tuned for the phone framing; applied only when the mobile experience
-// is active (touch device or the previewMobile debug toggle).
+// is active (touch / coarse-pointer device — Chrome device mode flips it live, see config/device.js).
 export const DEFAULT_MOBILE_CAMERA_PARAMETERS = {
     followDistance: 17.4, // gameplay walk
     followHeight: 13.7,
@@ -223,14 +221,11 @@ export const DEFAULT_LANTERN_GRASS_PARAMETERS = {
     colorAmount: 0.81, // how strongly to tint (0..1)
 }
 
-// Intro camera travel (GameDirector): optional rise → descending 360° spiral down to the
-// hero. Fully tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
+// Intro camera travel (GameDirector): a descending 360° spiral down to the hero. Fully
+// tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
 export const DEFAULT_INTRO_CAMERA_PARAMETERS = {
-    riseHeight: 0, // 0 = no initial rise; the spiral starts immediately
-    riseDuration: 0, // seconds of that initial rise (0 = skip straight to the spiral)
     spiralDuration: 4.55, // seconds of the descending 360° spiral down to the hero
     orbitDistance: 14, // peak camera radius mid-spiral (swells out, then pulls in)
-    revealReduce: 0.04, // how much the terrain/grass reveal shrinks during the rise
 }
 
 // A single arrow (arrow.glb, forward = local -X, origin behind it) floating in front of the
@@ -300,7 +295,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     staggerDelay: 0.12, // delay between each stone's scale-in (left→right)
     scaleInDuration: 0.5, // seconds for one stone to rise
     scaleOutDuration: 0.4, // seconds for the stones to sink on teardown
-    grassFade: 0.6, // grass fade band beyond each stone's radius (currently dormant)
     cameraHeight: 4.2, // camera height → near-frontal view of the vertical rainbow
     cameraDistance: 15, // distance back from the companion
     cameraLerp: 3.6, // how smoothly the camera moves / returns

@@ -3,8 +3,6 @@ uniform int uDitherMode;
 uniform int uFadeMode;
 uniform vec3 uBackgroundColor;
 uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
-uniform int uDebugBorders;
-uniform int uDebugPatchColors;
 uniform float uBaseBrightness;
 uniform sampler2D uNoiseTexture;
 uniform vec3 uLanternPosition;
@@ -19,8 +17,6 @@ uniform float uLightenAmount;
 uniform float uDissolveAmount;
 uniform float uDissolveMode; // 0 = alpha, 1 = dither
 uniform sampler2D uPainteryTexture;
-uniform float uPainterySize;
-uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
@@ -36,11 +32,9 @@ uniform vec3 uLightenColorOld; // outgoing theme's trail-lighten colour
 
 varying vec3 vColor;
 varying vec3 vColorOld;
-varying vec4 vGrassData;
+varying vec2 vGrassData; // x = blade-space X (across the width), y = reveal-circle mask
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
-varying float vPatchBorderScale;
-varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
@@ -109,15 +103,6 @@ bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
     return threshold < fadeLevel;
 }
 
-float inverseLerp(float v, float minValue, float maxValue) {
-  return (v - minValue) / (maxValue - minValue);
-}
-
-float remap(float v, float inMin, float inMax, float outMin, float outMax) {
-  float t = inverseLerp(v, inMin, inMax);
-  return mix(outMin, outMax, t);
-}
-
 float saturateValue(float x) {
   return clamp(x, 0.0, 1.0);
 }
@@ -149,7 +134,6 @@ float samplePainteryBrush(vec2 worldXZ) {
 
 void main() {
   float grassX = vGrassData.x;
-  float grassY = vGrassData.y;
 
   vec3 normal = normalize(vNormal);
   vec3 viewDir = normalize(cameraPosition - vWorldPosition);
@@ -180,13 +164,6 @@ void main() {
   float themedBrightness = mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
 
   vec3 color = themedColor * lighting * themedBrightness;
-
-  if (uDebugPatchColors == 1) {
-    color = vPatchDebugColor;
-  }
-  if (uDebugBorders == 1) {
-    color = mix(vec3(1.0, 0.08, 0.5), color, smoothstep(0.8, 0.98, vPatchBorderScale));
-  }
 
   vec2 lanternNoiseUv = vWorldPosition.xz * uLanternLightNoiseScale * 0.1;
   float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUv).r * 2.0 - 1.0;
@@ -236,7 +213,7 @@ void main() {
     if (charSt > charBrush) discard;
   }
 
-  float borderFade = 1.0 - vGrassData.w;
+  float borderFade = 1.0 - vGrassData.y;
 
   // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
   // grass doesn't snap toward the new sky at the click.
@@ -246,9 +223,9 @@ void main() {
   }
 
   // Only dither styles configured to use the legacy border fade.
-  if (uFadeMode == 0 && vGrassData.w < 0.99) {
+  if (uFadeMode == 0 && vGrassData.y < 0.99) {
       // Determine fade value (0 = opaque, 1 = transparent)
-      // vGrassData.w goes from 1 (opaque) to 0 (transparent)
+      // vGrassData.y goes from 1 (opaque) to 0 (transparent)
       float fade = borderFade;
 
       if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {

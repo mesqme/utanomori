@@ -169,12 +169,10 @@ function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
     return { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant }
 }
 
-export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
+export default function ScatteredObjects({ activeChunks, chunkSize }) {
     const objectParameters = useStore((s) => s.objectParameters)
     const treeEyesPlanesPerTree = useStore((s) => s.treeEyesParameters.planesPerTree)
     const roadParameters = useStore((s) => s.roadParameters)
-    const terrainScale = useStore((s) => s.terrainParameters.scale)
-    const terrainAmplitude = useStore((s) => s.terrainParameters.amplitude)
 
     const { nodes: stoneNodes } = useGLTF(stonesModelUrl)
     const { nodes: mushroomNodes } = useGLTF(mushroomsModelUrl)
@@ -419,8 +417,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
         const releaseChunk = (ids) => ids.forEach((id) => pool.removeInstance(id))
         const releaseEyePlanes = (ids) => pool.eyePool && ids.forEach((id) => pool.eyePool.removeInstance(id))
 
-        // A change to placement/terrain params invalidates every instance — full reset.
-        const generationKey = [objectGenerationKey, roadGenerationKey, terrainScale, terrainAmplitude].join('::')
+        // A change to placement params invalidates every instance — full reset.
+        const generationKey = [objectGenerationKey, roadGenerationKey].join('::')
         if (generationKey !== generationKeyRef.current) {
             for (const ids of chunkInstances.values()) releaseChunk(ids)
             for (const ids of chunkEyePlanes.values()) releaseEyePlanes(ids)
@@ -462,14 +460,13 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 const eyePlanesForChunk = []
                 for (const group of sampler.getGroupsInChunk(chunk.x, chunk.z, chunkSize)) {
                     for (const instance of group.instances) {
-                        const y = noise2D ? noise2D(instance.worldX * terrainScale, instance.worldZ * terrainScale) * terrainAmplitude : 0
                         const isStone = instance.type === 'stone'
                         const isTree = instance.type === 'tree'
                         const isMushroom = instance.type === 'mushroom'
                         const sizeMul = isStone ? stoneSize : isTree ? treeSize : isMushroom ? mushroomSize : 1
                         const yOffset = isStone ? stoneYOffset : isTree ? treeYOffset : isMushroom ? mushroomYOffset : 0
 
-                        dummy.position.set(instance.worldX, y + yOffset, instance.worldZ)
+                        dummy.position.set(instance.worldX, yOffset, instance.worldZ)
                         dummy.rotation.set(instance.tiltX, instance.rotationY, instance.tiltZ)
                         dummy.scale.setScalar(instance.scale * sizeMul)
                         dummy.updateMatrix()
@@ -546,7 +543,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize, noise2D }) {
                 if (eyePlanesForChunk.length) chunkEyePlanesRef.current.set(chunk.key, eyePlanesForChunk)
             }
         }
-    }, [pool, activeChunks, objectGenerationKey, roadGenerationKey, terrainScale, terrainAmplitude, objectParameters.enabled, chunkSize, noise2D])
+    }, [pool, activeChunks, objectGenerationKey, roadGenerationKey, objectParameters.enabled, chunkSize])
 
     useEffect(
         () => () => {

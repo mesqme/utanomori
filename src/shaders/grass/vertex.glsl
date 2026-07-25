@@ -3,7 +3,6 @@ uniform float uGrassSegments;
 uniform float uGrassChunkSize;
 uniform float uGrassWidth;
 uniform float uGrassHeight;
-uniform float uLeanFactor;
 uniform float uCameraFacingStrength;
 uniform float uOrientationVariation;
 uniform float uRoadGrassMinScale;
@@ -63,9 +62,8 @@ uniform float uGrassFadeOffset;
 
 attribute vec3 aInstancePosition;
 attribute vec2 aPatchCenter;
-attribute vec4 aPatchData;
+attribute vec3 aPatchData; // x = height multiplier, y = width multiplier, z = radial lean strength
 attribute vec2 aPatchColorData; // x = tint family (0..3 → uGrassTint*), y = tone
-attribute vec3 aPatchDebugColor;
 
 // The grass palette as UNIFORMS (the bake stores only each blade's family + tone), so recolouring
 // the field — day/night themes, Leva drags — is a uniform write, not an attribute rebuild.
@@ -86,9 +84,6 @@ attribute float aRoadMask;
 attribute float aObjectSuppress; // 1 = inside a stone/tree safe radius → no grass; fades to 0
 attribute vec2 aObjectLean; // direction × strength to lean away from the nearest stone/tree
 
-uniform vec4 uMusicStones[7]; // dynamic song-mini-game stones: xy = world XZ, z = radius, w = active
-uniform float uMusicStoneFade; // fade band width beyond each music stone's radius
-
 uniform vec3 uLanternPosition; // lantern world position (shared with the fragment's ground light)
 uniform float uLanternGrassEnabled;
 uniform float uLanternGrassRadius;
@@ -96,11 +91,9 @@ uniform float uLanternGrassSoftness;
 uniform float uLanternGrassScale; // how much the grass shortens near the lantern
 
 varying vec3 vColor;
-varying vec4 vGrassData;
+varying vec2 vGrassData; // x = blade-space X (across the width), y = reveal-circle mask
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
-varying float vPatchBorderScale;
-varying vec3 vPatchDebugColor;
 varying float vTrampleDissolve;
 varying float vTrampleLighten;
 varying float vLanternInfluence;
@@ -132,19 +125,6 @@ void main() {
   grassHeightMask *= mix(1.0, uRoadGrassMinScale, aRoadMask);
   // Stones / trees: full kill inside their safe radius, fading across the band (baked CPU-side).
   grassHeightMask *= (1.0 - aObjectSuppress);
-
-  // Music stones (song mini-game): the same clear + lean, but DYNAMIC — the radius tracks
-  // each stone's animated scale, so the clearing grows/recovers as the stone rises/sinks.
-  vec2 musicLean = vec2(0.0);
-  for (int i = 0; i < 7; i++) {
-    if (uMusicStones[i].w < 0.5) continue;
-    float msR = uMusicStones[i].z;
-    float msD = distance(worldXZ, uMusicStones[i].xy);
-    float msS = 1.0 - smoothstep(msR, msR + uMusicStoneFade, msD);
-    grassHeightMask *= (1.0 - msS);
-    vec2 away = msD > 1e-4 ? (worldXZ - uMusicStones[i].xy) / msD : vec2(0.0);
-    musicLean += away * msS * 0.45;
-  }
 
   // Lantern: a character-like grass interaction (scale here; alpha + colour in the fragment)
   // around the lantern's world position. No lean.
@@ -244,7 +224,7 @@ void main() {
   vec2 radialDelta = worldXZ - aPatchCenter;
   vec2 radialDirection = length(radialDelta) > 0.0001 ? normalize(radialDelta) : vec2(0.0);
   float bendProfile = heightPercent * heightPercent;
-  float radialLean = max(0.0, aPatchData.z * (1.0 + uLeanFactor * 0.5));
+  float radialLean = max(0.0, aPatchData.z);
   vec2 radialOffset = radialDirection * radialLean * height * bendProfile;
 
   vec2 windUv = worldXZ * uWindScale * 0.1 + vec2(uTime * uWindSpeed * 0.1);
@@ -253,9 +233,8 @@ void main() {
   vec2 windOffset = windDirection * windNoise * uWindStrength * height * bendProfile;
   float verticalCompression = clamp(1.0 - radialLean * bendProfile * 0.18, 0.65, 1.0);
   vec2 trampleOffset = trampleLeanDir * trampleLeanStrength * height * bendProfile;
-  // Lean away from nearby stones / trees (aObjectLean already carries direction × strength;
-  // musicLean is the dynamic music-stone contribution).
-  vec2 objectOffset = (aObjectLean + musicLean) * height * bendProfile;
+  // Lean away from nearby stones / trees (aObjectLean already carries direction × strength).
+  vec2 objectOffset = aObjectLean * height * bendProfile;
   vec3 grassLocalPosition = grassOffset + vec3(
     widthDirection.x * x + radialOffset.x + windOffset.x + trampleOffset.x + objectOffset.x,
     heightPercent * height * verticalCompression,
@@ -281,7 +260,5 @@ void main() {
   vColorOld = mix(uGrassBaseColorOld, patchTintOld, uGrassTintStrength) * aPatchColorData.y;
   vNormal = normalize(vec3(facingDirection.x * -zSide, 0.2, facingDirection.y * -zSide));
   vWorldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
-  vGrassData = vec4(x, heightPercent, xSide, grassMask);
-  vPatchBorderScale = aPatchData.w;
-  vPatchDebugColor = aPatchDebugColor;
+  vGrassData = vec2(x, grassMask);
 }

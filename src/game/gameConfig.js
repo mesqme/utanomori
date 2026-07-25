@@ -14,15 +14,14 @@ export const CAMERA_FOLLOW_ORBIT = { angle: Math.PI * 2, distance: 14.6, height:
 export const CAMERA_BASE_FOV = 45
 export const CAMERA_REFERENCE_HEIGHT = 1080
 
-// Intro travel — rise → descending 360° spiral down to the hero (rotation + descent together).
-// The live, tweakable numbers (heights, durations, orbit radius, optional target spiral) live
-// in the store (introCameraParameters) so they can be tuned + replayed from the "Intro Camera"
-// Leva folder. These constants are just the default timing the dialogue/reveal pacing keys off.
+// Intro travel — descending 360° spiral down to the hero (rotation + descent together).
+// The live, tweakable numbers (durations, orbit radius) live in the store
+// (introCameraParameters) so they can be tuned + replayed from the "Intro Camera" Leva
+// folder. These constants are just the default timing the dialogue/reveal pacing keys off.
 export const INTRO_TRAVEL_EASE = 'power1.inOut' // spiral-angle ease (gentle in/out)
-export const INTRO_TRAVEL_DURATION = 3.5 // default rise (0.7) + spiral (2.8)
+export const INTRO_TRAVEL_DURATION = 3.5 // pacing anchor for the dialogue/reveal delays below
 export const GAMEPLAY_ENTRY_DURATION = 2.0 // seconds for the rise into gameplay
 export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble starts as it settles
-export const DIALOGUE_TYPE_SPEED = 28 // ms per character
 
 export const DIALOGUE_TEXT = 'Hey there, wandering soul. My melody spirits slipped away into this forest... will you help me find them and restore my song?'
 

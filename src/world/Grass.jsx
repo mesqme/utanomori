@@ -6,9 +6,8 @@ import { mulberry32 } from './utils/randomUtils.js'
 import { createGrassPatchSampler } from './utils/grassPatchField.js'
 import { createRoadSampler } from './utils/roadField.js'
 import { createObjectFieldSampler } from './utils/objectField.js'
-import { soundJourneyPalette } from '../config/soundJourneyPalette.js'
 
-export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude, grassMaterial }) {
+export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, grassMaterial }) {
     const grassParameters = useStore((s) => s.grassParameters)
     const grassPatchParameters = useStore((s) => s.grassPatchParameters)
     const roadParameters = useStore((s) => s.roadParameters)
@@ -93,16 +92,13 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
         const positions = new Float32Array(grassParameters.count * 3)
         const patchCenters = new Float32Array(grassParameters.count * 2)
-        const patchData = new Float32Array(grassParameters.count * 4)
+        const patchData = new Float32Array(grassParameters.count * 3)
         // Per-blade colour SELECTORS (tint family 0..3 + tone) — the actual colours are uniforms
         // (uGrassBaseColor / uGrassTint*), so recolouring the field never rebuilds these attributes.
         const patchColorData = new Float32Array(grassParameters.count * 2)
-        const patchDebugColors = new Float32Array(grassParameters.count * 3)
         const roadMasks = new Float32Array(grassParameters.count)
         const objectSuppress = new Float32Array(grassParameters.count)
         const objectLean = new Float32Array(grassParameters.count * 2)
-        const debugPalette = soundJourneyPalette.grassPatchDebugColors.map((value) => new THREE.Color(value))
-        const debugColor = new THREE.Color()
         const patchSampler = createGrassPatchSampler(grassPatchParameters)
         const roadSampler = createRoadSampler(roadParameters)
         const objectSampler = createObjectFieldSampler(objectParameters, roadParameters)
@@ -115,7 +111,6 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
             const worldX = x + chunkX
             const worldZ = z + chunkZ
-            const y = noise2D ? noise2D(worldX * scale, worldZ * scale) * amplitude : 0
             patchSampler.sample(worldX, worldZ, patch)
             // Stones / trees: hard no-grass within the safe radius, then a fade band where
             // grass shortens (suppress) and leans away (lean). Roads keep their own mask.
@@ -123,21 +118,16 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             const roadMask = roadSampler.sampleMask(worldX, worldZ)
 
             positions[i * 3] = x
-            positions[i * 3 + 1] = y
+            positions[i * 3 + 1] = 0
             positions[i * 3 + 2] = z
             patchCenters[i * 2] = patch.centerX
             patchCenters[i * 2 + 1] = patch.centerZ
-            patchData[i * 4] = patch.heightMultiplier
-            patchData[i * 4 + 1] = patch.widthMultiplier
-            patchData[i * 4 + 2] = patch.leanStrength
-            patchData[i * 4 + 3] = patch.borderScale
+            patchData[i * 3] = patch.heightMultiplier
+            patchData[i * 3 + 1] = patch.widthMultiplier
+            patchData[i * 3 + 2] = patch.leanStrength
             const tone = 0.9 + patch.colorMix * 0.2
             patchColorData[i * 2] = patch.colorFamily // which uGrassTint* this blade blends toward
             patchColorData[i * 2 + 1] = tone
-            debugColor.copy(debugPalette[patch.colorFamily]).multiplyScalar(tone)
-            patchDebugColors[i * 3] = debugColor.r
-            patchDebugColors[i * 3 + 1] = debugColor.g
-            patchDebugColors[i * 3 + 2] = debugColor.b
             roadMasks[i] = roadMask
             objectSuppress[i] = objectField.suppress
             objectLean[i * 2] = objectField.leanX
@@ -146,15 +136,14 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
         grassGeometry.setAttribute('aInstancePosition', new THREE.InstancedBufferAttribute(positions, 3))
         grassGeometry.setAttribute('aPatchCenter', new THREE.InstancedBufferAttribute(patchCenters, 2))
-        grassGeometry.setAttribute('aPatchData', new THREE.InstancedBufferAttribute(patchData, 4))
+        grassGeometry.setAttribute('aPatchData', new THREE.InstancedBufferAttribute(patchData, 3))
         grassGeometry.setAttribute('aPatchColorData', new THREE.InstancedBufferAttribute(patchColorData, 2))
-        grassGeometry.setAttribute('aPatchDebugColor', new THREE.InstancedBufferAttribute(patchDebugColors, 3))
         grassGeometry.setAttribute('aRoadMask', new THREE.InstancedBufferAttribute(roadMasks, 1))
         grassGeometry.setAttribute('aObjectSuppress', new THREE.InstancedBufferAttribute(objectSuppress, 1))
         grassGeometry.setAttribute('aObjectLean', new THREE.InstancedBufferAttribute(objectLean, 2))
 
         return grassGeometry
-    }, [grassParameters.segmentsCount, grassParameters.count, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, noise2D, scale, amplitude])
+    }, [grassParameters.segmentsCount, grassParameters.count, patchGenerationKey, roadGenerationKey, objectGenerationKey, size, chunkX, chunkZ, chunkIndexX, chunkIndexZ])
 
     useEffect(() => {
         return () => {

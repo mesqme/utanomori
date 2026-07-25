@@ -32,8 +32,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         color: 'color',
         baseBrightness: 'baseBrightness',
         segments: 'segments',
-        scale: 'scale',
-        amplitude: 'amplitude',
         groundTextureScale: 'groundTextureScale',
         groundTextureContrast: 'groundTextureContrast',
         chunkSize: 'chunkSize',
@@ -61,7 +59,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
     },
     Stars: {
         starsEnabled: 'starsEnabled',
-        starStyle: 'starStyle',
         starCellSize: 'starCellSize',
         starDensity: 'starDensity',
         starSize: 'starSize',
@@ -71,10 +68,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         starColor: 'starColor',
         starsFadeStart: 'starsFadeStart',
         starsFadeWidth: 'starsFadeWidth',
-        constellations: 'constellationsEnabled',
-        constellationDensity: 'constellationDensity',
-        constellationBrightness: 'constellationBrightness',
-        constellationWidth: 'constellationWidth',
         skyRotation: 'rotationEnabled',
         skyRotationSpeed: 'rotationSpeed',
     },
@@ -126,7 +119,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         height: 'height',
         baseColor: 'colorBase',
         baseBrightness: 'baseBrightness',
-        lean: 'leanFactor',
     },
     Patches: {
         worldSeed: 'worldSeed',
@@ -313,13 +305,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         lumaNoise: 'luminanceNoise',
         chromaNoise: 'chromaNoise',
         sensorScale: 'sensorNoiseScale',
-        bloom: 'bloomEnabled',
-        bloomIntensity: 'bloomIntensity',
-        bloomThreshold: 'bloomThreshold',
-        bloomSmooth: 'bloomSmoothing',
-        bloomRadius: 'bloomRadius',
-        sharpen: 'sharpenEnabled',
-        sharpenStrength: 'sharpenStrength',
     },
     Dithering: {
         ditherMode: 'ditherMode',
@@ -391,7 +376,6 @@ const LEVA_SECTION_PATHS = Object.freeze({
         'Tutorial.tutorialImageRadius': 'tutorialImageRadius',
         'Tutorial.tutorialPadding': 'tutorialPadding',
         'Tutorial.tutorialButtonOutside': 'tutorialButtonOutside',
-        previewUI: 'previewUI',
     },
 })
 
@@ -747,7 +731,6 @@ export default function Controls() {
         // How the theme switch animates (the in-game day/night button + the dropdown above).
         Transition: folder(
             {
-                mode: { value: themeTransitionParameters.mode, options: ['Fade', 'Portal', 'Wipe', 'Dissolve', 'Instant'], onChange: setParam('themeTransitionParameters', 'mode') },
                 duration: { value: themeTransitionParameters.duration, min: 0.2, max: 4, step: 0.05, onChange: setParam('themeTransitionParameters', 'duration') },
                 easing: { value: themeTransitionParameters.easing, options: ['Fast start', 'Smooth', 'Slow start', 'Linear'], onChange: setParam('themeTransitionParameters', 'easing') },
                 edgeStyle: { value: themeTransitionParameters.edgeStyle, options: ['Paintery', 'Perlin'], onChange: setParam('themeTransitionParameters', 'edgeStyle') },
@@ -773,8 +756,6 @@ export default function Controls() {
         shadowSoftness: { value: terrainParameters.shadowSoftness, min: 0, max: 1, step: 0.01, onChange: setParam('terrainParameters', 'shadowSoftness') },
         shadowDarkness: { value: terrainParameters.shadowDarkness, min: 0, max: 3, step: 0.05, onChange: setParam('terrainParameters', 'shadowDarkness') },
         segments: { value: terrainParameters.segments, min: 1, max: 100, step: 1, onChange: setParam('terrainParameters', 'segments') },
-        scale: { value: terrainParameters.scale, min: 0, max: 1, step: 0.01, onChange: setParam('terrainParameters', 'scale') },
-        amplitude: { value: terrainParameters.amplitude, min: 0, max: 10, step: 0.1, onChange: setParam('terrainParameters', 'amplitude') },
         groundTextureScale: { value: terrainParameters.groundTextureScale, min: 0.01, max: 2.0, step: 0.01, onChange: setParam('terrainParameters', 'groundTextureScale') },
         groundTextureContrast: { value: terrainParameters.groundTextureContrast, min: 0, max: 4.0, step: 0.01, onChange: setParam('terrainParameters', 'groundTextureContrast') },
         chunkSize: { value: terrainParameters.chunkSize, min: 2, max: 50, step: 1, onChange: setParam('terrainParameters', 'chunkSize') },
@@ -801,7 +782,6 @@ export default function Controls() {
 
     useControls('World.Stars', {
         starsEnabled: { value: backgroundParameters.starsEnabled, onChange: setParam('backgroundParameters', 'starsEnabled') },
-        starStyle: { value: backgroundParameters.starStyle, options: ['Stylized', 'Natural'], onChange: setParam('backgroundParameters', 'starStyle') },
         starColor: { value: backgroundParameters.starColor, onChange: setParam('backgroundParameters', 'starColor') },
         starCellSize: { value: backgroundParameters.starCellSize, min: 8, max: 120, step: 1, onChange: setParam('backgroundParameters', 'starCellSize') },
         starDensity: { value: backgroundParameters.starDensity, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'starDensity') },
@@ -811,10 +791,6 @@ export default function Controls() {
         starRays: { value: backgroundParameters.starRays, min: 0, max: 2, step: 0.01, onChange: setParam('backgroundParameters', 'starRays') },
         starsFadeStart: { value: backgroundParameters.starsFadeStart, min: -1, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'starsFadeStart') },
         starsFadeWidth: { value: backgroundParameters.starsFadeWidth, min: 0.01, max: 1.5, step: 0.01, onChange: setParam('backgroundParameters', 'starsFadeWidth') },
-        constellations: { value: backgroundParameters.constellationsEnabled, onChange: setParam('backgroundParameters', 'constellationsEnabled') },
-        constellationDensity: { value: backgroundParameters.constellationDensity, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'constellationDensity') },
-        constellationBrightness: { value: backgroundParameters.constellationBrightness, min: 0, max: 3, step: 0.01, onChange: setParam('backgroundParameters', 'constellationBrightness') },
-        constellationWidth: { value: backgroundParameters.constellationWidth, min: 0.005, max: 0.2, step: 0.005, onChange: setParam('backgroundParameters', 'constellationWidth') },
         skyRotation: { value: backgroundParameters.rotationEnabled, onChange: setParam('backgroundParameters', 'rotationEnabled') },
         skyRotationSpeed: { value: backgroundParameters.rotationSpeed, min: -0.1, max: 0.1, step: 0.001, onChange: setParam('backgroundParameters', 'rotationSpeed') },
     })
@@ -871,7 +847,6 @@ export default function Controls() {
         height: { value: grassParameters.height, min: 0.05, max: 3, step: 0.01, onChange: setParam('grassParameters', 'height') },
         baseColor: { value: grassParameters.colorBase, onChange: setParam('grassParameters', 'colorBase') },
         baseBrightness: { value: grassParameters.baseBrightness, min: 0, max: 2, step: 0.01, onChange: setParam('grassParameters', 'baseBrightness') },
-        lean: { value: grassParameters.leanFactor, min: 0, max: 2, step: 0.01, onChange: setParam('grassParameters', 'leanFactor') },
     })
 
     useControls('Grass.Patches', {
@@ -1292,7 +1267,6 @@ export default function Controls() {
                 bobSpeed: { value: musicStoneParameters.bobSpeed, min: 0, max: 5, step: 0.05, onChange: setParam('musicStoneParameters', 'bobSpeed') },
                 floatRotate: { value: musicStoneParameters.floatRotate, onChange: setParam('musicStoneParameters', 'floatRotate') },
                 floatRotateAmount: { value: musicStoneParameters.floatRotateAmount, min: 0, max: 0.6, step: 0.01, onChange: setParam('musicStoneParameters', 'floatRotateAmount') },
-                grassFade: { value: musicStoneParameters.grassFade, min: 0, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'grassFade') },
             },
             { collapsed: true }
         ),
@@ -1362,11 +1336,8 @@ export default function Controls() {
 
     useControls('Game.Intro Camera', {
         'redo the animation': button(() => replayIntro()),
-        riseHeight: { value: introCameraParameters.riseHeight, min: 0, max: 20, step: 0.1, onChange: setParam('introCameraParameters', 'riseHeight') },
-        riseDuration: { value: introCameraParameters.riseDuration, min: 0, max: 3, step: 0.05, onChange: setParam('introCameraParameters', 'riseDuration') },
         spiralDuration: { value: introCameraParameters.spiralDuration, min: 0.3, max: 8, step: 0.05, onChange: setParam('introCameraParameters', 'spiralDuration') },
         orbitDistance: { value: introCameraParameters.orbitDistance, min: 3, max: 40, step: 0.5, onChange: setParam('introCameraParameters', 'orbitDistance') },
-        revealReduce: { value: introCameraParameters.revealReduce, min: 0, max: 0.3, step: 0.005, onChange: setParam('introCameraParameters', 'revealReduce') },
     })
 
     // ======================================================================================
@@ -1433,13 +1404,6 @@ export default function Controls() {
         lumaNoise: { value: painterlyPostParameters.luminanceNoise, min: 0, max: 0.2, step: 0.001, onChange: setParam('painterlyPostParameters', 'luminanceNoise') },
         chromaNoise: { value: painterlyPostParameters.chromaNoise, min: 0, max: 0.1, step: 0.001, onChange: setParam('painterlyPostParameters', 'chromaNoise') },
         sensorScale: { value: painterlyPostParameters.sensorNoiseScale, min: 1, max: 8, step: 1, onChange: setParam('painterlyPostParameters', 'sensorNoiseScale') },
-        bloom: { value: painterlyPostParameters.bloomEnabled, onChange: setParam('painterlyPostParameters', 'bloomEnabled') },
-        bloomIntensity: { value: painterlyPostParameters.bloomIntensity, min: 0, max: 2, step: 0.01, onChange: setParam('painterlyPostParameters', 'bloomIntensity') },
-        bloomThreshold: { value: painterlyPostParameters.bloomThreshold, min: 0, max: 1, step: 0.01, onChange: setParam('painterlyPostParameters', 'bloomThreshold') },
-        bloomSmooth: { value: painterlyPostParameters.bloomSmoothing, min: 0, max: 1, step: 0.01, onChange: setParam('painterlyPostParameters', 'bloomSmoothing') },
-        bloomRadius: { value: painterlyPostParameters.bloomRadius, min: 0, max: 1, step: 0.01, onChange: setParam('painterlyPostParameters', 'bloomRadius') },
-        sharpen: { value: painterlyPostParameters.sharpenEnabled, onChange: setParam('painterlyPostParameters', 'sharpenEnabled') },
-        sharpenStrength: { value: painterlyPostParameters.sharpenStrength, min: 0, max: 1, step: 0.01, onChange: setParam('painterlyPostParameters', 'sharpenStrength') },
     })
 
     useControls('Post.Brush Texture', {
@@ -1462,7 +1426,7 @@ export default function Controls() {
     // ======================================================================================
     // The whole in-game UI skin (SpeechBubble + InteractionPrompt + SongGame HUD + key chips). Each
     // value is written to a CSS custom property on :root (see the effect above) so the DOM UI restyles
-    // live. Toggle previewUI to splay every overlay on screen at once while dialing these in.
+    // live.
     useControls('Desktop.UI', {
         'Text & scale': folder(
             {
@@ -1554,7 +1518,6 @@ export default function Controls() {
             },
             { collapsed: true }
         ),
-        previewUI: { value: gameUiParameters.previewUI, label: '🐞 preview all UI', onChange: setParam('gameUiParameters', 'previewUI') },
     })
 
     // ALL desktop camera distances in one place — gameplay walk, the two dialogue framings, and the
