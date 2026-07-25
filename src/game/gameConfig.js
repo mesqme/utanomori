@@ -56,7 +56,7 @@ export const CREDITS_LINES = [
     'Three.js · React Three Fiber',
     '\u00a0',
     '— Special thanks —',
-    'Amelab — for the inspiration',
+    'Kei Yotsuba — for the inspiration',
     'Bruno Simon — for the journey',
     ' ',
     'Thank you for wandering',
