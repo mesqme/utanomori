@@ -62,7 +62,7 @@ uniform float uGrassFadeOffset;
 
 attribute vec3 aInstancePosition;
 attribute vec2 aPatchCenter;
-attribute vec4 aPatchData;
+attribute vec3 aPatchData; // x = height multiplier, y = width multiplier, z = radial lean strength
 attribute vec2 aPatchColorData; // x = tint family (0..3 → uGrassTint*), y = tone
 
 // The grass palette as UNIFORMS (the bake stores only each blade's family + tone), so recolouring
@@ -91,7 +91,7 @@ uniform float uLanternGrassSoftness;
 uniform float uLanternGrassScale; // how much the grass shortens near the lantern
 
 varying vec3 vColor;
-varying vec4 vGrassData;
+varying vec2 vGrassData; // x = blade-space X (across the width), y = reveal-circle mask
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vTrampleDissolve;
@@ -260,5 +260,5 @@ void main() {
   vColorOld = mix(uGrassBaseColorOld, patchTintOld, uGrassTintStrength) * aPatchColorData.y;
   vNormal = normalize(vec3(facingDirection.x * -zSide, 0.2, facingDirection.y * -zSide));
   vWorldPosition = (modelMatrix * vec4(grassLocalPosition, 1.0)).xyz;
-  vGrassData = vec4(x, heightPercent, xSide, grassMask);
+  vGrassData = vec2(x, grassMask);
 }

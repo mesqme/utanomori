@@ -92,7 +92,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
         const positions = new Float32Array(grassParameters.count * 3)
         const patchCenters = new Float32Array(grassParameters.count * 2)
-        const patchData = new Float32Array(grassParameters.count * 4)
+        const patchData = new Float32Array(grassParameters.count * 3)
         // Per-blade colour SELECTORS (tint family 0..3 + tone) — the actual colours are uniforms
         // (uGrassBaseColor / uGrassTint*), so recolouring the field never rebuilds these attributes.
         const patchColorData = new Float32Array(grassParameters.count * 2)
@@ -122,10 +122,9 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
             positions[i * 3 + 2] = z
             patchCenters[i * 2] = patch.centerX
             patchCenters[i * 2 + 1] = patch.centerZ
-            patchData[i * 4] = patch.heightMultiplier
-            patchData[i * 4 + 1] = patch.widthMultiplier
-            patchData[i * 4 + 2] = patch.leanStrength
-            patchData[i * 4 + 3] = patch.borderScale
+            patchData[i * 3] = patch.heightMultiplier
+            patchData[i * 3 + 1] = patch.widthMultiplier
+            patchData[i * 3 + 2] = patch.leanStrength
             const tone = 0.9 + patch.colorMix * 0.2
             patchColorData[i * 2] = patch.colorFamily // which uGrassTint* this blade blends toward
             patchColorData[i * 2 + 1] = tone
@@ -137,7 +136,7 @@ export default function Grass({ size, chunkX, chunkZ, chunkIndexX, chunkIndexZ, 
 
         grassGeometry.setAttribute('aInstancePosition', new THREE.InstancedBufferAttribute(positions, 3))
         grassGeometry.setAttribute('aPatchCenter', new THREE.InstancedBufferAttribute(patchCenters, 2))
-        grassGeometry.setAttribute('aPatchData', new THREE.InstancedBufferAttribute(patchData, 4))
+        grassGeometry.setAttribute('aPatchData', new THREE.InstancedBufferAttribute(patchData, 3))
         grassGeometry.setAttribute('aPatchColorData', new THREE.InstancedBufferAttribute(patchColorData, 2))
         grassGeometry.setAttribute('aRoadMask', new THREE.InstancedBufferAttribute(roadMasks, 1))
         grassGeometry.setAttribute('aObjectSuppress', new THREE.InstancedBufferAttribute(objectSuppress, 1))

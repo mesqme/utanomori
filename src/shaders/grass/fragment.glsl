@@ -32,7 +32,7 @@ uniform vec3 uLightenColorOld; // outgoing theme's trail-lighten colour
 
 varying vec3 vColor;
 varying vec3 vColorOld;
-varying vec4 vGrassData;
+varying vec2 vGrassData; // x = blade-space X (across the width), y = reveal-circle mask
 varying vec3 vNormal;
 varying vec3 vWorldPosition;
 varying float vTrampleDissolve;
@@ -213,7 +213,7 @@ void main() {
     if (charSt > charBrush) discard;
   }
 
-  float borderFade = 1.0 - vGrassData.w;
+  float borderFade = 1.0 - vGrassData.y;
 
   // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
   // grass doesn't snap toward the new sky at the click.
@@ -223,9 +223,9 @@ void main() {
   }
 
   // Only dither styles configured to use the legacy border fade.
-  if (uFadeMode == 0 && vGrassData.w < 0.99) {
+  if (uFadeMode == 0 && vGrassData.y < 0.99) {
       // Determine fade value (0 = opaque, 1 = transparent)
-      // vGrassData.w goes from 1 (opaque) to 0 (transparent)
+      // vGrassData.y goes from 1 (opaque) to 0 (transparent)
       float fade = borderFade;
 
       if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
