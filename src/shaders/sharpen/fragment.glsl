@@ -1,10 +1,10 @@
 uniform sampler2D inputBuffer;
 uniform vec2 resolution;
-uniform int sensorNoiseEnabled;
-uniform float luminanceNoise;
-uniform float chromaNoise;
-uniform float sensorNoiseScale;
-uniform float noiseSeed;
+uniform int uSensorNoiseEnabled;
+uniform float uLuminanceNoise;
+uniform float uChromaNoise;
+uniform float uSensorNoiseScale;
+uniform float uNoiseSeed;
 
 // Display color grade (two presets switched on the CPU: high = the normal-brightness-display look
 // (desaturated + warmed), low = a gentler eye-comfort look). Identity (no grade) = 1 / 0 / 1.
@@ -23,7 +23,7 @@ varying vec2 vUv;
 
 // Pattern-free hash (Dave Hoskins) — clean, structure-free grain.
 float hash(vec2 p) {
-    vec3 p3 = fract(vec3(p.xyx) * 0.1031 + noiseSeed * 0.017);
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031 + uNoiseSeed * 0.017);
     p3 += dot(p3, p3.yzx + 33.33);
     return fract((p3.x + p3.y) * p3.z);
 }
@@ -42,22 +42,22 @@ void main() {
     color *= vec3(1.0 + warmth, 1.0, 1.0 - warmth);
 
     // Film grain — the final layer of the pipeline (nothing filters it afterwards).
-    if (sensorNoiseEnabled == 1 && (luminanceNoise > 0.0 || chromaNoise > 0.0)) {
-        float grainScale = max(sensorNoiseScale * (resolution.y / 1080.0), 1.0);
+    if (uSensorNoiseEnabled == 1 && (uLuminanceNoise > 0.0 || uChromaNoise > 0.0)) {
+        float grainScale = max(uSensorNoiseScale * (resolution.y / 1080.0), 1.0);
         vec2 noiseCoord = floor(gl_FragCoord.xy / grainScale);
 
-        if (luminanceNoise > 0.0) {
+        if (uLuminanceNoise > 0.0) {
             float luminanceVariation = hash(noiseCoord) * 2.0 - 1.0;
-            color += luminanceVariation * luminanceNoise;
+            color += luminanceVariation * uLuminanceNoise;
         }
 
-        if (chromaNoise > 0.0) {
+        if (uChromaNoise > 0.0) {
             vec3 chromaVariation = vec3(
                 hash(noiseCoord + vec2(17.0, 7.0)),
                 hash(noiseCoord + vec2(5.0, 29.0)),
                 hash(noiseCoord + vec2(31.0, 13.0))
             ) * 2.0 - 1.0;
-            color += chromaVariation * chromaNoise;
+            color += chromaVariation * uChromaNoise;
         }
     }
 

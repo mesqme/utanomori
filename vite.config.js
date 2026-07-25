@@ -21,7 +21,7 @@ export default {
         restart({ restart: ['../public/**'] }),
         react(),
         glsl({
-            include: ['**/*.glsl', '**/*.vert', '**/*.frag'],
+            include: ['**/*.glsl'],
         }),
     ],
     base: '/utanomori/', // served at mesq.me/utanomori/ — all asset URLs are prefixed with this

@@ -2,8 +2,8 @@ import { useThree } from '@react-three/fiber'
 import { useEffect, useLayoutEffect, useMemo } from 'react'
 import * as THREE from 'three'
 
-import fullscreenVertexShader from '../../shaders/postprocessing/fullscreen.vert'
-import stylizeFragmentShader from '../../shaders/postprocessing/painteryStylize.frag'
+import fullscreenVertexShader from '../../shaders/fullscreen/vertex.glsl'
+import stylizeFragmentShader from '../../shaders/painteryStylize/fragment.glsl'
 
 // Bakes a stylized copy of the paintery brush texture (blur + levels + contrast +
 // posterize) into a render target, once at load and whenever the params change.
