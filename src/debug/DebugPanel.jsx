@@ -5,7 +5,7 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
 import { useIsMobile } from '../config/mobile.js'
-import { seeThrough, applySeeThroughParameters } from './utils/seeThrough.js'
+import { seeThrough, applySeeThroughParameters } from '../world/utils/seeThrough.js'
 import { updateEdgeUniforms } from '../materials/edgeUniforms.js'
 import { mainCharacterMaterialGroups } from '../config/mainCharacterMaterials.js'
 import { defaultSceneStyle } from '../config/sceneStyles.js'
@@ -16,12 +16,14 @@ import { THEME_OPTIONS, applyGlobalTheme } from '../config/colorPresets.js'
 import { startThemeTransition } from '../game/themeTransition.js'
 
 // ============================================================================================
-// Leva debug panel — every tweakable in the game, in 12 sections:
-//   Colors · World · Grass · Props · Characters · Lantern · Game · Audio · Post · Desktop ·
-//   Mobile · Debug
-// Registration order == panel order. Controls write straight into the zustand store (setParam);
-// LEVA_SECTION_PATHS below is the reverse map (store → Leva) used to refresh the panel when the
-// STORE changes from elsewhere (colour presets, the mobile loader overlay, HMR-restored state).
+// Leva debug panel — every tweakable in the game, in 12 sections (see debug/README.md for the
+// list and the rules). Registration order == panel order. Controls write straight into the
+// zustand store (setParam); LEVA_SECTION_PATHS below is the reverse map (store → Leva) used to
+// refresh the panel when the STORE changes from elsewhere (colour presets, the mobile loader
+// overlay, HMR-restored state).
+//
+// NOT optional, despite the folder: this component also performs four things the shipped game
+// needs — see debug/README.md. It may be hidden, but it must stay mounted.
 // ============================================================================================
 
 // Leva control path (inside its folder) → store param key, per synced section.
@@ -398,7 +400,7 @@ function addSeeThroughValues(values) {
     values['Debug.See-Through.textureContrast'] = seeThrough.textureContrast
 }
 
-export default function Controls() {
+export default function DebugPanel() {
     const syncingLeva = useRef(false)
     const terrainParameters = useStore((state) => state.terrainParameters)
     const grassParameters = useStore((state) => state.grassParameters)

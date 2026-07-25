@@ -4,7 +4,7 @@ import { Canvas } from '@react-three/fiber'
 import { KeyboardControls } from '@react-three/drei'
 import { Leva } from 'leva'
 
-import Experience from './world/Experience.jsx'
+import Experience from './Experience.jsx'
 import IntroTitle from './loader/IntroTitle.jsx'
 import Links from './ui/Links.jsx'
 import ControlsIcons from './ui/ControlsIcons.jsx'

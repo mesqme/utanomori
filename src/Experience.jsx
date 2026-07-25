@@ -1,20 +1,20 @@
 import { lazy, Suspense } from 'react'
 import { DefaultLoadingManager } from 'three'
 
-import Lights from './Lights.jsx'
-import MainCharacter from './MainCharacter.jsx'
-import LanternGlow from './LanternGlow.jsx'
-import Terrain from './Terrain.jsx'
-import Controls from './Controls.jsx'
-import BackgroundSphere from './BackgroundSphere.jsx'
-import Companions from './Companions.jsx'
-import MusicStones from './MusicStones.jsx'
-import MusicController from './MusicController.jsx'
-import AmbientController from './AmbientController.jsx'
-import CameraProjection from './CameraProjection.jsx'
-import useStore from '../stores/useStore.jsx'
-import PainterlyPostProcessing from '../postprocessing/PainterlyPostProcessing.jsx'
-import { preserveManagerHandlers } from '../loader/loadingManagerChain.js'
+import Lights from './world/Lights.jsx'
+import MainCharacter from './world/MainCharacter.jsx'
+import LanternGlow from './world/LanternGlow.jsx'
+import Terrain from './world/Terrain.jsx'
+import DebugPanel from './debug/DebugPanel.jsx'
+import BackgroundSphere from './world/BackgroundSphere.jsx'
+import Companions from './world/Companions.jsx'
+import MusicStones from './world/MusicStones.jsx'
+import MusicController from './world/MusicController.jsx'
+import AmbientController from './world/AmbientController.jsx'
+import CameraProjection from './world/CameraProjection.jsx'
+import useStore from './stores/useStore.jsx'
+import PainterlyPostProcessing from './postprocessing/PainterlyPostProcessing.jsx'
+import { preserveManagerHandlers } from './loader/loadingManagerChain.js'
 
 // The perf monitor is debug-only (#debug → Debug.General.perfMonitor, default off), so it is
 // loaded on first toggle instead of riding in the main bundle for every player.
@@ -62,7 +62,7 @@ export default function Experience() {
             <MusicController />
             <AmbientController />
 
-            <Controls />
+            <DebugPanel />
             <BackgroundSphere />
             <PainterlyPostProcessing />
         </>
