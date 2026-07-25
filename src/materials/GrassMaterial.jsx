@@ -46,8 +46,6 @@ export default function useGrassMaterial({
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
     const borderGrassFadeOffset = useStore((s) => s.borderParameters.grassFadeOffset)
-    const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
-    const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
@@ -157,8 +155,6 @@ export default function useGrassMaterial({
                     uNoiseScale: { value: borderNoiseScale },
                     uCircleRadiusFactor: { value: initialCircleRadius },
                     uGrassFadeOffset: { value: borderGrassFadeOffset },
-                    uGroundOffset: { value: borderGroundOffset },
-                    uGroundFadeOffset: { value: borderGroundFadeOffset },
                     uLanternPosition: { value: new THREE.Vector3() },
                     uLanternLightRadius: { value: lanternGroundLightParameters.radius },
                     uLanternLightEdgeSoftness: { value: lanternGroundLightParameters.edgeSoftness },
@@ -215,8 +211,6 @@ export default function useGrassMaterial({
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale
         u.uGrassFadeOffset.value = borderGrassFadeOffset
-        u.uGroundOffset.value = borderGroundOffset
-        u.uGroundFadeOffset.value = borderGroundFadeOffset
         u.uLanternLightRadius.value = lanternGroundLightParameters.radius
         u.uLanternLightEdgeSoftness.value = lanternGroundLightParameters.edgeSoftness
         u.uLanternLightNoiseScale.value = lanternGroundLightParameters.edgeNoiseScale
@@ -286,8 +280,6 @@ export default function useGrassMaterial({
         borderNoiseStrength,
         borderNoiseScale,
         borderGrassFadeOffset,
-        borderGroundOffset,
-        borderGroundFadeOffset,
         borderFadeMode,
         borderParameters,
         pixelSize,

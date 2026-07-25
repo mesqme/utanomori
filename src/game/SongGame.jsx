@@ -89,7 +89,7 @@ export default function SongGame() {
             timers.push(setTimeout(() => useSongGame.getState().setActiveNote(null), (at + spacing * 0.85) * 1000))
             t += spacing
         })
-        timers.push(setTimeout(() => useSongGame.getState().openWheel(), (t + 0.3) * 1000))
+        timers.push(setTimeout(() => useSongGame.getState().openInput(), (t + 0.3) * 1000))
 
         return () => timers.forEach(clearTimeout)
     }, [stage, round])

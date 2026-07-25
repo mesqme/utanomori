@@ -120,9 +120,14 @@ export const objectArchetypes = Object.freeze([
     { id: 'loneTree', weight: 0.5, count: [1, 2], radius: 1.2, mix: { tree: 1.0 } },
 ])
 
+// PLACEMENT fallbacks only — the sixteen values objectField.js getSettings() falls back to when a
+// parameter is missing. Everything else about the props (colours, Y offsets, wiggle, tree wind,
+// texture) is NOT configured here: those live in sceneStyles.objectParameters and reach the
+// shaders through the store. Earlier this object also carried its own copies of them, which had
+// drifted to different values than the ones that actually ship — a trap for anyone reading it as
+// "the prop defaults". If you add a key here, add it to getSettings() too or it will do nothing.
 export const objectFieldDefaults = Object.freeze({
     enabled: true,
-    textureName: 'paintaryAlpha', // paintery texture used by the prop material
     worldSeed: 7777,
     cellSize: 7,
     groupJitter: 0.52,
@@ -131,34 +136,11 @@ export const objectFieldDefaults = Object.freeze({
     groupScale: 1.0,
     minObjectSpacing: 0.75,
     treeSize: 0.65, // mean tree scale
-    treeYOffset: 0, // lift/sink trees relative to the ground
-    treeColor: '#575ac2', // tree bush (foliage) colour
-    treeTrunkColor: '#877fb9', // tree trunk colour
     stoneSize: 0.55, // global stone scale (the GLB models are authored near final size)
-    stoneYOffset: -0.3, // lift/sink stones relative to the ground
-    stoneTint: '#58a4fc', // multiplies the GLB stone colour (white = as authored)
     mushroomSize: 0.75, // global mushroom scale (the GLB models are authored near final size)
-    mushroomYOffset: -0.1, // lift/sink mushrooms relative to the ground (geometry grounded at the leg base)
-    mushroomCapColor: '#31bac0', // cap (head) base colour
-    mushroomLegColor: '#ecdcc4', // leg (stem) base colour
-    // Per-instance per-channel colour variation of the SAME base colour (like the sheep scales),
-    // separate factor per prop type (0 = all identical).
-    stoneColorVariation: 0.12,
-    mushroomColorVariation: 0.12,
-    mushroomLegColorVariation: 0.25, // how much of mushroomColorVariation reaches the leg (keeps play on the cap)
-    treeColorVariation: 0.1,
     grassFadeDistance: 0.0, // grass fade band beyond a stone/tree's safe radius
     grassLean: 0.45, // how far the grass leans away from a stone/tree in the fade band
     mushroomGrassRadius: 0.45, // multiplier on a mushroom's grass-clear radius (× its footprint)
     mushroomGrassFade: 0.4, // grass fade band beyond a mushroom's clear radius
     mushroomGrassLean: 0.45, // how far the grass leans away from a mushroom
-    mushroomWiggleRadius: 1.2, // hero distance (world units) that triggers a mushroom's bend
-    mushroomWiggleAngle: 0.4, // peak tilt of the bend (radians; 0 disables)
-    mushroomWiggleSpeed: 12, // wiggle oscillation speed (rad/s)
-    mushroomWiggleDecay: 3, // how fast the wiggle fades (higher = quicker settle)
-    // Tree wind (vertex-shader bend; trees only). Direction reuses windParameters.direction (shared
-    // with the grass). The motion is a sin sway whose amplitude is gust-modulated (non-sin/abrupt).
-    treeWindStrength: 0.01, // bend amount (× height², so small values; tune on the fine slider)
-    treeWindSpeed: 0.65, // sway speed
-    treeWindGust: 1.0, // 0 = steady sin sway, 1 = strong gusty / abrupt amplitude swings
 })
