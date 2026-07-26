@@ -1,4 +1,4 @@
-import { button, folder, useControls } from 'leva'
+import { folder, useControls } from 'leva'
 import { setParam } from './levaSync.js'
 import useStore from '../../stores/useStore.jsx'
 

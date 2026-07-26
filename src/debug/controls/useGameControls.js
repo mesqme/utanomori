@@ -1,10 +1,8 @@
 import { button, folder, useControls } from 'leva'
 import { setParam } from './levaSync.js'
 import useStore from '../../stores/useStore.jsx'
-import { useIsMobile } from '../../config/mobile.js'
 
 export function useGameControls() {
-    const mobile = useIsMobile()
     const introCameraParameters = useStore((state) => state.introCameraParameters)
     const replayIntro = useStore((state) => state.replayIntro)
     const arrowParameters = useStore((state) => state.arrowParameters)

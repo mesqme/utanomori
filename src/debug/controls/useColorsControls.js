@@ -1,4 +1,4 @@
-import { button, folder, useControls } from 'leva'
+import { folder, useControls } from 'leva'
 import { levaSync, setParam } from './levaSync.js'
 import useStore from '../../stores/useStore.jsx'
 import { THEME_OPTIONS } from '../../config/colorPresets.js'

@@ -1,10 +1,7 @@
 import { useEffect } from 'react'
-import { useThree } from '@react-three/fiber'
-import { folder } from 'leva'
 import { LEVA_SECTION_PATHS } from './controls/levaSectionPaths.js'
-import { addSeeThroughValues, pushLevaValues, setParam, syncLevaFromStore, syncLevaSection } from './controls/levaSync.js'
+import { addSeeThroughValues, pushLevaValues, syncLevaFromStore, syncLevaSection } from './controls/levaSync.js'
 import useStore from '../stores/useStore.jsx'
-import { useIsMobile } from '../config/mobile.js'
 import { useInitialTheme } from '../world/useInitialTheme.js'
 import { useSeeThroughDefaults } from '../world/useSeeThroughDefaults.js'
 import { useUiCssVariables } from '../ui/useUiCssVariables.js'
@@ -25,7 +22,7 @@ import { useDebugControls } from './controls/useDebugControls.js'
 // ============================================================================================
 // Leva debug panel — every tweakable in the game, in 12 sections (see debug/README.md for the
 // list and the rules). Registration order == panel order. Controls write straight into the
-// zustand store (setParam); LEVA_SECTION_PATHS below is the reverse map (store → Leva) used to
+// zustand store; LEVA_SECTION_PATHS (controls/levaSectionPaths.js) is the reverse map used to
 // refresh the panel when the STORE changes from elsewhere (colour presets, the mobile loader
 // overlay, HMR-restored state).
 //
@@ -33,67 +30,18 @@ import { useDebugControls } from './controls/useDebugControls.js'
 // needs — see debug/README.md. It may be hidden, but it must stay mounted.
 // ============================================================================================
 
-
-
-// Apply the default colour theme only once per real page load (not on HMR re-mounts, which would
-// clobber live tweaks). Module scope so it survives component re-mounts within a session.
-
-
 export default function DebugPanel() {
-    const terrainParameters = useStore((state) => state.terrainParameters)
-    const grassParameters = useStore((state) => state.grassParameters)
-    const grassPatchParameters = useStore((state) => state.grassPatchParameters)
-    const roadParameters = useStore((state) => state.roadParameters)
-    const objectParameters = useStore((state) => state.objectParameters)
-    const backgroundParameters = useStore((state) => state.backgroundParameters)
-    const windParameters = useStore((state) => state.windParameters)
-    const lanternGroundLightParameters = useStore((state) => state.lanternGroundLightParameters)
-    const lanternFireParameters = useStore((state) => state.lanternFireParameters)
-    const lanternGrassParameters = useStore((state) => state.lanternGrassParameters)
-    const borderParameters = useStore((state) => state.borderParameters)
-    const ditheringParameters = useStore((state) => state.ditheringParameters)
-    const painterlyPostParameters = useStore((state) => state.painterlyPostParameters)
-    const characterParameters = useStore((state) => state.characterParameters)
-    const characterMaterialParameters = useStore((state) => state.characterMaterialParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
-    const joystickParameters = useStore((state) => state.joystickParameters)
-    const mobileCameraParameters = useStore((state) => state.mobileCameraParameters)
-    const mobileStoneParameters = useStore((state) => state.mobileStoneParameters)
     const mobileUiParameters = useStore((state) => state.mobileUiParameters)
     const colorPresetParameters = useStore((state) => state.colorPresetParameters)
-    const themeTransitionParameters = useStore((state) => state.themeTransitionParameters)
-    const mobile = useIsMobile()
-    const colorGradeParameters = useStore((state) => state.colorGradeParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
-    const introCameraParameters = useStore((state) => state.introCameraParameters)
-    const replayIntro = useStore((state) => state.replayIntro)
-    const arrowParameters = useStore((state) => state.arrowParameters)
-    const songGameParameters = useStore((state) => state.songGameParameters)
-    const musicStoneParameters = useStore((state) => state.musicStoneParameters)
-    const musicParameters = useStore((state) => state.musicParameters)
-    const ambientSoundParameters = useStore((state) => state.ambientSoundParameters)
-    const characterEyesParameters = useStore((state) => state.characterEyesParameters)
-    const treeEyesParameters = useStore((state) => state.treeEyesParameters)
-    const sheepParameters = useStore((state) => state.sheepParameters)
-    const sheepMaterialParameters = useStore((state) => state.sheepMaterialParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
-    const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
     const propRimParameters = useStore((state) => state.propRimParameters)
-    const setDpr = useThree((state) => state.setDpr)
-    const perfVisible = useStore((state) => state.perfVisible)
-    const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
 
-
-
-
-    // Mount: apply the selected colour theme so the scene opens in that palette (the theme dropdown /
-    // in-game day-night toggle are the source of truth for colours), then force the panel to match the
-    // live store. Guarded by a module flag so it runs once on the real page load, not on every HMR
-    // re-mount (which would clobber live colour tweaks). sceneStyles stays the untouched base.
-    // Production: paint the scene in the selected theme (see world/useInitialTheme.js). Called
-    // before the panel sync below so the sync reads the applied palette.
+    // Production: paint the scene in the selected theme (see world/useInitialTheme.js) — called
+    // before the sync below so the sync reads the applied palette.
     useInitialTheme()
 
     useEffect(() => {
