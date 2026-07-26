@@ -1,6 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useThree } from '@react-three/fiber'
-import { button, folder, levaStore, useControls } from 'leva'
+import { button, folder, useControls } from 'leva'
+import { LEVA_SECTION_PATHS } from './controls/levaSectionPaths.js'
+import { addSeeThroughValues, levaSync, pushLevaValues, setParam, syncLevaFromStore, syncLevaSection } from './controls/levaSync.js'
 import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import useCompanions from '../stores/useCompanions.jsx'
@@ -28,381 +30,13 @@ import { startThemeTransition } from '../game/themeTransition.js'
 // needs — see debug/README.md. It may be hidden, but it must stay mounted.
 // ============================================================================================
 
-// Leva control path (inside its folder) → store param key, per synced section.
-const LEVA_SECTION_PATHS = Object.freeze({
-    Terrain: {
-        groundTexture: 'groundTextureEnabled',
-        groundTextureName: 'groundTextureName',
-        color: 'color',
-        baseBrightness: 'baseBrightness',
-        segments: 'segments',
-        groundTextureScale: 'groundTextureScale',
-        groundTextureContrast: 'groundTextureContrast',
-        chunkSize: 'chunkSize',
-        shadowRadius: 'shadowRadius',
-        shadowSoftness: 'shadowSoftness',
-        shadowDarkness: 'shadowDarkness',
-    },
-    Background: {
-        backgroundColor: 'backgroundColor',
-        backgroundTexture: 'textureName',
-        gradientTop: 'gradientTopColor',
-        horizonColor: 'horizonColor',
-        gradientIntensity: 'gradientIntensity',
-        gradientHeight: 'gradientHeight',
-        gradientPower: 'gradientPower',
-        textureEnabled: 'textureEnabled',
-        colorMode: 'colorMode',
-        textureSize: 'textureSize',
-        textureLayer2: 'textureLayer2',
-        textureYawParallax: 'textureYawParallax',
-        texturePitchParallax: 'texturePitchParallax',
-        textureContrast: 'textureContrast',
-        textureBrightness: 'textureBrightness',
-        textureMix: 'textureMixIntensity',
-    },
-    Stars: {
-        starsEnabled: 'starsEnabled',
-        starCellSize: 'starCellSize',
-        starDensity: 'starDensity',
-        starSize: 'starSize',
-        starBrightness: 'starBrightness',
-        starTwinkle: 'starTwinkleSpeed',
-        starRays: 'starRays',
-        starColor: 'starColor',
-        starsFadeStart: 'starsFadeStart',
-        starsFadeWidth: 'starsFadeWidth',
-        skyRotation: 'rotationEnabled',
-        skyRotationSpeed: 'rotationSpeed',
-    },
-    Border: {
-        fadeMode: 'fadeMode',
-        nStrength: 'noiseStrength',
-        nScale: 'noiseScale',
-        radius: 'circleRadiusFactor',
-        edgeFade: 'groundFadeOffset',
-        grassFade: 'grassFadeOffset',
-        groundOffset: 'groundOffset',
-        pSize: 'painterySize',
-        pScreenBlend: 'painteryScreenBlend',
-        pDrift: 'painteryDrift',
-        pLayer2: 'painteryLayer2Scale',
-        pBleed: 'painteryBleed',
-    },
-    Roads: {
-        enabled: 'enabled',
-        worldSeed: 'worldSeed',
-        laneSpacing: 'laneSpacing',
-        nodeSpacing: 'nodeSpacing',
-        meander: 'meanderStrength',
-        width: 'width',
-        softness: 'softness',
-        grassMinScale: 'grassMinScale',
-        groundBrightness: 'groundBrightness',
-        groundNoiseScale: 'groundNoiseScale',
-        groundNoiseStrength: 'groundNoiseStrength',
-        groundEdgeSharpness: 'groundEdgeSharpness',
-    },
-    Wind: {
-        direction: 'direction',
-        scale: 'scale',
-        strength: 'strength',
-        speed: 'speed',
-    },
-    // Tree wind lives with the other wind controls but writes objectParameters.
-    WindTrees: {
-        treeStrength: 'treeWindStrength',
-        treeSpeed: 'treeWindSpeed',
-        treeGust: 'treeWindGust',
-    },
-    Blades: {
-        enabled: 'enabled',
-        count: 'count',
-        segments: 'segmentsCount',
-        width: 'width',
-        height: 'height',
-        baseColor: 'colorBase',
-        baseBrightness: 'baseBrightness',
-    },
-    Patches: {
-        worldSeed: 'worldSeed',
-        spacing: 'spacing',
-        jitter: 'jitter',
-        warpScale: 'domainWarpScale',
-        warpStrength: 'domainWarpStrength',
-        patchHeightVariation: 'patchHeightVariation',
-        patchWidthVariation: 'patchWidthVariation',
-        patchColorVariation: 'patchColorVariation',
-        internalNoiseScale: 'internalNoiseScale',
-        internalHeightVariation: 'internalHeightVariation',
-        internalWidthVariation: 'internalWidthVariation',
-        internalColorVariation: 'internalColorVariation',
-        internalLeanVariation: 'internalLeanVariation',
-        radialLean: 'radialLeanStrength',
-        cameraFacing: 'cameraFacingStrength',
-        orientationVariation: 'orientationVariation',
-        borderWidth: 'borderWidth',
-        borderMinScale: 'borderMinScale',
-        tintCyan: 'tintColorCyan',
-        tintViolet: 'tintColorViolet',
-        tintYellow: 'tintColorYellow',
-        tintGreen: 'tintColorGreen',
-    },
-    Trail: {
-        enabled: 'trampleEnabled',
-        trailStrength: 'trailStrength',
-    },
-    'Trail Dissolve': {
-        enabled: 'dissolveEnabled',
-        source: 'dissolveSource',
-        radius: 'dissolveRadius',
-        start: 'dissolveStart',
-        end: 'dissolveEnd',
-        rate: 'dissolveRate',
-        amount: 'dissolveAmount',
-        mode: 'dissolveMode',
-    },
-    'Trail Lighten': {
-        enabled: 'lightenEnabled',
-        source: 'lightenSource',
-        radius: 'lightenRadius',
-        start: 'lightenStart',
-        end: 'lightenEnd',
-        rate: 'lightenRate',
-        amount: 'lightenAmount',
-        color: 'lightenColor',
-    },
-    'Trail Scale': {
-        enabled: 'scaleEnabled',
-        source: 'scaleSource',
-        radius: 'scaleRadius',
-        start: 'scaleStart',
-        end: 'scaleEnd',
-        rate: 'scaleRate',
-        amount: 'scaleAmount',
-    },
-    'Trail Lean': {
-        enabled: 'leanEnabled',
-        source: 'leanSource',
-        radius: 'leanRadius',
-        start: 'leanStart',
-        end: 'leanEnd',
-        rate: 'leanRate',
-        amount: 'leanAmount',
-    },
-    Placement: {
-        enabled: 'enabled',
-        worldSeed: 'worldSeed',
-        cellSize: 'cellSize',
-        groupJitter: 'groupJitter',
-        density: 'density',
-        roadClearance: 'roadClearance',
-        groupScale: 'groupScale',
-        minObjectSpacing: 'minObjectSpacing',
-        fadeOffset: 'fadeOffset',
-        grassFadeDistance: 'grassFadeDistance',
-        grassLean: 'grassLean',
-    },
-    Trees: {
-        treeSize: 'treeSize',
-        treeYOffset: 'treeYOffset',
-        treeColor: 'treeColor',
-        treeTrunkColor: 'treeTrunkColor',
-        treeColorVariation: 'treeColorVariation',
-    },
-    Stones: {
-        stoneSize: 'stoneSize',
-        stoneYOffset: 'stoneYOffset',
-        stoneTint: 'stoneTint',
-        stoneColorVariation: 'stoneColorVariation',
-        stoneGradientEnabled: 'stoneGradientEnabled',
-        stoneGradientDark: 'stoneGradientDark',
-        stoneGradientColor: 'stoneGradientColor',
-        stoneGradientColorStrength: 'stoneGradientColorStrength',
-        stoneGradientHeight: 'stoneGradientHeight',
-    },
-    Mushrooms: {
-        mushroomSize: 'mushroomSize',
-        mushroomYOffset: 'mushroomYOffset',
-        mushroomCapColor: 'mushroomCapColor',
-        mushroomLegColor: 'mushroomLegColor',
-        mushroomColorVariation: 'mushroomColorVariation',
-        mushroomLegColorVariation: 'mushroomLegColorVariation',
-        mushroomGrassRadius: 'mushroomGrassRadius',
-        mushroomGrassFade: 'mushroomGrassFade',
-        mushroomGrassLean: 'mushroomGrassLean',
-        mushroomWiggleRadius: 'mushroomWiggleRadius',
-        mushroomWiggleAngle: 'mushroomWiggleAngle',
-        mushroomWiggleSpeed: 'mushroomWiggleSpeed',
-        mushroomWiggleDecay: 'mushroomWiggleDecay',
-        mushroomLitBoost: 'mushroomLitBoost',
-        mushroomSoundVolume: 'mushroomSoundVolume',
-    },
-    Surface: {
-        painterly: 'painterlyEnabled',
-        painterlyTexture: 'textureName',
-        painterlyScale: 'painterlyScale',
-        painterlyContrast: 'painterlyContrast',
-        painterlyBrightness: 'painterlyBrightness',
-        painterlyTint: 'painterlyColorStrength',
-    },
-    'Leaves Edge': {
-        enabled: 'enabled',
-        mode: 'mode',
-        color: 'color',
-        tint: 'tint',
-        width: 'width',
-        bias: 'bias',
-        softness: 'softness',
-        noiseScale: 'noiseScale',
-        sharpness: 'sharpness',
-    },
-    'Rim Light': {
-        enabled: 'enabled',
-        stoneColor: 'stoneColor',
-        trunkColor: 'trunkColor',
-        mushroomColor: 'mushroomColor',
-        musicStoneColor: 'musicStoneColor',
-        strength: 'strength',
-        power: 'power',
-    },
-    Hero: {
-        modelScale: 'modelScale',
-        modelYOffset: 'modelYOffset',
-        rotationOffset: 'rotationOffset',
-        idleTimeScale: 'idleTimeScale',
-        runTimeScale: 'runTimeScale',
-        runBlendInSpeed: 'runBlendInSpeed',
-        runBlendOutSpeed: 'runBlendOutSpeed',
-    },
-    'Hero Material': {
-        debug: 'debugMode',
-        painterly: 'painterlyEnabled',
-        pTexture: 'painterlyTexture',
-        pScale: 'painterlyScale',
-        pContrast: 'painterlyContrast',
-        pColor: 'painterlyColor',
-        pTint: 'painterlyColorStrength',
-        pBrightness: 'painterlyBrightnessVariation',
-    },
-    'Ground Light': {
-        radius: 'radius',
-        edgeSoftness: 'edgeSoftness',
-        edgeNoiseScale: 'edgeNoiseScale',
-        edgeNoiseStrength: 'edgeNoiseStrength',
-        innerBrightness: 'innerBrightness',
-        outerDarkness: 'outerDarkness',
-    },
-    'Color Grade': {
-        highBrightnessMode: 'highBrightnessMode',
-        'LOW (eye-safety).lowSaturation': 'lowSaturation',
-        'LOW (eye-safety).lowWarmth': 'lowWarmth',
-        'LOW (eye-safety).lowBrightness': 'lowBrightness',
-        'HIGH (normal display).highSaturation': 'highSaturation',
-        'HIGH (normal display).highWarmth': 'highWarmth',
-        'HIGH (normal display).highBrightness': 'highBrightness',
-    },
-    'Painterly FX': {
-        enabled: 'enabled',
-        noiseSeed: 'noiseSeed',
-        sensorNoise: 'sensorNoiseEnabled',
-        lumaNoise: 'luminanceNoise',
-        chromaNoise: 'chromaNoise',
-        sensorScale: 'sensorNoiseScale',
-    },
-    Dithering: {
-        pixelSize: 'pixelSize',
-    },
-    'Camera Debug': {
-        debugOrbit: 'debugOrbit',
-        debugOrbitAngle: 'debugOrbitAngle',
-        debugOrbitDistance: 'debugOrbitDistance',
-        debugOrbitHeight: 'debugOrbitHeight',
-        debugTargetYOffset: 'debugTargetYOffset',
-    },
-    'Loader Debug': {
-        enabled: 'enabled',
-        targetX: 'targetX',
-        targetZ: 'targetZ',
-        step: 'nudgeStep',
-        circleRadius: 'circleRadius',
-        ringWidth: 'ringWidth',
-        cameraY: 'cameraHeight',
-    },
-    'Mobile Loader': {
-        loaderRadius: 'loaderRadius',
-        loaderRingWidth: 'loaderRingWidth',
-        loaderCameraHeight: 'loaderCameraHeight',
-        loaderTargetX: 'loaderTargetX',
-        loaderTargetZ: 'loaderTargetZ',
-    },
-    // Keys are the Leva control PATHS under "Desktop.UI" (incl. the subfolders the controls live in,
-    // so the store→Leva reverse-sync hits the real fields); values are the gameUiParameters keys.
-    'Game UI': {
-        'Text & scale.uiScale': 'uiScale',
-        'Text & scale.sizeFloor': 'sizeFloor',
-        'Text & scale.sizeCeil': 'sizeCeil',
-        'Text & scale.bubbleWidth': 'bubbleWidth',
-        'Corners & frame.panelRadius': 'panelRadius',
-        'Corners & frame.chipRadius': 'chipRadius',
-        'Corners & frame.borderWidth': 'borderWidth',
-        'Sound HUD.soundControlSize': 'soundControlSize',
-        'Sound HUD.volFrameHeight': 'volFrameHeight',
-        'Sound HUD.volSliderHeight': 'volSliderHeight',
-        'Sound HUD.volSliderTrack': 'volSliderTrack',
-        'Sound HUD.volSliderThumb': 'volSliderThumb',
-        'Sound HUD.volEmptyOpacity': 'volEmptyOpacity',
-        'Speech bubble.bubblePadX': 'bubblePadX',
-        'Speech bubble.bubblePadY': 'bubblePadY',
-        'Countdown.countSize': 'countSize',
-        'Countdown.countBox': 'countBox',
-        'Countdown.countBorder': 'countBorder',
-        'Countdown.countNudge': 'countNudge',
-        'Key chips.chipSize': 'chipSize',
-        'Key chips.chipPadX': 'chipPadX',
-        'Key chips.chipBorder': 'chipBorder',
-        'Key chips.chipNudge': 'chipNudge',
-        'Key chips.chipNudgeX': 'chipNudgeX',
-        'Start button.startBtnSize': 'startBtnSize',
-        'Start button.startBtnPadX': 'startBtnPadX',
-        'Start button.startBtnPadY': 'startBtnPadY',
-        'Credits buttons.creditsBtnSize': 'creditsBtnSize',
-        'Credits buttons.creditsBtnPadX': 'creditsBtnPadX',
-        'Credits buttons.creditsBtnPadY': 'creditsBtnPadY',
-        'Credits buttons.creditsBtnOffset': 'creditsBtnOffset',
-        'Dialogue reveal.wordStagger': 'wordStagger',
-        'Dialogue reveal.wordFade': 'wordFade',
-        'Tutorial.tutorialEnabled': 'tutorialEnabled',
-        'Tutorial.tutorialImageSize': 'tutorialImageSize',
-        'Tutorial.tutorialImageFrame': 'tutorialImageFrame',
-        'Tutorial.tutorialFrameRadius': 'tutorialFrameRadius',
-        'Tutorial.tutorialImageRadius': 'tutorialImageRadius',
-        'Tutorial.tutorialPadding': 'tutorialPadding',
-        'Tutorial.tutorialButtonOutside': 'tutorialButtonOutside',
-    },
-})
 
-function addLevaSectionValues(values, folderPath, section, paths) {
-    Object.entries(paths).forEach(([control, parameter]) => {
-        values[`${folderPath}.${control}`] = section[parameter]
-    })
-}
 
 // Apply the default colour theme only once per real page load (not on HMR re-mounts, which would
 // clobber live tweaks). Module scope so it survives component re-mounts within a session.
 
-function addSeeThroughValues(values) {
-    values['Debug.See-Through.enabled'] = seeThrough.enabled
-    values['Debug.See-Through.grassEnabled'] = seeThrough.grassEnabled
-    values['Debug.See-Through.worldRadius'] = seeThrough.worldRadius
-    values['Debug.See-Through.inner'] = seeThrough.inner
-    values['Debug.See-Through.depthBias'] = seeThrough.depthBias
-    values['Debug.See-Through.opacityIntensity'] = seeThrough.opacityIntensity
-    values['Debug.See-Through.textureContrast'] = seeThrough.textureContrast
-}
 
 export default function DebugPanel() {
-    const syncingLeva = useRef(false)
     const terrainParameters = useStore((state) => state.terrainParameters)
     const grassParameters = useStore((state) => state.grassParameters)
     const grassPatchParameters = useStore((state) => state.grassPatchParameters)
@@ -447,19 +81,9 @@ export default function DebugPanel() {
     const perfVisible = useStore((state) => state.perfVisible)
     const backgroundWireframe = useStore((state) => state.backgroundWireframe)
 
-    const setParam = (section, param) => (value, _, context) => {
-        if (syncingLeva.current || context?.initial) return
-
-        useStore.setState((state) => ({
-            [section]: {
-                ...state[section],
-                [param]: value,
-            },
-        }))
-    }
 
     const setCharacterMaterialParam = (slotId, param) => (value, _, context) => {
-        if (syncingLeva.current || context?.initial) return
+        if (levaSync.active || context?.initial) return
 
         useStore.setState((state) => ({
             characterMaterialParameters: {
@@ -476,7 +100,7 @@ export default function DebugPanel() {
     }
 
     const setSheepMaterialParam = (music, groupId) => (value, _, context) => {
-        if (syncingLeva.current || context?.initial) return
+        if (levaSync.active || context?.initial) return
 
         useStore.setState((state) => ({
             sheepMaterialParameters: {
@@ -492,68 +116,6 @@ export default function DebugPanel() {
         }))
     }
 
-    // Push the CURRENT store values into the Leva panel (all synced sections at once). Used at
-    // mount (Leva may hold HMR-stale values) and after a colour preset rewrites several groups.
-    const syncLevaFromStore = () => {
-        const s = useStore.getState()
-        const values = {
-            'Debug.General.perfMonitor': s.perfVisible,
-            'Debug.General.bgWireframe': s.backgroundWireframe,
-            'Colors.theme': s.colorPresetParameters.theme,
-        }
-        addLevaSectionValues(values, 'World.Terrain', s.terrainParameters, LEVA_SECTION_PATHS.Terrain)
-        addLevaSectionValues(values, 'World.Background', s.backgroundParameters, LEVA_SECTION_PATHS.Background)
-        addLevaSectionValues(values, 'World.Stars', s.backgroundParameters, LEVA_SECTION_PATHS.Stars)
-        addLevaSectionValues(values, 'World.Border', s.borderParameters, LEVA_SECTION_PATHS.Border)
-        addLevaSectionValues(values, 'World.Roads', s.roadParameters, LEVA_SECTION_PATHS.Roads)
-        addLevaSectionValues(values, 'World.Wind', s.windParameters, LEVA_SECTION_PATHS.Wind)
-        addLevaSectionValues(values, 'World.Wind', s.objectParameters, LEVA_SECTION_PATHS.WindTrees)
-        addLevaSectionValues(values, 'Grass.Blades', s.grassParameters, LEVA_SECTION_PATHS.Blades)
-        addLevaSectionValues(values, 'Grass.Patches', s.grassPatchParameters, LEVA_SECTION_PATHS.Patches)
-        addLevaSectionValues(values, 'Grass.Trail', s.grassParameters, LEVA_SECTION_PATHS.Trail)
-        addLevaSectionValues(values, 'Grass.Trail Dissolve', s.grassParameters, LEVA_SECTION_PATHS['Trail Dissolve'])
-        addLevaSectionValues(values, 'Grass.Trail Lighten', s.grassParameters, LEVA_SECTION_PATHS['Trail Lighten'])
-        addLevaSectionValues(values, 'Grass.Trail Scale', s.grassParameters, LEVA_SECTION_PATHS['Trail Scale'])
-        addLevaSectionValues(values, 'Grass.Trail Lean', s.grassParameters, LEVA_SECTION_PATHS['Trail Lean'])
-        addLevaSectionValues(values, 'Props.Placement', s.objectParameters, LEVA_SECTION_PATHS.Placement)
-        addLevaSectionValues(values, 'Props.Trees', s.objectParameters, LEVA_SECTION_PATHS.Trees)
-        addLevaSectionValues(values, 'Props.Stones', s.objectParameters, LEVA_SECTION_PATHS.Stones)
-        addLevaSectionValues(values, 'Props.Mushrooms', s.objectParameters, LEVA_SECTION_PATHS.Mushrooms)
-        addLevaSectionValues(values, 'Props.Surface', s.objectParameters, LEVA_SECTION_PATHS.Surface)
-        addLevaSectionValues(values, 'Props.Leaves Edge', s.edgeParameters, LEVA_SECTION_PATHS['Leaves Edge'])
-        addLevaSectionValues(values, 'Props.Rim Light', s.propRimParameters, LEVA_SECTION_PATHS['Rim Light'])
-        addLevaSectionValues(values, 'Characters.Hero', s.characterParameters, LEVA_SECTION_PATHS.Hero)
-        addLevaSectionValues(values, 'Characters.Hero Material', s.characterMaterialParameters, LEVA_SECTION_PATHS['Hero Material'])
-        addLevaSectionValues(values, 'Lantern.Ground Light', s.lanternGroundLightParameters, LEVA_SECTION_PATHS['Ground Light'])
-        addLevaSectionValues(values, 'Post.Color Grade', s.colorGradeParameters, LEVA_SECTION_PATHS['Color Grade'])
-        addLevaSectionValues(values, 'Post.Painterly FX', s.painterlyPostParameters, LEVA_SECTION_PATHS['Painterly FX'])
-        addLevaSectionValues(values, 'Post.Dithering', s.ditheringParameters, LEVA_SECTION_PATHS.Dithering)
-        addLevaSectionValues(values, 'Desktop.UI', s.gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
-        addLevaSectionValues(values, 'Debug.Camera Debug', s.cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
-        addLevaSectionValues(values, 'Debug.Loader Debug', s.loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
-
-        mainCharacterMaterialGroups.forEach((group) => {
-            values[`Characters.Hero Material.${group.label} Base`] = s.characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor
-        })
-
-        // Sheep companion colours + the tree-eye iris — nested / not in a LEVA_SECTION_PATHS map, so
-        // refresh their pickers here after a theme rewrites them (char 1/2/3 = piano/drums/winds).
-        const sheepMusic = { char1: 'piano', char2: 'drums', char3: 'winds' }
-        const sheepGroup = { Body: 'orange', Wool: 'white', Leg: 'brown' }
-        for (const [charKey, music] of Object.entries(sheepMusic)) {
-            for (const [groupKey, group] of Object.entries(sheepGroup)) {
-                values[`Characters.Sheep.Colours.${charKey}${groupKey}`] = s.sheepMaterialParameters.characters[music][group].baseColor
-            }
-        }
-        values['Props.Tree Eyes.Eye.eyeColor'] = s.treeEyesParameters.eyeColor
-
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
-    }
 
     // Mount: apply the selected colour theme so the scene opens in that palette (the theme dropdown /
     // in-game day-night toggle are the source of truth for colours), then force the panel to match the
@@ -577,48 +139,20 @@ export default function DebugPanel() {
 
     // Store changed elsewhere → refresh the affected panel section.
     useEffect(() => {
-        const values = {}
-        addLevaSectionValues(values, 'Debug.Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        syncLevaSection('Debug.Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
     }, [cameraParameters])
 
     useEffect(() => {
-        const values = {}
-        addLevaSectionValues(values, 'Debug.Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        syncLevaSection('Debug.Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
     }, [loaderDebugParameters])
 
     // The mobile loader overlay (touch −/+ buttons) writes mobileUiParameters — mirror it in the panel.
     useEffect(() => {
-        const values = {}
-        addLevaSectionValues(values, 'Mobile.Loader', mobileUiParameters, LEVA_SECTION_PATHS['Mobile Loader'])
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        syncLevaSection('Mobile.Loader', mobileUiParameters, LEVA_SECTION_PATHS['Mobile Loader'])
     }, [mobileUiParameters])
 
     useEffect(() => {
-        const values = {}
-        addLevaSectionValues(values, 'Desktop.UI', gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        syncLevaSection('Desktop.UI', gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
     }, [gameUiParameters])
 
     useEffect(() => {
@@ -626,14 +160,7 @@ export default function DebugPanel() {
     }, [edgeParameters])
 
     useEffect(() => {
-        const values = {}
-        addLevaSectionValues(values, 'Props.Rim Light', propRimParameters, LEVA_SECTION_PATHS['Rim Light'])
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        syncLevaSection('Props.Rim Light', propRimParameters, LEVA_SECTION_PATHS['Rim Light'])
     }, [propRimParameters])
 
     // Production: the DOM UI size tokens (see ui/useUiCssVariables.js).
@@ -646,12 +173,7 @@ export default function DebugPanel() {
     useEffect(() => {
         const values = {}
         addSeeThroughValues(values)
-        syncingLeva.current = true
-        try {
-            levaStore.set(values, false)
-        } finally {
-            syncingLeva.current = false
-        }
+        pushLevaValues(values)
     }, [])
 
     // ======================================================================================
@@ -660,7 +182,7 @@ export default function DebugPanel() {
     // only reachable from this dropdown. Individual colours live in World / Grass / Props.
     // ======================================================================================
     const selectTheme = (value, _, context) => {
-        if (syncingLeva.current || context?.initial) return
+        if (levaSync.active || context?.initial) return
         // Same animated switch as the in-game day/night button; the [colorPresetParameters]
         // effect re-syncs this picker.
         startThemeTransition(value, useStore.getState().themeTransitionParameters)
@@ -1553,13 +1075,13 @@ export default function DebugPanel() {
         perfMonitor: {
             value: perfVisible,
             onChange: (value, _, context) => {
-                if (!context?.initial && !syncingLeva.current) useStore.getState().setPerfVisible(value)
+                if (!context?.initial && !levaSync.active) useStore.getState().setPerfVisible(value)
             },
         },
         bgWireframe: {
             value: backgroundWireframe,
             onChange: (value, _, context) => {
-                if (!context?.initial && !syncingLeva.current) useStore.getState().setBackgroundWireframe(value)
+                if (!context?.initial && !levaSync.active) useStore.getState().setBackgroundWireframe(value)
             },
         },
         debugMode: {
