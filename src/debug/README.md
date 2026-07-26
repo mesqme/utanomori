@@ -24,13 +24,16 @@ changes from somewhere else — a colour preset, the mobile loader overlay, HMR-
 ## Caveat: the panel is not inert
 
 `DebugPanel` is mounted unconditionally as a child of `<Canvas>`, not gated behind `#debug`,
-because four things the shipped game depends on happen inside it:
+because four things the shipped game depends on run from inside it. Three now live in named hooks
+of their own, but this component is still their only caller:
 
-- the once-per-load `applyGlobalTheme` that installs the starting colour theme,
-- pushing the see-through defaults into the shared `seeThrough` module,
-- writing the ~60 `--ui-*` CSS custom properties on `:root` that size the entire DOM HUD,
-- `updateEdgeUniforms`, which feeds the stylized edge material.
+| behaviour | lives in |
+| --- | --- |
+| installs the starting colour theme on load | `world/useInitialTheme.js` |
+| seeds the shared `seeThrough` settings | `world/useSeeThroughDefaults.js` |
+| writes the 44 CSS custom properties that size the entire DOM UI | `ui/useUiCssVariables.js` |
+| feeds the stylized edge material | `updateEdgeUniforms`, still inline |
 
-Hiding the panel is fine (that is what `<Leva hidden>` does on the plain page); **unmounting it
-is not** — the game would lose its theme, its UI sizing and its edge uniforms. Those four
-behaviours are scheduled to move to their proper homes, after which this section should say so.
+Hiding the panel is fine — that is what `<Leva hidden>` does on the plain page. **Unmounting it, or
+lazy-loading it behind `#debug`, is not:** the game loses its theme, its see-through tuning and
+every UI dimension, with no error to tell you why.

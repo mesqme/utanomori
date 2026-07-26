@@ -295,7 +295,7 @@ const painteryStyle = {
         },
     },
     // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Every value here is written
-    // to a CSS custom property on :root by Controls.jsx, so the DOM UI restyles live. The old
+    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live. The old
     // textured/Blot-bubble params (shape, roughness, texture, colours, button sizes) are gone.
     /**
      * Game UI
