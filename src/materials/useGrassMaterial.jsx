@@ -59,7 +59,6 @@ export default function useGrassMaterial({
                     uPainteryTexture: { value: painteryTexture },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
                     uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
-                    uPainteryBleed: { value: borderParameters.painteryBleed },
                     uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                     uBackgroundColorOld: { value: new THREE.Color(backgroundColor) },
                     uTime: { value: 0 },
@@ -182,7 +181,6 @@ export default function useGrassMaterial({
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
-        u.uPainteryBleed.value = borderParameters.painteryBleed
         u.uBackgroundColor.value.set(backgroundColor)
         u.uGrassSegments.value = grassParameters.segmentsCount
         u.uGrassChunkSize.value = chunkSize

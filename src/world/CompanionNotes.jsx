@@ -113,9 +113,9 @@ export default function CompanionNotes({ headY = 1.05, isTarget = false, music =
         const baseScale = p.noteScale ?? 0.22
         const grow = p.noteGrow ?? 1.8
         // Each companion's notes match its body colour (the sheep's `orange` material = char_Body);
-        // fall back to the global noteColor if this companion has no music character.
+        // the literal is a defensive fallback for a companion with no music character.
         const bodyColor = music ? useStore.getState().sheepMaterialParameters?.characters?.[music]?.orange?.baseColor : null
-        tmpColor.set(bodyColor ?? p.noteColor ?? '#e8ecff')
+        tmpColor.set(bodyColor ?? '#99e386')
 
         // Local billboard quaternion = (parent world rotation)⁻¹ · camera world rotation, so the
         // notes face the camera despite the companion group's yaw.

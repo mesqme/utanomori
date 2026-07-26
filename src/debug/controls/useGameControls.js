@@ -22,7 +22,6 @@ export function useGameControls() {
                 note4: { value: musicStoneParameters.color3, onChange: setParam('musicStoneParameters', 'color3') },
                 note5: { value: musicStoneParameters.color4, onChange: setParam('musicStoneParameters', 'color4') },
                 note6: { value: musicStoneParameters.color5, onChange: setParam('musicStoneParameters', 'color5') },
-                note7: { value: musicStoneParameters.color6, onChange: setParam('musicStoneParameters', 'color6') },
             },
             { collapsed: true }
         ),
@@ -54,7 +53,6 @@ export function useGameControls() {
             {
                 listenTempo: { value: musicStoneParameters.listenTempo, min: 0.5, max: 4, step: 0.05, onChange: setParam('musicStoneParameters', 'listenTempo') },
                 notePlayDuration: { value: musicStoneParameters.notePlayDuration, min: 0.2, max: 3, step: 0.05, onChange: setParam('musicStoneParameters', 'notePlayDuration') },
-                alwaysSixNotes: { value: musicStoneParameters.alwaysSixNotes, onChange: setParam('musicStoneParameters', 'alwaysSixNotes') },
                 roundClearPause: { value: musicStoneParameters.roundClearPause, min: 0, max: 4, step: 0.1, onChange: setParam('musicStoneParameters', 'roundClearPause') },
                 countdownFrom: { value: musicStoneParameters.countdownFrom, min: 1, max: 5, step: 1, onChange: setParam('musicStoneParameters', 'countdownFrom') },
                 countdownStep: { value: musicStoneParameters.countdownStep, min: 0.3, max: 1.5, step: 0.05, onChange: setParam('musicStoneParameters', 'countdownStep') },
@@ -85,7 +83,6 @@ export function useGameControls() {
         noteScale: { value: songGameParameters.noteScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'noteScale') },
         noteRiseWorld: { value: songGameParameters.noteRiseWorld, min: 0, max: 4, step: 0.05, onChange: setParam('songGameParameters', 'noteRiseWorld') },
         noteWobbleWorld: { value: songGameParameters.noteWobbleWorld, min: 0, max: 1.5, step: 0.01, onChange: setParam('songGameParameters', 'noteWobbleWorld') },
-        noteColor: { value: songGameParameters.noteColor, onChange: setParam('songGameParameters', 'noteColor') },
         heartScale: { value: songGameParameters.heartScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'heartScale') },
         markScale: { value: songGameParameters.markScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'markScale') },
     })

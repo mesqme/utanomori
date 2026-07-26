@@ -194,7 +194,6 @@ const painteryStyle = {
         painteryScreenBlend: 1,
         painteryDrift: 0.16,
         painteryLayer2Scale: 0.8,
-        painteryBleed: 0,
     },
     ditheringParameters: {
         pixelSize: 1,
@@ -278,8 +277,6 @@ const painteryStyle = {
         painterlyTexture: 'paintaryAlpha',
         painterlyScale: 0.11,
         painterlyContrast: 0.66,
-        painterlyColor: '#ffffff',
-        painterlyColorStrength: 0,
         painterlyBrightnessVariation: 0.48,
         materials: {
             red: { baseColor: '#cc2d2d', toonColor: '#5c1028' },

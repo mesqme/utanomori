@@ -31,7 +31,7 @@ export function cloneSheepCharacters() {
 // HMR version gates — bump the matching one when its defaults change so a dev hot-reload
 // force-applies them instead of keeping the preserved runtime values (which would otherwise mask
 // the new defaults). See the merge block in useStore.jsx.
-export const GRASS_STYLE_VERSION = 19
+export const GRASS_STYLE_VERSION = 20
 export const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change.
 export const OBJECT_STYLE_VERSION = 9
@@ -107,12 +107,11 @@ export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
     // Progress curve. 'Fast start' responds the instant you click and eases out at the end;
     // 'Slow start' is the cinematic ramp-up (feels laggy on click); 'Smooth' is between.
     easing: 'Fast start', // 'Fast start' | 'Smooth' | 'Slow start' | 'Linear'
-    // The Portal/Wipe/Dissolve edge is a THRESHOLD against a noise field (exactly the ground
-    // border's paintery fade): within `band` around the front, pixels flip old→new where the local
-    // noise beats the progression; `bleed` soft-mixes near the threshold.
+    // The Portal edge is a THRESHOLD against a noise field (exactly the ground border's paintery
+    // fade): within `band` around the front, pixels flip old→new where the local noise beats the
+    // progression — a hard cutout, no soft blend across the threshold.
     edgeStyle: 'Paintery', // 'Paintery' (the brush texture) | 'Perlin' (procedural noise)
     band: 0.8, // width of the torn transition band (screen fraction) — wide = the whole sweep is brush-eaten
-    bleed: 0.0, // soft blend width inside the band (0 = hard paintery cutout)
     textureScale: 0.65, // Paintery style: brush tiling in screen space (small = big strokes)
     perlinScale: 6.5, // Perlin style: noise frequency
     perlinDetail: 1, // Perlin style: octaves (1 = soft blobs → 5 = crunchy)
@@ -185,11 +184,6 @@ export const DEFAULT_JOYSTICK_PARAMETERS = {
 // since they depend on the exact lantern mesh dimensions.
 export const DEFAULT_LANTERN_FIRE_PARAMETERS = {
     enabled: true,
-    // Fire offsets are LOCAL to the lantern (attached to the bone, see MainCharacter), so the
-    // flame follows the lantern's position AND rotation. -Y drops it from the top origin.
-    fireOffsetX: 0,
-    fireOffsetY: -0.7,
-    fireOffsetZ: 0.05,
     fireBoneOffset: 0.08, // nudge the flame up the lantern→flame bone axis (only used with the flame bone)
     fireSize: 0.13,
     fireColorCore: '#ffe6a8', // hot inner flame
@@ -265,15 +259,14 @@ export const DEFAULT_SONG_GAME_PARAMETERS = {
     noteScale: 0.19, // base world size of a note
     noteRiseWorld: 1.45, // world units it floats upward over its life
     noteWobbleWorld: 0.77, // world units of side-to-side sway + initial spread
-    noteColor: '#99e386', // fallback note tint (each companion's notes use its own body colour)
     // 3D feedback above the character head (CharacterFeedback): heart.glb on a correct press,
     // mark.glb (rocking) on a miss. Models are authored large, so these scales are small.
     heartScale: 0.15,
     markScale: 0.15,
 }
 
-// 3D music stones (song mini-game): seven coloured stones that rise around the companion,
-// flash on each played note, and are clicked to repeat the song. Colours default to NOTES.
+// 3D music stones (song mini-game): six coloured stones that rise around the companion, flash
+// on each played note, and are clicked to repeat the song. Colours default to NOTES.
 export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     color0: '#e85c5c',
     color1: '#ef9f43',
@@ -281,7 +274,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     color3: '#5fc46a',
     color4: '#46c2c9',
     color5: '#5b8def',
-    color6: '#b072e6',
     radius: 3.6, // rainbow radius (half-width + rise) above the companion's head
     scale: 0.55, // normal stone scale (matches the ordinary stoneSize)
     yOffset: 1.25, // base height offset (added on top of hoverHeight)
@@ -297,7 +289,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     flashDuration: 0.32, // seconds the flash decays over
     listenTempo: 1.6, // playback speed multiplier when hearing the song (>1 = slower)
     notePlayDuration: 0.9, // base seconds each note plays before the next during the melody (× listenTempo)
-    alwaysSixNotes: true, // always stage a full 6-stone board (extra stones are silent decoys)
     roundClearPause: 1.1, // seconds the "Nice!" banner holds before the next round's countdown
     countdownFrom: 3, // 3·2·1 — how many counts before each round's playback
     countdownStep: 0.7, // seconds per countdown tick
@@ -368,7 +359,6 @@ export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
 
 export const DEFAULT_CHARACTER_EYES_PARAMETERS = {
     enabled: true,
-    debugUv1: false, // paint the head by its second UV (R=u, G=v) to find the eye layout
     // Eyeball (yellow circle with a big wobbly border), positioned in the head's uv1.
     eyeColor: '#f2c20a',
     eyeRadius: 0.26,

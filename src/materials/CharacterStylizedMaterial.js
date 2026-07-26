@@ -39,8 +39,6 @@ export function createCharacterStylizedMaterial(sourceMaterial, materialSettings
             uPainterlyTexture: { value: painterlyTexture },
             uPainterlyScale: { value: settings.painterlyScale },
             uPainterlyContrast: { value: settings.painterlyContrast },
-            uPainterlyColor: { value: new THREE.Color(settings.painterlyColor) },
-            uPainterlyColorStrength: { value: settings.painterlyColorStrength },
             uPainterlyBrightnessVariation: { value: settings.painterlyBrightnessVariation },
             uFade: { value: 0 },
             uBackgroundColor: { value: new THREE.Color(options.backgroundColor ?? '#000000') },
@@ -94,7 +92,5 @@ export function updateCharacterStylizedMaterial(material, materialSettings, styl
     uniforms.uPainterlyTexture.value = painterlyTexture
     uniforms.uPainterlyScale.value = settings.painterlyScale
     uniforms.uPainterlyContrast.value = settings.painterlyContrast
-    uniforms.uPainterlyColor.value.set(settings.painterlyColor)
-    uniforms.uPainterlyColorStrength.value = settings.painterlyColorStrength
     uniforms.uPainterlyBrightnessVariation.value = settings.painterlyBrightnessVariation
 }

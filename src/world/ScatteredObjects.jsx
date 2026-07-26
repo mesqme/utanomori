@@ -138,7 +138,6 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
                 screenBlend: state.borderParameters.painteryScreenBlend,
                 drift: state.borderParameters.painteryDrift,
                 layer2Scale: state.borderParameters.painteryLayer2Scale,
-                bleed: state.borderParameters.painteryBleed,
             },
             seeThrough,
             stoneSeeThrough: musicStoneSeeThrough,

@@ -774,7 +774,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
                     }
                 }
             } else {
-                lanternFireOffsetRef.current.set(fp.fireOffsetX, fp.fireOffsetY, fp.fireOffsetZ)
+                lanternFireOffsetRef.current.set(0, -0.7, 0.05) // local to the lantern; -Y drops it from the top origin
                 nodes.lantern_1.localToWorld(lanternFireOffsetRef.current)
             }
             setLanternFirePosition(lanternFireOffsetRef.current)

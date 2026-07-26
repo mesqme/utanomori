@@ -17,7 +17,6 @@ uniform float uPainteryDpr; // device pixel ratio (CSS-locks the tile size)
 uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
-uniform float uPainteryBleed;
 // See-through subjects + seeThroughAmount() come from includes/seeThrough.glsl (included
 // below, after the varyings). These two are prop-only — the paintery edge on the hole.
 uniform float uSeeThroughTextureContrast;
@@ -229,7 +228,7 @@ void main() {
         finalColor = mix(fadeBg, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
         float painteryBrush = samplePainteryBrush(vWorldXZ);
-        finalColor = mix(finalColor, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));
+        finalColor = mix(finalColor, fadeBg, step(painteryBrush, fade));
         if (fade > painteryBrush) discard;
     } else {
         if (fade >= 0.999 || (fade > 0.0 && bayerDither(gl_FragCoord.xy, uPixelSize) < fade)) discard;

@@ -32,14 +32,13 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPainterlyBrightnessVariation: { value: 0.5 },
             uBackgroundColor: { value: new THREE.Color(palette.background) },
             uBackgroundColorOld: { value: new THREE.Color(palette.background) },
-            uPropFadeMode: { value: 1 },
+            uPropFadeMode: { value: 2 },
             uPixelSize: { value: 1 },
             uPainterySize: { value: 167 },
             ...screenPainteryUniforms,
             uPainteryScreenBlend: { value: 0.85 },
             uPainteryDrift: { value: 0.12 },
             uPainteryLayer2Scale: { value: 2.2 },
-            uPainteryBleed: { value: 0.35 },
             uCircleCenter: { value: new THREE.Vector3() },
             uCircleRadiusFactor: { value: 0.07 },
             uPropChunkSize: { value: 9 },
@@ -200,7 +199,6 @@ export function updatePropStylizedMaterial(material, options) {
         u.uPainteryScreenBlend.value = options.paintery.screenBlend
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale
-        u.uPainteryBleed.value = options.paintery.bleed
     }
     if (options.seeThrough) {
         const st = options.seeThrough

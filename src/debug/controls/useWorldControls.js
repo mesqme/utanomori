@@ -60,7 +60,7 @@ export function useWorldControls() {
     })
 
     useControls('World.Border', {
-        fadeMode: { value: borderParameters.fadeMode, options: ['Color', 'Dither', 'Paintery'], onChange: setParam('borderParameters', 'fadeMode') },
+        fadeMode: { value: borderParameters.fadeMode, options: ['Dither', 'Paintery'], onChange: setParam('borderParameters', 'fadeMode') },
         nStrength: { value: borderParameters.noiseStrength, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'noiseStrength') },
         nScale: { value: borderParameters.noiseScale, min: 0.01, max: 1.0, step: 0.01, onChange: setParam('borderParameters', 'noiseScale') },
         radius: { value: borderParameters.circleRadiusFactor, min: 0.1, max: 1.0, step: 0.01, onChange: setParam('borderParameters', 'circleRadiusFactor') },
@@ -71,7 +71,6 @@ export function useWorldControls() {
         pScreenBlend: { value: borderParameters.painteryScreenBlend, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'painteryScreenBlend') },
         pDrift: { value: borderParameters.painteryDrift, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'painteryDrift') },
         pLayer2: { value: borderParameters.painteryLayer2Scale, min: 0, max: 6, step: 0.05, onChange: setParam('borderParameters', 'painteryLayer2Scale') },
-        pBleed: { value: borderParameters.painteryBleed, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'painteryBleed') },
     })
 
     useControls('World.Roads', {

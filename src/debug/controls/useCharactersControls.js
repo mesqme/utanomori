@@ -64,8 +64,6 @@ export function useCharactersControls() {
         pTexture: { value: characterMaterialParameters.painterlyTexture, options: painterlyTextureOptions, onChange: setParam('characterMaterialParameters', 'painterlyTexture') },
         pScale: { value: characterMaterialParameters.painterlyScale, min: 0, max: 1, step: 0.01, onChange: setParam('characterMaterialParameters', 'painterlyScale') },
         pContrast: { value: characterMaterialParameters.painterlyContrast, min: 0, max: 10, step: 0.01, onChange: setParam('characterMaterialParameters', 'painterlyContrast') },
-        pColor: { value: characterMaterialParameters.painterlyColor, onChange: setParam('characterMaterialParameters', 'painterlyColor') },
-        pTint: { value: characterMaterialParameters.painterlyColorStrength, min: 0, max: 1, step: 0.01, onChange: setParam('characterMaterialParameters', 'painterlyColorStrength') },
         pBrightness: { value: characterMaterialParameters.painterlyBrightnessVariation, min: 0, max: 1, step: 0.01, onChange: setParam('characterMaterialParameters', 'painterlyBrightnessVariation') },
         ...mainCharacterMaterialGroups.reduce((controls, group) => {
             controls[`${group.label} Base`] = {
@@ -78,7 +76,6 @@ export function useCharactersControls() {
 
     useControls('Characters.Hero Eyes', {
         enabled: { value: characterEyesParameters.enabled, onChange: setParam('characterEyesParameters', 'enabled') },
-        debugUv1: { value: characterEyesParameters.debugUv1, onChange: setParam('characterEyesParameters', 'debugUv1') },
         edgeSoftness: { value: characterEyesParameters.edgeSoftness, min: 0.005, max: 0.3, step: 0.005, onChange: setParam('characterEyesParameters', 'edgeSoftness') },
         // Eyeball (yellow circle, big wobbly border) — laid out in the head's second UV (uv1).
         Eye: folder(
@@ -175,15 +172,6 @@ export function useCharactersControls() {
                 // Sheep see-through size is the SHARED Debug → See-Through worldRadius (common with the
                 // hero); only the per-sheep head-anchor height lives here.
                 seeThroughHeight: { value: sheepParameters.seeThroughHeight, min: 0, max: 3, step: 0.05, onChange: setParam('sheepParameters', 'seeThroughHeight') },
-            },
-            { collapsed: true }
-        ),
-        Material: folder(
-            {
-                painterlyEnabled: { value: sheepMaterialParameters.painterlyEnabled, onChange: setParam('sheepMaterialParameters', 'painterlyEnabled') },
-                painterlyBrightnessVariation: { value: sheepMaterialParameters.painterlyBrightnessVariation, min: 0, max: 1.5, step: 0.02, onChange: setParam('sheepMaterialParameters', 'painterlyBrightnessVariation') },
-                painterlyScale: { value: sheepMaterialParameters.painterlyScale, min: 0.01, max: 1, step: 0.01, onChange: setParam('sheepMaterialParameters', 'painterlyScale') },
-                painterlyContrast: { value: sheepMaterialParameters.painterlyContrast, min: 0.5, max: 2, step: 0.01, onChange: setParam('sheepMaterialParameters', 'painterlyContrast') },
             },
             { collapsed: true }
         ),

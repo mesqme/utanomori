@@ -511,7 +511,6 @@ export default function MusicStones() {
                 screenBlend: store.borderParameters.painteryScreenBlend,
                 drift: store.borderParameters.painteryDrift,
                 layer2Scale: store.borderParameters.painteryLayer2Scale,
-                bleed: store.borderParameters.painteryBleed,
             },
             seeThrough,
         }

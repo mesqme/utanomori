@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import { getMusicCharacter } from '../config/musicCharacters.js'
 import { FAIL_LINES } from '../game/gameText.js'
-import useStore from './useStore.jsx'
 
 /**
  * Companion song mini-game state machine (pure state — timers live in SongGame.jsx and the
@@ -16,6 +15,11 @@ import useStore from './useStore.jsx'
  * sound (random assignment each game); the melody is a sequence of those sounds (with repeats —
  * you click the same stone again), mapped to a stone sequence (`song`). No vanishing.
  */
+
+// Stones staged per game — one per stone colour (Game → Colors → note1..note6). Characters with
+// fewer sounds than this get silent decoy stones in the leftover slots.
+const BOARD_STONES = 6
+
 const initialState = {
     active: false,
     stage: 'idle',
@@ -56,11 +60,11 @@ const useSongGame = create((set, get) => ({
             set({ ...initialState, active: true, stage: 'prompt', companion })
             return
         }
-        // "Always 6 notes" (debug): stage a full 6-stone board and scatter the character's real
-        // sounds across random slots; the remaining stones are silent decoys (a wrong click = miss).
+        // Every board is a full six stones — one per stone colour. The character's real sounds are
+        // scattered across random slots and the leftovers are silent decoys (a wrong click = miss).
+        // Every music character has soundCount <= BOARD_STONES, so no sound is ever dropped.
         const soundCount = config.soundCount
-        const alwaysSix = useStore.getState().musicStoneParameters?.alwaysSixNotes
-        const stoneCount = Math.min(7, alwaysSix ? Math.max(soundCount, 6) : soundCount)
+        const stoneCount = BOARD_STONES
         const slots = shuffledRange(stoneCount) // random stone slot per real sound
         const stoneSounds = new Array(stoneCount).fill(-1) // stone i → sound index (or -1 = decoy)
         const soundToStone = []

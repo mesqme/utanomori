@@ -7,8 +7,6 @@ uniform int uPainterlyEnabled;
 uniform sampler2D uPainterlyTexture;
 uniform float uPainterlyScale;
 uniform float uPainterlyContrast;
-uniform vec3 uPainterlyColor;
-uniform float uPainterlyColorStrength;
 uniform float uPainterlyBrightnessVariation;
 // Reveal-edge fade (companions only; the hero leaves uFade = 0 so this is a no-op for it).
 uniform float uFade;
@@ -98,8 +96,6 @@ void main() {
         painterlyValue = clamp((painterlyValue - 0.5) * uPainterlyContrast + 0.5, 0.0, 1.0);
         float signedVariation = painterlyValue * 2.0 - 1.0;
         finalColor *= 1.0 + signedVariation * uPainterlyBrightnessVariation;
-        float tintMask = smoothstep(0.55, 1.0, painterlyValue) * uPainterlyColorStrength;
-        finalColor = mix(finalColor, uPainterlyColor, tintMask);
     }
 
     if (uDebugMode == 1) {
@@ -111,8 +107,6 @@ void main() {
     // In-shader eyes (head mesh only) — drawn last so they read on top of the head paint.
     if (uDrawEyes == 1) {
         finalColor = drawEyes(finalColor, vUv1);
-    } else if (uDrawEyes == 2) {
-        finalColor = vec3(vUv1, 0.0); // debug: paint the head by its second UV (R=u, G=v; black = no uv1)
     }
 
     // Reveal-edge fade (uFade 0→1): a SCREEN-DOOR dither dissolve (not alpha) so the creature stays

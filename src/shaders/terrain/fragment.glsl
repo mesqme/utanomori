@@ -20,7 +20,6 @@ uniform int uFadeMode;
 uniform sampler2D uPainteryTexture;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
-uniform float uPainteryBleed;
 uniform sampler2D uNoiseTexture;
 uniform float uNoiseStrength;
 uniform float uNoiseScale;
@@ -167,7 +166,7 @@ void main() {
         vec2 painteryUv = worldXZ * uPainteryDrift;
         float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
         painteryBrush = mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
-        color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, t));
+        color = mix(color, fadeBg, step(painteryBrush, t));
         if (t > painteryBrush) discard;
     }
 

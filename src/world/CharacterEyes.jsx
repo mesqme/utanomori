@@ -80,7 +80,7 @@ export default function CharacterEyes() {
         lookOffsetRef.current += (lookTargetRef.current - lookOffsetRef.current) * (1 - Math.exp(-p.pupilLookSpeed * dt))
 
         applyEyeUniforms(u, p, blink, p.pupilOffsetX + lookOffsetRef.current)
-        u.uDrawEyes.value = p.debugUv1 ? 2 : 1 // 2 = paint the head by its second UV (placement aid)
+        u.uDrawEyes.value = 1
     })
 
     return null

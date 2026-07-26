@@ -29,7 +29,6 @@ export function useColorsControls() {
                 easing: { value: themeTransitionParameters.easing, options: ['Fast start', 'Smooth', 'Slow start', 'Linear'], onChange: setParam('themeTransitionParameters', 'easing') },
                 edgeStyle: { value: themeTransitionParameters.edgeStyle, options: ['Paintery', 'Perlin'], onChange: setParam('themeTransitionParameters', 'edgeStyle') },
                 band: { value: themeTransitionParameters.band, min: 0.01, max: 0.8, step: 0.01, label: 'edge band', onChange: setParam('themeTransitionParameters', 'band') },
-                bleed: { value: themeTransitionParameters.bleed, min: 0, max: 1, step: 0.01, onChange: setParam('themeTransitionParameters', 'bleed') },
                 textureScale: { value: themeTransitionParameters.textureScale, min: 0.05, max: 8, step: 0.05, label: 'paintery scale', onChange: setParam('themeTransitionParameters', 'textureScale') },
                 perlinScale: { value: themeTransitionParameters.perlinScale, min: 0.5, max: 40, step: 0.5, onChange: setParam('themeTransitionParameters', 'perlinScale') },
                 perlinDetail: { value: themeTransitionParameters.perlinDetail, min: 1, max: 5, step: 1, onChange: setParam('themeTransitionParameters', 'perlinDetail') },

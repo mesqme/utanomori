@@ -59,7 +59,6 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         pScreenBlend: 'painteryScreenBlend',
         pDrift: 'painteryDrift',
         pLayer2: 'painteryLayer2Scale',
-        pBleed: 'painteryBleed',
     },
     Roads: {
         enabled: 'enabled',
@@ -253,8 +252,6 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         pTexture: 'painterlyTexture',
         pScale: 'painterlyScale',
         pContrast: 'painterlyContrast',
-        pColor: 'painterlyColor',
-        pTint: 'painterlyColorStrength',
         pBrightness: 'painterlyBrightnessVariation',
     },
     'Ground Light': {

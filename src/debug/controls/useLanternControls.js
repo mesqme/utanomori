@@ -15,9 +15,6 @@ export function useLanternControls() {
         fireEnabled: { value: lanternFireParameters.enabled, onChange: setParam('lanternFireParameters', 'enabled') },
         Flame: folder(
             {
-                fireOffsetX: { value: lanternFireParameters.fireOffsetX, min: -1, max: 1, step: 0.005, onChange: setParam('lanternFireParameters', 'fireOffsetX') },
-                fireOffsetY: { value: lanternFireParameters.fireOffsetY, min: -1, max: 1, step: 0.005, onChange: setParam('lanternFireParameters', 'fireOffsetY') },
-                fireOffsetZ: { value: lanternFireParameters.fireOffsetZ, min: -1, max: 1, step: 0.005, onChange: setParam('lanternFireParameters', 'fireOffsetZ') },
                 fireBoneOffset: { value: lanternFireParameters.fireBoneOffset, min: -1, max: 1, step: 0.005, onChange: setParam('lanternFireParameters', 'fireBoneOffset') },
                 fireSize: { value: lanternFireParameters.fireSize, min: 0.02, max: 0.6, step: 0.005, onChange: setParam('lanternFireParameters', 'fireSize') },
                 fireCore: { value: lanternFireParameters.fireColorCore, onChange: setParam('lanternFireParameters', 'fireColorCore') },

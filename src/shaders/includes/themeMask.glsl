@@ -9,7 +9,6 @@ uniform float uThemeMaskProgress;
 uniform vec2 uThemeMaskResolution; // drawing-buffer px (gl_FragCoord space)
 uniform sampler2D uThemeMaskBrush;
 uniform float uThemeMaskBand;
-uniform float uThemeMaskBleed;
 uniform float uThemeMaskTexScale;
 uniform float uThemeMaskPerlinScale;
 uniform int uThemeMaskPerlinDetail;
@@ -64,5 +63,5 @@ float themeMaskNewness() {
 
     // Brush-threshold with bleed (the ground border's paintery fade): newness ramps where the
     // per-pixel progression beats the local noise value.
-    return smoothstep(brush - uThemeMaskBleed, brush + 0.0001, t);
+    return smoothstep(brush, brush + 0.0001, t);
 }

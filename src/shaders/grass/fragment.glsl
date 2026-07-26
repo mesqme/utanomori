@@ -18,7 +18,6 @@ uniform float uDissolveMode; // 0 = alpha, 1 = dither
 uniform sampler2D uPainteryTexture;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
-uniform float uPainteryBleed;
 
 uniform vec3 uLanternGrassColor;
 uniform float uLanternGrassAlpha;
@@ -181,7 +180,7 @@ void main() {
     // across blades) with a gentle world drift. Matches the ground's portal edge.
     if (uFadeMode == 2 && borderFade > 0.0) {
         float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
-        color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
+        color = mix(color, fadeBg, step(painteryBrush, borderFade));
         if (borderFade > painteryBrush) discard;
     }
 
