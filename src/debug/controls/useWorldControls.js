@@ -30,14 +30,11 @@ export function useWorldControls() {
 
     useControls('World.Background', {
         backgroundColor: { value: backgroundParameters.backgroundColor, onChange: setParam('backgroundParameters', 'backgroundColor') },
-        gradientTop: { value: backgroundParameters.gradientTopColor, onChange: setParam('backgroundParameters', 'gradientTopColor') },
-        horizonColor: { value: backgroundParameters.horizonColor, onChange: setParam('backgroundParameters', 'horizonColor') },
-        gradientIntensity: { value: backgroundParameters.gradientIntensity, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'gradientIntensity') },
-        gradientHeight: { value: backgroundParameters.gradientHeight, min: -1, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'gradientHeight') },
-        gradientPower: { value: backgroundParameters.gradientPower, min: 0.1, max: 6, step: 0.05, onChange: setParam('backgroundParameters', 'gradientPower') },
         textureEnabled: { value: backgroundParameters.textureEnabled, onChange: setParam('backgroundParameters', 'textureEnabled') },
         backgroundTexture: { value: backgroundParameters.textureName, options: BACKGROUND_TEXTURE_IDS, onChange: setParam('backgroundParameters', 'textureName') },
         colorMode: { value: backgroundParameters.colorMode, options: ['Intensity', 'Color Mix', 'Both'], onChange: setParam('backgroundParameters', 'colorMode') },
+        mixColor: { value: backgroundParameters.skyMixColor, onChange: setParam('backgroundParameters', 'skyMixColor') },
+        mixAmount: { value: backgroundParameters.skyMixAmount, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'skyMixAmount') },
         textureSize: { value: backgroundParameters.textureSize, min: 20, max: 2000, step: 1, onChange: setParam('backgroundParameters', 'textureSize') },
         textureLayer2: { value: backgroundParameters.textureLayer2, min: 0, max: 6, step: 0.05, onChange: setParam('backgroundParameters', 'textureLayer2') },
         textureYawParallax: { value: backgroundParameters.textureYawParallax ?? 400, min: -1500, max: 1500, step: 10, onChange: setParam('backgroundParameters', 'textureYawParallax') },

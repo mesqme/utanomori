@@ -21,11 +21,8 @@ export const LEVA_SECTION_PATHS = Object.freeze({
     Background: {
         backgroundColor: 'backgroundColor',
         backgroundTexture: 'textureName',
-        gradientTop: 'gradientTopColor',
-        horizonColor: 'horizonColor',
-        gradientIntensity: 'gradientIntensity',
-        gradientHeight: 'gradientHeight',
-        gradientPower: 'gradientPower',
+        mixColor: 'skyMixColor',
+        mixAmount: 'skyMixAmount',
         textureEnabled: 'textureEnabled',
         colorMode: 'colorMode',
         textureSize: 'textureSize',

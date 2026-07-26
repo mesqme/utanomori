@@ -201,11 +201,8 @@ const painteryStyle = {
     },
     backgroundParameters: {
         backgroundColor: '#070258',
-        gradientTopColor: '#3d1f95',
-        horizonColor: '#0093ff',
-        gradientIntensity: 0.47,
-        gradientHeight: -0.9,
-        gradientPower: 3.1,
+        skyMixColor: '#0093ff', // the second colour the brush texture mixes toward
+        skyMixAmount: 0.47, // how much of it sits under the brush (0 = plain background colour)
         textureEnabled: true,
         textureName: 'watercolor', // background image: 'watercolor' | 'paintaryAlpha'
         colorMode: 'Both',

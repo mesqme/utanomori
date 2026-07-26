@@ -1,18 +1,14 @@
-// Layer 1 — base colour (vertical gradient)
+// Layer 1 — base colour
 uniform vec3 uBackgroundColor; // flat pre-intro colour and final texture mix colour
-uniform vec3 uGradientTopColor; // top / zenith gradient colour
-uniform vec3 uHorizonColor; // horizon / lower gradient colour
-uniform float uGradientIntensity; // 0 = flat base colour, 1 = full vertical gradient
+uniform vec3 uSkyMixColor; // the second colour the brush texture mixes toward
+uniform float uSkyMixAmount; // how much of the mix colour sits under the brush (0 = plain background)
 // Outgoing theme (masked theme transitions — the sky keeps moving on both sides of the edge).
 uniform vec3 uBackgroundColorOld;
-uniform vec3 uGradientTopColorOld;
-uniform vec3 uHorizonColorOld;
-uniform float uGradientIntensityOld;
+uniform vec3 uSkyMixColorOld;
+uniform float uSkyMixAmountOld;
 uniform float uStarsEnabledOld; // 0/1
 
 #include ../includes/themeMask.glsl
-uniform float uGradientHeight; // sky direction.y where the horizon colour sits
-uniform float uGradientPower; // gradient curve
 
 // Layer 2 — paintery texture (watercolor), screen space
 uniform bool uTextureEnabled;
@@ -85,15 +81,14 @@ void main() {
     // when no transition runs), so the portal/wipe edge crosses the sky too.
     float tmNew = themeMaskNewness();
     vec3 bgColor = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
-    vec3 topColor = mix(uGradientTopColorOld, uGradientTopColor, tmNew);
-    vec3 horizonColor = mix(uHorizonColorOld, uHorizonColor, tmNew);
-    float gradIntensity = mix(uGradientIntensityOld, uGradientIntensity, tmNew);
+    vec3 mixColor = mix(uSkyMixColorOld, uSkyMixColor, tmNew);
+    float mixAmount = mix(uSkyMixAmountOld, uSkyMixAmount, tmNew);
 
-    // ----- Layer 1: base vertical gradient -----
-    float h = clamp((dir.y - uGradientHeight) / max(1.0 - uGradientHeight, 1e-3), 0.0, 1.0);
-    h = pow(h, uGradientPower);
-    vec3 gradientColor = mix(horizonColor, topColor, h);
-    vec3 color = mix(bgColor, gradientColor, clamp(gradIntensity, 0.0, 1.0));
+    // ----- Layer 1: base colour -----
+    // Flat: the sky is the background colour blended toward one mix colour. Layer 2 then paints
+    // the brush over it, pulling back toward the background wherever the brush is bright — so the
+    // mix colour reads as texture rather than as a gradient.
+    vec3 color = mix(bgColor, mixColor, clamp(mixAmount, 0.0, 1.0));
 
     // ----- Layer 2: paintery texture colour variation (screen space) -----
     if (uTextureEnabled) {

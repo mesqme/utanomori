@@ -16,18 +16,14 @@ export function createBackgroundMaterial(painteryTexture) {
         fragmentShader: backgroundFragmentShader,
         side: THREE.BackSide,
         uniforms: {
-            // Layer 1 — base colour gradient
+            // Layer 1 — base colour
             uBackgroundColor: { value: new THREE.Color('#2a2358') },
-            uGradientTopColor: { value: new THREE.Color('#44336c') },
-            uHorizonColor: { value: new THREE.Color('#3f6ea8') },
-            uGradientIntensity: { value: 1 },
-            uGradientHeight: { value: 0.12 },
-            uGradientPower: { value: 1.4 },
+            uSkyMixColor: { value: new THREE.Color('#3f6ea8') },
+            uSkyMixAmount: { value: 1 },
             // Outgoing theme (masked theme transitions) + the screen-space mask itself.
             uBackgroundColorOld: { value: new THREE.Color('#2a2358') },
-            uGradientTopColorOld: { value: new THREE.Color('#44336c') },
-            uHorizonColorOld: { value: new THREE.Color('#3f6ea8') },
-            uGradientIntensityOld: { value: 1 },
+            uSkyMixColorOld: { value: new THREE.Color('#3f6ea8') },
+            uSkyMixAmountOld: { value: 1 },
             uStarsEnabledOld: { value: 1 },
             uStarColorOld: { value: new THREE.Color('#fff8ff') },
             ...themeMaskUniforms,
@@ -62,20 +58,16 @@ export function updateBackgroundMaterial(material, options) {
     const u = material.uniforms
     const refScale = options.refScale ?? 1
 
-    // Layer 1 — base colour gradient (top colour comes from the scene background colour)
+    // Layer 1 — the flat base: background colour blended toward the mix colour
     u.uBackgroundColor.value.set(options.backgroundColor ?? options.colorMixColor ?? '#2a2358')
-    u.uGradientTopColor.value.set(options.gradientTopColor ?? options.color ?? '#44336c')
-    u.uHorizonColor.value.set(options.horizonColor ?? options.colorHorizon ?? '#3f6ea8')
-    u.uGradientIntensity.value = options.gradientIntensity ?? 1
-    u.uGradientHeight.value = options.gradientHeight ?? 0.12
-    u.uGradientPower.value = options.gradientPower ?? 1.4
+    u.uSkyMixColor.value.set(options.skyMixColor ?? '#3f6ea8')
+    u.uSkyMixAmount.value = options.skyMixAmount ?? 1
 
     // Outgoing theme during a masked theme transition (identity when inactive).
     const old = options.themeMaskOld
     u.uBackgroundColorOld.value.set(old?.bgColor ?? options.backgroundColor ?? '#2a2358')
-    u.uGradientTopColorOld.value.set(old?.gradTop ?? options.gradientTopColor ?? '#44336c')
-    u.uHorizonColorOld.value.set(old?.horizon ?? options.horizonColor ?? '#3f6ea8')
-    u.uGradientIntensityOld.value = old?.gradIntensity ?? options.gradientIntensity ?? 1
+    u.uSkyMixColorOld.value.set(old?.skyMixColor ?? options.skyMixColor ?? '#3f6ea8')
+    u.uSkyMixAmountOld.value = old?.skyMixAmount ?? options.skyMixAmount ?? 1
     u.uStarsEnabledOld.value = (old ? old.starsEnabled : options.starsEnabled !== false) ? 1 : 0
     u.uStarColorOld.value.set(old?.starColor ?? options.starColor ?? '#fff8ff')
 

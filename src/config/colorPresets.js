@@ -123,9 +123,8 @@ export const GLOBAL_THEMES = {
             grassParameters: { baseBrightness: d.grassParameters.baseBrightness },
             backgroundParameters: {
                 backgroundColor: d.backgroundParameters.backgroundColor,
-                gradientTopColor: d.backgroundParameters.gradientTopColor,
-                horizonColor: d.backgroundParameters.horizonColor,
-                gradientIntensity: d.backgroundParameters.gradientIntensity,
+                skyMixColor: d.backgroundParameters.skyMixColor,
+                skyMixAmount: d.backgroundParameters.skyMixAmount,
                 starColor: d.backgroundParameters.starColor,
                 starsEnabled: d.backgroundParameters.starsEnabled,
             },
@@ -147,9 +146,8 @@ export const GLOBAL_THEMES = {
             grassParameters: { baseBrightness: d.grassParameters.baseBrightness },
             backgroundParameters: {
                 backgroundColor: '#2b0091',
-                gradientTopColor: '#7053c6',
-                horizonColor: '#ffffff',
-                gradientIntensity: 0.25,
+                skyMixColor: '#ffffff',
+                skyMixAmount: 0.25,
                 starColor: '#ffffff',
                 starsEnabled: true,
             },
@@ -170,9 +168,8 @@ export const GLOBAL_THEMES = {
             grassPatchParameters: { tintColorCyan: '#b5e32b', tintColorViolet: '#57c443', tintColorYellow: '#a8d653', tintColorGreen: '#84c540' },
             backgroundParameters: {
                 backgroundColor: '#306685',
-                gradientTopColor: '#cfe0ff',
-                horizonColor: '#ffe8c0',
-                gradientIntensity: 0.22,
+                skyMixColor: '#ffe8c0',
+                skyMixAmount: 0.22,
                 starColor: '#ffffff',
                 starsEnabled: false, // no stars in daylight
             },
