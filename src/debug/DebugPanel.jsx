@@ -18,6 +18,7 @@ import { usePostControls } from './controls/usePostControls.js'
 import { useDesktopControls } from './controls/useDesktopControls.js'
 import { useMobileControls } from './controls/useMobileControls.js'
 import { useDebugControls } from './controls/useDebugControls.js'
+import { useSeeThroughControls } from './controls/useSeeThroughControls.js'
 
 // ============================================================================================
 // Leva debug panel — every tweakable in the game, in 12 sections (see debug/README.md for the
@@ -34,7 +35,6 @@ export default function DebugPanel() {
     const cameraParameters = useStore((state) => state.cameraParameters)
     const mobileUiParameters = useStore((state) => state.mobileUiParameters)
     const colorPresetParameters = useStore((state) => state.colorPresetParameters)
-    const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
     const gameUiParameters = useStore((state) => state.gameUiParameters)
     const edgeParameters = useStore((state) => state.edgeParameters)
     const propRimParameters = useStore((state) => state.propRimParameters)
@@ -61,9 +61,9 @@ export default function DebugPanel() {
         syncLevaSection('Debug.Camera Debug', cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
     }, [cameraParameters])
 
-    useEffect(() => {
-        syncLevaSection('Debug.Loader Debug', loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
-    }, [loaderDebugParameters])
+    // NB: loaderDebugParameters has no panel section any more (the Loader Debug controls were
+    // hidden), so there is nothing to mirror — but the group itself is live shipped config that
+    // drives the desktop loading ring and the locked hat shot. Do not delete it.
 
     // The mobile loader overlay (touch −/+ buttons) writes mobileUiParameters — mirror it in the panel.
     useEffect(() => {
@@ -95,8 +95,9 @@ export default function DebugPanel() {
         pushLevaValues(values)
     }, [])
 
-    // The twelve Leva sections. CALL ORDER IS PANEL ORDER — moving one of these lines
-    // moves that section in the panel.
+    // The Leva sections. CALL ORDER IS PANEL ORDER — moving one of these lines moves that
+    // section in the panel.
+    useDebugControls() // Debug — first, because it holds the toggles reached most often
     useColorsControls() // Colors
     useWorldControls() // World
     useGrassControls() // Grass
@@ -105,10 +106,10 @@ export default function DebugPanel() {
     useLanternControls() // Lantern
     useGameControls() // Game
     useAudioControls() // Audio
+    useSeeThroughControls() // See-Through
     usePostControls() // Post
     useDesktopControls() // Desktop
     useMobileControls() // Mobile
-    useDebugControls() // Debug
 
     return null
 }

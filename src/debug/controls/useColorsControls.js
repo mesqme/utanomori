@@ -35,5 +35,5 @@ export function useColorsControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 }

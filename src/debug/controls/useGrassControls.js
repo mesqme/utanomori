@@ -17,7 +17,7 @@ export function useGrassControls() {
         height: { value: grassParameters.height, min: 0.05, max: 3, step: 0.01, onChange: setParam('grassParameters', 'height') },
         baseColor: { value: grassParameters.colorBase, onChange: setParam('grassParameters', 'colorBase') },
         baseBrightness: { value: grassParameters.baseBrightness, min: 0, max: 2, step: 0.01, onChange: setParam('grassParameters', 'baseBrightness') },
-    })
+    }, { collapsed: true })
 
     useControls('Grass.Patches', {
         worldSeed: { value: grassPatchParameters.worldSeed, step: 1, onChange: setParam('grassPatchParameters', 'worldSeed') },
@@ -42,7 +42,7 @@ export function useGrassControls() {
         tintViolet: { value: grassPatchParameters.tintColorViolet, onChange: setParam('grassPatchParameters', 'tintColorViolet') },
         tintYellow: { value: grassPatchParameters.tintColorYellow, onChange: setParam('grassPatchParameters', 'tintColorYellow') },
         tintGreen: { value: grassPatchParameters.tintColorGreen, onChange: setParam('grassPatchParameters', 'tintColorGreen') },
-    })
+    }, { collapsed: true })
 
     const grassLayerControls = (prefix, extra = {}) => ({
         enabled: { value: grassParameters[`${prefix}Enabled`], onChange: setParam('grassParameters', `${prefix}Enabled`) },
@@ -58,23 +58,25 @@ export function useGrassControls() {
     useControls('Grass.Trail', {
         enabled: { value: grassParameters.trampleEnabled, onChange: setParam('grassParameters', 'trampleEnabled') },
         trailStrength: { value: grassParameters.trailStrength, min: 0, max: 4, step: 0.01, onChange: setParam('grassParameters', 'trailStrength') },
-    })
+    }, { collapsed: true })
 
     useControls(
-        'Grass.Trail Dissolve',
+        'Grass.Trail.Dissolve',
         grassLayerControls('dissolve', {
             mode: { value: grassParameters.dissolveMode, options: ['Alpha', 'Dither'], onChange: setParam('grassParameters', 'dissolveMode') },
-        })
+        }),
+        { collapsed: true }
     )
 
     useControls(
-        'Grass.Trail Lighten',
+        'Grass.Trail.Lighten',
         grassLayerControls('lighten', {
             color: { value: grassParameters.lightenColor, onChange: setParam('grassParameters', 'lightenColor') },
-        })
+        }),
+        { collapsed: true }
     )
 
-    useControls('Grass.Trail Scale', grassLayerControls('scale'))
+    useControls('Grass.Trail.Scale', grassLayerControls('scale'), { collapsed: true })
 
-    useControls('Grass.Trail Lean', grassLayerControls('lean'))
+    useControls('Grass.Trail.Lean', grassLayerControls('lean'), { collapsed: true })
 }

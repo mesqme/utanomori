@@ -1,7 +1,8 @@
-import { useControls } from 'leva'
+import { folder, useControls } from 'leva'
 import { setParam } from './levaSync.js'
 import useStore from '../../stores/useStore.jsx'
 import { GROUND_TEXTURE_IDS, BACKGROUND_TEXTURE_IDS } from '../../config/surfaceTextures.js'
+import { PAINTERY_TEXTURE_IDS } from '../../config/painteryTextures.js'
 
 export function useWorldControls() {
     const terrainParameters = useStore((state) => state.terrainParameters)
@@ -10,6 +11,8 @@ export function useWorldControls() {
     const backgroundParameters = useStore((state) => state.backgroundParameters)
     const windParameters = useStore((state) => state.windParameters)
     const borderParameters = useStore((state) => state.borderParameters)
+    const painteryTextureParameters = useStore((state) => state.painteryTextureParameters)
+    const ditheringParameters = useStore((state) => state.ditheringParameters)
 
     // ======================================================================================
     // World — terrain, sky, world border, roads, wind.
@@ -19,14 +22,33 @@ export function useWorldControls() {
         groundTextureName: { value: terrainParameters.groundTextureName, options: GROUND_TEXTURE_IDS, onChange: setParam('terrainParameters', 'groundTextureName') },
         color: { value: terrainParameters.color, onChange: setParam('terrainParameters', 'color') },
         baseBrightness: { value: terrainParameters.baseBrightness, min: 0, max: 2, step: 0.01, onChange: setParam('terrainParameters', 'baseBrightness') },
-        shadowRadius: { value: terrainParameters.shadowRadius, min: 0.2, max: 4, step: 0.05, onChange: setParam('terrainParameters', 'shadowRadius') },
-        shadowSoftness: { value: terrainParameters.shadowSoftness, min: 0, max: 1, step: 0.01, onChange: setParam('terrainParameters', 'shadowSoftness') },
-        shadowDarkness: { value: terrainParameters.shadowDarkness, min: 0, max: 3, step: 0.05, onChange: setParam('terrainParameters', 'shadowDarkness') },
-        segments: { value: terrainParameters.segments, min: 1, max: 100, step: 1, onChange: setParam('terrainParameters', 'segments') },
         groundTextureScale: { value: terrainParameters.groundTextureScale, min: 0.01, max: 2.0, step: 0.01, onChange: setParam('terrainParameters', 'groundTextureScale') },
         groundTextureContrast: { value: terrainParameters.groundTextureContrast, min: 0, max: 4.0, step: 0.01, onChange: setParam('terrainParameters', 'groundTextureContrast') },
+        // The blob the hero and the props drop onto the ground.
+        'Ground Shadow': folder(
+            {
+                shadowRadius: { value: terrainParameters.shadowRadius, min: 0.2, max: 4, step: 0.05, onChange: setParam('terrainParameters', 'shadowRadius') },
+                shadowSoftness: { value: terrainParameters.shadowSoftness, min: 0, max: 1, step: 0.01, onChange: setParam('terrainParameters', 'shadowSoftness') },
+                shadowDarkness: { value: terrainParameters.shadowDarkness, min: 0, max: 3, step: 0.05, onChange: setParam('terrainParameters', 'shadowDarkness') },
+            },
+            { collapsed: true }
+        ),
+        // Mesh resolution: how big a chunk is and how finely it is subdivided.
         chunkSize: { value: terrainParameters.chunkSize, min: 2, max: 50, step: 1, onChange: setParam('terrainParameters', 'chunkSize') },
-    })
+        segments: { value: terrainParameters.segments, min: 1, max: 100, step: 1, onChange: setParam('terrainParameters', 'segments') },
+    }, { collapsed: true })
+
+    // The paintery brush is baked once and then shared by the terrain, the grass, the props AND
+    // the sky, so it lives at world level rather than inside any one surface.
+    useControls('World.Brush Texture', {
+        enabled: { value: painteryTextureParameters.enabled, onChange: setParam('painteryTextureParameters', 'enabled') },
+        texture: { value: painteryTextureParameters.textureName, options: PAINTERY_TEXTURE_IDS, onChange: setParam('painteryTextureParameters', 'textureName') },
+        blur: { value: painteryTextureParameters.blur, min: 0, max: 6, step: 0.1, onChange: setParam('painteryTextureParameters', 'blur') },
+        levelsLow: { value: painteryTextureParameters.levelsLow, min: 0, max: 1, step: 0.01, onChange: setParam('painteryTextureParameters', 'levelsLow') },
+        levelsHigh: { value: painteryTextureParameters.levelsHigh, min: 0, max: 1, step: 0.01, onChange: setParam('painteryTextureParameters', 'levelsHigh') },
+        contrast: { value: painteryTextureParameters.contrast, min: 0.2, max: 12, step: 0.05, onChange: setParam('painteryTextureParameters', 'contrast') },
+        posterize: { value: painteryTextureParameters.posterize, min: 0, max: 12, step: 1, onChange: setParam('painteryTextureParameters', 'posterize') },
+    }, { collapsed: true })
 
     useControls('World.Background', {
         backgroundColor: { value: backgroundParameters.backgroundColor, onChange: setParam('backgroundParameters', 'backgroundColor') },
@@ -35,14 +57,14 @@ export function useWorldControls() {
         colorMode: { value: backgroundParameters.colorMode, options: ['Intensity', 'Color Mix', 'Both'], onChange: setParam('backgroundParameters', 'colorMode') },
         mixColor: { value: backgroundParameters.skyMixColor, onChange: setParam('backgroundParameters', 'skyMixColor') },
         mixAmount: { value: backgroundParameters.skyMixAmount, min: 0, max: 1, step: 0.01, onChange: setParam('backgroundParameters', 'skyMixAmount') },
-        textureSize: { value: backgroundParameters.textureSize, min: 20, max: 2000, step: 1, onChange: setParam('backgroundParameters', 'textureSize') },
-        textureLayer2: { value: backgroundParameters.textureLayer2, min: 0, max: 6, step: 0.05, onChange: setParam('backgroundParameters', 'textureLayer2') },
+        layer1Size: { value: backgroundParameters.textureSize, min: 20, max: 2000, step: 1, onChange: setParam('backgroundParameters', 'textureSize') },
+        layer2Scale: { value: backgroundParameters.textureLayer2, min: 0, max: 6, step: 0.05, onChange: setParam('backgroundParameters', 'textureLayer2') },
         textureYawParallax: { value: backgroundParameters.textureYawParallax ?? 400, min: -1500, max: 1500, step: 10, onChange: setParam('backgroundParameters', 'textureYawParallax') },
         texturePitchParallax: { value: backgroundParameters.texturePitchParallax ?? 400, min: -1500, max: 1500, step: 10, onChange: setParam('backgroundParameters', 'texturePitchParallax') },
         textureContrast: { value: backgroundParameters.textureContrast, min: 0, max: 6, step: 0.05, onChange: setParam('backgroundParameters', 'textureContrast') },
         textureBrightness: { value: backgroundParameters.textureBrightness, min: 0, max: 4, step: 0.01, onChange: setParam('backgroundParameters', 'textureBrightness') },
         textureMix: { value: backgroundParameters.textureMixIntensity, min: 0, max: 2, step: 0.01, onChange: setParam('backgroundParameters', 'textureMixIntensity') },
-    })
+    }, { collapsed: true })
 
     useControls('World.Stars', {
         starsEnabled: { value: backgroundParameters.starsEnabled, onChange: setParam('backgroundParameters', 'starsEnabled') },
@@ -57,7 +79,7 @@ export function useWorldControls() {
         starsFadeWidth: { value: backgroundParameters.starsFadeWidth, min: 0.01, max: 1.5, step: 0.01, onChange: setParam('backgroundParameters', 'starsFadeWidth') },
         skyRotation: { value: backgroundParameters.rotationEnabled, onChange: setParam('backgroundParameters', 'rotationEnabled') },
         skyRotationSpeed: { value: backgroundParameters.rotationSpeed, min: -0.1, max: 0.1, step: 0.001, onChange: setParam('backgroundParameters', 'rotationSpeed') },
-    })
+    }, { collapsed: true })
 
     useControls('World.Border', {
         fadeMode: { value: borderParameters.fadeMode, options: ['Dither', 'Paintery'], onChange: setParam('borderParameters', 'fadeMode') },
@@ -71,7 +93,9 @@ export function useWorldControls() {
         pScreenBlend: { value: borderParameters.painteryScreenBlend, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'painteryScreenBlend') },
         pDrift: { value: borderParameters.painteryDrift, min: 0, max: 1, step: 0.01, onChange: setParam('borderParameters', 'painteryDrift') },
         pLayer2: { value: borderParameters.painteryLayer2Scale, min: 0, max: 6, step: 0.05, onChange: setParam('borderParameters', 'painteryLayer2Scale') },
-    })
+        // Block size of the Bayer threshold used by the 'Dither' fade mode.
+        pixelSize: { value: ditheringParameters.pixelSize, min: 1, max: 10, step: 1, onChange: setParam('ditheringParameters', 'pixelSize') },
+    }, { collapsed: true })
 
     useControls('World.Roads', {
         enabled: { value: roadParameters.enabled, onChange: setParam('roadParameters', 'enabled') },
@@ -86,7 +110,7 @@ export function useWorldControls() {
         groundNoiseScale: { value: roadParameters.groundNoiseScale, min: 0.01, max: 2, step: 0.01, onChange: setParam('roadParameters', 'groundNoiseScale') },
         groundNoiseStrength: { value: roadParameters.groundNoiseStrength, min: 0, max: 2, step: 0.01, onChange: setParam('roadParameters', 'groundNoiseStrength') },
         groundEdgeSharpness: { value: roadParameters.groundEdgeSharpness, min: 0, max: 1, step: 0.01, onChange: setParam('roadParameters', 'groundEdgeSharpness') },
-    })
+    }, { collapsed: true })
 
     // One wind home: the grass field wind + the tree sway (different systems, same weather).
     useControls('World.Wind', {
@@ -97,5 +121,5 @@ export function useWorldControls() {
         treeStrength: { value: objectParameters.treeWindStrength, min: 0, max: 0.008, step: 0.0001, onChange: setParam('objectParameters', 'treeWindStrength') },
         treeSpeed: { value: objectParameters.treeWindSpeed, min: 0, max: 4, step: 0.05, onChange: setParam('objectParameters', 'treeWindSpeed') },
         treeGust: { value: objectParameters.treeWindGust, min: 0, max: 1, step: 0.02, onChange: setParam('objectParameters', 'treeWindGust') },
-    })
+    }, { collapsed: true })
 }

@@ -56,7 +56,7 @@ export function useCharactersControls() {
         runTimeScale: { value: characterParameters.runTimeScale, min: 0.1, max: 3, step: 0.05, onChange: setParam('characterParameters', 'runTimeScale') },
         runBlendInSpeed: { value: characterParameters.runBlendInSpeed, min: 1, max: 30, step: 0.5, onChange: setParam('characterParameters', 'runBlendInSpeed') },
         runBlendOutSpeed: { value: characterParameters.runBlendOutSpeed, min: 1, max: 30, step: 0.5, onChange: setParam('characterParameters', 'runBlendOutSpeed') },
-    })
+    }, { collapsed: true })
 
     useControls('Characters.Hero Material', {
         debug: { value: characterMaterialParameters.debugMode, options: stylizedDebugModes, onChange: setParam('characterMaterialParameters', 'debugMode') },
@@ -72,7 +72,7 @@ export function useCharactersControls() {
             }
             return controls
         }, {}),
-    })
+    }, { collapsed: true })
 
     useControls('Characters.Hero Eyes', {
         enabled: { value: characterEyesParameters.enabled, onChange: setParam('characterEyesParameters', 'enabled') },
@@ -123,7 +123,7 @@ export function useCharactersControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 
     const sheepChars = sheepMaterialParameters.characters
     useControls('Characters.Sheep', {
@@ -175,5 +175,5 @@ export function useCharactersControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 }

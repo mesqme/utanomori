@@ -22,7 +22,7 @@ export function useMobileControls() {
         nameTopLandscape: { value: mobileUiParameters.nameTopLandscape, min: 0, max: 45, step: 1, label: 'name top landscape (%)', onChange: setParam('mobileUiParameters', 'nameTopLandscape') },
         bubbleBottomLandscape: { value: mobileUiParameters.bubbleBottomLandscape, min: 0, max: 80, step: 1, label: 'bubble bottom L (%)', onChange: setParam('mobileUiParameters', 'bubbleBottomLandscape') },
         startOffsetLandscape: { value: mobileUiParameters.startOffsetLandscape, min: -200, max: 300, step: 2, label: 'start offset L (px)', onChange: setParam('mobileUiParameters', 'startOffsetLandscape') },
-    })
+    }, { collapsed: true })
 
     useControls('Mobile.Loader', {
         loaderRadius: { value: mobileUiParameters.loaderRadius, min: 20, max: 160, step: 1, onChange: setParam('mobileUiParameters', 'loaderRadius') },
@@ -30,7 +30,7 @@ export function useMobileControls() {
         loaderCameraHeight: { value: mobileUiParameters.loaderCameraHeight, min: 10, max: 80, step: 0.5, onChange: setParam('mobileUiParameters', 'loaderCameraHeight') },
         loaderTargetX: { value: mobileUiParameters.loaderTargetX, min: -10, max: 20, step: 0.01, onChange: setParam('mobileUiParameters', 'loaderTargetX') },
         loaderTargetZ: { value: mobileUiParameters.loaderTargetZ, min: -10, max: 10, step: 0.01, onChange: setParam('mobileUiParameters', 'loaderTargetZ') },
-    })
+    }, { collapsed: true })
 
     useControls('Mobile.Stones', {
         lineWidth: { value: mobileStoneParameters.lineWidth, min: 1, max: 12, step: 0.1, onChange: setParam('mobileStoneParameters', 'lineWidth') },
@@ -41,7 +41,7 @@ export function useMobileControls() {
         rowGap: { value: mobileStoneParameters.rowGap, label: 'grid row gap', min: 0.5, max: 6, step: 0.1, onChange: setParam('mobileStoneParameters', 'rowGap') },
         gridHeight: { value: mobileStoneParameters.gridHeight, label: 'grid height', min: 0, max: 8, step: 0.1, onChange: setParam('mobileStoneParameters', 'gridHeight') },
         gridScale: { value: mobileStoneParameters.gridScale, label: 'grid scale', min: 0.1, max: 2, step: 0.02, onChange: setParam('mobileStoneParameters', 'gridScale') },
-    })
+    }, { collapsed: true })
 
     useControls('Mobile.Camera', {
         followDistance: { value: mobileCameraParameters.followDistance, label: 'walk distance', min: 6, max: 40, step: 0.1, onChange: setParam('mobileCameraParameters', 'followDistance') },
@@ -52,7 +52,7 @@ export function useMobileControls() {
         cameraHeight: { value: mobileCameraParameters.cameraHeight, label: 'minigame height', min: 2, max: 34, step: 0.5, onChange: setParam('mobileCameraParameters', 'cameraHeight') },
         dialogueCameraDistance: { value: mobileCameraParameters.dialogueCameraDistance, label: 'char-talk dist', min: 2, max: 26, step: 0.5, onChange: setParam('mobileCameraParameters', 'dialogueCameraDistance') },
         dialogueCameraHeight: { value: mobileCameraParameters.dialogueCameraHeight, label: 'char-talk height', min: 0.5, max: 20, step: 0.1, onChange: setParam('mobileCameraParameters', 'dialogueCameraHeight') },
-    })
+    }, { collapsed: true })
 
     useControls('Mobile.Joystick', {
         side: { value: joystickParameters.side, options: ['left', 'right'], onChange: setParam('joystickParameters', 'side') },
@@ -68,5 +68,5 @@ export function useMobileControls() {
         runThreshold: { value: joystickParameters.runThreshold, min: 0.5, max: 1.2, step: 0.01, onChange: setParam('joystickParameters', 'runThreshold') },
         baseColor: { value: joystickParameters.baseColor, onChange: setParam('joystickParameters', 'baseColor') },
         knobColor: { value: joystickParameters.knobColor, onChange: setParam('joystickParameters', 'knobColor') },
-    })
+    }, { collapsed: true })
 }

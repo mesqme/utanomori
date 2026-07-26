@@ -104,7 +104,7 @@ export function useDesktopControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 
     // ALL desktop camera distances in one place — gameplay walk, the two dialogue framings, and the
     // mini-game top-down shot (the minigame/talk values live in musicStoneParameters).
@@ -117,5 +117,5 @@ export function useDesktopControls() {
         minigameHeight: { value: musicStoneParameters.cameraHeight, label: 'minigame height', min: 2, max: 30, step: 0.5, onChange: setParam('musicStoneParameters', 'cameraHeight') },
         talkDistance: { value: musicStoneParameters.dialogueCameraDistance, label: 'char-talk dist', min: 2, max: 20, step: 0.5, onChange: setParam('musicStoneParameters', 'dialogueCameraDistance') },
         talkHeight: { value: musicStoneParameters.dialogueCameraHeight, label: 'char-talk height', min: 0.5, max: 14, step: 0.1, onChange: setParam('musicStoneParameters', 'dialogueCameraHeight') },
-    })
+    }, { collapsed: true })
 }

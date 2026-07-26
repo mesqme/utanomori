@@ -73,7 +73,7 @@ export function useGameControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 
     // Floating notes over a singing companion + the ♥/❗ feedback emotes.
     useControls('Game.Notes & Emotes', {
@@ -85,7 +85,7 @@ export function useGameControls() {
         noteWobbleWorld: { value: songGameParameters.noteWobbleWorld, min: 0, max: 1.5, step: 0.01, onChange: setParam('songGameParameters', 'noteWobbleWorld') },
         heartScale: { value: songGameParameters.heartScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'heartScale') },
         markScale: { value: songGameParameters.markScale, min: 0.02, max: 1, step: 0.01, onChange: setParam('songGameParameters', 'markScale') },
-    })
+    }, { collapsed: true })
 
     useControls('Game.Target Arrow', {
         distance: { value: arrowParameters.distance, min: 0.5, max: 12, step: 0.1, onChange: setParam('arrowParameters', 'distance') },
@@ -99,11 +99,11 @@ export function useGameControls() {
         floatAmount: { value: arrowParameters.floatAmount, min: 0, max: 2, step: 0.02, onChange: setParam('arrowParameters', 'floatAmount') },
         floatSpeed: { value: arrowParameters.floatSpeed, min: 0, max: 8, step: 0.1, onChange: setParam('arrowParameters', 'floatSpeed') },
         color: { value: arrowParameters.color, onChange: setParam('arrowParameters', 'color') },
-    })
+    }, { collapsed: true })
 
     useControls('Game.Intro Camera', {
         'redo the animation': button(() => replayIntro()),
         spiralDuration: { value: introCameraParameters.spiralDuration, min: 0.3, max: 8, step: 0.05, onChange: setParam('introCameraParameters', 'spiralDuration') },
         orbitDistance: { value: introCameraParameters.orbitDistance, min: 3, max: 40, step: 0.5, onChange: setParam('introCameraParameters', 'orbitDistance') },
-    })
+    }, { collapsed: true })
 }

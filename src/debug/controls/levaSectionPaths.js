@@ -14,6 +14,10 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         groundTextureScale: 'groundTextureScale',
         groundTextureContrast: 'groundTextureContrast',
         chunkSize: 'chunkSize',
+    },
+    // A folder inside World.Terrain, so it needs its own map — a folder adds a level to the leva
+    // path and these would not resolve under 'World.Terrain'.
+    'Ground Shadow': {
         shadowRadius: 'shadowRadius',
         shadowSoftness: 'shadowSoftness',
         shadowDarkness: 'shadowDarkness',
@@ -25,8 +29,8 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         mixAmount: 'skyMixAmount',
         textureEnabled: 'textureEnabled',
         colorMode: 'colorMode',
-        textureSize: 'textureSize',
-        textureLayer2: 'textureLayer2',
+        layer1Size: 'textureSize',
+        layer2Scale: 'textureLayer2',
         textureYawParallax: 'textureYawParallax',
         texturePitchParallax: 'texturePitchParallax',
         textureContrast: 'textureContrast',

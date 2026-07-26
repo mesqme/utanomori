@@ -5,16 +5,24 @@ Development-time tooling, reachable through the `#debug` Leva panel.
 - **DebugPanel.jsx** — the panel itself: every tweakable value in the game. Read the caveat below
   before touching it.
 - **LoaderDebugOverlay** — visual alignment helper for the loading-ring ↔ top-down hat-shot
-  illusion (desktop `loaderDebugParameters` and the mobile loader values). Enable via
-  Leva ▸ Debug ▸ Loader Debug ▸ `enabled` to nudge the camera target while seeing the ring.
+  illusion (desktop `loaderDebugParameters` and the mobile loader values). Its Leva section is
+  deliberately **not registered** — the alignment is locked and should not be nudged by accident.
+  The overlay and its parameters are intact: to tune it again, set `enabled: true` in
+  `DEFAULT_LOADER_DEBUG_PARAMETERS` (`config/parameterDefaults.js`), or re-add a
+  `useControls('Debug.Loader Debug', …)` block using the `Loader Debug` map that
+  `controls/levaSectionPaths.js` still carries.
+
+Note that `loaderDebugParameters` is **live shipped config** despite the name — `targetX/Z`,
+`circleRadius`, `ringWidth` and `cameraHeight` drive the real loading ring and the locked hat shot
+on every run. Only `enabled`/`nudgeStep` and the overlay itself are debug.
 
 If you are reading the codebase to understand how the game *plays*, the overlay is skippable —
 the panel is not.
 
-## The panel's 12 sections
+## The panel's 13 sections
 
-Colors · World · Grass · Props · Characters · Lantern · Game · Audio · Post · Desktop ·
-Mobile · Debug
+Debug · Colors · World · Grass · Props · Characters · Lantern · Game · Audio · See-Through ·
+Post · Desktop · Mobile
 
 **Registration order == panel order**, so the sequence of `useControls` calls in DebugPanel.jsx
 is the layout. Controls write straight into the zustand store via `setParam`;

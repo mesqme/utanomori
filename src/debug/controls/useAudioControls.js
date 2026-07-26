@@ -19,7 +19,7 @@ export function useAudioControls() {
         collectedVolume: { value: musicParameters.collectedVolume, min: 0, max: 1, step: 0.01, onChange: setParam('musicParameters', 'collectedVolume') },
         creditsVolume: { value: musicParameters.creditsVolume, min: 0, max: 1, step: 0.01, onChange: setParam('musicParameters', 'creditsVolume') },
         volumeLerp: { value: musicParameters.volumeLerp, min: 0.2, max: 10, step: 0.1, onChange: setParam('musicParameters', 'volumeLerp') },
-    })
+    }, { collapsed: true })
 
     useControls('Audio.Ambient SFX', {
         cicadaVolume: { value: ambientSoundParameters.cicadaVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'cicadaVolume') },
@@ -33,5 +33,5 @@ export function useAudioControls() {
         mumbleVolume: { value: ambientSoundParameters.mumbleVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'mumbleVolume') },
         sadVolume: { value: ambientSoundParameters.sadVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sadVolume') },
         sighVolume: { value: ambientSoundParameters.sighVolume, min: 0, max: 1, step: 0.01, onChange: setParam('ambientSoundParameters', 'sighVolume') },
-    })
+    }, { collapsed: true })
 }

@@ -39,7 +39,7 @@ export function useLanternControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 
     useControls('Lantern.Ground Light', {
         radius: { value: lanternGroundLightParameters.radius, min: 0.25, max: 15, step: 0.05, onChange: setParam('lanternGroundLightParameters', 'radius') },
@@ -48,7 +48,7 @@ export function useLanternControls() {
         edgeNoiseStrength: { value: lanternGroundLightParameters.edgeNoiseStrength, min: 0, max: 1, step: 0.01, onChange: setParam('lanternGroundLightParameters', 'edgeNoiseStrength') },
         innerBrightness: { value: lanternGroundLightParameters.innerBrightness, min: 0, max: 2, step: 0.01, onChange: setParam('lanternGroundLightParameters', 'innerBrightness') },
         outerDarkness: { value: lanternGroundLightParameters.outerDarkness, min: 0, max: 1, step: 0.01, onChange: setParam('lanternGroundLightParameters', 'outerDarkness') },
-    })
+    }, { collapsed: true })
 
     useControls('Lantern.Grass React', {
         grassEnabled: { value: lanternGrassParameters.enabled, onChange: setParam('lanternGrassParameters', 'enabled') },
@@ -58,5 +58,5 @@ export function useLanternControls() {
         grassAlpha: { value: lanternGrassParameters.alpha, min: 0, max: 1, step: 0.01, onChange: setParam('lanternGrassParameters', 'alpha') },
         grassColor: { value: lanternGrassParameters.color, onChange: setParam('lanternGrassParameters', 'color') },
         grassColorAmount: { value: lanternGrassParameters.colorAmount, min: 0, max: 1, step: 0.01, onChange: setParam('lanternGrassParameters', 'colorAmount') },
-    })
+    }, { collapsed: true })
 }

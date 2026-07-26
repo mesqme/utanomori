@@ -25,7 +25,7 @@ export function usePropsControls() {
         fadeOffset: { value: objectParameters.fadeOffset, min: 0, max: 8, step: 0.1, onChange: setParam('objectParameters', 'fadeOffset') },
         grassFadeDistance: { value: objectParameters.grassFadeDistance, min: 0, max: 5, step: 0.05, onChange: setParam('objectParameters', 'grassFadeDistance') },
         grassLean: { value: objectParameters.grassLean, min: 0, max: 2, step: 0.05, onChange: setParam('objectParameters', 'grassLean') },
-    })
+    }, { collapsed: true })
 
     useControls('Props.Trees', {
         treeSize: { value: objectParameters.treeSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'treeSize') },
@@ -33,7 +33,7 @@ export function usePropsControls() {
         treeColor: { value: objectParameters.treeColor, onChange: setParam('objectParameters', 'treeColor') },
         treeTrunkColor: { value: objectParameters.treeTrunkColor, onChange: setParam('objectParameters', 'treeTrunkColor') },
         treeColorVariation: { value: objectParameters.treeColorVariation, min: 0, max: 0.6, step: 0.01, onChange: setParam('objectParameters', 'treeColorVariation') },
-    })
+    }, { collapsed: true })
 
     useControls('Props.Stones', {
         stoneSize: { value: objectParameters.stoneSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'stoneSize') },
@@ -45,7 +45,7 @@ export function usePropsControls() {
         stoneGradientColor: { value: objectParameters.stoneGradientColor, onChange: setParam('objectParameters', 'stoneGradientColor') },
         stoneGradientColorStrength: { value: objectParameters.stoneGradientColorStrength, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'stoneGradientColorStrength') },
         stoneGradientHeight: { value: objectParameters.stoneGradientHeight, min: 0.05, max: 1.5, step: 0.01, onChange: setParam('objectParameters', 'stoneGradientHeight') },
-    })
+    }, { collapsed: true })
 
     useControls('Props.Mushrooms', {
         mushroomSize: { value: objectParameters.mushroomSize, min: 0.2, max: 4, step: 0.05, onChange: setParam('objectParameters', 'mushroomSize') },
@@ -63,7 +63,7 @@ export function usePropsControls() {
         mushroomWiggleDecay: { value: objectParameters.mushroomWiggleDecay, min: 0.5, max: 10, step: 0.1, onChange: setParam('objectParameters', 'mushroomWiggleDecay') },
         mushroomLitBoost: { value: objectParameters.mushroomLitBoost, min: 0, max: 3, step: 0.05, onChange: setParam('objectParameters', 'mushroomLitBoost') },
         mushroomSoundVolume: { value: objectParameters.mushroomSoundVolume, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'mushroomSoundVolume') },
-    })
+    }, { collapsed: true })
 
     // The shared triplanar painterly brush on every prop's surface.
     useControls('Props.Surface', {
@@ -73,7 +73,7 @@ export function usePropsControls() {
         painterlyContrast: { value: objectParameters.painterlyContrast, min: 0, max: 10, step: 0.01, onChange: setParam('objectParameters', 'painterlyContrast') },
         painterlyBrightness: { value: objectParameters.painterlyBrightness, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'painterlyBrightness') },
         painterlyTint: { value: objectParameters.painterlyColorStrength, min: 0, max: 1, step: 0.01, onChange: setParam('objectParameters', 'painterlyColorStrength') },
-    })
+    }, { collapsed: true })
 
     // Painterly silhouette edge — applied only to the tree leaves (canopy).
     useControls('Props.Leaves Edge', {
@@ -86,7 +86,7 @@ export function usePropsControls() {
         softness: { value: edgeParameters.softness, min: 0, max: 1, step: 0.01, onChange: setParam('edgeParameters', 'softness') },
         noiseScale: { value: edgeParameters.noiseScale, min: 0.02, max: 4, step: 0.02, onChange: setParam('edgeParameters', 'noiseScale') },
         sharpness: { value: edgeParameters.sharpness, min: 0.2, max: 8, step: 0.1, onChange: setParam('edgeParameters', 'sharpness') },
-    })
+    }, { collapsed: true })
 
     // Fresnel colour rim on the hard-surface props (trunks / stones / mushrooms / music stones).
     useControls('Props.Rim Light', {
@@ -97,9 +97,9 @@ export function usePropsControls() {
         musicStoneColor: { value: propRimParameters.musicStoneColor, onChange: setParam('propRimParameters', 'musicStoneColor') },
         strength: { value: propRimParameters.strength, min: 0, max: 3, step: 0.01, onChange: setParam('propRimParameters', 'strength') },
         power: { value: propRimParameters.power, min: 0.2, max: 8, step: 0.1, onChange: setParam('propRimParameters', 'power') },
-    })
+    }, { collapsed: true })
 
-    useControls('Props.Tree Eyes', {
+    useControls('Props.Trees.Tree Eyes', {
         planesPerTree: { value: treeEyesParameters.planesPerTree, min: 0, max: 11, step: 1, onChange: setParam('treeEyesParameters', 'planesPerTree') },
         // Camera-facing fade (transparent edge-on near 90° + on back-facing planes).
         facingThreshold: { value: treeEyesParameters.facingThreshold, min: 0, max: 0.95, step: 0.01, onChange: setParam('treeEyesParameters', 'facingThreshold') },
@@ -138,5 +138,5 @@ export function usePropsControls() {
             },
             { collapsed: true }
         ),
-    })
+    }, { collapsed: true })
 }
