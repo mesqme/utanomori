@@ -3,7 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
-import { getTrampleData, MAX_TRAMPLERS } from './utils/trampleField.js'
+import { getTrampleData, MAX_TRAMPLERS } from './state/trampleField.js'
 
 /**
  * Top-down trail canvas (adapted from the old BallTrailCanvas idea). A 2D canvas

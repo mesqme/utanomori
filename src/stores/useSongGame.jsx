@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { getMusicCharacter } from '../config/musicCharacters.js'
-import { FAIL_LINES } from '../game/gameConfig.js'
+import { FAIL_LINES } from '../game/gameText.js'
 import useStore from './useStore.jsx'
 
 /**
@@ -28,7 +28,6 @@ const initialState = {
     round: 0,
     activeNote: null, // the STONE index currently "sung" (or null)
     input: [], // stone indices entered this round
-    wheelOpen: false,
     lastPress: null, // { stone, correct, nonce } — last clicked stone result (drives feedback FX)
     pressNonce: 0, // bumped each press so repeats re-trigger the same-result flash
     failLine: null, // the funny-angry line the character says when you miss
@@ -85,7 +84,7 @@ const useSongGame = create((set, get) => ({
     },
 
     // Yes → stage the stones (rise + camera), then SongGame advances to playback.
-    confirmReady: () => set({ stage: 'setup', input: [], activeNote: null, wheelOpen: false }),
+    confirmReady: () => set({ stage: 'setup', input: [], activeNote: null }),
 
     // Setup finished (stones are up) → run the 3·2·1 countdown before the first playback.
     startPlayback: () => set({ stage: 'countdown' }),
@@ -95,7 +94,8 @@ const useSongGame = create((set, get) => ({
 
     setActiveNote: (index) => set({ activeNote: index }),
 
-    openWheel: () => set({ stage: 'input', wheelOpen: true, activeNote: null }),
+    // Melody finished playing → hand over to the player (the stones become clickable).
+    openInput: () => set({ stage: 'input', activeNote: null }),
 
     // Validate a clicked stone against the expected stone sequence for this round. Each press
     // publishes `lastPress` (with a bumping nonce) so the torus rings / arrow / character emote
@@ -111,7 +111,6 @@ const useSongGame = create((set, get) => ({
         if (!correct) {
             set({
                 stage: 'fail',
-                wheelOpen: false,
                 activeNote: null,
                 lastPress,
                 pressNonce: nonce,
@@ -124,13 +123,13 @@ const useSongGame = create((set, get) => ({
         const base = { input: nextInput, lastPress, pressNonce: nonce }
         if (nextInput.length >= length) {
             const lastRound = round >= rounds.length - 1
-            set({ ...base, wheelOpen: false, stage: lastRound ? 'success' : 'roundClear' })
+            set({ ...base, stage: lastRound ? 'success' : 'roundClear' })
         } else {
             set(base)
         }
     },
 
-    nextRound: () => set((s) => ({ round: s.round + 1, stage: 'countdown', input: [], activeNote: null, wheelOpen: false })),
+    nextRound: () => set((s) => ({ round: s.round + 1, stage: 'countdown', input: [], activeNote: null })),
 
     // Fail flow: 'fail' (exclamation moment, stones still up) → 'failSpeech' (stones gone, the
     // character delivers its grumpy line up close) → 'flee' (it bolts; Companions relocates + resets).

@@ -1,5 +1,9 @@
 import { create } from 'zustand'
 
+// SHIPS IN THE ENTRY CHUNK (the Loader reads the phase to know when to fade out), so this file must
+// stay dependency-light: never import three, @react-three/*, useStore or the audio engines here.
+// Anything heavier belongs in the lazy app chunk. See the README's note on the entry-chunk split.
+
 // Game-cycle phases:
 //   loading → warmup (GO) → intro (camera travel + dialogue) → start (gameplay)
 //   → finale (party complete: final line) → credits → restarting (cinematic reverse) → warmup, or

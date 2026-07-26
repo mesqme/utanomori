@@ -10,15 +10,15 @@ import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../mater
 import { createStoneGeometry } from './utils/stoneGeometry.js'
 import { MUSIC_STONE_VARIANTS } from '../config/objectFieldDefaults.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
-import { revealCircle } from './utils/revealCircle.js'
+import { revealCircle } from './state/revealCircle.js'
 import { getRefScale } from './utils/screenScale.js'
-import { seeThrough } from './utils/seeThrough.js'
-import { themeMask } from './utils/themeMask.js'
-import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './utils/musicStoneSeeThrough.js'
-import { musicStonePointer } from './utils/musicStonePointer.js'
+import { seeThrough } from './state/seeThrough.js'
+import { themeMask } from './state/themeMask.js'
+import { musicStoneSeeThrough, clearMusicStoneSeeThrough, MAX_STONE_SEE_THROUGH } from './state/musicStoneSeeThrough.js'
+import { musicStonePointer } from './state/musicStonePointer.js'
 import { cameraRig } from '../game/cameraRig.js'
 import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.js'
-import { playSound } from '../game/gameSounds.js'
+import { playSound } from '../audio/gameSounds.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 
 // Coloured stones that stage the song mini-game in 3D: ONE stone per UNIQUE sound for the current
@@ -44,6 +44,8 @@ const easeOut = (t) => 1 - Math.pow(1 - t, 3)
 export default function MusicStones() {
     const { nodes } = useGLTF(stonesModelUrl)
     const textureName = useStore((s) => s.objectParameters.textureName)
+    // Shared Texture instances (useTexture caches by URL) — see the note in Terrain.jsx before
+    // changing any filter/wrap write here.
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
         const t = painterlyTextures[painteryTextureIndex(textureName)] ?? painterlyTextures[0]
@@ -129,6 +131,9 @@ export default function MusicStones() {
     const stBuffer = useMemo(() => new THREE.Vector2(), [])
 
     useFrame((state, delta) => {
+        /**
+         * Stage state and layout
+         */
         const dt = Math.min(delta, 0.05)
         const game = useSongGame.getState()
         const store = useStore.getState()
@@ -141,6 +146,9 @@ export default function MusicStones() {
             stageStartRef.current = state.clock.elapsedTime
         }
 
+        /**
+         * Camera
+         */
         // Camera: the shared "dialogue camera" (a close framing on the music character) for any
         // interaction speech (prompt / fail speech); the wider stones framing while they're up;
         // otherwise hand back to the follow camera. The song game OWNS the camera only during gameplay
@@ -204,6 +212,9 @@ export default function MusicStones() {
             }
         }
 
+        /**
+         * Flash and pop
+         */
         // Flash + scale-pop the matching stone when a new sound plays (the character demonstrating the
         // melody) — the same pop as a tap, to emphasise each played note.
         if (game.activeNote !== prevNoteRef.current) {
@@ -214,6 +225,9 @@ export default function MusicStones() {
             prevNoteRef.current = game.activeNote
         }
 
+        /**
+         * Idle reset
+         */
         // No layout (idle): everything sunk → hide, clear state, leave the camera.
         if (!layout) {
             clearMusicStoneSeeThrough()
@@ -227,6 +241,9 @@ export default function MusicStones() {
             return
         }
 
+        /**
+         * Stones
+         */
         const count = layout.count // this character's stone count
         const sinceStart = state.clock.elapsedTime - stageStartRef.current
         const inRate = dt / Math.max(0.05, p.scaleInDuration)
@@ -340,6 +357,9 @@ export default function MusicStones() {
             stones[i].material.uniforms.uBaseColor.value.copy(tmpColor)
         }
 
+        /**
+         * Pointer
+         */
         // Pointer (the shared arrow): playback → the singing note; input → the HOVERED stone. On
         // each change it snaps to that note's place and re-"appears" (scales from 0), so it pops
         // note-to-note. A press doesn't move it — pressing just flashes green/red (TargetArrow,
@@ -428,6 +448,9 @@ export default function MusicStones() {
             musicStonePointer.quaternion.setFromRotationMatrix(ptrBasis)
         }
 
+        /**
+         * See-through
+         */
         // See-through: every stone acts like the hero — trees in front of any stone fade, so even
         // the highest stones stay visible behind tall trees.
         clearMusicStoneSeeThrough()
@@ -456,6 +479,9 @@ export default function MusicStones() {
 
         if (!staged && allDown) layoutRef.current = null
 
+        /**
+         * Material
+         */
         const options = {
             // Music stones get their OWN rim colour (single colour → all type slots in their material).
             propRim: {

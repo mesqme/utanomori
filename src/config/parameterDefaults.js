@@ -2,8 +2,14 @@
 // version constants. useStore.jsx imports these and only wires them into the store + the hot-reload
 // merge — so when you want to change a default value, you change it HERE.
 //
-// (The painterly scene-style sections — terrain/grass/objects/background/etc. — live separately in
-// sceneStyles.js, since they're a per-style "look preset" rather than global feature params.)
+// The split with sceneStyles.js: this file holds GLOBAL FEATURE parameters (one set, always in
+// effect — camera, audio, the mini-game, mobile tuning). sceneStyles.js holds the painterly LOOK
+// preset — terrain/grass/objects/background/etc. — the things a colour theme repaints.
+//
+// Two places cross that line, deliberately:
+// - DEFAULT_GAME_UI_PARAMETERS (bottom of this file) is defined in sceneStyles.js and only
+//   re-exported here, because the UI skin is part of the look but is seeded like a global group.
+// - Colour themes (config/colorPresets.js) write into BOTH sides when a theme is applied.
 import { defaultSceneStyle } from './sceneStyles.js'
 import { characterStylizedDefaults } from './stylizedMaterialDefaults.js'
 import { sheepCharacterDefaults } from './sheepMaterials.js'
@@ -18,6 +24,10 @@ export function cloneSheepCharacters() {
     )
 }
 
+/**
+ * Versions
+ */
+
 // HMR version gates — bump the matching one when its defaults change so a dev hot-reload
 // force-applies them instead of keeping the preserved runtime values (which would otherwise mask
 // the new defaults). See the merge block in useStore.jsx.
@@ -27,6 +37,10 @@ export const CHARACTER_STYLIZED_VERSION = 4
 export const OBJECT_STYLE_VERSION = 9
 export const LOADER_DEBUG_VERSION = 6
 export const GAME_UI_VERSION = 18
+
+/**
+ * Camera
+ */
 
 export const DEFAULT_CAMERA_PARAMETERS = {
     debugOrbit: false,
@@ -44,6 +58,10 @@ export const DEFAULT_CAMERA_PARAMETERS = {
     frontHeight: 4.3,
 }
 
+/**
+ * Display grade
+ */
+
 // Two display color-grade presets, applied in the final post pass (SharpenPass) and switched by
 // highBrightnessMode (also the in-game ☀/☾ toggle). HIGH = the normal-brightness-display look: a
 // desaturate + warm that counters the too-blue / too-saturated cast the scene takes on there. LOW =
@@ -59,15 +77,17 @@ export const DEFAULT_COLOR_GRADE_PARAMETERS = {
     highBrightness: 1.0,
 }
 
-export const DEFAULT_LOADER_DEBUG_PARAMETERS = {
-    enabled: false,
-    targetX: 5.71,
-    targetZ: 0.04,
-    nudgeStep: 0.02,
-    circleRadius: 106,
-    ringWidth: 15.5,
-    cameraHeight: 18,
-}
+/**
+ * Loader
+ */
+
+// Defined in loaderShellDefaults.js and re-exported here, so the entry chunk can import them
+// without pulling this whole catalogue in. This stays their import site for the rest of the app.
+export { DEFAULT_LOADER_DEBUG_PARAMETERS, DEFAULT_MOBILE_UI_PARAMETERS } from './loaderShellDefaults.js'
+
+/**
+ * Theme
+ */
 
 // Which named colour preset each group is currently on (Colors folder in Leva). Presets live in
 // config/colorPresets.js; selecting one writes its colours into the real param groups — these
@@ -100,6 +120,10 @@ export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
     // mode triggers an instance rebuild.)
 }
 
+/**
+ * Mobile
+ */
+
 // Mobile-only camera distances (isMobile → resolvedCameraDistances). Same fields as the desktop
 // Camera Distance controls but tuned for the phone framing; applied only when the mobile experience
 // is active (touch / coarse-pointer device — Chrome device mode flips it live, see config/device.js).
@@ -114,35 +138,8 @@ export const DEFAULT_MOBILE_CAMERA_PARAMETERS = {
     dialogueCameraHeight: 6.2,
 }
 
-// Mobile UI tweaks: the overall DOM UI scale (bigger on a phone) + a smaller loading ring, with the
-// initial hat-shot camera zoomed out to match the smaller ring (the ring must keep covering the hat).
-export const DEFAULT_MOBILE_UI_PARAMETERS = {
-    uiScale: 2.45, // multiplies --ui-scale on the mobile experience (desktop uses gameUi.uiScale)
-    // --ui-vmin = clamp(sizeFloor, 1vmin, sizeCeil). The desktop floor (6.5px) is too tall for a phone
-    // (props the whole UI up); 0 lets the intro bubble / button / title scale down with the small vmin.
-    sizeFloor: 0,
-    sizeCeil: 10.8,
-    loaderRadius: 83, // loading-ring radius on mobile (desktop is loaderDebug.circleRadius ~106)
-    loaderRingWidth: 12.5, // loading-ring thickness on mobile
-    loaderCameraHeight: 22.8, // zoom the initial top-down hat shot out so the smaller ring still covers it
-    // Camera look-at for the hat shot on mobile (its own so the desktop illusion isn't nudged — the
-    // slightly different height/aspect projects the hat to a slightly different spot). Desktop uses
-    // loaderDebugParameters.targetX/Z.
-    loaderTargetX: 5.71,
-    loaderTargetZ: 0.06,
-    // Portrait-only placement (%, viewport-relative) for touch UI that can't share the desktop spots.
-    // "Talk to…" interaction prompt: centred by default (clear of the bottom joystick).
-    promptPortraitX: 50, // % from left, centred on this point
-    promptPortraitY: 64, // % from top, centred on this point
-    // "Round n/3" banner: dropped near the bottom (≈ the joystick zone) instead of the top-left counter.
-    roundPortraitY: 20, // % from the bottom edge
-    // Landscape-only intro layout: the short viewport crams the title and the speech bubble together
-    // over the hero. Narrow the bubble (uses less width) and raise the title (further from the bubble).
-    bubbleWidthLandscape: 570, // px — speech-bubble max width on landscape phones
-    nameTopLandscape: 7, // % from the top — the intro title's vertical position on landscape phones
-    bubbleBottomLandscape: 5, // % from the bottom — vertical position of the bubble block on landscape
-    startOffsetLandscape: -4, // px — extra gap above the Start button (down = +, up toward bubble = −)
-}
+// (DEFAULT_MOBILE_UI_PARAMETERS lives in loaderShellDefaults.js — re-exported under "Loader" above,
+// because the loading ring reads it and the entry chunk must not import this file.)
 
 // Mobile mini-game stone layout — landscape: a horizontal LINE (not the desktop rainbow arc) with
 // the guide arrow rising from below; portrait ("lazy" hold): a 2-COLUMN grid (3 rows for 6 stones,
@@ -177,6 +174,10 @@ export const DEFAULT_JOYSTICK_PARAMETERS = {
     baseColor: '#fff8ff',
     knobColor: '#fff8ff',
 }
+
+/**
+ * Lantern
+ */
 
 // Lantern fire + glow: a flickering flame placed in the hollow middle of the lantern (whose
 // origin sits at the TOP) and a semi-transparent, paintery-edged glow circle around it. Both
@@ -221,6 +222,10 @@ export const DEFAULT_LANTERN_GRASS_PARAMETERS = {
     colorAmount: 0.81, // how strongly to tint (0..1)
 }
 
+/**
+ * Intro travel and target arrow
+ */
+
 // Intro camera travel (GameDirector): a descending 360° spiral down to the hero. Fully
 // tunable + replayable via the "Intro Camera" Leva folder ("redo the animation").
 export const DEFAULT_INTRO_CAMERA_PARAMETERS = {
@@ -248,6 +253,10 @@ export const DEFAULT_ARROW_PARAMETERS = {
 // Song mini-game: the "press E" interaction radius + the floating head-notes (CompanionNotes).
 // (The old 2D note wheel + spatial singing voices were removed — the mini-game is now the 3D
 // music stones, and the backing audio lives in musicTracks.js.)
+/**
+ * Melody mini-game
+ */
+
 export const DEFAULT_SONG_GAME_PARAMETERS = {
     interactRadius: 4.0, // distance (world units) to a companion at which the "press E" prompt appears
     // Floating notes above a singing head — now the 3D models from notes.glb (CompanionNotes).
@@ -317,6 +326,10 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
 // the MusicController only fades each track's volume. The current TARGET's track is heard by
 // distance to the hero; a COLLECTED companion's track plays softly behind the party; everything
 // is muted during a conversation / mini-game.
+/**
+ * Audio
+ */
+
 export const DEFAULT_MUSIC_PARAMETERS = {
     hearNear: 0, // distance (hero→target) at/under which the target track reaches nearVolume
     hearFar: 10, // distance beyond which it fades down to farVolume
@@ -349,6 +362,10 @@ export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
 // characterEyes shader). Placement is local to the character model; shape is in quad-UV units.
 // The eyes are drawn directly in the head mesh's fragment shader, laid out in the head's second UV
 // (uv1). CharacterEyes drives the blink + glance; everything here is shape/colour in uv1 space.
+/**
+ * Eyes
+ */
+
 export const DEFAULT_CHARACTER_EYES_PARAMETERS = {
     enabled: true,
     debugUv1: false, // paint the head by its second UV (R=u, G=v) to find the eye layout
@@ -412,6 +429,10 @@ export const DEFAULT_TREE_EYES_PARAMETERS = {
 }
 
 // The sheep music companion: animation pacing, world scale, and the scales' jump-driven twist.
+/**
+ * Sheep companions
+ */
+
 export const DEFAULT_SHEEP_PARAMETERS = {
     modelScale: 0.65, // world scale of the glb (× the per-companion definition.scale)
     modelYaw: 90, // degrees — correct the model's facing (it exported 90° off)
@@ -437,6 +458,10 @@ export const DEFAULT_SHEEP_MATERIAL_PARAMETERS = {
     characters: cloneSheepCharacters(),
 }
 
+/**
+ * Textures
+ */
+
 // One-time stylization baked into the paintery brush texture (blur + levels +
 // contrast + posterize) so its small details merge into larger painterly regions,
 // replacing the per-frame Kuwahara abstraction.
@@ -449,6 +474,10 @@ export const DEFAULT_PAINTERY_TEXTURE_PARAMETERS = {
     contrast: 1.15,
     posterize: 0,
 }
+
+/**
+ * Game UI
+ */
 
 // Stylized game UI (speech bubble + buttons). Defined per scene style (see gameUiParameters in
 // sceneStyles.js); mirrored here as the global default the store seeds + HMR-merges.

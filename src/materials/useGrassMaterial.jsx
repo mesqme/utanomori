@@ -4,10 +4,10 @@ import * as THREE from 'three'
 import grassVertexShader from '../shaders/grass/vertex.glsl'
 import grassFragmentShader from '../shaders/grass/fragment.glsl'
 import useStore from '../stores/useStore.jsx'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
-import { fadeModeToInt } from './TerrainMaterial.jsx'
-import { getTrampleData } from '../world/utils/trampleField.js'
-import { characterSeeThrough } from '../world/utils/characterSeeThrough.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
+import { fadeModeToInt } from './fadeMode.js'
+import { getTrampleData } from '../world/state/trampleField.js'
+import { characterSeeThrough } from '../world/state/characterSeeThrough.js'
 
 // Characters react the grass via four independent layers (dissolve / lighten /
 // scale / lean), each reading the fading trail texture or a radius around the
@@ -46,19 +46,15 @@ export default function useGrassMaterial({
     const borderNoiseStrength = useStore((s) => s.borderParameters.noiseStrength)
     const borderNoiseScale = useStore((s) => s.borderParameters.noiseScale)
     const borderGrassFadeOffset = useStore((s) => s.borderParameters.grassFadeOffset)
-    const borderGroundOffset = useStore((s) => s.borderParameters.groundOffset)
-    const borderGroundFadeOffset = useStore((s) => s.borderParameters.groundFadeOffset)
     const borderFadeMode = useStore((s) => s.borderParameters.fadeMode)
     const borderParameters = useStore((s) => s.borderParameters)
     const pixelSize = useStore((s) => s.ditheringParameters.pixelSize)
-    const ditherModeValue = useStore((s) => (s.ditheringParameters.ditherMode === 'Bayer' ? 1 : 0))
 
     const material = useMemo(
         () =>
             new THREE.ShaderMaterial({
                 uniforms: {
                     uPixelSize: { value: pixelSize },
-                    uDitherMode: { value: ditherModeValue }, // 0: Diamond, 1: Bayer
                     uFadeMode: { value: fadeModeToInt(borderFadeMode) },
                     uPainteryTexture: { value: painteryTexture },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
@@ -157,8 +153,6 @@ export default function useGrassMaterial({
                     uNoiseScale: { value: borderNoiseScale },
                     uCircleRadiusFactor: { value: initialCircleRadius },
                     uGrassFadeOffset: { value: borderGrassFadeOffset },
-                    uGroundOffset: { value: borderGroundOffset },
-                    uGroundFadeOffset: { value: borderGroundFadeOffset },
                     uLanternPosition: { value: new THREE.Vector3() },
                     uLanternLightRadius: { value: lanternGroundLightParameters.radius },
                     uLanternLightEdgeSoftness: { value: lanternGroundLightParameters.edgeSoftness },
@@ -185,7 +179,6 @@ export default function useGrassMaterial({
     useEffect(() => {
         const u = material.uniforms
         u.uPixelSize.value = pixelSize
-        u.uDitherMode.value = ditherModeValue
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
@@ -215,8 +208,6 @@ export default function useGrassMaterial({
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale
         u.uGrassFadeOffset.value = borderGrassFadeOffset
-        u.uGroundOffset.value = borderGroundOffset
-        u.uGroundFadeOffset.value = borderGroundFadeOffset
         u.uLanternLightRadius.value = lanternGroundLightParameters.radius
         u.uLanternLightEdgeSoftness.value = lanternGroundLightParameters.edgeSoftness
         u.uLanternLightNoiseScale.value = lanternGroundLightParameters.edgeNoiseScale
@@ -286,12 +277,9 @@ export default function useGrassMaterial({
         borderNoiseStrength,
         borderNoiseScale,
         borderGrassFadeOffset,
-        borderGroundOffset,
-        borderGroundFadeOffset,
         borderFadeMode,
         borderParameters,
         pixelSize,
-        ditherModeValue,
     ])
 
     useEffect(() => {

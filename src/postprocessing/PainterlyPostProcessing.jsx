@@ -5,7 +5,7 @@ import { EffectComposer, SMAA } from '@react-three/postprocessing'
 import useStore from '../stores/useStore.jsx'
 import usePhases from '../stores/usePhases.jsx'
 import { updateNoiseReveal } from '../game/visualReveal.js'
-import { themeMask } from '../world/utils/themeMask.js'
+import { themeMask } from '../world/state/themeMask.js'
 import SharpenPass from './SharpenPass.js'
 
 // Post chain: scene (no MSAA) → SMAA (final-image AA) → SharpenPass

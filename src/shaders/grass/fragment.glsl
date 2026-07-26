@@ -1,5 +1,4 @@
 uniform float uPixelSize;
-uniform int uDitherMode;
 uniform int uFadeMode;
 uniform vec3 uBackgroundColor;
 uniform vec3 uBackgroundColorOld; // outgoing theme's sky (masked transitions — border fade target)
@@ -28,7 +27,7 @@ uniform float uGrassGlobalAlpha; // whole-field fade (0 on the loading/GO screen
 uniform float uBaseBrightnessOld; // outgoing theme's brightness (masked theme transitions)
 uniform vec3 uLightenColorOld; // outgoing theme's trail-lighten colour
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 
 varying vec3 vColor;
 varying vec3 vColorOld;
@@ -46,213 +45,158 @@ uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
 uniform int uCharSeeThroughCount;
 
 // --- Dither Functions ---
-// 0. Diamond Dither
-float getDiamondThreshold(vec2 fragCoord, float pixelSize) {
-    vec2 uv = mod(fragCoord + 0.01, pixelSize);
-    vec2 centered = (uv / pixelSize) * 2.0 - 1.0;
-    float dist = abs(centered.x) + abs(centered.y);
-    return dist / 2.0; 
-}
-
-// 1. Bayer Dither (8x8)
-float getBayerThreshold(vec2 fragCoord, float pixelSize) {
-    // Pixelate
-    vec2 pixelCoord = floor(fragCoord / pixelSize);
-    
-    // 8x8 Bayer Matrix
-    int x = int(mod(pixelCoord.x, 8.0));
-    int y = int(mod(pixelCoord.y, 8.0));
-    
-    // 8x8 Bayer threshold, computed arithmetically via the recursive 2x2 construction.
-    // (The old version filled a 64-element local int array and indexed it with a runtime value;
-    // that dynamically-indexed large local array makes ANGLE's Metal shader compiler throw an
-    // internal error at pipeline creation, so the ground/grass fail to render on macOS. This is
-    // exactly equivalent — it reproduces the same 0..63 Bayer matrix.)
-    float bx = float(x);
-    float by = float(y);
-    float v = 0.0;
-    float scale = 16.0;
-    for (int bit = 0; bit < 3; bit++) {
-        float p = pow(2.0, float(bit));
-        float xi = mod(floor(bx / p), 2.0);
-        float yi = mod(floor(by / p), 2.0);
-        v += (2.0 * xi + 3.0 * yi - 4.0 * xi * yi) * scale;
-        scale *= 0.25;
-    }
-    return v / 64.0;
-}
-
-
-// Check if pixel should be discarded
-// mode 0: Diamond
-// mode 1: Bayer
-bool shouldDiscard(vec2 fragCoord, float pixelSize, float fadeLevel, int mode) {
-    if (fadeLevel <= 0.0) return false;
-    if (fadeLevel >= 1.0) return true;
-    
-    float threshold = 0.0;
-    
-    if (mode == 0) {
-        // Diamond
-        threshold = getDiamondThreshold(fragCoord, pixelSize + 4.0);
-    } 
-    else if (mode == 1) {
-        // Bayer
-        threshold = getBayerThreshold(fragCoord, pixelSize);
-    }
-    return threshold < fadeLevel;
-}
+#include ../includes/dither.glsl
 
 float saturateValue(float x) {
-  return clamp(x, 0.0, 1.0);
+    return clamp(x, 0.0, 1.0);
 }
 
 vec3 lambertLight(vec3 normal, vec3 viewDir, vec3 lightDir, vec3 lightColour) {
-  float wrap = 0.5;
-  float dotNL = saturateValue((dot(normal, lightDir) + wrap) / (1.0 + wrap));
-  vec3 lighting = vec3(dotNL);
+    float wrap = 0.5;
+    float dotNL = saturateValue((dot(normal, lightDir) + wrap) / (1.0 + wrap));
+    vec3 lighting = vec3(dotNL);
 
-  float backlight = saturateValue((dot(viewDir, -lightDir) + wrap) / (1.0 + wrap));
-  vec3 scatter = vec3(pow(backlight, 2.0));
+    float backlight = saturateValue((dot(viewDir, -lightDir) + wrap) / (1.0 + wrap));
+    vec3 scatter = vec3(pow(backlight, 2.0));
 
-  lighting += scatter;
+    lighting += scatter;
 
-  return lighting * lightColour;
+    return lighting * lightColour;
 }
 
 vec3 hemiLight(vec3 normal, vec3 groundColour, vec3 skyColour) {
-  return mix(groundColour, skyColour, 0.5 * normal.y + 0.5);
+    return mix(groundColour, skyColour, 0.5 * normal.y + 0.5);
 }
 
 float samplePainteryBrush(vec2 worldXZ) {
-  // World-anchored: the dissolve is the reveal-circle edge (a world feature), so the brush
-  // tracks the world — stable on resize / camera zoom; strokes regenerate as the edge sweeps.
-  vec2 painteryUv = worldXZ * uPainteryDrift;
-  float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
-  return mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
+    // World-anchored: the dissolve is the reveal-circle edge (a world feature), so the brush
+    // tracks the world — stable on resize / camera zoom; strokes regenerate as the edge sweeps.
+    vec2 painteryUv = worldXZ * uPainteryDrift;
+    float painteryBrush = texture2D(uPainteryTexture, painteryUv).r;
+    return mix(painteryBrush, texture2D(uPainteryTexture, painteryUv * uPainteryLayer2Scale + vec2(0.37)).r, 0.5);
 }
 
 void main() {
-  float grassX = vGrassData.x;
+    float grassX = vGrassData.x;
 
-  vec3 normal = normalize(vNormal);
-  vec3 viewDir = normalize(cameraPosition - vWorldPosition);
+    vec3 normal = normalize(vNormal);
+    vec3 viewDir = normalize(cameraPosition - vWorldPosition);
 
-  vec3 baseColor = mix(
-    vColor * 0.15,
-    vColor,
-    smoothstep(0.125, 0.0, abs(grassX))
-  );
+    vec3 baseColor = mix(
+        vColor * 0.15,
+        vColor,
+        smoothstep(0.125, 0.0, abs(grassX))
+    );
 
-  // Hemi
-  vec3 c1 = vec3(1.0, 1.0, 0.75);
-  vec3 c2 = vec3(0.05, 0.05, 0.25);
+    // Hemi
+    vec3 c1 = vec3(1.0, 1.0, 0.75);
+    vec3 c2 = vec3(0.05, 0.05, 0.25);
 
-  vec3 ambientLighting = hemiLight(normal, c2, c1);
+    vec3 ambientLighting = hemiLight(normal, c2, c1);
 
-  // Directional light
-  vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
-  vec3 lightColour = vec3(1.0);
-  vec3 diffuseLighting = lambertLight(normal, viewDir, lightDir, lightColour);
+    // Directional light
+    vec3 lightDir = normalize(vec3(1.0, 0.5, 1.0));
+    vec3 lightColour = vec3(1.0);
+    vec3 diffuseLighting = lambertLight(normal, viewDir, lightDir, lightColour);
 
-  vec3 lighting = diffuseLighting * 0.2 + ambientLighting * 0.8;
+    vec3 lighting = diffuseLighting * 0.2 + ambientLighting * 0.8;
 
-  // Masked theme transition: blend the outgoing palette toward the live one per fragment (the
-  // whole field keeps moving on both sides of the portal/wipe edge). Inactive → tmNew = 1.
-  float tmNew = themeMaskNewness();
-  vec3 themedColor = mix(vColorOld, vColor, tmNew);
-  float themedBrightness = mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
+    // Masked theme transition: blend the outgoing palette toward the live one per fragment (the
+    // whole field keeps moving on both sides of the portal/wipe edge). Inactive → tmNew = 1.
+    float tmNew = themeMaskNewness();
+    vec3 themedColor = mix(vColorOld, vColor, tmNew);
+    float themedBrightness = mix(uBaseBrightnessOld, uBaseBrightness, tmNew);
 
-  vec3 color = themedColor * lighting * themedBrightness;
+    vec3 color = themedColor * lighting * themedBrightness;
 
-  vec2 lanternNoiseUv = vWorldPosition.xz * uLanternLightNoiseScale * 0.1;
-  float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUv).r * 2.0 - 1.0;
-  float lanternNoisyRadius = uLanternLightRadius * (1.0 + lanternNoise * uLanternLightNoiseStrength);
-  float lanternDistance = length(vWorldPosition.xz - uLanternPosition.xz);
-  float lanternSoftness = max(uLanternLightEdgeSoftness, 0.0001);
-  float lanternMask = 1.0 - smoothstep(
-    lanternNoisyRadius - lanternSoftness,
-    lanternNoisyRadius + lanternSoftness,
-    lanternDistance
-  );
-  float lanternLightMultiplier = mix(
-    1.0 - uLanternLightOuterDarkness,
-    1.0 + uLanternLightInnerBrightness,
-    lanternMask
-  );
-  color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
+    vec2 lanternNoiseUv = vWorldPosition.xz * uLanternLightNoiseScale * 0.1;
+    float lanternNoise = texture2D(uNoiseTexture, lanternNoiseUv).r * 2.0 - 1.0;
+    float lanternNoisyRadius = uLanternLightRadius * (1.0 + lanternNoise * uLanternLightNoiseStrength);
+    float lanternDistance = length(vWorldPosition.xz - uLanternPosition.xz);
+    float lanternSoftness = max(uLanternLightEdgeSoftness, 0.0001);
+    float lanternMask = 1.0 - smoothstep(
+        lanternNoisyRadius - lanternSoftness,
+        lanternNoisyRadius + lanternSoftness,
+        lanternDistance
+    );
+    float lanternLightMultiplier = mix(
+        1.0 - uLanternLightOuterDarkness,
+        1.0 + uLanternLightInnerBrightness,
+        lanternMask
+    );
+    color = clamp(color * lanternLightMultiplier, 0.0, 1.0);
 
-  // Lighten/darken layer — mix toward the layer colour by its influence × amount (the colour
-  // itself follows the theme-transition mask like everything else).
-  color = mix(color, mix(uLightenColorOld, uLightenColor, tmNew), clamp(vTrampleLighten * uLightenAmount, 0.0, 1.0));
+    // Lighten/darken layer — mix toward the layer colour by its influence × amount (the colour
+    // itself follows the theme-transition mask like everything else).
+    color = mix(color, mix(uLightenColorOld, uLightenColor, tmNew), clamp(vTrampleLighten * uLightenAmount, 0.0, 1.0));
 
-  // Dissolve layer — semi-transparent (alpha) or dithered cut-out.
-  float grassAlpha = 1.0;
-  float dissolve = clamp(vTrampleDissolve * uDissolveAmount, 0.0, 1.0);
-  if (dissolve > 0.0) {
-    if (uDissolveMode < 0.5) {
-      grassAlpha = 1.0 - dissolve;
-    } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve, uDitherMode)) {
-      discard;
+    // Dissolve layer — semi-transparent (alpha) or dithered cut-out.
+    float grassAlpha = 1.0;
+    float dissolve = clamp(vTrampleDissolve * uDissolveAmount, 0.0, 1.0);
+    if (dissolve > 0.0) {
+        if (uDissolveMode < 0.5) {
+            grassAlpha = 1.0 - dissolve;
+        } else if (shouldDiscard(gl_FragCoord.xy, uPixelSize, dissolve)) {
+            discard;
+        }
     }
-  }
 
-  // Music-character see-through: discard grass that sits in FRONT of a sheep (closer than it) and
-  // inside its screen disc, so the companion shows through. Paintery edge via the same brush.
-  float charSt = 0.0;
-  for (int i = 0; i < MAX_CHAR_ST; i++) {
-    if (i >= uCharSeeThroughCount) break;
-    vec4 c = uCharSeeThrough[i];
-    if (c.z <= 0.0) continue; // inactive slot
-    if (length(vWorldPosition - cameraPosition) >= c.w - 0.5) continue; // behind the sheep → keep grass
-    float sd = length(gl_FragCoord.xy - c.xy) / max(c.z, 1.0);
-    charSt = max(charSt, 1.0 - smoothstep(0.35, 1.0, sd));
-  }
-  if (charSt > 0.0) {
-    float charBrush = samplePainteryBrush(vWorldPosition.xz);
-    if (charSt > charBrush) discard;
-  }
+    // Music-character see-through: discard grass that sits in FRONT of a sheep (closer than it) and
+    // inside its screen disc, so the companion shows through. Paintery edge via the same brush.
+    float charSt = 0.0;
+    for (int i = 0; i < MAX_CHAR_ST; i++) {
+        if (i >= uCharSeeThroughCount) break;
+        vec4 c = uCharSeeThrough[i];
+        if (c.z <= 0.0) continue; // inactive slot
+        if (length(vWorldPosition - cameraPosition) >= c.w - 0.5) continue; // behind the sheep → keep grass
+        float sd = length(gl_FragCoord.xy - c.xy) / max(c.z, 1.0);
+        charSt = max(charSt, 1.0 - smoothstep(0.35, 1.0, sd));
+    }
+    if (charSt > 0.0) {
+        float charBrush = samplePainteryBrush(vWorldPosition.xz);
+        if (charSt > charBrush) discard;
+    }
 
-  float borderFade = 1.0 - vGrassData.y;
+    float borderFade = 1.0 - vGrassData.y;
 
-  // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
-  // grass doesn't snap toward the new sky at the click.
-  vec3 fadeBg = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
-  if (uFadeMode == 1) {
-      color = mix(color, fadeBg, borderFade);
-  }
+    // The border-fade target is the SKY colour, which is themed — mix it by the mask so the far
+    // grass doesn't snap toward the new sky at the click.
+    vec3 fadeBg = mix(uBackgroundColorOld, uBackgroundColor, tmNew);
+    if (uFadeMode == 1) {
+        color = mix(color, fadeBg, borderFade);
+    }
 
-  // Only dither styles configured to use the legacy border fade.
-  if (uFadeMode == 0 && vGrassData.y < 0.99) {
-      // Determine fade value (0 = opaque, 1 = transparent)
-      // vGrassData.y goes from 1 (opaque) to 0 (transparent)
-      float fade = borderFade;
+    // Only dither styles configured to use the legacy border fade.
+    if (uFadeMode == 0 && vGrassData.y < 0.99) {
+        // Determine fade value (0 = opaque, 1 = transparent)
+        // vGrassData.y goes from 1 (opaque) to 0 (transparent)
+        float fade = borderFade;
 
-      if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade, uDitherMode)) {
-          discard;
-      }
-  }
+        if (shouldDiscard(gl_FragCoord.xy, uPixelSize, fade)) {
+            discard;
+        }
+    }
 
-  // Paintery edge — screen-space brush texture as the dissolve threshold (coherent
-  // across blades) with a gentle world drift. Matches the ground's portal edge.
-  if (uFadeMode == 2 && borderFade > 0.0) {
-      float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
-      color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
-      if (borderFade > painteryBrush) discard;
-  }
+    // Paintery edge — screen-space brush texture as the dissolve threshold (coherent
+    // across blades) with a gentle world drift. Matches the ground's portal edge.
+    if (uFadeMode == 2 && borderFade > 0.0) {
+        float painteryBrush = samplePainteryBrush(vWorldPosition.xz);
+        color = mix(color, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, borderFade));
+        if (borderFade > painteryBrush) discard;
+    }
 
-  // Lantern grass interaction: tint + fade the grass near the lantern (scale handled in vertex).
-  if (vLanternInfluence > 0.0) {
-    color = mix(color, uLanternGrassColor, vLanternInfluence * uLanternGrassColorAmount);
-    grassAlpha *= 1.0 - vLanternInfluence * uLanternGrassAlpha;
-  }
+    // Lantern grass interaction: tint + fade the grass near the lantern (scale handled in vertex).
+    if (vLanternInfluence > 0.0) {
+        color = mix(color, uLanternGrassColor, vLanternInfluence * uLanternGrassColorAmount);
+        grassAlpha *= 1.0 - vLanternInfluence * uLanternGrassAlpha;
+    }
 
-  // Whole-field fade (loading/GO screens → gameplay). Fully hidden → skip the blend entirely.
-  if (uGrassGlobalAlpha < 0.004) discard;
-  grassAlpha *= uGrassGlobalAlpha;
+    // Whole-field fade (loading/GO screens → gameplay). Fully hidden → skip the blend entirely.
+    if (uGrassGlobalAlpha < 0.004) discard;
+    grassAlpha *= uGrassGlobalAlpha;
 
-  gl_FragColor = vec4(color, grassAlpha);
+    gl_FragColor = vec4(color, grassAlpha);
 
-  #include <tonemapping_fragment>
-  #include <colorspace_fragment>
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
 }

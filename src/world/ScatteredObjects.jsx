@@ -4,20 +4,19 @@ import { useGLTF, useTexture } from '@react-three/drei'
 import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
-import { createObjectFieldSampler } from './utils/objectField.js'
+import { createObjectFieldSampler } from './fields/objectField.js'
 import { createBatchedMeshPool } from './utils/batchedMeshPool.js'
-import { musicStoneSeeThrough } from './utils/musicStoneSeeThrough.js'
-import { characterSeeThrough } from './utils/characterSeeThrough.js'
-import { revealCircle } from './utils/revealCircle.js'
-import { seeThrough } from './utils/seeThrough.js'
-import { themeMask } from './utils/themeMask.js'
+import { musicStoneSeeThrough } from './state/musicStoneSeeThrough.js'
+import { characterSeeThrough } from './state/characterSeeThrough.js'
+import { revealCircle } from './state/revealCircle.js'
+import { seeThrough } from './state/seeThrough.js'
+import { themeMask } from './state/themeMask.js'
 import { getRefScale } from './utils/screenScale.js'
 import { createPropStylizedMaterial, updatePropStylizedMaterial } from '../materials/PropStylizedMaterial.js'
 import { createEyePlaneMaterial, updateEyePlaneMaterial } from '../materials/EyePlaneMaterial.js'
-import { playSound } from '../game/gameSounds.js'
-import { MUSHROOM_VARIANTS, objectLibrary, OBJECT_TYPES, STONE_VARIANTS, TREE_VARIANTS } from '../config/objectFieldDefaults.js'
+import { updateMushroomReactions } from './utils/mushroomReaction.js'
 import { PAINTERY_TEXTURE_URL_LIST, painteryTextureIndex } from '../config/painteryTextures.js'
-import { createEyePlaneGeometry, createMushroomGeometries, createStoneGeometry, createTreeGeometries, toCanonicalGeometry } from './utils/stoneGeometry.js'
+import { buildPropPrototypes, pickEyePlaneIds } from './utils/propPrototypes.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 import mushroomsModelUrl from '../assets/models/mushrooms.glb'
 import treesModelUrl from '../assets/models/trees.glb'
@@ -29,145 +28,6 @@ import treesModelUrl from '../assets/models/trees.glb'
 const MAX_OBJECT_INSTANCES = 4096
 const MAX_EYE_PLANE_INSTANCES = 2048
 const WHITE = new THREE.Color('#ffffff')
-// Reused temps for the mushroom "bend when the hero reaches it" wiggle (rotates the baked instance
-// around its leg-base origin — the geometry is grounded there — so cap + leg tip together).
-const _wiggleAxis = new THREE.Vector3()
-const _wiggleRot = new THREE.Matrix4()
-const _wiggleMat = new THREE.Matrix4()
-const _litColor = new THREE.Color() // reused temp for the mushroom touch "light up"
-
-// Deterministically pick which of a tree's eye planes show (the GLB authors many; a tree only uses
-// a random few). Rank the planes by a hash of the tree's world position and take the lowest `count`.
-function eyePlaneHash(x, z, i) {
-    const s = Math.sin(x * 12.9898 + z * 78.233 + i * 37.719) * 43758.5453
-    return s - Math.floor(s)
-}
-function pickEyePlaneIds(planeIds, count, x, z) {
-    const k = Math.min(count, planeIds.length)
-    if (k <= 0) return []
-    return planeIds
-        .map((id, i) => ({ id, h: eyePlaneHash(x, z, i) }))
-        .sort((a, b) => a.h - b.h)
-        .slice(0, k)
-        .map((entry) => entry.id)
-}
-
-// Procedural placeholder primitives (trees + mushrooms). Stones are authored GLB meshes.
-function createPartGeometry(part) {
-    switch (part.geometry) {
-        case 'cylinder':
-            return new THREE.CylinderGeometry(...part.args)
-        case 'sphere':
-            return new THREE.SphereGeometry(...part.args)
-        case 'cone':
-            return new THREE.ConeGeometry(...part.args)
-        case 'box':
-        default:
-            return new THREE.BoxGeometry(...part.args)
-    }
-}
-
-// One prototype per (type, part). Stones expand to one prototype per GLB variant (a single id
-// chosen per instance at placement). Mushrooms expand to TWO prototypes per GLB variant — a
-// [capId, legId] pair rendered together (cap + leg take different colours). `prototypeMeta`
-// carries the foliage flag (tree canopy) and, for mushrooms, the `part` ('cap' | 'leg').
-function buildPrototypes(stoneNodes, mushroomNodes, treeNodes) {
-    const prototypes = []
-    const prototypeIdsByType = {}
-    const prototypeMeta = {}
-    const eyePlanePrototypes = [] // tree eye planes (separate batched pool / material)
-    const eyePlaneIdsByVariant = {} // variantIndex → [eye-plane prototype ids]
-    const partMatrix = new THREE.Matrix4()
-
-    for (const type of OBJECT_TYPES) {
-        prototypeIdsByType[type] = []
-
-        if (type === 'tree') {
-            TREE_VARIANTS.forEach((variant, variantIndex) => {
-                const trunkNode = treeNodes[variant.trunk]
-                const bushNode = treeNodes[variant.bush]
-                if (!trunkNode || !bushNode) return
-                const { trunk, bush, offset } = createTreeGeometries(trunkNode, bushNode)
-                const trunkId = `tree:${variantIndex}:trunk`
-                const bushId = `tree:${variantIndex}:bush`
-                prototypes.push({ id: trunkId, type, geometry: trunk, color: WHITE })
-                prototypes.push({ id: bushId, type, geometry: bush, color: WHITE })
-                prototypeIdsByType[type].push([trunkId, bushId]) // variant-indexed pair
-                prototypeMeta[trunkId] = { type, foliage: false, part: 'trunk' }
-                prototypeMeta[bushId] = { type, foliage: true, part: 'bush' }
-
-                // Eye planes for this variant (tree_0X_eyesPlane_*) → tree-local prototypes, grounded
-                // identically so the tree's instance matrix lands them on the canopy.
-                const base = variant.trunk.replace('_trunk', '')
-                const planeIds = []
-                Object.keys(treeNodes)
-                    .filter((key) => key.startsWith(`${base}_eyesPlane`))
-                    .sort()
-                    .forEach((key, planeIndex) => {
-                        const node = treeNodes[key]
-                        if (!node?.geometry) return
-                        const id = `eyeplane:${variantIndex}:${planeIndex}`
-                        eyePlanePrototypes.push({ id, geometry: createEyePlaneGeometry(node, offset) })
-                        planeIds.push(id)
-                    })
-                eyePlaneIdsByVariant[variantIndex] = planeIds
-            })
-            continue
-        }
-
-        if (type === 'stone') {
-            STONE_VARIANTS.forEach((variant, variantIndex) => {
-                const node = stoneNodes[variant.node]
-                if (!node) return
-                const id = `stone:${variantIndex}`
-                const geometry = createStoneGeometry(node)
-                const material = Array.isArray(node.material) ? node.material[0] : node.material
-                const color = material?.color ? material.color.clone() : new THREE.Color('#9aa3ad')
-                prototypes.push({ id, type, geometry, color })
-                prototypeIdsByType[type].push(id)
-                prototypeMeta[id] = { type, foliage: false }
-            })
-            continue
-        }
-
-        if (type === 'mushroom') {
-            MUSHROOM_VARIANTS.forEach((variant, variantIndex) => {
-                const capNode = mushroomNodes[variant.cap]
-                const legNode = mushroomNodes[variant.leg]
-                if (!capNode || !legNode) return
-                const { cap, leg } = createMushroomGeometries(capNode, legNode)
-                const capId = `mushroom:${variantIndex}:cap`
-                const legId = `mushroom:${variantIndex}:leg`
-                prototypes.push({ id: capId, type, geometry: cap, color: WHITE })
-                prototypes.push({ id: legId, type, geometry: leg, color: WHITE })
-                prototypeIdsByType[type].push([capId, legId]) // variant-indexed pair
-                prototypeMeta[capId] = { type, foliage: false, part: 'cap' }
-                prototypeMeta[legId] = { type, foliage: false, part: 'leg' }
-            })
-            continue
-        }
-
-        objectLibrary[type].parts.forEach((part, partIndex) => {
-            const base = createPartGeometry(part)
-            base.applyMatrix4(
-                partMatrix.compose(
-                    new THREE.Vector3(part.offset?.[0] ?? 0, part.offset?.[1] ?? 0, part.offset?.[2] ?? 0),
-                    new THREE.Quaternion(),
-                    new THREE.Vector3(part.scale?.[0] ?? 1, part.scale?.[1] ?? 1, part.scale?.[2] ?? 1)
-                )
-            )
-            const foliage = !!part.foliage
-            const geometry = toCanonicalGeometry(base, foliage, 1) // trees are the only see-through props
-            base.dispose()
-            const id = `${type}:${partIndex}`
-            prototypes.push({ id, type, geometry, color: part.color })
-            prototypeIdsByType[type].push(id)
-            prototypeMeta[id] = { type, foliage }
-        })
-    }
-
-    return { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant }
-}
 
 export default function ScatteredObjects({ activeChunks, chunkSize }) {
     const objectParameters = useStore((s) => s.objectParameters)
@@ -178,6 +38,8 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
     const { nodes: mushroomNodes } = useGLTF(mushroomsModelUrl)
     const { nodes: treeNodes } = useGLTF(treesModelUrl)
 
+    // Shared Texture instances (useTexture caches by URL) — see the note in Terrain.jsx before
+    // changing any filter/wrap write here.
     const painterlyTextures = useTexture(PAINTERY_TEXTURE_URL_LIST)
     const painterlyTexture = useMemo(() => {
         const texture = painterlyTextures[painteryTextureIndex(objectParameters.textureName)] ?? painterlyTextures[0]
@@ -189,7 +51,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
     }, [painterlyTextures, objectParameters.textureName])
 
     const pool = useMemo(() => {
-        const { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant } = buildPrototypes(
+        const { prototypes, prototypeIdsByType, prototypeMeta, eyePlanePrototypes, eyePlaneIdsByVariant } = buildPropPrototypes(
             stoneNodes,
             mushroomNodes,
             treeNodes
@@ -216,7 +78,15 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
         if (uniforms?.uPainterlyTexture) uniforms.uPainterlyTexture.value = painterlyTexture
     }, [pool, painterlyTexture])
 
+    const chunkInstancesRef = useRef(new Map())
+    const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
+    const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
+    const generationKeyRef = useRef(null)
+
     useFrame((frameState, delta) => {
+        /**
+         * Prop material
+         */
         const state = useStore.getState()
         updatePropStylizedMaterial(pool.mesh.material, {
             propRim: {
@@ -283,6 +153,9 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
             },
         })
 
+        /**
+         * Eye planes
+         */
         // Tree eye planes share the tree's wind (whole-plane translation) + fade at the reveal edge.
         if (pool.eyePool) {
             updateEyePlaneMaterial(pool.eyePool.mesh.material, {
@@ -307,75 +180,11 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
             })
         }
 
-        // Mushroom bend: when the hero reaches a mushroom it tips away with a decaying wiggle
-        // (re-composing base × a rotation around the leg-base origin). One-shot on each entry into
-        // the trigger radius; restores the rest matrix once the wiggle settles.
-        const op = state.objectParameters
-        const maxAngle = op.mushroomWiggleAngle ?? 0.4
-        const litBoost = op.mushroomLitBoost ?? 0
-        const soundVolume = op.mushroomSoundVolume ?? 0
-        const wiggleOn = maxAngle > 0.0001
-        // Run the reaction loop if ANY of wiggle / light / sound is on, so the touch react still fires
-        // even when the bend is turned off.
-        if (wiggleOn || litBoost > 0 || soundVolume > 0) {
-            const dt = Math.min(delta, 0.05)
-            const hero = state.ballPosition
-            const radiusSq = (op.mushroomWiggleRadius ?? 1.2) ** 2
-            const speed = op.mushroomWiggleSpeed ?? 12
-            const decay = op.mushroomWiggleDecay ?? 3
-            for (const entries of chunkMushroomsRef.current.values()) {
-                for (const m of entries) {
-                    const dx = m.x - hero.x
-                    const dz = m.z - hero.z
-                    const distSq = dx * dx + dz * dz
-                    const within = distSq < radiusSq
-                    if (within && !m.inside) {
-                        const d = Math.sqrt(distSq) || 1
-                        m.dirX = dx / d // tip AWAY from the hero
-                        m.dirZ = dz / d
-                        m.phase = 0
-                        m.active = true
-                        // Soft wind one-shot on touch — one of Tori's (winds) melody sounds.
-                        if (soundVolume > 0) playSound('winds', Math.floor(Math.random() * 6), { gain: soundVolume })
-                    }
-                    m.inside = within
-                    if (!m.active) continue
-                    m.phase += dt
-                    const amp = Math.exp(-m.phase * decay)
-                    if (amp < 0.02) {
-                        m.active = false
-                        pool.setMatrix(m.capId, m.base)
-                        pool.setMatrix(m.legId, m.base)
-                        // Restore the base colours once the reaction settles.
-                        if (litBoost > 0 && m.capColor) {
-                            pool.setColor(m.capId, m.capColor)
-                            pool.setColor(m.legId, m.legColor)
-                        }
-                        continue
-                    }
-                    // Light up: brighten cap + leg, riding the reaction amplitude (fades as it settles).
-                    if (litBoost > 0 && m.capColor) {
-                        const brightness = 1 + amp * litBoost
-                        pool.setColor(m.capId, _litColor.copy(m.capColor).multiplyScalar(brightness))
-                        pool.setColor(m.legId, _litColor.copy(m.legColor).multiplyScalar(brightness))
-                    }
-                    if (wiggleOn) {
-                        const angle = Math.sin(m.phase * speed) * maxAngle * amp
-                        _wiggleAxis.set(m.dirZ, 0, -m.dirX) // horizontal axis ⟂ to the tip direction
-                        _wiggleRot.makeRotationAxis(_wiggleAxis, angle)
-                        _wiggleMat.multiplyMatrices(m.base, _wiggleRot)
-                        pool.setMatrix(m.capId, _wiggleMat)
-                        pool.setMatrix(m.legId, _wiggleMat)
-                    }
-                }
-            }
-        }
+        /**
+         * Mushroom reaction
+         */
+        updateMushroomReactions(pool, chunkMushroomsRef.current, state.ballPosition, state.objectParameters, delta)
     })
-
-    const chunkInstancesRef = useRef(new Map())
-    const chunkMushroomsRef = useRef(new Map()) // chunk.key → mushroom wiggle entries (cap+leg ids + base matrix)
-    const chunkEyePlanesRef = useRef(new Map()) // chunk.key → eye-plane instance ids (in pool.eyePool)
-    const generationKeyRef = useRef(null)
 
     // NOTE: colours + colour variations are deliberately NOT in this key — they're shader uniforms
     // (typeColors above), so recolouring props (day/night themes, Leva colour drags) never rebuilds

@@ -18,25 +18,10 @@ uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
 uniform float uPainteryBleed;
-uniform float uSeeThroughActive;
-uniform vec2 uSeeThroughCenter;
-uniform float uSeeThroughRadius;
-uniform float uSeeThroughDepth;
-uniform float uSeeThroughInner;
-uniform float uSeeThroughDepthBias;
-uniform float uSeeThroughOpacityIntensity;
+// See-through subjects + seeThroughAmount() come from includes/seeThrough.glsl (included
+// below, after the varyings). These two are prop-only — the paintery edge on the hole.
 uniform float uSeeThroughTextureContrast;
 uniform float uSeeThroughTextureScale;
-// Extra see-through subjects: the music stones. xy = screen centre px, z = radius px,
-// w = camera depth. Props fade where ANY of these (or the hero) sits behind them.
-#define MAX_STONE_ST 7
-uniform vec4 uStoneSeeThrough[MAX_STONE_ST];
-uniform int uStoneSeeThroughCount;
-// Extra see-through subjects: the music characters (sheep). Same packing as the stones; inactive
-// slots carry radius 0 (skipped).
-#define MAX_CHAR_ST 5
-uniform vec4 uCharSeeThrough[MAX_CHAR_ST];
-uniform int uCharSeeThroughCount;
 
 // Fresnel colour rim for the hard-surface props. A SEPARATE colour per type (selected by the
 // vStone / vSeeThrough attributes): stones, tree trunks, mushrooms. (Music stones use a separate
@@ -86,7 +71,7 @@ uniform vec3 uPropRimColorStoneOld;
 uniform vec3 uPropRimColorTrunkOld;
 uniform vec3 uPropRimColorMushroomOld;
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 
 #include <common>
 #include <color_pars_fragment>
@@ -104,7 +89,7 @@ varying float vStone;
 varying float vPart;
 varying vec3 vTypeJitter; // per-instance colour jitter, computed in the VERTEX (stable, no crawl)
 
-#include ../lib/paintedEdge.glsl
+#include ../includes/paintedEdge.glsl
 
 // View-facing fresnel: tints the silhouette toward the given rim colour, fully opaque.
 vec3 applyPropRim(vec3 color, vec3 rimColor, vec3 worldNormal, vec3 worldPosition) {
@@ -154,12 +139,7 @@ float samplePainteryBrush(vec2 worldXZ) {
 
 // See-through amount for one subject (hero / stone): how much to fade this prop where the
 // subject sits behind it on screen and the prop is in front of it.
-float seeThroughAmount(vec2 center, float radiusPx, float depth) {
-    if (length(vWorldPos - cameraPosition) >= depth - uSeeThroughDepthBias) return 0.0;
-    float sd = length(gl_FragCoord.xy - center) / max(radiusPx, 1.0);
-    float fade = 1.0 - smoothstep(uSeeThroughInner, 1.0, sd);
-    return fade * uSeeThroughOpacityIntensity;
-}
+#include ../includes/seeThrough.glsl
 
 void main() {
     // See-through: where the hero OR a bottom music stone is hidden behind this prop, dither it

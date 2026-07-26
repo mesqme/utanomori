@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import eyePlaneVertexShader from '../shaders/eyePlane/vertex.glsl'
 import eyePlaneFragmentShader from '../shaders/eyePlane/fragment.glsl'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // Material for the tree eye planes (one eye pair per UV-square, instanced per tree via a BatchedMesh).
 // Transparent decal (depthWrite off + a slight polygon offset so it sits just in front of the

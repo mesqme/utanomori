@@ -11,12 +11,12 @@ import SheepCreature from './SheepCreature.jsx'
 import CompanionNotes from './CompanionNotes.jsx'
 import CharacterFeedback from './CharacterFeedback.jsx'
 import TargetArrow from './TargetArrow.jsx'
-import { sampleTrail } from './utils/companionTrail.js'
-import { getRevealRadius } from './utils/revealCircle.js'
-import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './utils/trampleField.js'
-import { setGroundShadow, clearGroundShadow } from './utils/groundShadowField.js'
-import { resumeAudio } from '../game/songAudio.js'
-import { playMumble } from '../game/ambientSounds.js'
+import { sampleTrail } from './state/companionTrail.js'
+import { getRevealRadius } from './state/revealCircle.js'
+import { setTrampler, clearTrampler, TRAMPLE_SLOT_TARGET, TRAMPLE_SLOT_FOLLOWER } from './state/trampleField.js'
+import { setGroundShadow, clearGroundShadow } from './state/groundShadowField.js'
+import { resumeAudio } from '../audio/songAudio.js'
+import { playMumble } from '../audio/ambientSounds.js'
 import useTutorial from '../stores/useTutorial.jsx'
 
 const INTERACT_RADIUS = 2.3
@@ -101,10 +101,16 @@ function TargetCreature({ target }) {
     }, [stage])
 
     useFrame((state, delta) => {
+        /**
+         * Frame setup
+         */
         const group = groupRef.current
         if (!group) return
         const player = useStore.getState().ballPosition
 
+        /**
+         * Flee run or stand ground
+         */
         if (stage === 'flee') {
             // Turn toward the new spawn and run there (it fades out at the reveal edge en route).
             const dt = Math.min(delta, 0.1)
@@ -128,13 +134,22 @@ function TargetCreature({ target }) {
             setTrampler(TRAMPLE_SLOT_TARGET, target.x, 0, target.z)
         }
 
+        /**
+         * Hop and idle bob
+         */
         if (creatureRef.current) {
             const t = state.clock.elapsedTime
             creatureRef.current.position.y = stage === 'success' ? Math.abs(Math.sin(t * 9)) * 0.5 : Math.abs(Math.sin(t * 2.5)) * 0.12
         }
 
+        /**
+         * Ground shadow
+         */
         setGroundShadow(TRAMPLE_SLOT_TARGET, group.position.x, group.position.z, (target.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
 
+        /**
+         * Reveal gate
+         */
         // Stay hidden until it's been positioned AND the SheepCreature's reveal-fade has been
         // computed from that real position (one frame behind, since the child runs first) — avoids
         // the one-frame flash of the companion snapping to its spawn when gameplay starts.
@@ -177,11 +192,17 @@ function Follower({ definition, index }) {
     )
 
     useFrame((state, delta) => {
+        /**
+         * Frame setup
+         */
         const group = groupRef.current
         if (!group) return
 
         const safeDelta = Math.min(delta, 0.1)
 
+        /**
+         * Restart scatter
+         */
         // Cinematic restart: scatter outward (each in its own fanned direction) off the terrain.
         // Keep fleeing through the brief 'resettling' curtain so they don't snap back to the trail.
         const phaseNow = usePhases.getState().phase
@@ -215,6 +236,9 @@ function Follower({ definition, index }) {
         }
         fleeStateRef.current = null
 
+        /**
+         * Follow line sample
+         */
         // Follow line: the first companion trails the hero by `followLead`, each next one by an
         // extra `followGap` (both tunable in the Sheep Leva folder).
         const follow = useStore.getState().sheepParameters
@@ -226,6 +250,9 @@ function Follower({ definition, index }) {
         }
         group.visible = true
 
+        /**
+         * Trail chase and speed cap
+         */
         const position = positionRef.current
         if (!initializedRef.current) {
             position.set(definition.x, 0, definition.z)
@@ -252,11 +279,17 @@ function Follower({ definition, index }) {
         position.y += stepY
         position.z += stepZ
 
+        /**
+         * Speed and run animation
+         */
         const speed = position.distanceTo(previousRef.current) / safeDelta
         previousRef.current.copy(position)
         const movingNow = speed > MOVE_THRESHOLD
         setMoving((current) => (current === movingNow ? current : movingNow))
 
+        /**
+         * Placement, bob and heading
+         */
         // Group sits on the ground; jump arc + bob live on the inner creature so the
         // shadow stays planted and the trampler reports the ground position.
         group.position.set(position.x, 0, position.z)
@@ -273,9 +306,15 @@ function Follower({ definition, index }) {
         }
         group.rotation.y = headingRef.current
 
+        /**
+         * Trample and ground shadow
+         */
         setTrampler(slot, position.x, 0, position.z)
         setGroundShadow(slot, position.x, position.z, (definition.scale ?? 0.5) * 0.62, GROUND_SHADOW_STRENGTH)
 
+        /**
+         * Reveal gate
+         */
         // Hidden until positioned + the reveal-fade settles — avoids the one-frame snap-to-trail flash.
         if (placedRef.current < 2) {
             placedRef.current += 1
@@ -332,6 +371,9 @@ export default function Companions() {
     }, [subscribeKeys])
 
     useFrame(() => {
+        /**
+         * Phase gate
+         */
         const store = useStore.getState()
 
         // Pre-place the FIRST music character during warmup/intro so its sheep warms up (skeleton
@@ -342,6 +384,9 @@ export default function Companions() {
         const inStart = phaseNow === PHASES.start
         if (!inStart && phaseNow !== PHASES.warmup && phaseNow !== PHASES.intro) return
 
+        /**
+         * Song game guard
+         */
         const companions = useCompanions.getState()
         const gameActive = useSongGame.getState().active
 
@@ -350,6 +395,9 @@ export default function Companions() {
 
         const player = store.ballPosition
 
+        /**
+         * Target spawn
+         */
         if (!companions.target) {
             if (companions.found.length < MAX_PARTY) {
                 const spawn = findHiddenSpawn(player)
@@ -358,23 +406,35 @@ export default function Companions() {
             return
         }
 
+        /**
+         * Gameplay gate and distance
+         */
         // The pre-placed target just sits there faded — abandon / in-range checks are gameplay-only.
         if (!inStart) return
 
         const distance = Math.hypot(player.x - companions.target.x, player.z - companions.target.z)
 
+        /**
+         * Tutorial tip
+         */
         // Tutorial: the first time a spirit crosses into the visible circle (fully opaque), explain
         // the mini-game. showSpirit() self-guards, so it fires only once and only when idle.
         if (useStore.getState().gameUiParameters.tutorialEnabled && distance <= getRevealRadius()) {
             useTutorial.getState().showSpirit()
         }
 
+        /**
+         * Abandon and relocate
+         */
         if (distance > ABANDON_RADIUS) {
             const spawn = findHiddenSpawn(player)
             companions.relocateTarget(spawn.x, spawn.z)
             return
         }
 
+        /**
+         * Interact range
+         */
         const interactRadius = useStore.getState().songGameParameters?.interactRadius ?? INTERACT_RADIUS
         companions.setTargetInRange(distance <= interactRadius)
     })

@@ -5,8 +5,8 @@ import useStore from '../stores/useStore.jsx'
 import { useIsMobile } from '../config/mobile.js'
 import { getMusicCharacter } from '../config/musicCharacters.js'
 import SpeechBubble from './SpeechBubble.jsx'
-import { playSound } from './gameSounds.js'
-import { resumeAudio } from './songAudio.js'
+import { playSound } from '../audio/gameSounds.js'
+import { resumeAudio } from '../audio/songAudio.js'
 import './songGame.css'
 
 const FAIL_EXCLAIM_TIME = 1.1 // seconds the ❗ burst shows (stones still up) before the speech
@@ -89,7 +89,7 @@ export default function SongGame() {
             timers.push(setTimeout(() => useSongGame.getState().setActiveNote(null), (at + spacing * 0.85) * 1000))
             t += spacing
         })
-        timers.push(setTimeout(() => useSongGame.getState().openWheel(), (t + 0.3) * 1000))
+        timers.push(setTimeout(() => useSongGame.getState().openInput(), (t + 0.3) * 1000))
 
         return () => timers.forEach(clearTimeout)
     }, [stage, round])

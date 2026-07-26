@@ -212,7 +212,7 @@ export function applyColorPatch(patch) {
 
 // Apply a GLOBAL theme by name: the flat patch, the nested hero + sheep colours (baseColor only —
 // toon shades kept), and the remembered preset selections. Shared by the Leva "Colors" dropdown and
-// the in-game day/night toggle (InteractionPrompt); Controls re-syncs the Leva pickers reactively.
+// the in-game day/night toggle (InteractionPrompt); debug/DebugPanel.jsx re-syncs the Leva pickers.
 export function applyGlobalTheme(name) {
     const theme = GLOBAL_THEMES[name]
     if (!theme) return

@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import { PAINTERY_TEXTURE_URLS } from '../../config/painteryTextures.js'
 
-// Shared state of the LIVE (in-shader) theme transition — see shaders/lib/themeMask.glsl. While
+// Shared state of the LIVE (in-shader) theme transition — see shaders/includes/themeMask.glsl. While
 // active, every themed material mixes its OLD values (the `old` snapshot, captured at switch time)
 // toward the live store values by the per-fragment screen-space mask, so the whole world keeps
 // moving during the Portal switch. Driven by game/themeTransition.js.

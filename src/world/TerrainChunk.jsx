@@ -3,7 +3,7 @@ import * as THREE from 'three'
 
 import useStore from '../stores/useStore.jsx'
 import Grass from './Grass.jsx'
-import { createRoadSampler } from './utils/roadField.js'
+import { createRoadSampler } from './fields/roadField.js'
 
 export default function TerrainChunk({ x, z, size, terrainMaterial, grassMaterial }) {
     const terrainSegments = useStore((s) => s.terrainParameters.segments)

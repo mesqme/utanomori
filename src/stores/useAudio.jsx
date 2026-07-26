@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { setAudioMuted, setAudioVolume } from '../game/songAudio.js'
+import { setAudioMuted, setAudioVolume } from '../audio/songAudio.js'
 
 // On-screen sound controls. Both drive the shared master gain (songAudio), so they affect EVERYTHING
 // at once — music tracks, mini-game one-shots and ambient layers. `muted` is the quick on/off button;

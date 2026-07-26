@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 import backgroundVertexShader from '../shaders/background/vertex.glsl'
 import backgroundFragmentShader from '../shaders/background/fragment.glsl'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // Layered night sky: base colour gradient + paintery texture variation + stars.
 function colorModeToInt(mode) {

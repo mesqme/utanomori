@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { createRoadSampler, getNearestRoadPoint, sampleRoadDirection, sampleRoadDistance, sampleRoadMask } from '../src/world/utils/roadField.js'
+import { createRoadSampler, getNearestRoadPoint, sampleRoadDirection, sampleRoadDistance, sampleRoadMask } from '../src/world/fields/roadField.js'
 
 const parameters = {
     enabled: true,

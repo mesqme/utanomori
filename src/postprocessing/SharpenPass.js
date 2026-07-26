@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 import { Pass } from 'postprocessing'
 
-import fullscreenVertexShader from '../shaders/postprocessing/fullscreen.vert'
-import sharpenFragmentShader from '../shaders/postprocessing/sharpen.frag'
-import { themeMaskUniforms } from '../world/utils/themeMask.js'
+import fullscreenVertexShader from '../shaders/fullscreen/vertex.glsl'
+import sharpenFragmentShader from '../shaders/sharpen/fragment.glsl'
+import { themeMaskUniforms } from '../world/state/themeMask.js'
 
 // Final pass of the painterly pipeline: the display color grade, then the film
 // grain applied last so nothing (AA) filters the grain afterwards.
@@ -14,13 +14,15 @@ export default class SharpenPass extends Pass {
             vertexShader: fullscreenVertexShader,
             fragmentShader: sharpenFragmentShader,
             uniforms: {
+                // inputBuffer and resolution keep their bare names on purpose — the postprocessing
+                // library binds those two by name. Everything else follows the u* convention.
                 inputBuffer: { value: null },
                 resolution: { value: new THREE.Vector2(1, 1) },
-                sensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
-                luminanceNoise: { value: settings.luminanceNoise },
-                chromaNoise: { value: settings.chromaNoise },
-                sensorNoiseScale: { value: settings.sensorNoiseScale },
-                noiseSeed: { value: settings.noiseSeed },
+                uSensorNoiseEnabled: { value: settings.sensorNoiseEnabled ? 1 : 0 },
+                uLuminanceNoise: { value: settings.luminanceNoise },
+                uChromaNoise: { value: settings.chromaNoise },
+                uSensorNoiseScale: { value: settings.sensorNoiseScale },
+                uNoiseSeed: { value: settings.noiseSeed },
                 uSaturation: { value: settings.saturation ?? 1 },
                 uWarmth: { value: settings.warmth ?? 0 },
                 uBrightness: { value: settings.brightness ?? 1 },
@@ -40,11 +42,11 @@ export default class SharpenPass extends Pass {
 
     update(settings) {
         const u = this.material.uniforms
-        u.sensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
-        u.luminanceNoise.value = settings.luminanceNoise
-        u.chromaNoise.value = settings.chromaNoise
-        u.sensorNoiseScale.value = settings.sensorNoiseScale
-        u.noiseSeed.value = settings.noiseSeed
+        u.uSensorNoiseEnabled.value = settings.sensorNoiseEnabled ? 1 : 0
+        u.uLuminanceNoise.value = settings.luminanceNoise
+        u.uChromaNoise.value = settings.chromaNoise
+        u.uSensorNoiseScale.value = settings.sensorNoiseScale
+        u.uNoiseSeed.value = settings.noiseSeed
         u.uSaturation.value = settings.saturation ?? 1
         u.uWarmth.value = settings.warmth ?? 0
         u.uBrightness.value = settings.brightness ?? 1

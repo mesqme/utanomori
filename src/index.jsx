@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 
 import Loader from './loader/Loader.jsx'
-import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
+import { applyPaletteCssVariables } from './config/palette.js'
 
 // ENTRY CHUNK — kept deliberately tiny (react + the Loader + the light stores; NO three.js): the
 // loading screen must appear within moments of the HTML, not after the multi-MB 3D bundle. The rest
@@ -12,7 +12,7 @@ import { applySoundJourneyCssVariables } from './config/soundJourneyPalette.js'
 // pre-loader in index.html shows the same screen — the Loader fades it out when progress starts.
 const App = lazy(() => import('./App.jsx'))
 
-applySoundJourneyCssVariables()
+applyPaletteCssVariables()
 
 // iOS Safari ignores user-scalable=no — its proprietary gesture events are the reliable way to stop
 // pinch-zoom mid-game (double-tap zoom is already killed by touch-action: none in style.css).

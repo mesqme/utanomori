@@ -1,9 +1,9 @@
 import * as THREE from 'three'
 
-// Shared screen-space drift + viewport for every paintery overlay (background + the terrain
-// border, grass and prop surfaces), so they all pan together with the camera and stay resize /
-// DPR stable. Spread these uniforms (by reference) into each paintery material, then call
-// updateScreenPaintery once per frame. Values are in drawing-buffer (device) pixels.
+// Shared screen-space drift + viewport for the paintery overlays that pan with the camera — the
+// background sphere and the prop surfaces — so they stay in step and remain resize / DPR stable.
+// Spread these uniforms (by reference) into each paintery material; BackgroundSphere owns the
+// single updateScreenPaintery call per frame. Values are in drawing-buffer (device) pixels.
 export const screenPainteryUniforms = {
     uTexturePan: { value: new THREE.Vector2() }, // camera-drift offset (from yaw/pitch)
     uPainteryResolution: { value: new THREE.Vector2(1, 1) }, // drawing buffer size

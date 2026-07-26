@@ -37,6 +37,12 @@ import {
 const createStore = () =>
     create(
         subscribeWithSelector((set, get) => ({
+            /**
+             * Live world positions
+             *
+             * Mutated IN PLACE (copy, never reassign) so the per-frame writers don't churn the
+             * store: readers hold the same Vector3 instance for the lifetime of the app.
+             */
             ballPosition: new THREE.Vector3(0, 0, 0),
             setBallPosition: (position) => {
                 get().ballPosition.copy(position)
@@ -63,6 +69,12 @@ const createStore = () =>
                 get().lanternGlowPosition.copy(position)
             },
 
+            /**
+             * Versions
+             *
+             * Mirrored into the store so the HMR merge below can compare the running store's
+             * version against the freshly imported one and force-apply changed defaults.
+             */
             grassStyleVersion: GRASS_STYLE_VERSION,
             characterStylizedVersion: CHARACTER_STYLIZED_VERSION,
             objectStyleVersion: OBJECT_STYLE_VERSION,
@@ -91,7 +103,9 @@ const createStore = () =>
              */
             lanternGroundLightParameters: { ...defaultSceneStyle.lanternGroundLightParameters },
 
-            /**Border parameters */
+            /**
+             * Border parameters
+             */
             borderParameters: { ...defaultSceneStyle.borderParameters },
             setBorderParameters: (parameters) => {
                 set({ borderParameters: parameters })
@@ -124,6 +138,12 @@ const createStore = () =>
 
             /**
              * Camera debug parameters
+             */
+            /**
+             * Global feature parameters
+             *
+             * Seeded straight from the DEFAULT_* groups in config/parameterDefaults.js — this
+             * store is plumbing, so the values themselves live there, not here.
              */
             cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
             colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS },
@@ -269,6 +289,9 @@ if (import.meta?.hot) {
             ...state.painterlyPostParameters,
         },
         characterMaterialParameters,
+        // NOTE: the only group here that RESETS rather than merges — a hot reload discards live
+        // camera tweaks and returns to the defaults. Dev-only either way; flagged rather than
+        // "fixed" because whether that is intentional has not been confirmed.
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
         colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS, ...state.colorGradeParameters },
         loaderDebugParameters: applyLoaderDebugDefaults ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS } : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },

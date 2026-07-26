@@ -13,7 +13,7 @@ import {
     playMumble,
     playSad,
     playFootstep,
-} from '../game/ambientSounds.js'
+} from '../audio/ambientSounds.js'
 
 // Drives the ambient layer (wind / cicadas / owls), the per-character one-shots (mumble on a
 // conversation, sad on a flee), and the hero footsteps. Nothing renders — a frame hook so it

@@ -10,7 +10,7 @@ uniform vec3 uHorizonColorOld;
 uniform float uGradientIntensityOld;
 uniform float uStarsEnabledOld; // 0/1
 
-#include ../lib/themeMask.glsl
+#include ../includes/themeMask.glsl
 uniform float uGradientHeight; // sky direction.y where the horizon colour sits
 uniform float uGradientPower; // gradient curve
 

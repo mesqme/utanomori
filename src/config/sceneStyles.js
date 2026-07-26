@@ -1,9 +1,22 @@
+// The painterly LOOK preset — every value the scene is painted with, in one object. Global
+// feature parameters (camera, audio, mini-game, mobile) live in parameterDefaults.js instead;
+// the rule of thumb is that a colour theme (config/colorPresets.js) repaints things in HERE.
+//
+// One style ships (`painteryStyle`), exported as `defaultSceneStyle`; the store seeds every
+// section from it and HMR-merges against it. Section order below is the render order it reads
+// in: ground, then what stands on it, then the air, then the passes over the whole frame.
+
 function cloneMaterials(materials) {
     return Object.fromEntries(Object.entries(materials).map(([id, colors]) => [id, { ...colors }]))
 }
 
 const painteryStyle = {
     label: 'Paintery',
+
+    /**
+     * Ground
+     */
+
     terrainParameters: {
         color: '#747dff',
         baseBrightness: 0.66,
@@ -96,6 +109,10 @@ const painteryStyle = {
         groundNoiseStrength: 2,
         groundEdgeSharpness: 1,
     },
+    /**
+     * Props and wind
+     */
+
     objectParameters: {
         enabled: true,
         textureName: 'paintaryAlpha',
@@ -153,6 +170,10 @@ const painteryStyle = {
         strength: 0.2,
         speed: 1.1,
     },
+    /**
+     * Atmosphere
+     */
+
     lanternGroundLightParameters: {
         radius: 3,
         edgeSoftness: 3.26,
@@ -176,7 +197,6 @@ const painteryStyle = {
         painteryBleed: 0,
     },
     ditheringParameters: {
-        ditherMode: 'Bayer',
         pixelSize: 1,
     },
     backgroundParameters: {
@@ -209,6 +229,10 @@ const painteryStyle = {
         textureYawParallax: 1000, // CSS px/radian: horizontal cloud drift vs camera yaw (signed)
         texturePitchParallax: 1000, // CSS px/radian: vertical cloud drift vs camera pitch (signed)
     },
+    /**
+     * Post-processing and stylized edges
+     */
+
     painterlyPostParameters: {
         enabled: true,
         noiseSeed: 0,
@@ -238,6 +262,10 @@ const painteryStyle = {
         strength: 3,
         power: 4.4,
     },
+    /**
+     * Characters
+     */
+
     characterParameters: {
         modelScale: 0.51,
         modelYOffset: 0.59,
@@ -267,8 +295,12 @@ const painteryStyle = {
         },
     },
     // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Every value here is written
-    // to a CSS custom property on :root by Controls.jsx, so the DOM UI restyles live. The old
+    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live. The old
     // textured/Blot-bubble params (shape, roughness, texture, colours, button sizes) are gone.
+    /**
+     * Game UI
+     */
+
     gameUiParameters: {
         // Global multiplier on ALL in-game UI text (sized in vmin → constant proportion at any
         // resolution); written to --ui-scale.
@@ -325,6 +357,10 @@ const painteryStyle = {
         tutorialButtonOutside: true, // bool → place the button below the card instead of inside it
         tutorialPadding: 3.0, // vmin·scale → --tut-pad: gap between the image/content and the card frame
     },
+    /**
+     * See-through
+     */
+
     seeThroughParameters: {
         enabled: true,
         grassEnabled: false,

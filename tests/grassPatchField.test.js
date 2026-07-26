@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-import { getGrassPatchCell, sampleGrassPatchField } from '../src/world/utils/grassPatchField.js'
+import { getGrassPatchCell, sampleGrassPatchField } from '../src/world/fields/grassPatchField.js'
 
 const parameters = {
     worldSeed: 9187,
