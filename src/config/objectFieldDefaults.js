@@ -1,12 +1,8 @@
 /**
- * Placeholder object library.
+ * Prop library. Trees, stones and mushrooms are all authored GLB meshes (see TREE_VARIANTS /
+ * STONE_VARIANTS / MUSHROOM_VARIANTS + ScatteredObjects); one variant is chosen per instance.
  *
- * Trees are still lightweight procedural placeholders (data-driven `parts`, each a
- * primitive with a local offset / scale / colour). Stones AND mushrooms are now real
- * authored meshes loaded from glb (see STONE_VARIANTS / MUSHROOM_VARIANTS +
- * ScatteredObjects): one variant is chosen per instance.
- *
- * `footprintRadius` drives grass suppression + spacing around the object. For stones /
+ * `footprintRadius` drives grass suppression + spacing around the object. For stones and
  * mushrooms it is derived per-variant from the measured safe diameter instead.
  */
 export const OBJECT_TYPES = Object.freeze(['tree', 'stone', 'mushroom'])
@@ -77,8 +73,8 @@ export const TREE_VARIANTS = Object.freeze([
     { trunk: 'tree_03_trunk', bush: 'tree_03_bush', diameter: 0.92, canopyDiameter: 4.54 },
 ])
 
-// Procedural parts sit on the ground (origin at the base) so a per-type instance scale resizes
-// them while keeping them grounded. Trees / stones / mushrooms are now authored GLB meshes.
+// Per-type shared settings. Geometry is authored (see the *_VARIANTS above); these are the
+// placement fallbacks used when a variant does not supply its own radius.
 export const objectLibrary = Object.freeze({
     // Authored tree — trunk + bush geometry comes from trees.glb (TREE_VARIANTS), baked together.
     // footprintRadius is a fallback; the real small/big radii are per-variant. trunkRadius is the
@@ -86,20 +82,17 @@ export const objectLibrary = Object.freeze({
     tree: {
         footprintRadius: 0.9,
         trunkRadius: 0.28,
-        parts: [],
     },
     // Authored boulder — geometry comes from stones.glb (STONE_VARIANTS), recentred to sit
     // on the ground. footprintRadius here is a fallback; the real radius is per-variant.
     stone: {
         footprintRadius: 1.4,
-        parts: [],
     },
     // Authored mushroom — cap + leg geometry comes from mushrooms.glb (MUSHROOM_VARIANTS),
     // baked together so the cap sits on the leg. footprintRadius here is a fallback; the real
     // radius is per-variant.
     mushroom: {
         footprintRadius: 0.7,
-        parts: [],
     },
 })
 

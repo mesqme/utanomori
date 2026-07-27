@@ -16,7 +16,7 @@ import { FAIL_LINES } from '../game/gameText.js'
  * you click the same stone again), mapped to a stone sequence (`song`). No vanishing.
  */
 
-// Stones staged per game — one per stone colour (Game → Colors → note1..note6). Characters with
+// Stones staged per game — one per stone colour (Game → Minigame → Note colours). Characters with
 // fewer sounds than this get silent decoy stones in the leftover slots.
 const BOARD_STONES = 6
 
@@ -26,7 +26,7 @@ const initialState = {
     companion: null, // the target definition (carries `music`)
     track: null, // 'piano' | 'drums' | 'winds'
     stoneSounds: [], // stone index → unique-sound index (or -1 for a silent decoy stone)
-    stoneCount: 0, // how many stones to stage (= real sounds, or 6 with "always six notes")
+    stoneCount: 0, // how many stones to stage (always BOARD_STONES)
     song: [], // the full melody as a STONE sequence the player must reproduce
     rounds: [], // notes per round, e.g. [2,3,4]
     round: 0,

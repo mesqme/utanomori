@@ -1,8 +1,8 @@
-// Shared Web Audio context plumbing. The actual sound now lives in musicTracks.js (the looping
-// WAV backing layers) and gameSounds.js (the one-shot mini-game sounds); this module only owns the
-// single AudioContext they all share, so everything stays on one clock and one user-gesture resume.
-// (The old placeholder synth + spatial "voices" that used to live here were removed once real audio
-// replaced them — only getAudioContext / resumeAudio are still used.)
+// Shared Web Audio context plumbing. The actual sound lives in musicTracks.js (the looping mp3
+// backing layers), gameSounds.js (the one-shot mini-game sounds) and ambientSounds.js; this module
+// owns the single AudioContext they all share, so everything stays on one clock and resumes on one
+// user gesture. It also owns the master gain and the buffer loader, which is how the loading bar
+// distinguishes the audio that blocks GO from the audio that streams in behind it.
 
 import { DefaultLoadingManager } from 'three'
 

@@ -1,12 +1,12 @@
 // Ambient + character + footstep sounds, all on the shared AudioContext (so they resume on the
 // same GO gesture as the music). Safe no-ops until the buffers decode / WebAudio is available.
 //
-//   • wind / cicadas — persistent looping layers, gain ramped by the AmbientController
+//   • cicadas — the persistent looping bed, gain ramped by the AmbientController
 //   • owls (far / close) — a self-scheduling random pool: fade in → hold the whole clip →
 //     fade out → wait a random gap → pick another (each clip is more than just the hoot, so the
 //     fades let the bedded ambience breathe)
 //   • spiritMumble / spiritSad — one-shots fired on conversation / flee
-//   • footsteps — one-shots fired on a cadence while the hero walks (plain OR grass pair)
+//   • footsteps — one-shots fired on a cadence while the hero walks (a grass pair)
 import { getAudioContext, getMasterGain, loadAudioBuffer } from './songAudio.js'
 
 import cicadesUrl from '../assets/audio/sounds/cicades.mp3'

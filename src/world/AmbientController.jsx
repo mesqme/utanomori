@@ -15,7 +15,7 @@ import {
     playFootstep,
 } from '../audio/ambientSounds.js'
 
-// Drives the ambient layer (wind / cicadas / owls), the per-character one-shots (mumble on a
+// Drives the ambient layer (cicadas / owls), the per-character one-shots (mumble on a
 // conversation, sad on a flee), and the hero footsteps. Nothing renders — a frame hook so it
 // shares the world clock. Mirrors MusicController's shape.
 export default function AmbientController() {

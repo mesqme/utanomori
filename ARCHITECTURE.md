@@ -149,8 +149,9 @@ would rebuild every chunk on every colour change.
 ## 5. Materials and shaders
 
 Four hand-written `ShaderMaterial`s cover almost everything drawn: character, prop, terrain, grass.
-Each is built by a `create*` function and refreshed by an `update*` function that takes an options
-object — never by rebuilding the material.
+Character and prop are a `create*`/`update*` pair taking an options object; terrain and grass wrap
+the same pattern in a `use*Material` hook. Either way the material is refreshed, never rebuilt —
+both hooks memoize on `[]`.
 
 The painterly look comes from **one brush texture**, sampled three different ways depending on what
 is being painted:
@@ -169,8 +170,9 @@ the split — `uPainteryTexture` is the baked one, `uPainterlyTexture` the raw o
 The screen-anchored blend exists only on the reveal-circle and see-through edges of props, where a
 purely object-space dither would streak across a non-planar surface as the edge sweeps past.
 
-The only full-screen pass (`postprocessing/`) does a display colour grade (LOW/HIGH presets, the
-in-game sun/moon) and film grain, applied last so nothing filters it.
+The only authored full-screen pass (`postprocessing/`) does a display colour grade (LOW/HIGH
+presets, the in-game sun/moon) and film grain, applied last so nothing filters it. SMAA runs after
+it, from @react-three/postprocessing.
 
 Shared GLSL lives in `shaders/includes/`, pulled in with `#include`:
 
@@ -273,7 +275,8 @@ stateDiagram-v2
 rather than animating there.
 
 The mini-game is a second machine (`stores/useSongGame.jsx`):
-`prompt → setup → countdown → playback → input → roundClear → success | fail → failSpeech`.
+`idle → prompt → setup → countdown → playback → input → roundClear → (countdown…) → success`,
+with a wrong press at `input` branching to `fail → failSpeech → flee`.
 `world/MusicStones.jsx` renders the stones and owns the arrow pointer; `game/SongGame.jsx` is the
 HUD and the timers.
 

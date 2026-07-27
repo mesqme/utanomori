@@ -332,9 +332,8 @@ export const DEFAULT_MUSIC_PARAMETERS = {
     volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
-// Ambient + character + footstep SFX (see ambientSounds.js / AmbientController). Wind is the
-// constant bed (ducked during dialogues), cicadas a secondary bed, owls a random far/close pool,
-// plus per-character one-shots and a switchable footstep pair.
+// Ambient + character + footstep SFX (see ambientSounds.js / AmbientController). Cicadas are the
+// constant bed, owls a random far/close pool, plus per-character one-shots and footsteps.
 export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
     cicadaVolume: 0.12, // the ambient bed (the original cicada file)
     owlVolume: 0.5, // peak volume of each owl hoot in the random pool
