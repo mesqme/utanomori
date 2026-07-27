@@ -10,8 +10,8 @@ import { LEVA_SECTION_PATHS } from './levaSectionPaths.js'
 // The echo guard is the load-bearing part: leva fires onChange SYNCHRONOUSLY from our own
 // levaStore.set(), so pushing store -> panel would immediately fire panel -> store and fight
 // whatever else is writing. `levaSync.active` is raised around every push and every setParam
-// checks it. Module scope rather than a component ref because the twelve section hooks all
-// need the same flag.
+// checks it. Module scope rather than a component ref because every section hook needs
+// the same flag.
 export const levaSync = { active: false }
 
 // Raise the guard, push, lower it — always via try/finally so a throw cannot leave it stuck on.

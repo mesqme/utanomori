@@ -17,7 +17,7 @@ Built for the [Three.js Journey](https://threejs-journey.com/) challenge.
   relocates — the arrow just repoints.
 - Three spirits completes the song, then the finale and credits.
 
-`#debug` in the URL opens the Leva panel: 12 sections covering the whole look, from grass blade
+`#debug` in the URL opens the Leva panel: one section per subsystem, covering the whole look, from grass blade
 width to film grain.
 
 ## Technical highlights
@@ -85,3 +85,12 @@ constraints that fail silently if you break them. Worth a skim before changing a
 
 Music by Aleksandr Manin. Reference artwork by Kei Yotsuba. Course and inspiration: Bruno Simon's
 Three.js Journey.
+
+## License
+
+[MIT](LICENSE) — the code and the 3D models. Use them, fork them, build on them; MIT just asks
+that you keep the copyright notice with them.
+
+The music is **not** covered: it was composed by Aleksandr Manin and is used here with permission.
+The footstep SFX are Stormwave Audio (attribution is in the files' ID3 tags), and Bebas Neue ships
+under the SIL Open Font License.

@@ -3,9 +3,8 @@
 A technical walkthrough of Utanomori: how the app is assembled, what happens on a frame, and the
 constraints that are not obvious from reading any single file.
 
-Written to be useful cold — to a person who just forked this, or to an agent asked to change
-something in it. Every rule below is stated with the symptom you get for breaking it, because most
-of them fail quietly rather than loudly.
+Written to be useful cold, to someone who just forked this. Every rule below is stated with the
+symptom you get for breaking it, because most of them fail quietly rather than loudly.
 
 **Contents**
 [1. Map](#1-map) ·
@@ -329,7 +328,7 @@ reload.)
 
 ## 11. The debug panel
 
-`debug/DebugPanel.jsx` registers twelve Leva sections and returns `null`. It is mounted in **every**
+`debug/DebugPanel.jsx` calls one hook per Leva section and returns `null`. It is mounted in **every**
 build — hidden on the plain page, visible at `#debug`.
 
 **It must stay mounted.** Four things the shipped game needs run inside it:

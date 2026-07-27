@@ -21,8 +21,8 @@ import { useDebugControls } from './controls/useDebugControls.js'
 import { useSeeThroughControls } from './controls/useSeeThroughControls.js'
 
 // ============================================================================================
-// Leva debug panel — every tweakable in the game, in 12 sections (see debug/README.md for the
-// list and the rules). Registration order == panel order. Controls write straight into the
+// Leva debug panel — every tweakable in the game, one section per subsystem (see debug/README.md
+// for the list and the rules). Registration order == panel order. Controls write straight into the
 // zustand store; LEVA_SECTION_PATHS (controls/levaSectionPaths.js) is the reverse map used to
 // refresh the panel when the STORE changes from elsewhere (colour presets, the mobile loader
 // overlay, HMR-restored state).
