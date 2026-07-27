@@ -5,15 +5,15 @@
 //   • owls (far / close) — a self-scheduling random pool: fade in → hold the whole clip →
 //     fade out → wait a random gap → pick another (each clip is more than just the hoot, so the
 //     fades let the bedded ambience breathe)
-//   • capucine_mumble / capucin_sad — one-shots fired on conversation / flee
+//   • spiritMumble / spiritSad — one-shots fired on conversation / flee
 //   • footsteps — one-shots fired on a cadence while the hero walks (plain OR grass pair)
 import { getAudioContext, getMasterGain, loadAudioBuffer } from './songAudio.js'
 
 import cicadesUrl from '../assets/audio/sounds/cicades.mp3'
 import owlFarUrl from '../assets/audio/sounds/owlFar.mp3'
 import owlCloseUrl from '../assets/audio/sounds/owlClose.mp3'
-import mumbleUrl from '../assets/audio/sounds/capucine_mumble.mp3'
-import sadUrl from '../assets/audio/sounds/capucin_sad.mp3'
+import mumbleUrl from '../assets/audio/sounds/spiritMumble.mp3'
+import sadUrl from '../assets/audio/sounds/spiritSad.mp3'
 import sighUrl from '../assets/audio/sounds/sigh_03.mp3'
 import footstepGrass01 from '../assets/audio/sounds/footstepGrass_01.mp3'
 import footstepGrass02 from '../assets/audio/sounds/footstepGrass_02.mp3'

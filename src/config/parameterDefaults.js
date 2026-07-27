@@ -344,8 +344,8 @@ export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
     footstepVolume: 0.05,
     footstepInterval: 0.45, // seconds between steps while moving
     footstepSpeedThreshold: 2.95, // hero speed (u/s) above which footsteps play (grass pair)
-    mumbleVolume: 0.38, // capucine_mumble — companion conversation
-    sadVolume: 0.42, // capucin_sad — companion runs away after a missed song
+    mumbleVolume: 0.38, // spiritMumble — companion conversation
+    sadVolume: 0.42, // spiritSad — companion runs away after a missed song
     sighVolume: 0.9, // intro-dialogue sigh volume
 }
 
