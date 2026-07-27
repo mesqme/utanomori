@@ -1,30 +1,3 @@
-export const mainCharacterMaterialPresets = Object.freeze({
-    previous: {
-        label: 'Previous',
-        materials: {
-            red: { baseColor: '#cc2d36', toonColor: '#5c1028' },
-            black: { baseColor: '#191919', toonColor: '#05030b' },
-            darkBrown: { baseColor: '#7a4159', toonColor: '#241229' },
-            blue: { baseColor: '#3661da', toonColor: '#15206a' },
-            lightBrown: { baseColor: '#b5777d', toonColor: '#4d263c' },
-            metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
-            lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
-        },
-    },
-    tuned: {
-        label: 'Tuned',
-        materials: {
-            red: { baseColor: '#cc2544', toonColor: '#722255' },
-            black: { baseColor: '#31222d', toonColor: '#241941' },
-            darkBrown: { baseColor: '#7a4159', toonColor: '#482452' },
-            blue: { baseColor: '#5648a0', toonColor: '#34219a' },
-            lightBrown: { baseColor: '#ad7278', toonColor: '#583972' },
-            metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
-            lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
-        },
-    },
-})
-
 export const mainCharacterMaterialGroups = Object.freeze([
     { id: 'red', label: 'Red', baseColor: '#cc2544', toonColor: '#722255' },
     { id: 'black', label: 'Black', baseColor: '#31222d', toonColor: '#241941' },
@@ -56,9 +29,15 @@ export const mainCharacterMaterialSlots = Object.freeze([
     { meshName: 'Cube006_3', materialId: 'black' },
 ])
 
-export const mainCharacterMaterialDefaults = Object.freeze(
-    mainCharacterMaterialGroups.reduce((defaults, group) => {
-        defaults[group.id] = { ...mainCharacterMaterialPresets.previous.materials[group.id] }
-        return defaults
-    }, {})
-)
+// Last-resort fallback for a slot whose id is missing from characterMaterialParameters.materials.
+// Unreachable in practice — sceneStyles seeds all seven ids — so these are deliberately NOT kept in
+// sync with the groups above; the live palette is the one in sceneStyles.
+export const mainCharacterMaterialDefaults = Object.freeze({
+    red: { baseColor: '#cc2d36', toonColor: '#5c1028' },
+    black: { baseColor: '#191919', toonColor: '#05030b' },
+    darkBrown: { baseColor: '#7a4159', toonColor: '#241229' },
+    blue: { baseColor: '#3661da', toonColor: '#15206a' },
+    lightBrown: { baseColor: '#b5777d', toonColor: '#4d263c' },
+    metal: { baseColor: '#91a2ff', toonColor: '#34419c' },
+    lantern: { baseColor: '#e6a23a', toonColor: '#7a3d18' },
+})

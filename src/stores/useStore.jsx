@@ -249,7 +249,6 @@ if (import.meta?.hot) {
               ),
           }
 
-    delete characterMaterialParameters.palettePreset
 
     useStore.setState({
         grassStyleVersion: GRASS_STYLE_VERSION,

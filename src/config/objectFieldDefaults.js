@@ -8,7 +8,6 @@
  *
  * `footprintRadius` drives grass suppression + spacing around the object. For stones /
  * mushrooms it is derived per-variant from the measured safe diameter instead.
- * `sockets` are local attachment points where secondary characters can later be placed.
  */
 export const OBJECT_TYPES = Object.freeze(['tree', 'stone', 'mushroom'])
 
@@ -88,14 +87,12 @@ export const objectLibrary = Object.freeze({
         footprintRadius: 0.9,
         trunkRadius: 0.28,
         parts: [],
-        sockets: [],
     },
     // Authored boulder — geometry comes from stones.glb (STONE_VARIANTS), recentred to sit
     // on the ground. footprintRadius here is a fallback; the real radius is per-variant.
     stone: {
         footprintRadius: 1.4,
         parts: [],
-        sockets: [{ id: 'top', offset: [0, 1.0, 0], normal: [0, 1, 0], capacity: 1 }],
     },
     // Authored mushroom — cap + leg geometry comes from mushrooms.glb (MUSHROOM_VARIANTS),
     // baked together so the cap sits on the leg. footprintRadius here is a fallback; the real
@@ -103,7 +100,6 @@ export const objectLibrary = Object.freeze({
     mushroom: {
         footprintRadius: 0.7,
         parts: [],
-        sockets: [],
     },
 })
 
