@@ -20,6 +20,7 @@
         "@react-three/postprocessing": "^3.0.4",
         "gsap": "^3.14.1",
         "leva": "^0.10.1",
+        "postprocessing": "^6.38.0",
         "r3f-perf": "^7.2.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",

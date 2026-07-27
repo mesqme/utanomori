@@ -74,7 +74,11 @@ npm install
 npm run dev      # vite dev server
 npm test         # node --test
 npm run build    # production build into dist/
+npm run preview  # serve dist/ — needed because the build is based at /utanomori/
 ```
+
+`#debug` in the URL opens the Leva panel. Opening `dist/index.html` from the filesystem shows a
+blank page: `vite.config.js` sets `base: '/utanomori/'`, so use `npm run preview`.
 
 ## Docs
 
