@@ -49,7 +49,6 @@ const GROUND_EPSILON = 0.02
 const HERO_COLLISION_RADIUS = 0.35 // hero body radius for pushing out of solid stones
 const CREDITS_TRACK_GAIN = 1.2 // how firmly the credits runner steers back onto the lane centre
 const CREDITS_SPEED_SCALE = 0.65 // credits run at half the normal walk/run speed
-const SHADOW_GROUND_OFFSET = 0.025
 const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
