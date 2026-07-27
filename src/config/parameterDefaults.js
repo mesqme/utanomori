@@ -266,7 +266,7 @@ export const DEFAULT_SONG_GAME_PARAMETERS = {
 }
 
 // 3D music stones (song mini-game): six coloured stones that rise around the companion, flash
-// on each played note, and are clicked to repeat the song. Colours default to NOTES.
+// on each played note, and are clicked to repeat the song.
 export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     color0: '#e85c5c',
     color1: '#ef9f43',

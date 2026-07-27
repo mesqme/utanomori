@@ -1,6 +1,5 @@
 import { create } from 'zustand'
 import { companionPool } from '../config/companionPool.js'
-import { getCompanionSong } from '../config/notes.js'
 import useSongGame from './useSongGame.jsx'
 
 export const MAX_PARTY = 3
@@ -19,7 +18,6 @@ const useCompanions = create((set, get) => ({
     targetInRange: false,
 
     // Spawn the next pool member at a world position (chosen off-screen by the manager).
-    // Each target carries its own song (deterministic per character, override-able).
     spawnTarget: (x, z) => {
         const { found } = get()
         if (found.length >= MAX_PARTY) {
@@ -27,10 +25,7 @@ const useCompanions = create((set, get) => ({
             return
         }
         const definition = companionPool[found.length % companionPool.length]
-        const generated = getCompanionSong(definition.id)
-        const song = definition.song ?? generated.notes
-        const beats = definition.beats ?? generated.beats
-        set({ target: { ...definition, key: `${definition.id}-${found.length}`, x, z, song, beats }, targetInRange: false })
+        set({ target: { ...definition, key: `${definition.id}-${found.length}`, x, z }, targetInRange: false })
     },
 
     // Relocate the active target (used when the player abandons it, or after a failed song).
@@ -57,14 +52,11 @@ const useCompanions = create((set, get) => ({
         const party = []
         for (let i = 0; i < MAX_PARTY; i++) {
             const definition = companionPool[i % companionPool.length]
-            const generated = getCompanionSong(definition.id)
             party.push({
                 ...definition,
                 key: `${definition.id}-${i}`,
                 x: 0,
                 z: 0,
-                song: definition.song ?? generated.notes,
-                beats: definition.beats ?? generated.beats,
             })
         }
         set({ found: party, target: null, targetInRange: false })
