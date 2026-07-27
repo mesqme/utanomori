@@ -90,7 +90,7 @@ export default function MainCharacter() {
     const characterParameters = useStore((state) => state.characterParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
-    const setBallPosition = useStore((state) => state.setBallPosition)
+    const setHeroPosition = useStore((state) => state.setHeroPosition)
     const setSmoothedCircleCenter = useStore((state) => state.setSmoothedCircleCenter)
     const phase = usePhases((state) => state.phase)
     const setPhase = usePhases((state) => state.setPhase)
@@ -148,10 +148,10 @@ export default function MainCharacter() {
         isGroundedRef.current = true
         setModelTransform()
 
-        setBallPosition(positionRef.current)
+        setHeroPosition(positionRef.current)
         smoothedCircleCenter.copy(positionRef.current)
         resetTrail(positionRef.current)
-    }, [setBallPosition, setModelTransform, smoothedCircleCenter])
+    }, [setHeroPosition, setModelTransform, smoothedCircleCenter])
 
     const handleReset = useCallback(() => {
         resetPosition()
@@ -441,7 +441,7 @@ export default function MainCharacter() {
             setGroundShadow(TRAMPLE_SLOT_MAIN, visualPosition.x, visualPosition.z, shadowScale, shadowOpacity)
         }
 
-        setBallPosition(visualPosition)
+        setHeroPosition(visualPosition)
 
         if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits) {
             recordTrail(visualPosition)

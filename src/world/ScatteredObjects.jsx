@@ -182,7 +182,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
         /**
          * Mushroom reaction
          */
-        updateMushroomReactions(pool, chunkMushroomsRef.current, state.ballPosition, state.objectParameters, delta)
+        updateMushroomReactions(pool, chunkMushroomsRef.current, state.heroPosition, state.objectParameters, delta)
     })
 
     // NOTE: colours + colour variations are deliberately NOT in this key — they're shader uniforms

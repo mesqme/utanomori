@@ -61,7 +61,7 @@ export default function AmbientController() {
         setOwlConfig({ minGap: p.owlGapMin, maxGap: p.owlGapMax, fade: p.owlFade })
 
         // --- Footsteps: cadence while the hero actually moves on the ground (gameplay + credits). ---
-        const pos = store.ballPosition
+        const pos = store.heroPosition
         let speed = 0
         if (hadPosRef.current) {
             const dx = pos.x - prevX.current

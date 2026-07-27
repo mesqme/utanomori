@@ -6,7 +6,7 @@ import useStore from '../stores/useStore.jsx'
 import { getTrampleData, MAX_TRAMPLERS } from './state/trampleField.js'
 
 /**
- * Top-down trail canvas (adapted from the old BallTrailCanvas idea). A 2D canvas
+ * Top-down trail canvas. A 2D canvas
  * stays centred on the hero; every character paints a soft brush into it and the
  * whole thing fades a little each frame, so a natural trail forms behind anyone who
  * moves and recovers behind them. The canvas is uploaded as a texture the grass
@@ -87,9 +87,9 @@ export default function GrassTrail({ grassMaterial }) {
         elapsedRef.current = 0
 
         const scale = RESOLUTION / WORLD_SIZE
-        const ball = useStore.getState().ballPosition
-        const centerX = ball.x
-        const centerZ = ball.z
+        const hero = useStore.getState().heroPosition
+        const centerX = hero.x
+        const centerZ = hero.z
 
         if (!prev.current.initialized) {
             prev.current.x = centerX

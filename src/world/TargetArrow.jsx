@@ -108,7 +108,7 @@ export default function TargetArrow() {
         group.visible = true
 
         if (display) {
-            const hero = useStore.getState().ballPosition
+            const hero = useStore.getState().heroPosition
             let dx = display.x - hero.x
             let dz = display.z - hero.z
             const distance = Math.hypot(dx, dz) || 1

@@ -43,9 +43,9 @@ const createStore = () =>
              * Mutated IN PLACE (copy, never reassign) so the per-frame writers don't churn the
              * store: readers hold the same Vector3 instance for the lifetime of the app.
              */
-            ballPosition: new THREE.Vector3(0, 0, 0),
-            setBallPosition: (position) => {
-                get().ballPosition.copy(position)
+            heroPosition: new THREE.Vector3(0, 0, 0),
+            setHeroPosition: (position) => {
+                get().heroPosition.copy(position)
             },
 
             smoothedCircleCenter: new THREE.Vector3(0, 0, 0),

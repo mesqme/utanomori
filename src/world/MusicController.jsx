@@ -29,7 +29,7 @@ export default function MusicController() {
         const dt = Math.min(delta, 0.05)
         const store = useStore.getState()
         const m = store.musicParameters
-        const player = store.ballPosition
+        const player = store.heroPosition
         const companions = useCompanions.getState()
         const inGame = useSongGame.getState().active
         const playing = phase === PHASES.start || phase === PHASES.credits
