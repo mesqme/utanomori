@@ -2,8 +2,9 @@
  * Prop library. Trees, stones and mushrooms are all authored GLB meshes (see TREE_VARIANTS /
  * STONE_VARIANTS / MUSHROOM_VARIANTS + ScatteredObjects); one variant is chosen per instance.
  *
- * `footprintRadius` drives grass suppression + spacing around the object. For stones and
- * mushrooms it is derived per-variant from the measured safe diameter instead.
+ * `footprintRadius` drives grass suppression + spacing around the object. All three types derive it
+ * per-variant from the measured safe diameter (diameter / 2); the objectLibrary values below are
+ * only the fallback for a variant that supplies none.
  */
 export const OBJECT_TYPES = Object.freeze(['tree', 'stone', 'mushroom'])
 
@@ -24,12 +25,12 @@ export const STONE_VARIANTS = Object.freeze([
 ])
 
 /**
- * The seven music-stone meshes from stones.glb, used only by the song mini-game (one per
- * note). `diameter` is the measured safe diameter (world units) → safe radius = diameter/2,
- * which sizes each stone's see-through disc + hover proxy (see MusicStones).
- * `circle` is the matching `musicStone_0X_circle` mesh — a ring authored AROUND the stone
- * that flashes green/red as the correct/incorrect press feedback (baked with the stone's
- * offset + parented to it so it stays aligned).
+ * The music-stone mesh pool from stones.glb, used only by the song mini-game. The board stages the
+ * first `stoneCount` of them (currently a fixed six — see BOARD_STONES in useSongGame), so the
+ * seventh is spare. `diameter` is the measured safe diameter (world units) → safe radius =
+ * diameter/2, which sizes each stone's see-through disc + hover proxy (see MusicStones).
+ * `circle` names the matching `musicStone_0X_circle` ring authored in the GLB — nothing reads it
+ * today; the correct/incorrect flash happens on the arrow pointer instead.
  */
 export const MUSIC_STONE_VARIANTS = Object.freeze([
     { node: 'musicStone_01', circle: 'musicStone_01_circle', diameter: 3.27 },

@@ -10,7 +10,7 @@ import markUrl from '../assets/models/mark.glb'
 
 // Floating reaction above the music character's head during the mini-game (3D models, world-space):
 //   • each CORRECT press pops a heart (heart.glb) that floats up + fades
-//   • a miss shows the exclamation mark (mark.glb) rocking left/right ("something's wrong")
+//   • a miss pops the exclamation mark (mark.glb), which rises + fades like a note ("something's wrong")
 // Rendered as meshes inside the companion group (Companions.jsx), so they track the head in 3D.
 // Scale of each model is tunable (Game ▸ Song Game ▸ heartScale / markScale).
 
@@ -34,8 +34,8 @@ export default function CharacterFeedback({ headY = 1.4 }) {
     const markGltf = useGLTF(markUrl)
 
     const heartGeom = useMemo(() => centeredClone(heartGltf.nodes.heart.geometry), [heartGltf])
-    // The mark keeps its AUTHORED origin (its base) — NOT recentered — so it rocks like a pendulum
-    // from the base instead of spinning around its centre of mass.
+    // The mark keeps its AUTHORED origin (its base) — NOT recentered like the heart — so it pops
+    // and rises from its base instead of from its centre of mass.
     const markGeom = useMemo(() => markGltf.nodes.mark.geometry.clone(), [markGltf])
 
     // Own materials (the GLBs ship none). Independent material per heart slot so they can fade out

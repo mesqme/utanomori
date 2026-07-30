@@ -1,4 +1,4 @@
-// Option A — soft brushy silhouette dissolve. The contour (where the surface turns
+// Soft brushy silhouette dissolve. The contour (where the surface turns
 // away from the camera) dissolves into the background through the brush noise, for a
 // thin painterly oil/pastel edge. Shared by the character and prop materials.
 uniform int uEdgeEnabled;

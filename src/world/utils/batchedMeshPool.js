@@ -11,8 +11,9 @@ import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
  *   - guards capacity and reuses freed instance slots;
  *   - one `dispose()` for the whole thing.
  *
- * The whole batch renders in ~1 draw call (WebGL multi-draw) with per-instance
- * frustum culling.
+ * The whole batch renders in ~1 draw call (WebGL multi-draw). Frustum culling is
+ * off both for the mesh and per instance — see the note on perObjectFrustumCulled
+ * below.
  *
  * Usage:
  *   const pool = createBatchedMeshPool({

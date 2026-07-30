@@ -11,8 +11,8 @@ export function useDesktopControls() {
     // Desktop — the desktop DOM-UI skin + camera distances.
     // ======================================================================================
     // The whole in-game UI skin (SpeechBubble + InteractionPrompt + SongGame HUD + key chips). Each
-    // value is written to a CSS custom property on :root (see the effect above) so the DOM UI restyles
-    // live.
+    // value is written to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI
+    // restyles live.
     useControls('Desktop.UI', {
         'Text & scale': folder(
             {

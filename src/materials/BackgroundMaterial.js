@@ -4,7 +4,8 @@ import backgroundVertexShader from '../shaders/background/vertex.glsl'
 import backgroundFragmentShader from '../shaders/background/fragment.glsl'
 import { themeMaskUniforms } from '../world/state/themeMask.js'
 
-// Layered night sky: base colour gradient + paintery texture variation + stars.
+// Layered night sky: flat base colour blended toward one sky-mix colour + paintery texture variation
+// + stars. (Deliberately flat, not a gradient — the brush texture is what breaks up the sky.)
 function colorModeToInt(mode) {
     return mode === 'Color Mix' ? 1 : mode === 'Both' ? 2 : 0
 }

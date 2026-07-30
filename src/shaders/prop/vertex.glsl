@@ -69,8 +69,8 @@ void main() {
 
     // Wind sway (trees only, aWind = 1): shear the upper vertices along the world wind direction;
     // the bend grows with local height² (a cantilever — base stays planted, canopy moves most).
-    // Rhythm (from the backup): a sin sway whose amplitude is gust-modulated, plus sharp kicks, so
-    // it's non-sin / abrupt. Phased per-instance by the world position so trees don't move in sync.
+    // Rhythm: a sin sway whose amplitude is gust-modulated, plus sharp kicks, so it's non-sin /
+    // abrupt. Phased per-instance by the world position so trees don't move in sync.
     if (aWind > 0.5 && uWindStrength > 0.0) {
         float windH = max(position.y, 0.0);
         float phase = dot(worldPosition.xz, vec2(0.21, 0.13));

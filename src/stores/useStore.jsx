@@ -137,9 +137,6 @@ const createStore = () =>
             characterMaterialParameters: cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters),
 
             /**
-             * Camera debug parameters
-             */
-            /**
              * Global feature parameters
              *
              * Seeded straight from the DEFAULT_* groups in config/parameterDefaults.js — this
@@ -289,8 +286,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         // NOTE: the only group here that RESETS rather than merges — a hot reload discards live
-        // camera tweaks and returns to the defaults. Dev-only either way; flagged rather than
-        // "fixed" because whether that is intentional has not been confirmed.
+        // camera tweaks and returns to the defaults. Dev-only either way.
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
         colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS, ...state.colorGradeParameters },
         loaderDebugParameters: applyLoaderDebugDefaults ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS } : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },

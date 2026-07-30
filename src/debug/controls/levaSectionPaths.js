@@ -3,7 +3,6 @@
 // STORE changes from somewhere other than the panel (a colour theme, the mobile loader overlay,
 // HMR-restored state). If a control is not listed here it simply is not reverse-synced.
 
-// Leva control path (inside its folder) → store param key, per synced section.
 export const LEVA_SECTION_PATHS = Object.freeze({
     Terrain: {
         groundTexture: 'groundTextureEnabled',

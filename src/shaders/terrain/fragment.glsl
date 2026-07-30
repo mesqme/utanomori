@@ -155,9 +155,9 @@ void main() {
         color = mix(color, fadeBg, t);
     }
 
-    // Paintery edge — a seamless brush (alpha) texture used as the dissolve threshold,
-    // sampled mostly in screen space (coherent on any geometry) with a gentle
-    // world-space drift so the strokes regenerate as you move. A stylized portal edge.
+    // Paintery edge — a seamless brush (alpha) texture used as the dissolve threshold, so the
+    // ground border tears like a brush stroke instead of ending on a hard circle. A stylized
+    // portal edge.
     if (uFadeMode == 2 && t > 0.0) {
         // World-anchored brush: the dissolve is a ground edge, so it must track the world or it
         // swims when the camera zooms (a height resize keeps the vertical FOV, so the world edge

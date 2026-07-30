@@ -16,7 +16,7 @@ uniform sampler2D uBaseTexture;
 uniform int uUseBaseTexture;
 
 // In-shader cartoon eyes (head mesh only, uDrawEyes = 1) — drawn in the second UV set (uv1), where
-// the front face is laid out. Same look as the procedural eyes quad; CharacterEyes drives these.
+// the front face is laid out. CharacterEyes pushes the blink / glance / shape params in each frame.
 uniform int uDrawEyes;
 uniform vec3 uEyeColor;
 uniform vec3 uPupilColor;

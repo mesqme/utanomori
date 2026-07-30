@@ -7,7 +7,7 @@ import { characterHead } from './state/characterHead.js'
 // Drives the cartoon eyes that are drawn directly in the head mesh's fragment shader (in the second
 // UV set, uv1 — see character/fragment.glsl, gated by uDrawEyes). Nothing renders here: each frame
 // it computes the blink + an occasional left/right glance and pushes the shape/colour params into
-// the head material's eye uniforms. (The old 3D-quad overlay was removed — head shader only.)
+// the head material's eye uniforms.
 function applyEyeUniforms(u, p, blink, pupilOffsetX) {
     if (!u || !u.uEyeColor) return
     u.uEyeColor.value.set(p.eyeColor)

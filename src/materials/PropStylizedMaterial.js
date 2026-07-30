@@ -14,8 +14,8 @@ import { themeMaskUniforms } from '../world/state/themeMask.js'
 // which the batching chunks require.
 //
 // `vertexColors: true` makes it read a geometry colour attribute instead of the
-// batched colour — used for the (non-batched) companion creatures, which carry
-// per-vertex colours. The batching chunks are inert on a regular mesh.
+// batched colour, for a plain (non-batched) mesh — the batching chunks are inert
+// there. No current caller passes it: the props and the music stones are all batched.
 export function createPropStylizedMaterial(painterlyTexture, { vertexColors = false, toneMapped = false } = {}) {
     const material = new THREE.ShaderMaterial({
         name: 'prop_stylized',

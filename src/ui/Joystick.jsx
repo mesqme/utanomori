@@ -8,7 +8,8 @@ import { joystickInput, resetJoystick } from './joystickInput.js'
 import './Joystick.css'
 
 // On-screen analog joystick for touch devices — replaces the keyboard arrows / on-screen d-pad.
-// Auto-shows on touch devices (joystickParameters.mode = 'auto'); force with 'on' to test on desktop.
+// Shown only on the mobile experience (isMobile — touch / coarse-pointer device; Chrome device mode
+// flips it live, see config/device.js).
 export default function Joystick() {
     const phase = usePhases((state) => state.phase)
     const songActive = useSongGame((state) => state.active)

@@ -17,8 +17,7 @@
     border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
-    color: var(--sj-ui-primary); /* self-sufficient: the preview renders this outside .song-game */
-    font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
+    color: var(--sj-ui-primary);     font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.14em;
 }
 
@@ -31,7 +30,8 @@
     }
 }
 
-/* "Are you ready?" — the confirm button on the pre-game prompt. */
+/* Base mini-game button look — worn by the "Start" button below. The speech-bubble confirm
+   button (.dialogue-start) mirrors these values. */
 .song-yes {
     padding: calc(0.8 * var(--ui-vmin) * var(--ui-scale)) calc(2.8 * var(--ui-vmin) * var(--ui-scale));
     border: var(--ui-border) solid var(--sj-ui-primary);
@@ -119,7 +119,7 @@
     }
 }
 
-/* Status banners (Listen / Nice / fail) */
+/* Status banners — "Nice!" between rounds, and the win line on success. */
 .song-banner {
     position: absolute;
     left: 50%;

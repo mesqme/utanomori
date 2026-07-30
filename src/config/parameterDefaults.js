@@ -89,9 +89,10 @@ export { DEFAULT_LOADER_DEBUG_PARAMETERS, DEFAULT_MOBILE_UI_PARAMETERS } from '.
  * Theme
  */
 
-// Which named colour preset each group is currently on (Colors folder in Leva). Presets live in
-// config/colorPresets.js; selecting one writes its colours into the real param groups — these
-// only remember the selection so the dropdowns read back correctly.
+// Which named colour preset each group is currently on. Presets live in config/colorPresets.js;
+// applying a theme writes its colours into the real param groups and records the names here. Only
+// `theme` is bound to a Leva dropdown (the Colors folder) — grass/stones/trees are bookkeeping,
+// a record of which per-group palette a theme reused.
 export const DEFAULT_COLOR_PRESET_PARAMETERS = {
     theme: 'Night Forest',
     grass: 'Violet Night',
@@ -245,8 +246,8 @@ export const DEFAULT_ARROW_PARAMETERS = {
 }
 
 // Song mini-game: the "press E" interaction radius + the floating head-notes (CompanionNotes).
-// (The old 2D note wheel + spatial singing voices were removed — the mini-game is now the 3D
-// music stones, and the backing audio lives in musicTracks.js.)
+// The mini-game proper is the 3D music stones (musicStoneParameters below); the backing audio
+// lives in audio/musicTracks.js.
 /**
  * Melody mini-game
  */
@@ -304,19 +305,21 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     dialogueCameraDistance: 8.5, // distance back from the character during speech
     dialogueTargetY: 1.2, // look-at height (the character's head) during speech
     // Pointer (the shared arrow): during playback it snaps to the singing note; during input it
-    // follows the mouse freely around the arc and snaps onto a stone only while its proxy is hovered.
+    // snaps to whichever stone's hover proxy is under the cursor (on touch, to the last tapped
+    // stone), and rests on the last one when nothing is hovered — it never sits between stones.
     // Size is taken from the walking target arrow (arrowParameters.scale) — it's the same arrow.
     pointerRadius: 1.75, // arrow distance from the rainbow centre (the half-circle's centre)
-    // See-through: during the game, the bottom side stones act like the hero — trees in front of
-    // them fade away so the stones stay readable. This is the world radius of each stone's hole.
+    // See-through: during the game EVERY staged stone acts like the hero — trees in front of it
+    // fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,
     seeThroughRadius: 2.8,
 }
 
-// The three synched backing tracks (one per music companion). All start (looping, muted) on GO;
-// the MusicController only fades each track's volume. The current TARGET's track is heard by
-// distance to the hero; a COLLECTED companion's track plays softly behind the party; everything
-// is muted during a conversation / mini-game.
+// The six synched backing layers — a FULL melody + a simplified PREVIEW per music companion (see
+// audio/musicTracks.js). All start (looping, muted) on GO; the MusicController only fades each
+// layer's volume. The current TARGET's PREVIEW is heard by distance to the hero; a COLLECTED
+// companion's FULL layer plays softly behind the party; everything is muted during a conversation /
+// mini-game.
 /**
  * Audio
  */
@@ -348,10 +351,9 @@ export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
     sighVolume: 0.9, // intro-dialogue sigh volume
 }
 
-// Procedural cartoon eyes drawn on a quad in front of the hero's face (see CharacterEyes + the
-// characterEyes shader). Placement is local to the character model; shape is in quad-UV units.
-// The eyes are drawn directly in the head mesh's fragment shader, laid out in the head's second UV
-// (uv1). CharacterEyes drives the blink + glance; everything here is shape/colour in uv1 space.
+// Procedural cartoon eyes for the hero, drawn directly in the head mesh's fragment shader
+// (shaders/character/fragment.glsl, gated by uDrawEyes) and laid out in the head's second UV set
+// (uv1). CharacterEyes.jsx drives the blink + glance; everything here is shape/colour in uv1 space.
 /**
  * Eyes
  */
@@ -441,7 +443,8 @@ export const DEFAULT_SHEEP_PARAMETERS = {
     seeThroughHeight: 0.6, // height above the companion's feet to centre the see-through hole
 }
 
-// Sheep stylized material: the hero's painterly settings + per-companion base colours.
+// Sheep stylized material: the shared character painterly defaults (stylizedMaterialDefaults.js —
+// the hero ships with its own tuned values in sceneStyles) + per-companion base colours.
 export const DEFAULT_SHEEP_MATERIAL_PARAMETERS = {
     ...characterStylizedDefaults,
     characters: cloneSheepCharacters(),

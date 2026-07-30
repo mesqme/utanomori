@@ -3,8 +3,6 @@
 //
 // Used for the organic borders of the eyes: both the hero's procedural eyes (character/fragment)
 // and the tree eye planes (eyePlane/fragment) wobble their iris and pupil edges with it.
-// Previously each of those files carried its own copy under a prefixed name (eyeSnoise / snoise)
-// purely to avoid a symbol collision that does not exist once there is a single definition.
 
 vec3 mod289(vec3 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
 vec2 mod289(vec2 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }

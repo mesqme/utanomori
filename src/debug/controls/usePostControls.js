@@ -7,8 +7,9 @@ export function usePostControls() {
     const colorGradeParameters = useStore((state) => state.colorGradeParameters)
 
     // ======================================================================================
-    // Post — everything applied to the rendered image: colour grade, painterly camera FX,
-    // the shared paintery brush texture bake, and dithering.
+    // Post — everything applied to the rendered image: the colour grade and the painterly
+    // camera FX. (The shared paintery brush bake lives in World.Brush Texture; the dither
+    // block size sits with the border fade in World.Border.)
     // ======================================================================================
     useControls('Post.Color Grade', {
         highBrightnessMode: {

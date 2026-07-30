@@ -12,7 +12,7 @@ import './songGame.css'
 const FAIL_EXCLAIM_TIME = 1.1 // seconds the ❗ burst shows (stones still up) before the speech
 
 // All mini-game timings are tweakable in the Game → Minigame Leva folder (musicStoneParameters):
-// soundSpacing, listenTempo, roundClearPause, countdownFrom, countdownStep, scaleInDuration…
+// notePlayDuration, listenTempo, roundClearPause, countdownFrom, countdownStep, scaleInDuration…
 
 // How long the stones take to rise (matches MusicStones' scale-in + stagger) before playback.
 function setupDuration(stoneCount) {

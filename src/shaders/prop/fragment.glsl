@@ -157,7 +157,7 @@ void main() {
         if (c.z <= 0.0) continue; // inactive slot
         stAmount = max(stAmount, seeThroughAmount(c.xy, c.z, c.w));
     }
-    stAmount *= vSeeThrough; // only trees see-through; stones + mushrooms stay solid
+    stAmount *= vSeeThrough; // trees + stones see-through; mushrooms stay solid
     if (stAmount > 0.0) {
         vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);
         vec2 stUv = mix(vWorldXZ * uPainteryDrift, stScreenUv, uPainteryScreenBlend);

@@ -49,8 +49,8 @@ function findHiddenSpawn(player) {
     return { x: player.x + Math.cos(angle) * distance, z: player.z + Math.sin(angle) * distance }
 }
 
-// Companion ground shadow strength (the dark blob is drawn in the terrain shader now, see
-// groundShadowField — opacity that the old transparent decal used).
+// Companion ground shadow strength — the dark blob is drawn in the terrain shader (see
+// groundShadowField), not a decal mesh.
 const GROUND_SHADOW_STRENGTH = 0.3
 
 function TargetCreature({ target }) {

@@ -1,7 +1,8 @@
 // The three music companions. Each owns a full backing track (played from GO, volume managed)
-// and a small set of unique one-shot sounds used in its mini-game. The mini-game shows ONE stone
-// per UNIQUE sound; the melody is a sequence of those sounds (with repeats — you click the same
-// stone again). Rounds reveal a growing prefix of the melody: [len-2, len-1, len].
+// and a small set of unique one-shot sounds used in its mini-game. The board is always six stones
+// (BOARD_STONES in stores/useSongGame.jsx) — this character's unique sounds land in random slots
+// and the leftovers are silent decoys. The melody is a sequence of those sounds (with repeats —
+// you click the same stone again). Rounds reveal a growing prefix of the melody: [len-2, len-1, len].
 //
 // `melody` lists indices into the unique sounds (0-based). `rounds` are derived from its length.
 
@@ -12,7 +13,7 @@ function roundsFor(melodyLength) {
 export const MUSIC_CHARACTERS = {
     piano: {
         track: 'piano', // backing track + sound-file prefix
-        soundCount: 4, // unique sounds → stone count
+        soundCount: 4, // how many unique one-shot sounds this character has (the board is always 6)
         melody: [0, 1, 2, 3], // piano_01..04
         rounds: roundsFor(4), // [2, 3, 4]
         prompt: 'I am Kiri, the spirit of the morning mist. Would you like to listen to my song?',

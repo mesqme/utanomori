@@ -23,7 +23,7 @@ keep them apart.
 | `groundShadowField` | MainCharacter, Companions | terrain shader |
 | `characterSeeThrough` | MainCharacter, SheepCreature | grass + prop shaders |
 | `musicStoneSeeThrough` | MusicStones | prop shader |
-| `seeThrough` | DebugPanel (settings) | the see-through writers |
+| `seeThrough` | DebugPanel (tunables), MainCharacter (the live hero disc) | the see-through writers + the grass / prop materials |
 | `revealCircle` | Terrain | props, companions, spawn logic |
 | `screenPaintery` | BackgroundSphere | prop + background materials |
 | `characterHead` | MainCharacter | CharacterEyes |

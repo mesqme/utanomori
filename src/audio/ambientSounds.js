@@ -87,7 +87,7 @@ export function preloadAmbientSounds() {
     }
 }
 
-// ----- Looping layer (cicadas — the original file) -----
+// ----- Looping layer (cicadas — the seamless-looped buffer built above) -----
 const loops = {} // name → { src, gain }
 
 function ensureLoop(name) {

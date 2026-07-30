@@ -12,8 +12,8 @@ import { getTrampleData, MAX_TRAMPLERS } from './state/trampleField.js'
  * moves and recovers behind them. The canvas is uploaded as a texture the grass
  * shader samples (mapped to world XZ) to lean / shorten / lighten / dissolve blades.
  *
- * One texture lookup per blade replaces the old per-blade loop over every
- * character — more natural AND cheaper.
+ * One texture lookup per blade is both more natural and cheaper than looping
+ * over every character per blade (the 'Radius' layer source still does that).
  */
 const RESOLUTION = 256
 const WORLD_SIZE = 28 // world units the canvas spans (centred on the hero)

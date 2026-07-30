@@ -158,8 +158,8 @@ export default function Loader() {
         background: `conic-gradient(from -90deg, ${RING_COLOR} ${percent * 3.6}deg, transparent ${percent * 3.6}deg)`,
     }
     // The loader colours come from the palette (--sj-loader-background / --sj-loader-hero via
-    // applyPaletteCssVariables) — single source of truth. (Previously these were overridden
-    // inline from loaderDebugParameters.cssColorA/B, which silently masked the palette colour.)
+    // applyPaletteCssVariables) — single source of truth. Don't set them inline here: an inline
+    // colour silently masks the palette one.
     const loaderStyle = { ...fixedSizeStyle }
 
     // Rounded caps for the progress arc: a dot on the arc's SOLID band (⌀ = ring-edge, i.e. the band

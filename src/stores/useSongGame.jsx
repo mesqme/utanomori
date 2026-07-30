@@ -11,9 +11,11 @@ import { FAIL_LINES } from '../game/gameText.js'
  * (a 3·2·1 countdown precedes every round's playback; a miss shows an exclamation, then the
  *  character's "not satisfied" speech, then it flees)
  *
- * The mini-game now uses each character's real one-shot SOUNDS. There is ONE stone per UNIQUE
- * sound (random assignment each game); the melody is a sequence of those sounds (with repeats —
- * you click the same stone again), mapped to a stone sequence (`song`). No vanishing.
+ * The mini-game uses each character's real one-shot SOUNDS. The board is ALWAYS BOARD_STONES
+ * stones — the character's unique sounds are scattered into random slots each game and the
+ * leftover slots are silent decoys (clicking one is a miss). The melody is a sequence of those
+ * sounds (with repeats — you click the same stone again), mapped to a stone sequence (`song`).
+ * Stones never vanish as they are played.
  */
 
 // Stones staged per game — one per stone colour (Game → Minigame → Note colours). Characters with

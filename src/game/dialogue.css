@@ -15,9 +15,10 @@
     pointer-events: auto;
 }
 
-/* Same look as the in-world character dialogue (.song-prompt / .song-yes): dark translucent
-   panel, near-white text, 2px primary border — no texture or brushy edge. The full line is
-   laid out underneath the reveal so the box never grows. */
+/* The shared speech-bubble panel — the intro dialogue AND every in-world character speech use
+   this same bubble: dark translucent panel, near-white text, 2px primary border (--ui-border),
+   no texture or brushy edge. Every word occupies its slot from the start (the reveal only fades
+   them in), so the box never grows as the line appears. */
 .dialogue-bubble {
     box-sizing: border-box;
     max-width: var(--dlg-width, 460px);
@@ -83,7 +84,7 @@
     transform: none;
 }
 
-/* Matches the in-world "Yes" button (.song-yes). */
+/* Matches the mini-game button (.song-yes). */
 .dialogue-start {
     /* Exactly the bubble text's font: inherited Bebas, same size + tracking (not a tighter/
        wider button treatment), so "Start" reads identically to the line above it. */

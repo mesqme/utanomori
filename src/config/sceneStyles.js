@@ -288,9 +288,9 @@ const painteryStyle = {
             lantern: { baseColor: '#ffbf00', toonColor: '#7a3d18' },
         },
     },
-    // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Every value here is written
-    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live. The old
-    // textured/Blot-bubble params (shape, roughness, texture, colours, button sizes) are gone.
+    // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Most values here are written
+    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live; a few
+    // (bubbleWidth, tutorialButtonOutside) are read straight by the component that uses them.
     /**
      * Game UI
      */

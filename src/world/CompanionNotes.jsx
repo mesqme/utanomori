@@ -8,9 +8,9 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import notesUrl from '../assets/models/notes.glb'
 
-// The 3 authored note models (notes.glb) — they replaced the CSS glyph placeholders. A small pool
-// of meshes is reused: each spawned note picks one of the 3 models, then rises + sways + grows +
-// fades above the singing companion's head, billboarded to the camera.
+// The 3 authored note models (notes.glb). A small pool of meshes is reused: each spawned note
+// picks one of the 3 models, then rises + sways + grows + fades above the singing companion's
+// head, billboarded to the camera.
 const NOTE_NODES = ['note_01', 'note_02', 'note_03']
 const POOL = 8
 const AMBIENT_MIN = 0.45 // seconds between idle notes (randomized up to AMBIENT_MAX)

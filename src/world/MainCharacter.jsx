@@ -48,7 +48,7 @@ const GRAVITY = 13.0
 const GROUND_EPSILON = 0.02
 const HERO_COLLISION_RADIUS = 0.35 // hero body radius for pushing out of solid stones
 const CREDITS_TRACK_GAIN = 1.2 // how firmly the credits runner steers back onto the lane centre
-const CREDITS_SPEED_SCALE = 0.65 // credits run at half the normal walk/run speed
+const CREDITS_SPEED_SCALE = 0.65 // credits run at ~two thirds of the normal walk/run speed
 const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
@@ -113,7 +113,7 @@ export default function MainCharacter() {
     const isGroundedRef = useRef(true)
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const seeThroughSlotRef = useRef(-1) // hero's slot in the shared character see-through buffer (grass + props)
-    const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 before the game (same clock as the grain)
+    const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 across the intro travel (same clock as the texture/stars/glow)
     const readyFramesRef = useRef(0) // counts the first rendered frames → signals sceneReady (loader anti-blink)
     const [isMoving, setIsMoving] = useState(false)
 
