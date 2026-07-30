@@ -15,7 +15,7 @@ import {
     playFootstep,
 } from '../audio/ambientSounds.js'
 
-// Drives the ambient layer (wind / cicadas / owls), the per-character one-shots (mumble on a
+// Drives the ambient layer (cicadas / owls), the per-character one-shots (mumble on a
 // conversation, sad on a flee), and the hero footsteps. Nothing renders — a frame hook so it
 // shares the world clock. Mirrors MusicController's shape.
 export default function AmbientController() {
@@ -61,7 +61,7 @@ export default function AmbientController() {
         setOwlConfig({ minGap: p.owlGapMin, maxGap: p.owlGapMax, fade: p.owlFade })
 
         // --- Footsteps: cadence while the hero actually moves on the ground (gameplay + credits). ---
-        const pos = store.ballPosition
+        const pos = store.heroPosition
         let speed = 0
         if (hadPosRef.current) {
             const dx = pos.x - prevX.current

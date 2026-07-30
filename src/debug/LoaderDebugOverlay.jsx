@@ -26,10 +26,11 @@ function bump(group, key, delta, precision = 2) {
     }))
 }
 
-// On-screen loader alignment tool — align the CSS loading ring with the 3D top-down hat shot. Enabled
-// via loaderDebugParameters.enabled (Leva). Adapts to whichever loader is live: mobile (smaller ring,
-// mobileUi params) or desktop (loaderDebug params). Touch-friendly so it works on a real phone where
-// the Leva panel is fiddly.
+// On-screen loader alignment tool — align the CSS loading ring with the 3D top-down hat shot. Off in
+// the shipped build, and its Leva section is deliberately NOT registered (the alignment is locked):
+// to tune again, set `enabled: true` in DEFAULT_LOADER_DEBUG_PARAMETERS (config/loaderShellDefaults.js).
+// Adapts to whichever loader is live: mobile (smaller ring, mobileUi params) or desktop (loaderDebug
+// params). Touch-friendly so it works on a real phone where the Leva panel is fiddly.
 export default function LoaderDebugOverlay() {
     const loaderParams = useStore((state) => state.loaderDebugParameters)
     const mobileUi = useStore((state) => state.mobileUiParameters)

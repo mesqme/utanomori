@@ -1,12 +1,20 @@
 {
     "name": "sound-journey",
     "private": true,
-    "version": "0.0.0",
+    "version": "1.0.0",
+    "description": "Utanomori — a painterly night-forest exploration game built with React Three Fiber.",
+    "license": "MIT",
+    "homepage": "https://mesq.me/utanomori/",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/mesqme/sound-journey.git"
+    },
     "type": "module",
     "scripts": {
         "dev": "vite",
         "test": "node --test",
-        "build": "vite build"
+        "build": "vite build",
+        "preview": "vite preview"
     },
     "devDependencies": {
         "@vitejs/plugin-react": "4.3",
@@ -20,6 +28,7 @@
         "@react-three/postprocessing": "^3.0.4",
         "gsap": "^3.14.1",
         "leva": "^0.10.1",
+        "postprocessing": "^6.38.0",
         "r3f-perf": "^7.2.3",
         "react": "^19.1.0",
         "react-dom": "^19.1.0",

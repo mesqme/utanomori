@@ -64,10 +64,11 @@ export const TREE_PRESETS = {
 // dropdowns read back sensibly. -------------------------------------------------------------------
 const g = DEFAULT_COLOR_GRADE_PARAMETERS
 
-// Hero (main-character) material base colours. Themes set these so the player recolours with the
-// scene; the toon-shade (toonColor) is preserved by the apply logic (only baseColor is patched).
-// Non-Amethyst themes reset to the authored hero (defaultSceneStyle); Amethyst Dusk carries the
-// user's tuned magenta/violet hero. Slot ids match mainCharacterMaterialGroups.
+// Hero (main-character) material base colours — one set per theme. Themes set these so the player
+// recolours with the scene; the toon-shade (toonColor) is preserved by the apply logic (only
+// baseColor is patched). Night Forest restores the authored hero (defaultSceneStyle), Amethyst Dusk
+// carries the tuned magenta/violet one, Daylight its own warmer daytime one. Slot ids match
+// mainCharacterMaterialGroups.
 const m = d.characterMaterialParameters.materials
 const DEFAULT_HERO = {
     red: m.red.baseColor,
@@ -123,9 +124,8 @@ export const GLOBAL_THEMES = {
             grassParameters: { baseBrightness: d.grassParameters.baseBrightness },
             backgroundParameters: {
                 backgroundColor: d.backgroundParameters.backgroundColor,
-                gradientTopColor: d.backgroundParameters.gradientTopColor,
-                horizonColor: d.backgroundParameters.horizonColor,
-                gradientIntensity: d.backgroundParameters.gradientIntensity,
+                skyMixColor: d.backgroundParameters.skyMixColor,
+                skyMixAmount: d.backgroundParameters.skyMixAmount,
                 starColor: d.backgroundParameters.starColor,
                 starsEnabled: d.backgroundParameters.starsEnabled,
             },
@@ -147,9 +147,8 @@ export const GLOBAL_THEMES = {
             grassParameters: { baseBrightness: d.grassParameters.baseBrightness },
             backgroundParameters: {
                 backgroundColor: '#2b0091',
-                gradientTopColor: '#7053c6',
-                horizonColor: '#ffffff',
-                gradientIntensity: 0.25,
+                skyMixColor: '#ffffff',
+                skyMixAmount: 0.25,
                 starColor: '#ffffff',
                 starsEnabled: true,
             },
@@ -170,9 +169,8 @@ export const GLOBAL_THEMES = {
             grassPatchParameters: { tintColorCyan: '#b5e32b', tintColorViolet: '#57c443', tintColorYellow: '#a8d653', tintColorGreen: '#84c540' },
             backgroundParameters: {
                 backgroundColor: '#306685',
-                gradientTopColor: '#cfe0ff',
-                horizonColor: '#ffe8c0',
-                gradientIntensity: 0.22,
+                skyMixColor: '#ffe8c0',
+                skyMixAmount: 0.22,
                 starColor: '#ffffff',
                 starsEnabled: false, // no stars in daylight
             },

@@ -4,8 +4,8 @@
 import paintaryAlphaUrl from '../assets/textures/paintaryAlpha.png'
 import watercolorUrl from '../assets/textures/watercolor.png'
 
-// The two paintery brush textures. paintaryAlpha is the default every material uses; watercolor is the
-// alternative. (The old _01/_02/.. and watercolorBasic/Large variants were consolidated to these two.)
+// The two paintery brush textures. paintaryAlpha is the default every material uses; watercolor is
+// the alternative.
 export const PAINTERY_TEXTURE_IDS = ['paintaryAlpha', 'watercolor']
 
 export const PAINTERY_TEXTURE_URLS = {

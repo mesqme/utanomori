@@ -72,10 +72,10 @@ export default function BackgroundSphere() {
             resolution: screenPainteryUniforms.uPainteryResolution.value,
             time: rootState.clock.elapsedTime,
             ...params,
-            // The gradient holds at 0 through the camera travel and fades in only at the very
+            // The mix colour holds at 0 through the camera travel and fades in only at the very
             // end (as the camera settles / the first dialogue appears) — unlike the texture and
-            // stars, which ramp in across the whole reveal.
-            gradientIntensity: (params.gradientIntensity ?? 1) * THREE.MathUtils.smoothstep(textureAmount, 0.6, 1.0),
+            // stars, which ramp in across the whole reveal. So the intro sky is the flat colour.
+            skyMixAmount: (params.skyMixAmount ?? 1) * THREE.MathUtils.smoothstep(textureAmount, 0.6, 1.0),
             textureBrightness: (params.textureBrightness ?? params.colorIntensity ?? 0.4) * textureAmount,
             textureMixIntensity: params.textureMixIntensity ?? params.colorMixIntensity ?? 0.0,
             starBrightness: (params.starBrightness ?? 1.2) * textureAmount,

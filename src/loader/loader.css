@@ -73,8 +73,9 @@
     display: none;
 }
 
-/* Rounded end-caps for the progress arc — dots (⌀ = ring width) centred on the ring centreline;
-   the inline transform (Loader.jsx) rotates each to the arc's start / current-end angle. */
+/* Rounded end-caps for the progress arc — dots (⌀ = --sj-loader-ring-edge, i.e. the ring width minus its
+   ~1px feathered inner edge, so the cap sits flush and doesn't read thicker) centred on the ring
+   centreline; the inline transform (Loader.jsx) rotates each to the arc's start / current-end angle. */
 .loader-ring-cap {
     position: absolute;
     top: 50%;

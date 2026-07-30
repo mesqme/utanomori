@@ -48,8 +48,7 @@ const GRAVITY = 13.0
 const GROUND_EPSILON = 0.02
 const HERO_COLLISION_RADIUS = 0.35 // hero body radius for pushing out of solid stones
 const CREDITS_TRACK_GAIN = 1.2 // how firmly the credits runner steers back onto the lane centre
-const CREDITS_SPEED_SCALE = 0.65 // credits run at half the normal walk/run speed
-const SHADOW_GROUND_OFFSET = 0.025
+const CREDITS_SPEED_SCALE = 0.65 // credits run at ~two thirds of the normal walk/run speed
 const SHADOW_MIN_SCALE = 0.45
 const SHADOW_MAX_SCALE = 1.25
 const SHADOW_MIN_OPACITY = 0.08
@@ -91,7 +90,7 @@ export default function MainCharacter() {
     const characterParameters = useStore((state) => state.characterParameters)
     const cameraParameters = useStore((state) => state.cameraParameters)
     const loaderDebugParameters = useStore((state) => state.loaderDebugParameters)
-    const setBallPosition = useStore((state) => state.setBallPosition)
+    const setHeroPosition = useStore((state) => state.setHeroPosition)
     const setSmoothedCircleCenter = useStore((state) => state.setSmoothedCircleCenter)
     const phase = usePhases((state) => state.phase)
     const setPhase = usePhases((state) => state.setPhase)
@@ -114,7 +113,7 @@ export default function MainCharacter() {
     const isGroundedRef = useRef(true)
     const colliderRef = useRef({ objParams: null, roadParams: null, sampler: null })
     const seeThroughSlotRef = useRef(-1) // hero's slot in the shared character see-through buffer (grass + props)
-    const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 before the game (same clock as the grain)
+    const contrastRevealRef = useRef(0) // painterly contrast fades 0→1 across the intro travel (same clock as the texture/stars/glow)
     const readyFramesRef = useRef(0) // counts the first rendered frames → signals sceneReady (loader anti-blink)
     const [isMoving, setIsMoving] = useState(false)
 
@@ -149,10 +148,10 @@ export default function MainCharacter() {
         isGroundedRef.current = true
         setModelTransform()
 
-        setBallPosition(positionRef.current)
+        setHeroPosition(positionRef.current)
         smoothedCircleCenter.copy(positionRef.current)
         resetTrail(positionRef.current)
-    }, [setBallPosition, setModelTransform, smoothedCircleCenter])
+    }, [setHeroPosition, setModelTransform, smoothedCircleCenter])
 
     const handleReset = useCallback(() => {
         resetPosition()
@@ -442,7 +441,7 @@ export default function MainCharacter() {
             setGroundShadow(TRAMPLE_SLOT_MAIN, visualPosition.x, visualPosition.z, shadowScale, shadowOpacity)
         }
 
-        setBallPosition(visualPosition)
+        setHeroPosition(visualPosition)
 
         if (phase === PHASES.intro || phase === PHASES.start || phase === PHASES.finale || phase === PHASES.credits) {
             recordTrail(visualPosition)
@@ -774,7 +773,7 @@ const CharacterModel = forwardRef(function CharacterModel({ moving }, ref) {
                     }
                 }
             } else {
-                lanternFireOffsetRef.current.set(fp.fireOffsetX, fp.fireOffsetY, fp.fireOffsetZ)
+                lanternFireOffsetRef.current.set(0, -0.7, 0.05) // local to the lantern; -Y drops it from the top origin
                 nodes.lantern_1.localToWorld(lanternFireOffsetRef.current)
             }
             setLanternFirePosition(lanternFireOffsetRef.current)

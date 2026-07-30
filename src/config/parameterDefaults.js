@@ -31,7 +31,7 @@ export function cloneSheepCharacters() {
 // HMR version gates — bump the matching one when its defaults change so a dev hot-reload
 // force-applies them instead of keeping the preserved runtime values (which would otherwise mask
 // the new defaults). See the merge block in useStore.jsx.
-export const GRASS_STYLE_VERSION = 19
+export const GRASS_STYLE_VERSION = 20
 export const CHARACTER_STYLIZED_VERSION = 4
 // Bump when objectParameters / edgeParameters / propRimParameters defaults change.
 export const OBJECT_STYLE_VERSION = 9
@@ -89,9 +89,10 @@ export { DEFAULT_LOADER_DEBUG_PARAMETERS, DEFAULT_MOBILE_UI_PARAMETERS } from '.
  * Theme
  */
 
-// Which named colour preset each group is currently on (Colors folder in Leva). Presets live in
-// config/colorPresets.js; selecting one writes its colours into the real param groups — these
-// only remember the selection so the dropdowns read back correctly.
+// Which named colour preset each group is currently on. Presets live in config/colorPresets.js;
+// applying a theme writes its colours into the real param groups and records the names here. Only
+// `theme` is bound to a Leva dropdown (the Colors folder) — grass/stones/trees are bookkeeping,
+// a record of which per-group palette a theme reused.
 export const DEFAULT_COLOR_PRESET_PARAMETERS = {
     theme: 'Night Forest',
     grass: 'Violet Night',
@@ -107,12 +108,11 @@ export const DEFAULT_THEME_TRANSITION_PARAMETERS = {
     // Progress curve. 'Fast start' responds the instant you click and eases out at the end;
     // 'Slow start' is the cinematic ramp-up (feels laggy on click); 'Smooth' is between.
     easing: 'Fast start', // 'Fast start' | 'Smooth' | 'Slow start' | 'Linear'
-    // The Portal/Wipe/Dissolve edge is a THRESHOLD against a noise field (exactly the ground
-    // border's paintery fade): within `band` around the front, pixels flip old→new where the local
-    // noise beats the progression; `bleed` soft-mixes near the threshold.
+    // The Portal edge is a THRESHOLD against a noise field (exactly the ground border's paintery
+    // fade): within `band` around the front, pixels flip old→new where the local noise beats the
+    // progression — a hard cutout, no soft blend across the threshold.
     edgeStyle: 'Paintery', // 'Paintery' (the brush texture) | 'Perlin' (procedural noise)
     band: 0.8, // width of the torn transition band (screen fraction) — wide = the whole sweep is brush-eaten
-    bleed: 0.0, // soft blend width inside the band (0 = hard paintery cutout)
     textureScale: 0.65, // Paintery style: brush tiling in screen space (small = big strokes)
     perlinScale: 6.5, // Perlin style: noise frequency
     perlinDetail: 1, // Perlin style: octaves (1 = soft blobs → 5 = crunchy)
@@ -185,11 +185,6 @@ export const DEFAULT_JOYSTICK_PARAMETERS = {
 // since they depend on the exact lantern mesh dimensions.
 export const DEFAULT_LANTERN_FIRE_PARAMETERS = {
     enabled: true,
-    // Fire offsets are LOCAL to the lantern (attached to the bone, see MainCharacter), so the
-    // flame follows the lantern's position AND rotation. -Y drops it from the top origin.
-    fireOffsetX: 0,
-    fireOffsetY: -0.7,
-    fireOffsetZ: 0.05,
     fireBoneOffset: 0.08, // nudge the flame up the lantern→flame bone axis (only used with the flame bone)
     fireSize: 0.13,
     fireColorCore: '#ffe6a8', // hot inner flame
@@ -251,8 +246,8 @@ export const DEFAULT_ARROW_PARAMETERS = {
 }
 
 // Song mini-game: the "press E" interaction radius + the floating head-notes (CompanionNotes).
-// (The old 2D note wheel + spatial singing voices were removed — the mini-game is now the 3D
-// music stones, and the backing audio lives in musicTracks.js.)
+// The mini-game proper is the 3D music stones (musicStoneParameters below); the backing audio
+// lives in audio/musicTracks.js.
 /**
  * Melody mini-game
  */
@@ -265,15 +260,14 @@ export const DEFAULT_SONG_GAME_PARAMETERS = {
     noteScale: 0.19, // base world size of a note
     noteRiseWorld: 1.45, // world units it floats upward over its life
     noteWobbleWorld: 0.77, // world units of side-to-side sway + initial spread
-    noteColor: '#99e386', // fallback note tint (each companion's notes use its own body colour)
     // 3D feedback above the character head (CharacterFeedback): heart.glb on a correct press,
     // mark.glb (rocking) on a miss. Models are authored large, so these scales are small.
     heartScale: 0.15,
     markScale: 0.15,
 }
 
-// 3D music stones (song mini-game): seven coloured stones that rise around the companion,
-// flash on each played note, and are clicked to repeat the song. Colours default to NOTES.
+// 3D music stones (song mini-game): six coloured stones that rise around the companion, flash
+// on each played note, and are clicked to repeat the song.
 export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     color0: '#e85c5c',
     color1: '#ef9f43',
@@ -281,7 +275,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     color3: '#5fc46a',
     color4: '#46c2c9',
     color5: '#5b8def',
-    color6: '#b072e6',
     radius: 3.6, // rainbow radius (half-width + rise) above the companion's head
     scale: 0.55, // normal stone scale (matches the ordinary stoneSize)
     yOffset: 1.25, // base height offset (added on top of hoverHeight)
@@ -297,7 +290,6 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     flashDuration: 0.32, // seconds the flash decays over
     listenTempo: 1.6, // playback speed multiplier when hearing the song (>1 = slower)
     notePlayDuration: 0.9, // base seconds each note plays before the next during the melody (× listenTempo)
-    alwaysSixNotes: true, // always stage a full 6-stone board (extra stones are silent decoys)
     roundClearPause: 1.1, // seconds the "Nice!" banner holds before the next round's countdown
     countdownFrom: 3, // 3·2·1 — how many counts before each round's playback
     countdownStep: 0.7, // seconds per countdown tick
@@ -313,19 +305,21 @@ export const DEFAULT_MUSIC_STONE_PARAMETERS = {
     dialogueCameraDistance: 8.5, // distance back from the character during speech
     dialogueTargetY: 1.2, // look-at height (the character's head) during speech
     // Pointer (the shared arrow): during playback it snaps to the singing note; during input it
-    // follows the mouse freely around the arc and snaps onto a stone only while its proxy is hovered.
+    // snaps to whichever stone's hover proxy is under the cursor (on touch, to the last tapped
+    // stone), and rests on the last one when nothing is hovered — it never sits between stones.
     // Size is taken from the walking target arrow (arrowParameters.scale) — it's the same arrow.
     pointerRadius: 1.75, // arrow distance from the rainbow centre (the half-circle's centre)
-    // See-through: during the game, the bottom side stones act like the hero — trees in front of
-    // them fade away so the stones stay readable. This is the world radius of each stone's hole.
+    // See-through: during the game EVERY staged stone acts like the hero — trees in front of it
+    // fade away so the stones stay readable. This is the world radius of each stone's hole.
     seeThroughEnabled: true,
     seeThroughRadius: 2.8,
 }
 
-// The three synched backing tracks (one per music companion). All start (looping, muted) on GO;
-// the MusicController only fades each track's volume. The current TARGET's track is heard by
-// distance to the hero; a COLLECTED companion's track plays softly behind the party; everything
-// is muted during a conversation / mini-game.
+// The six synched backing layers — a FULL melody + a simplified PREVIEW per music companion (see
+// audio/musicTracks.js). All start (looping, muted) on GO; the MusicController only fades each
+// layer's volume. The current TARGET's PREVIEW is heard by distance to the hero; a COLLECTED
+// companion's FULL layer plays softly behind the party; everything is muted during a conversation /
+// mini-game.
 /**
  * Audio
  */
@@ -341,9 +335,8 @@ export const DEFAULT_MUSIC_PARAMETERS = {
     volumeLerp: 2.1, // volume smoothing (higher = snappier fades)
 }
 
-// Ambient + character + footstep SFX (see ambientSounds.js / AmbientController). Wind is the
-// constant bed (ducked during dialogues), cicadas a secondary bed, owls a random far/close pool,
-// plus per-character one-shots and a switchable footstep pair.
+// Ambient + character + footstep SFX (see ambientSounds.js / AmbientController). Cicadas are the
+// constant bed, owls a random far/close pool, plus per-character one-shots and footsteps.
 export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
     cicadaVolume: 0.12, // the ambient bed (the original cicada file)
     owlVolume: 0.5, // peak volume of each owl hoot in the random pool
@@ -353,22 +346,20 @@ export const DEFAULT_AMBIENT_SOUND_PARAMETERS = {
     footstepVolume: 0.05,
     footstepInterval: 0.45, // seconds between steps while moving
     footstepSpeedThreshold: 2.95, // hero speed (u/s) above which footsteps play (grass pair)
-    mumbleVolume: 0.38, // capucine_mumble — companion conversation
-    sadVolume: 0.42, // capucin_sad — companion runs away after a missed song
+    mumbleVolume: 0.38, // spiritMumble — companion conversation
+    sadVolume: 0.42, // spiritSad — companion runs away after a missed song
     sighVolume: 0.9, // intro-dialogue sigh volume
 }
 
-// Procedural cartoon eyes drawn on a quad in front of the hero's face (see CharacterEyes + the
-// characterEyes shader). Placement is local to the character model; shape is in quad-UV units.
-// The eyes are drawn directly in the head mesh's fragment shader, laid out in the head's second UV
-// (uv1). CharacterEyes drives the blink + glance; everything here is shape/colour in uv1 space.
+// Procedural cartoon eyes for the hero, drawn directly in the head mesh's fragment shader
+// (shaders/character/fragment.glsl, gated by uDrawEyes) and laid out in the head's second UV set
+// (uv1). CharacterEyes.jsx drives the blink + glance; everything here is shape/colour in uv1 space.
 /**
  * Eyes
  */
 
 export const DEFAULT_CHARACTER_EYES_PARAMETERS = {
     enabled: true,
-    debugUv1: false, // paint the head by its second UV (R=u, G=v) to find the eye layout
     // Eyeball (yellow circle with a big wobbly border), positioned in the head's uv1.
     eyeColor: '#f2c20a',
     eyeRadius: 0.26,
@@ -452,7 +443,8 @@ export const DEFAULT_SHEEP_PARAMETERS = {
     seeThroughHeight: 0.6, // height above the companion's feet to centre the see-through hole
 }
 
-// Sheep stylized material: the hero's painterly settings + per-companion base colours.
+// Sheep stylized material: the shared character painterly defaults (stylizedMaterialDefaults.js —
+// the hero ships with its own tuned values in sceneStyles) + per-companion base colours.
 export const DEFAULT_SHEEP_MATERIAL_PARAMETERS = {
     ...characterStylizedDefaults,
     characters: cloneSheepCharacters(),

@@ -1,6 +1,8 @@
-// Screen-space effects (paintery edge, background texture/stars, dithering, grain)
-// are tuned against a 1080p drawing buffer. This factor rescales their pixel sizes
-// to the actual buffer height so the look is identical on a 1440p / 4k monitor.
+// Screen-space pixel sizes are tuned against a 1080p drawing buffer. This factor rescales
+// them to the actual buffer height so the look is identical on a 1440p / 4k monitor. Used by
+// the dithering (terrain + grass) and the props' / music-stones' pixel size — NOT by the
+// background texture (that uses getWorldLockScale below), the paintery border brush
+// (world-anchored) or the stars (direction space, already resolution independent).
 export const REFERENCE_HEIGHT = 1080
 
 export function getRefScale(state) {

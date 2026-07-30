@@ -25,8 +25,8 @@
     border-radius: var(--ui-radius-chip);
     background: var(--sj-ui-panel);
     transition: background 0.1s, transform 0.1s;
-    box-sizing: border-box; /* Include border in width/height */
-    pointer-events: auto; /* Enable clicks on keys */
+    box-sizing: border-box;
+    pointer-events: auto; /* re-enable clicks on the keys (the container is pointer-events: none) */
     cursor: pointer;
     
     /* Prevent selection and context menus on mobile */

@@ -1,10 +1,11 @@
-// The three synched backing tracks (one per music companion). All start together on GO and stay on
-// the same timeline; the MusicController only changes each track's volume (muted → distance-based for
-// the active target → collected level).
+// The six synched backing layers (a FULL melody + a simplified PREVIEW per music companion). All start
+// together on GO and stay on the same timeline; the MusicController only changes each layer's volume
+// (muted → distance-based for the active target → collected level), so the preview ↔ full swap on a
+// win is musically seamless.
 //
 // Played through the Web Audio API (decoded audio → looping AudioBufferSourceNode), NOT HTMLAudio: an
 // <audio> loop re-seeks at the boundary and isn't gapless, whereas a looping buffer source is
-// sample-accurate. All three sources start at ONE shared audio time, so the layers stay perfectly in
+// sample-accurate. All six sources start at ONE shared audio time, so the layers stay perfectly in
 // sync (and loop seamlessly). Decoded buffers are cached so a restart replays instantly. (MP3 source
 // files — once decoded into a buffer the playback is identical to WAV, just a smaller download.)
 import { getAudioContext, getMasterGain, loadAudioBuffer } from './songAudio.js'
@@ -34,8 +35,9 @@ const sources = {} // track → AudioBufferSourceNode (looping)
 let started = false
 let preloadStarted = false
 
-// Decode the six layers into the buffer cache DURING the loading screen (via the loading manager, so
-// they count on the bar). No playback here — startMusicTracks() then starts instantly from the cache.
+// Decode the six layers into the buffer cache in the BACKGROUND, once GO is showing (called from the
+// Loader's warmup). Untracked, so they never count on the loading bar or hold up GO. No playback here
+// — startMusicTracks() then starts instantly from the cache.
 export function preloadMusicTracks() {
     if (preloadStarted || typeof window === 'undefined') return
     const ctx = getAudioContext()

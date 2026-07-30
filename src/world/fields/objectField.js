@@ -216,18 +216,6 @@ function buildRawCellGroup(cellX, cellZ, settings) {
         const worldX = anchorX + localX
         const worldZ = anchorZ + localZ
 
-        // Sockets are centred (offset x/z == 0 in the library), so world XZ matches the
-        // instance and only the height needs scaling. Terrain Y is added by the consumer.
-        const sockets = (library.sockets ?? []).map((socket, socketIndex) => ({
-            id: socket.id,
-            index: socketIndex,
-            capacity: socket.capacity ?? 1,
-            worldX,
-            worldZ,
-            heightOffset: (socket.offset?.[1] ?? 0) * scale,
-            normal: socket.normal ?? [0, 1, 0],
-        }))
-
         // Per-instance colour jitter (hash-based so it never shifts the placement rng) — a subtle
         // per-CHANNEL tint variation on stones / mushrooms, like the sheep scales' colour offsets.
         const ji = instances.length
@@ -237,7 +225,7 @@ function buildRawCellGroup(cellX, cellZ, settings) {
             hash01(cellX * 131 + ji, cellZ, settings.worldSeed ^ 0x51aa3319) * 2 - 1,
         ]
 
-        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, canopyRadius, grassRadius, solidRadius, colorTone, colorJitter, sockets })
+        instances.push({ type, variantIndex, localX, localZ, worldX, worldZ, scale, rotationY, tiltX, tiltZ, footprintRadius, canopyRadius, grassRadius, solidRadius, colorTone, colorJitter })
     }
 
     if (instances.length === 0) return null
@@ -427,24 +415,6 @@ export function createObjectFieldSampler(parameters = {}, roadParameters = {}) {
 
             if (pushX === 0 && pushZ === 0) return null
             return { x: worldX + pushX, z: worldZ + pushZ }
-        },
-
-        // Nearest object + its group — for future character placement / collision.
-        sampleNearestObject(worldX, worldZ) {
-            if (!settings.enabled) return null
-
-            let best = null
-            let bestDistance = Infinity
-            forEachNeighborInstance(worldX, worldZ, (instance, group) => {
-                const dx = worldX - instance.worldX
-                const dz = worldZ - instance.worldZ
-                const dist = Math.sqrt(dx * dx + dz * dz)
-                if (dist < bestDistance) {
-                    bestDistance = dist
-                    best = { group, instance, distance: dist }
-                }
-            })
-            return best
         },
     }
 }

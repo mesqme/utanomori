@@ -1,4 +1,3 @@
-import React from 'react'
 import './Links.css'
 import { icons } from './icons.js'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
@@ -13,13 +12,6 @@ export default function Links() {
 
     return (
         <div className="links">
-            {/* GitHub link hidden on screen for now (kept in code — restore when wanted):
-            <a href="https://github.com/mesqme/infinite-terrain" target="_blank" rel="noopener noreferrer" className="link-item">
-                <svg viewBox="0 0 24 24" fill="currentColor">
-                    <path d={icons.github} />
-                </svg>
-            </a>
-            */}
             <a href="https://www.linkedin.com/in/mesqme/" target="_blank" rel="noopener noreferrer" className="link-item">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                     <path d={icons.linkedin} />

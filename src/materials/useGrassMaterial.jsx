@@ -59,7 +59,6 @@ export default function useGrassMaterial({
                     uPainteryTexture: { value: painteryTexture },
                     uPainteryDrift: { value: borderParameters.painteryDrift },
                     uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
-                    uPainteryBleed: { value: borderParameters.painteryBleed },
                     uBackgroundColor: { value: new THREE.Color(backgroundColor) },
                     uBackgroundColorOld: { value: new THREE.Color(backgroundColor) },
                     uTime: { value: 0 },
@@ -106,9 +105,9 @@ export default function useGrassMaterial({
                     uTrampleEnabled: { value: 1 },
                     uTrailStrength: { value: grassParameters.trailStrength ?? 0.7 },
                     uTramplers: { value: getTrampleData() },
-                    // Music-character see-through: grass in front of a sheep clears so it shows through
-                    // (the trample only presses the grass down at foot level). Shared buffer, mutated
-                    // by each SheepCreature each frame and re-uploaded — like uTramplers.
+                    // Character see-through: grass in front of the HERO or a sheep clears so they show
+                    // through (the trample only presses the grass down at foot level). Shared buffer,
+                    // mutated each frame by MainCharacter + every SheepCreature — like uTramplers.
                     uCharSeeThrough: { value: characterSeeThrough.data },
                     uCharSeeThroughCount: { value: characterSeeThrough.count },
                     uUseTrailSource: { value: computeSourceUsage(grassParameters).useTrail },
@@ -182,7 +181,6 @@ export default function useGrassMaterial({
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
-        u.uPainteryBleed.value = borderParameters.painteryBleed
         u.uBackgroundColor.value.set(backgroundColor)
         u.uGrassSegments.value = grassParameters.segmentsCount
         u.uGrassChunkSize.value = chunkSize

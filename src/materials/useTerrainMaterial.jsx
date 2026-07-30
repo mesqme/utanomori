@@ -55,7 +55,6 @@ export default function useTerrainMaterial({
                 uPainteryTexture: { value: painteryTexture },
                 uPainteryDrift: { value: borderParameters.painteryDrift },
                 uPainteryLayer2Scale: { value: borderParameters.painteryLayer2Scale },
-                uPainteryBleed: { value: borderParameters.painteryBleed },
                 uNoiseTexture: { value: noiseTexture },
                 uNoiseStrength: { value: borderNoiseStrength },
                 uNoiseScale: { value: borderNoiseScale },
@@ -101,7 +100,6 @@ export default function useTerrainMaterial({
         u.uFadeMode.value = fadeModeToInt(borderFadeMode)
         u.uPainteryDrift.value = borderParameters.painteryDrift
         u.uPainteryLayer2Scale.value = borderParameters.painteryLayer2Scale
-        u.uPainteryBleed.value = borderParameters.painteryBleed
         u.uNoiseTexture.value = noiseTexture
         u.uNoiseStrength.value = borderNoiseStrength
         u.uNoiseScale.value = borderNoiseScale

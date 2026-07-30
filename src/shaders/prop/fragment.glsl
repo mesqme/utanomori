@@ -17,7 +17,6 @@ uniform float uPainteryDpr; // device pixel ratio (CSS-locks the tile size)
 uniform float uPainteryScreenBlend;
 uniform float uPainteryDrift;
 uniform float uPainteryLayer2Scale;
-uniform float uPainteryBleed;
 // See-through subjects + seeThroughAmount() come from includes/seeThrough.glsl (included
 // below, after the varyings). These two are prop-only — the paintery edge on the hole.
 uniform float uSeeThroughTextureContrast;
@@ -158,7 +157,7 @@ void main() {
         if (c.z <= 0.0) continue; // inactive slot
         stAmount = max(stAmount, seeThroughAmount(c.xy, c.z, c.w));
     }
-    stAmount *= vSeeThrough; // only trees see-through; stones + mushrooms stay solid
+    stAmount *= vSeeThrough; // trees + stones see-through; mushrooms stay solid
     if (stAmount > 0.0) {
         vec2 stScreenUv = (gl_FragCoord.xy - 0.5 * uPainteryResolution + uTexturePan) / (uSeeThroughTextureScale * uPainteryDpr);
         vec2 stUv = mix(vWorldXZ * uPainteryDrift, stScreenUv, uPainteryScreenBlend);
@@ -229,7 +228,7 @@ void main() {
         finalColor = mix(fadeBg, finalColor, vPropMask);
     } else if (uPropFadeMode == 2) {
         float painteryBrush = samplePainteryBrush(vWorldXZ);
-        finalColor = mix(finalColor, fadeBg, smoothstep(painteryBrush - uPainteryBleed, painteryBrush, fade));
+        finalColor = mix(finalColor, fadeBg, step(painteryBrush, fade));
         if (fade > painteryBrush) discard;
     } else {
         if (fade >= 0.999 || (fade > 0.0 && bayerDither(gl_FragCoord.xy, uPixelSize) < fade)) discard;

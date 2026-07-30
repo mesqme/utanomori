@@ -25,7 +25,7 @@ export const INTRO_DIALOGUE_DELAY = INTRO_TRAVEL_DURATION + 0.2 // speech bubble
 
 export const FINALE_DIALOGUE_DELAY = 0.6 // seconds after entering finale before the bubble opens
 
-export const CREDITS_SCROLL_DURATION = 36 // seconds for the credits to scroll past (half speed → 2× the old 18s)
+export const CREDITS_SCROLL_DURATION = 36 // seconds for the credits to scroll past
 
 // Cinematic restart: the reverse of the intro. Companions flee, the camera un-spirals up to the
 // top "hat" shot, the reveal shrinks, and the background/stars fade — then we land back in warmup.

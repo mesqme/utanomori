@@ -10,8 +10,8 @@ import { LEVA_SECTION_PATHS } from './levaSectionPaths.js'
 // The echo guard is the load-bearing part: leva fires onChange SYNCHRONOUSLY from our own
 // levaStore.set(), so pushing store -> panel would immediately fire panel -> store and fight
 // whatever else is writing. `levaSync.active` is raised around every push and every setParam
-// checks it. Module scope rather than a component ref because the twelve section hooks all
-// need the same flag.
+// checks it. Module scope rather than a component ref because every section hook needs
+// the same flag.
 export const levaSync = { active: false }
 
 // Raise the guard, push, lower it — always via try/finally so a throw cannot leave it stuck on.
@@ -51,13 +51,13 @@ export function syncLevaSection(folderPath, section, paths) {
 }
 
 export function addSeeThroughValues(values) {
-    values['Debug.See-Through.enabled'] = seeThrough.enabled
-    values['Debug.See-Through.grassEnabled'] = seeThrough.grassEnabled
-    values['Debug.See-Through.worldRadius'] = seeThrough.worldRadius
-    values['Debug.See-Through.inner'] = seeThrough.inner
-    values['Debug.See-Through.depthBias'] = seeThrough.depthBias
-    values['Debug.See-Through.opacityIntensity'] = seeThrough.opacityIntensity
-    values['Debug.See-Through.textureContrast'] = seeThrough.textureContrast
+    values['See-Through.enabled'] = seeThrough.enabled
+    values['See-Through.grassEnabled'] = seeThrough.grassEnabled
+    values['See-Through.worldRadius'] = seeThrough.worldRadius
+    values['See-Through.inner'] = seeThrough.inner
+    values['See-Through.depthBias'] = seeThrough.depthBias
+    values['See-Through.opacityIntensity'] = seeThrough.opacityIntensity
+    values['See-Through.textureContrast'] = seeThrough.textureContrast
 }
 
 // Push the CURRENT store values into the Leva panel (all synced sections at once). Used at
@@ -70,6 +70,7 @@ export function syncLevaFromStore() {
         'Colors.theme': s.colorPresetParameters.theme,
     }
     addLevaSectionValues(values, 'World.Terrain', s.terrainParameters, LEVA_SECTION_PATHS.Terrain)
+    addLevaSectionValues(values, 'World.Terrain.Ground Shadow', s.terrainParameters, LEVA_SECTION_PATHS['Ground Shadow'])
     addLevaSectionValues(values, 'World.Background', s.backgroundParameters, LEVA_SECTION_PATHS.Background)
     addLevaSectionValues(values, 'World.Stars', s.backgroundParameters, LEVA_SECTION_PATHS.Stars)
     addLevaSectionValues(values, 'World.Border', s.borderParameters, LEVA_SECTION_PATHS.Border)
@@ -79,10 +80,10 @@ export function syncLevaFromStore() {
     addLevaSectionValues(values, 'Grass.Blades', s.grassParameters, LEVA_SECTION_PATHS.Blades)
     addLevaSectionValues(values, 'Grass.Patches', s.grassPatchParameters, LEVA_SECTION_PATHS.Patches)
     addLevaSectionValues(values, 'Grass.Trail', s.grassParameters, LEVA_SECTION_PATHS.Trail)
-    addLevaSectionValues(values, 'Grass.Trail Dissolve', s.grassParameters, LEVA_SECTION_PATHS['Trail Dissolve'])
-    addLevaSectionValues(values, 'Grass.Trail Lighten', s.grassParameters, LEVA_SECTION_PATHS['Trail Lighten'])
-    addLevaSectionValues(values, 'Grass.Trail Scale', s.grassParameters, LEVA_SECTION_PATHS['Trail Scale'])
-    addLevaSectionValues(values, 'Grass.Trail Lean', s.grassParameters, LEVA_SECTION_PATHS['Trail Lean'])
+    addLevaSectionValues(values, 'Grass.Trail.Dissolve', s.grassParameters, LEVA_SECTION_PATHS['Trail Dissolve'])
+    addLevaSectionValues(values, 'Grass.Trail.Lighten', s.grassParameters, LEVA_SECTION_PATHS['Trail Lighten'])
+    addLevaSectionValues(values, 'Grass.Trail.Scale', s.grassParameters, LEVA_SECTION_PATHS['Trail Scale'])
+    addLevaSectionValues(values, 'Grass.Trail.Lean', s.grassParameters, LEVA_SECTION_PATHS['Trail Lean'])
     addLevaSectionValues(values, 'Props.Placement', s.objectParameters, LEVA_SECTION_PATHS.Placement)
     addLevaSectionValues(values, 'Props.Trees', s.objectParameters, LEVA_SECTION_PATHS.Trees)
     addLevaSectionValues(values, 'Props.Stones', s.objectParameters, LEVA_SECTION_PATHS.Stones)
@@ -95,10 +96,9 @@ export function syncLevaFromStore() {
     addLevaSectionValues(values, 'Lantern.Ground Light', s.lanternGroundLightParameters, LEVA_SECTION_PATHS['Ground Light'])
     addLevaSectionValues(values, 'Post.Color Grade', s.colorGradeParameters, LEVA_SECTION_PATHS['Color Grade'])
     addLevaSectionValues(values, 'Post.Painterly FX', s.painterlyPostParameters, LEVA_SECTION_PATHS['Painterly FX'])
-    addLevaSectionValues(values, 'Post.Dithering', s.ditheringParameters, LEVA_SECTION_PATHS.Dithering)
+    addLevaSectionValues(values, 'World.Border', s.ditheringParameters, LEVA_SECTION_PATHS.Dithering)
     addLevaSectionValues(values, 'Desktop.UI', s.gameUiParameters, LEVA_SECTION_PATHS['Game UI'])
     addLevaSectionValues(values, 'Debug.Camera Debug', s.cameraParameters, LEVA_SECTION_PATHS['Camera Debug'])
-    addLevaSectionValues(values, 'Debug.Loader Debug', s.loaderDebugParameters, LEVA_SECTION_PATHS['Loader Debug'])
 
     mainCharacterMaterialGroups.forEach((group) => {
         values[`Characters.Hero Material.${group.label} Base`] = s.characterMaterialParameters.materials[group.id]?.baseColor ?? group.baseColor
@@ -113,7 +113,7 @@ export function syncLevaFromStore() {
             values[`Characters.Sheep.Colours.${charKey}${groupKey}`] = s.sheepMaterialParameters.characters[music][group].baseColor
         }
     }
-    values['Props.Tree Eyes.Eye.eyeColor'] = s.treeEyesParameters.eyeColor
+    values['Props.Trees.Tree Eyes.Eye.eyeColor'] = s.treeEyesParameters.eyeColor
 
     pushLevaValues(values)
 }

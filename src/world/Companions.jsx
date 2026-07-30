@@ -49,8 +49,8 @@ function findHiddenSpawn(player) {
     return { x: player.x + Math.cos(angle) * distance, z: player.z + Math.sin(angle) * distance }
 }
 
-// Companion ground shadow strength (the dark blob is drawn in the terrain shader now, see
-// groundShadowField — opacity that the old transparent decal used).
+// Companion ground shadow strength — the dark blob is drawn in the terrain shader (see
+// groundShadowField), not a decal mesh.
 const GROUND_SHADOW_STRENGTH = 0.3
 
 function TargetCreature({ target }) {
@@ -90,7 +90,7 @@ function TargetCreature({ target }) {
             fleeTargetRef.current = null
             return undefined
         }
-        const player = useStore.getState().ballPosition
+        const player = useStore.getState().heroPosition
         const spawn = findHiddenSpawn(player)
         fleeTargetRef.current = spawn
         const timer = setTimeout(() => {
@@ -106,7 +106,7 @@ function TargetCreature({ target }) {
          */
         const group = groupRef.current
         if (!group) return
-        const player = useStore.getState().ballPosition
+        const player = useStore.getState().heroPosition
 
         /**
          * Flee run or stand ground
@@ -211,7 +211,7 @@ function Follower({ definition, index }) {
             let flee = fleeStateRef.current
             if (!flee) {
                 const start = positionRef.current
-                const hero = useStore.getState().ballPosition
+                const hero = useStore.getState().heroPosition
                 let dx = start.x - hero.x
                 let dz = start.z - hero.z
                 let len = Math.hypot(dx, dz)
@@ -393,7 +393,7 @@ export default function Companions() {
         // While the song game runs, the target is pinned — skip spawn/abandon/range.
         if (gameActive) return
 
-        const player = store.ballPosition
+        const player = store.heroPosition
 
         /**
          * Target spawn

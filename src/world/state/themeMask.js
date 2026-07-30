@@ -29,7 +29,6 @@ export const themeMaskUniforms = {
     uThemeMaskResolution: { value: new THREE.Vector2(1, 1) },
     uThemeMaskBrush: { value: brushTexture },
     uThemeMaskBand: { value: 0.15 },
-    uThemeMaskBleed: { value: 0 },
     uThemeMaskTexScale: { value: 0.65 },
     uThemeMaskPerlinScale: { value: 6.5 },
     uThemeMaskPerlinDetail: { value: 1 },
@@ -44,7 +43,6 @@ export function updateThemeMask(gl, params) {
     themeMaskUniforms.uThemeMaskProgress.value = themeMask.progress
     gl.getDrawingBufferSize(themeMaskUniforms.uThemeMaskResolution.value)
     themeMaskUniforms.uThemeMaskBand.value = params.band
-    themeMaskUniforms.uThemeMaskBleed.value = params.bleed
     themeMaskUniforms.uThemeMaskTexScale.value = params.textureScale
     themeMaskUniforms.uThemeMaskPerlinScale.value = params.perlinScale
     themeMaskUniforms.uThemeMaskPerlinDetail.value = Math.round(params.perlinDetail)

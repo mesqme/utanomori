@@ -1,8 +1,8 @@
 import * as THREE from 'three'
 
-// Shared geometry helpers for the GLB stones — used by both the scattered terrain stones
-// (ScatteredObjects, batched) and the music stones (MusicStones, individual meshes) so they
-// build identically.
+// Shared geometry helpers for the GLB props — stones, mushrooms, trees and the tree eye planes.
+// The stone bakers are used by both the scattered terrain stones (ScatteredObjects, batched) and
+// the music stones (MusicStones, individual meshes) so they build identically.
 
 // Normalise a geometry to ONE attribute layout: position, normal, uv, aFoliage. Copy only
 // those (zero-fill uv when missing, recompute normals if absent). aFoliage tags tree leaves

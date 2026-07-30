@@ -24,8 +24,7 @@ const applyShot = (shot) => {
 
 // The intro camera travel: from the top "hat" shot, a descending 360° SPIRAL down to the
 // dialogue framing (rotation + descent together). Fully driven by the tunable store params
-// so it can be replayed live ("redo the animation"). Optionally the look-at point also
-// spirals in XZ (out and back, Y unchanged).
+// (introCameraParameters) so it can be replayed live ("redo the animation").
 function runIntroTravel({ introTweenRef, loaderCameraHeight, params, isReplay }) {
     if (introTweenRef.current) {
         introTweenRef.current.kill()

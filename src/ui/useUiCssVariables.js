@@ -19,8 +19,7 @@ export function useUiCssVariables() {
     const joystickParameters = useStore((state) => state.joystickParameters)
     const mobile = useIsMobile()
 
-    // Push the UI design tokens onto :root so the whole DOM UI (bubble, prompts, HUD, chips) restyles
-    // live. style.css keys every size/corner/border off these vars. One effect for the lot.
+    // One effect writes the lot onto :root, so any slider change restyles the whole DOM UI at once.
     useEffect(() => {
         const root = document.documentElement.style
         const p = gameUiParameters

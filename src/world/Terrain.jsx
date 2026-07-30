@@ -285,10 +285,10 @@ export default function Terrain() {
         /**
          * Chunk grid
          */
-        const ballPosition = state.ballPosition
+        const heroPosition = state.heroPosition
         const safeChunkSize = Math.max(0.0001, chunkSize)
-        const chunkX = Math.round(ballPosition.x / safeChunkSize)
-        const chunkZ = Math.round(ballPosition.z / safeChunkSize)
+        const chunkX = Math.round(heroPosition.x / safeChunkSize)
+        const chunkZ = Math.round(heroPosition.z / safeChunkSize)
 
         if (chunkX !== currentChunk.current.x || chunkZ !== currentChunk.current.z || currentChunk.current.size !== safeChunkSize || activeChunks.length === 0) {
             currentChunk.current = { x: chunkX, z: chunkZ, size: safeChunkSize }

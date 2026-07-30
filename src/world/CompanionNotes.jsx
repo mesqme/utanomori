@@ -8,9 +8,9 @@ import useStore from '../stores/useStore.jsx'
 import usePhases, { PHASES } from '../stores/usePhases.jsx'
 import notesUrl from '../assets/models/notes.glb'
 
-// The 3 authored note models (notes.glb) — they replaced the CSS glyph placeholders. A small pool
-// of meshes is reused: each spawned note picks one of the 3 models, then rises + sways + grows +
-// fades above the singing companion's head, billboarded to the camera.
+// The 3 authored note models (notes.glb). A small pool of meshes is reused: each spawned note
+// picks one of the 3 models, then rises + sways + grows + fades above the singing companion's
+// head, billboarded to the camera.
 const NOTE_NODES = ['note_01', 'note_02', 'note_03']
 const POOL = 8
 const AMBIENT_MIN = 0.45 // seconds between idle notes (randomized up to AMBIENT_MAX)
@@ -113,9 +113,9 @@ export default function CompanionNotes({ headY = 1.05, isTarget = false, music =
         const baseScale = p.noteScale ?? 0.22
         const grow = p.noteGrow ?? 1.8
         // Each companion's notes match its body colour (the sheep's `orange` material = char_Body);
-        // fall back to the global noteColor if this companion has no music character.
+        // the literal is a defensive fallback for a companion with no music character.
         const bodyColor = music ? useStore.getState().sheepMaterialParameters?.characters?.[music]?.orange?.baseColor : null
-        tmpColor.set(bodyColor ?? p.noteColor ?? '#e8ecff')
+        tmpColor.set(bodyColor ?? '#99e386')
 
         // Local billboard quaternion = (parent world rotation)⁻¹ · camera world rotation, so the
         // notes face the camera despite the companion group's yaw.

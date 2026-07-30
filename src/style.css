@@ -2,11 +2,11 @@
    the earliest text already have it — declaring it AGAIN here would silently win the family
    resolution (last declaration wins) and bypass the preloaded file. One declaration only. */
 
-/* Shared UI design tokens (driven live by the "Game UI" Leva folder — ui/useUiCssVariables.js writes these on
-   the root). The in-game text is sized in `vmin` so it stays the same PROPORTION of the screen at any
-   resolution; --ui-scale multiplies all of it together. The two radii unify the corner rounding:
-   --ui-radius for panels/buttons (the speech-bubble look), --ui-radius-chip for the little key chips
-   (the control-key look). The *-nudge vars fine-tune vertical glyph centering (Bebas Neue sits high). */
+/* Shared UI design tokens (driven live by the "Desktop" / "Mobile" Leva sections — ui/useUiCssVariables.js
+   writes these on the root). The in-game text is sized in `vmin` so it stays the same PROPORTION of the
+   screen at any resolution; --ui-scale multiplies all of it together. The two radii unify the corner
+   rounding: --ui-radius for panels/buttons (the speech-bubble look), --ui-radius-chip for the little key
+   chips (the control-key look). The *-nudge vars fine-tune vertical glyph centering (Bebas Neue sits high). */
 :root {
     --ui-scale: 1.3;
     /* The base UI unit. `vmin` is 1% of the viewport's SHORTER side in CSS px, so the UI scales with the
@@ -94,81 +94,4 @@ body,
 #leva__root {
     position: fixed;
     z-index: 10001;
-}
-
-/**
- * Interface
- */
-.interface {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    font-family: 'Bebas Neue', Impact, sans-serif;
-}
-
-/**
- * Time
- */
-.time {
-    position: absolute;
-    top: 15%;
-    left: 0;
-    width: 100%;
-    color: var(--sj-ui-primary);
-    font-size: 6vh;
-    background: var(--sj-ui-panel);
-    padding-top: 5px;
-    text-align: center;
-}
-
-/**
- * Restart
- */
-.restart {
-    display: flex;
-    justify-content: center;
-    position: absolute;
-    top: 40%;
-    left: 0;
-    width: 100%;
-    color: var(--sj-ui-primary);
-    font-size: 80px;
-    background: var(--sj-ui-panel);
-    padding-top: 10px;
-    pointer-events: auto;
-    cursor: pointer;
-}
-
-/**
- * Controls
- */
-.controls {
-    position: absolute;
-    bottom: 10%;
-    left: 0;
-    width: 100%;
-}
-
-.controls .raw {
-    display: flex;
-    justify-content: center;
-}
-
-.controls .key {
-    width: 40px;
-    height: 40px;
-    margin: 4px;
-    border: 2px solid var(--sj-ui-primary);
-    background: var(--sj-ui-panel);
-}
-
-.controls .key.large {
-    width: 144px;
-}
-
-.controls .key.active {
-    background: var(--sj-ui-panel-active);
 }

@@ -69,8 +69,8 @@ function ShellBridge() {
     return null
 }
 
-// The Leva debug panel only shows when the URL hash is #debug (e.g. ...?/#debug). On the plain page
-// it's hidden. The controls still register + drive the scene; only the panel UI is hidden.
+// The Leva debug panel only shows when the URL hash is #debug (append `#debug` to the page URL). The
+// controls still register and drive the scene on the plain page; only the panel UI is hidden.
 const isDebug = typeof window !== 'undefined' && window.location.hash === '#debug'
 
 export default function App() {

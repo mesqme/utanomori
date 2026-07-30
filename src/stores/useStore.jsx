@@ -43,9 +43,9 @@ const createStore = () =>
              * Mutated IN PLACE (copy, never reassign) so the per-frame writers don't churn the
              * store: readers hold the same Vector3 instance for the lifetime of the app.
              */
-            ballPosition: new THREE.Vector3(0, 0, 0),
-            setBallPosition: (position) => {
-                get().ballPosition.copy(position)
+            heroPosition: new THREE.Vector3(0, 0, 0),
+            setHeroPosition: (position) => {
+                get().heroPosition.copy(position)
             },
 
             smoothedCircleCenter: new THREE.Vector3(0, 0, 0),
@@ -136,9 +136,6 @@ const createStore = () =>
              */
             characterMaterialParameters: cloneSceneStyleSection(defaultSceneStyle.characterMaterialParameters),
 
-            /**
-             * Camera debug parameters
-             */
             /**
              * Global feature parameters
              *
@@ -249,7 +246,6 @@ if (import.meta?.hot) {
               ),
           }
 
-    delete characterMaterialParameters.palettePreset
 
     useStore.setState({
         grassStyleVersion: GRASS_STYLE_VERSION,
@@ -290,8 +286,7 @@ if (import.meta?.hot) {
         },
         characterMaterialParameters,
         // NOTE: the only group here that RESETS rather than merges — a hot reload discards live
-        // camera tweaks and returns to the defaults. Dev-only either way; flagged rather than
-        // "fixed" because whether that is intentional has not been confirmed.
+        // camera tweaks and returns to the defaults. Dev-only either way.
         cameraParameters: { ...DEFAULT_CAMERA_PARAMETERS },
         colorGradeParameters: { ...DEFAULT_COLOR_GRADE_PARAMETERS, ...state.colorGradeParameters },
         loaderDebugParameters: applyLoaderDebugDefaults ? { ...DEFAULT_LOADER_DEBUG_PARAMETERS } : { ...DEFAULT_LOADER_DEBUG_PARAMETERS, ...state.loaderDebugParameters },

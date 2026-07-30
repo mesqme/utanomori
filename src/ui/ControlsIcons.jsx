@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { useKeyboardControls } from '@react-three/drei'
 import './ControlsIcons.css'
 import useStore from '../stores/useStore.jsx'

@@ -1,4 +1,5 @@
-/* Title block, top-centre of the loading / GO / intro screens. Above the loader cover (z 10000). */
+/* Title block, top-centre of the intro screen (IntroTitle mounts on PHASES.intro only — NOT on the
+   loading / GO screens). Above the loader cover (z 10000). */
 .intro-title {
     position: fixed;
     top: 16%;

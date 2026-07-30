@@ -194,18 +194,14 @@ const painteryStyle = {
         painteryScreenBlend: 1,
         painteryDrift: 0.16,
         painteryLayer2Scale: 0.8,
-        painteryBleed: 0,
     },
     ditheringParameters: {
         pixelSize: 1,
     },
     backgroundParameters: {
         backgroundColor: '#070258',
-        gradientTopColor: '#3d1f95',
-        horizonColor: '#0093ff',
-        gradientIntensity: 0.47,
-        gradientHeight: -0.9,
-        gradientPower: 3.1,
+        skyMixColor: '#0093ff', // the second colour the brush texture mixes toward
+        skyMixAmount: 0.47, // how much of it sits under the brush (0 = plain background colour)
         textureEnabled: true,
         textureName: 'watercolor', // background image: 'watercolor' | 'paintaryAlpha'
         colorMode: 'Both',
@@ -281,8 +277,6 @@ const painteryStyle = {
         painterlyTexture: 'paintaryAlpha',
         painterlyScale: 0.11,
         painterlyContrast: 0.66,
-        painterlyColor: '#ffffff',
-        painterlyColorStrength: 0,
         painterlyBrightnessVariation: 0.48,
         materials: {
             red: { baseColor: '#cc2d2d', toonColor: '#5c1028' },
@@ -294,9 +288,9 @@ const painteryStyle = {
             lantern: { baseColor: '#ffbf00', toonColor: '#7a3d18' },
         },
     },
-    // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Every value here is written
-    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live. The old
-    // textured/Blot-bubble params (shape, roughness, texture, colours, button sizes) are gone.
+    // The whole in-game UI skin (speech bubble + prompts + HUD + chips). Most values here are written
+    // to a CSS custom property on :root by ui/useUiCssVariables.js, so the DOM UI restyles live; a few
+    // (bubbleWidth, tutorialButtonOutside) are read straight by the component that uses them.
     /**
      * Game UI
      */

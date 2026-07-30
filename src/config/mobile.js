@@ -5,9 +5,6 @@ import useStore from '../stores/useStore.jsx'
 export { isMobile, useIsMobile, isPortrait, useIsPortrait } from './device.js'
 import { isMobile } from './device.js'
 
-// The camera distances to actually use this frame — the mobile set when the mobile experience is
-// active, otherwise the desktop store params (cameraParameters + musicStoneParameters). One place
-// so MainCharacter / GameDirector / MusicStones don't each branch on isMobile.
 // Initial top-down "hat" shot camera height — zoomed further out on mobile so the smaller loading
 // ring still covers the hat.
 export function resolvedLoaderCameraHeight() {
@@ -23,6 +20,9 @@ export function resolvedLoaderTarget() {
     return { x: state.loaderDebugParameters.targetX, z: state.loaderDebugParameters.targetZ }
 }
 
+// The camera distances to actually use this frame — the mobile set when the mobile experience is
+// active, otherwise the desktop store params (cameraParameters + musicStoneParameters). One place
+// so MainCharacter / GameDirector / MusicStones don't each branch on isMobile.
 export function resolvedCameraDistances() {
     const state = useStore.getState()
     if (isMobile()) {

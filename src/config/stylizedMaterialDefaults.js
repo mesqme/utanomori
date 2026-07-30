@@ -15,7 +15,5 @@ export const characterStylizedDefaults = Object.freeze({
     painterlyTexture: painterlyTextureOptions.paintaryAlpha,
     painterlyScale: 0.05,
     painterlyContrast: 1.02,
-    painterlyColor: '#ffffff',
-    painterlyColorStrength: 0,
     painterlyBrightnessVariation: 0.56,
 })

@@ -3,7 +3,6 @@
 // STORE changes from somewhere other than the panel (a colour theme, the mobile loader overlay,
 // HMR-restored state). If a control is not listed here it simply is not reverse-synced.
 
-// Leva control path (inside its folder) → store param key, per synced section.
 export const LEVA_SECTION_PATHS = Object.freeze({
     Terrain: {
         groundTexture: 'groundTextureEnabled',
@@ -14,6 +13,10 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         groundTextureScale: 'groundTextureScale',
         groundTextureContrast: 'groundTextureContrast',
         chunkSize: 'chunkSize',
+    },
+    // A folder inside World.Terrain, so it needs its own map — a folder adds a level to the leva
+    // path and these would not resolve under 'World.Terrain'.
+    'Ground Shadow': {
         shadowRadius: 'shadowRadius',
         shadowSoftness: 'shadowSoftness',
         shadowDarkness: 'shadowDarkness',
@@ -21,15 +24,12 @@ export const LEVA_SECTION_PATHS = Object.freeze({
     Background: {
         backgroundColor: 'backgroundColor',
         backgroundTexture: 'textureName',
-        gradientTop: 'gradientTopColor',
-        horizonColor: 'horizonColor',
-        gradientIntensity: 'gradientIntensity',
-        gradientHeight: 'gradientHeight',
-        gradientPower: 'gradientPower',
+        mixColor: 'skyMixColor',
+        mixAmount: 'skyMixAmount',
         textureEnabled: 'textureEnabled',
         colorMode: 'colorMode',
-        textureSize: 'textureSize',
-        textureLayer2: 'textureLayer2',
+        layer1Size: 'textureSize',
+        layer2Scale: 'textureLayer2',
         textureYawParallax: 'textureYawParallax',
         texturePitchParallax: 'texturePitchParallax',
         textureContrast: 'textureContrast',
@@ -62,7 +62,6 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         pScreenBlend: 'painteryScreenBlend',
         pDrift: 'painteryDrift',
         pLayer2: 'painteryLayer2Scale',
-        pBleed: 'painteryBleed',
     },
     Roads: {
         enabled: 'enabled',
@@ -256,8 +255,6 @@ export const LEVA_SECTION_PATHS = Object.freeze({
         pTexture: 'painterlyTexture',
         pScale: 'painterlyScale',
         pContrast: 'painterlyContrast',
-        pColor: 'painterlyColor',
-        pTint: 'painterlyColorStrength',
         pBrightness: 'painterlyBrightnessVariation',
     },
     'Ground Light': {

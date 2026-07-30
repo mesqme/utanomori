@@ -21,15 +21,18 @@ import { resolvedCameraDistances, isMobile, isPortrait } from '../config/mobile.
 import { playSound } from '../audio/gameSounds.js'
 import stonesModelUrl from '../assets/models/stones.glb'
 
-// Coloured stones that stage the song mini-game in 3D: ONE stone per UNIQUE sound for the current
-// character (3–6), in a half-circle "rainbow" above the singing companion. The camera lifts, each
+// Coloured stones that stage the song mini-game in 3D: a fixed board of SIX stones (one per note
+// colour) in a half-circle "rainbow" above the singing companion — mobile swaps that for a flat
+// line (landscape) or a 2-column grid (portrait). The character's real sounds land in random slots
+// and the leftover slots are silent decoys, so a wrong click is a miss. The camera lifts, each
 // played sound flashes its stone, and the player clicks the stones to repeat the melody. Stone i
-// plays the unique sound game.stoneSounds[i]; the melody (game.song) is a sequence of stone indices.
+// plays game.stoneSounds[i] (-1 = decoy → silent); the melody (game.song) is a sequence of stone
+// indices.
 //
 // Hover/click happen on a FIXED-SIZE invisible proxy sphere per stone (not the visible mesh, which
 // scales with the rise + hover and would drop the hover at its edges). The shared arrow pointer
-// (TargetArrow) follows the mouse freely around the arc during input and snaps onto a stone only
-// when its proxy is hovered (during playback it snaps to the singing note).
+// (TargetArrow) never follows the cursor — it snaps stone to stone: onto the hovered stone during
+// input (resting on the last one when nothing is hovered), onto the singing note during playback.
 const COUNT_MAX = 7 // we keep up to 7 meshes; the active game uses the first `count` of them
 const STAGED = new Set(['setup', 'countdown', 'playback', 'input', 'roundClear', 'success', 'fail'])
 const REVEAL_FACTOR_ALWAYS = 1000 // focal element → never fade at the reveal-circle edge
@@ -140,7 +143,7 @@ export default function MusicStones() {
         const p = store.musicStoneParameters
         const staged = game.active && STAGED.has(game.stage) && !!game.companion
 
-        // Capture the layout (companion centre + this character's stone count) when staging begins.
+        // Capture the layout (companion centre + the board's stone count) when staging begins.
         if (staged && !layoutRef.current && game.stoneSounds.length > 0) {
             layoutRef.current = { cx: game.companion.x, cz: game.companion.z, count: game.stoneCount }
             stageStartRef.current = state.clock.elapsedTime
@@ -511,7 +514,6 @@ export default function MusicStones() {
                 screenBlend: store.borderParameters.painteryScreenBlend,
                 drift: store.borderParameters.painteryDrift,
                 layer2Scale: store.borderParameters.painteryLayer2Scale,
-                bleed: store.borderParameters.painteryBleed,
             },
             seeThrough,
         }

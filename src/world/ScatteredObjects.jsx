@@ -138,7 +138,6 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
                 screenBlend: state.borderParameters.painteryScreenBlend,
                 drift: state.borderParameters.painteryDrift,
                 layer2Scale: state.borderParameters.painteryLayer2Scale,
-                bleed: state.borderParameters.painteryBleed,
             },
             seeThrough,
             stoneSeeThrough: musicStoneSeeThrough,
@@ -183,7 +182,7 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
         /**
          * Mushroom reaction
          */
-        updateMushroomReactions(pool, chunkMushroomsRef.current, state.ballPosition, state.objectParameters, delta)
+        updateMushroomReactions(pool, chunkMushroomsRef.current, state.heroPosition, state.objectParameters, delta)
     })
 
     // NOTE: colours + colour variations are deliberately NOT in this key — they're shader uniforms
@@ -258,8 +257,6 @@ export default function ScatteredObjects({ activeChunks, chunkSize }) {
             const stoneYOffset = objectParameters.stoneYOffset ?? 0
             const mushroomSize = objectParameters.mushroomSize ?? 1.0
             const mushroomYOffset = objectParameters.mushroomYOffset ?? 0
-            // (Type colours + per-instance variation are shader uniforms now — nothing colour-
-            // related is baked here beyond the stone GLB variant colour × placement tone.)
 
             for (const chunk of activeChunks) {
                 if (chunkInstances.has(chunk.key)) continue

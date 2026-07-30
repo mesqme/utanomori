@@ -12,7 +12,8 @@ export const seeThrough = {
     // opacityIntensity, brush). `grassEnabled` toggles only the GRASS clearing (for hero + sheep);
     // the props always stay see-through so characters read behind trees/stones.
     enabled: true,
-    grassEnabled: false, // also punch the hole into the GRASS in front of the hero + sheep (test toggle)
+    grassEnabled: false, // also punch the hole into the GRASS in front of the hero + sheep. Ships
+    // off: the grass is short enough to see over, so the clearing cost buys nothing.
     worldRadius: 2.5, // size of the hole in world units around the hero / sheep
     inner: 0.41, // 0..1 - core radius before the falloff begins
     depthBias: 0.5, // occluder must be at least this many world units in front

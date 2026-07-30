@@ -14,8 +14,8 @@ import { themeMaskUniforms } from '../world/state/themeMask.js'
 // which the batching chunks require.
 //
 // `vertexColors: true` makes it read a geometry colour attribute instead of the
-// batched colour — used for the (non-batched) companion creatures, which carry
-// per-vertex colours. The batching chunks are inert on a regular mesh.
+// batched colour, for a plain (non-batched) mesh — the batching chunks are inert
+// there. No current caller passes it: the props and the music stones are all batched.
 export function createPropStylizedMaterial(painterlyTexture, { vertexColors = false, toneMapped = false } = {}) {
     const material = new THREE.ShaderMaterial({
         name: 'prop_stylized',
@@ -32,14 +32,13 @@ export function createPropStylizedMaterial(painterlyTexture, { vertexColors = fa
             uPainterlyBrightnessVariation: { value: 0.5 },
             uBackgroundColor: { value: new THREE.Color(palette.background) },
             uBackgroundColorOld: { value: new THREE.Color(palette.background) },
-            uPropFadeMode: { value: 1 },
+            uPropFadeMode: { value: 2 },
             uPixelSize: { value: 1 },
             uPainterySize: { value: 167 },
             ...screenPainteryUniforms,
             uPainteryScreenBlend: { value: 0.85 },
             uPainteryDrift: { value: 0.12 },
             uPainteryLayer2Scale: { value: 2.2 },
-            uPainteryBleed: { value: 0.35 },
             uCircleCenter: { value: new THREE.Vector3() },
             uCircleRadiusFactor: { value: 0.07 },
             uPropChunkSize: { value: 9 },
@@ -200,7 +199,6 @@ export function updatePropStylizedMaterial(material, options) {
         u.uPainteryScreenBlend.value = options.paintery.screenBlend
         u.uPainteryDrift.value = options.paintery.drift
         u.uPainteryLayer2Scale.value = options.paintery.layer2Scale
-        u.uPainteryBleed.value = options.paintery.bleed
     }
     if (options.seeThrough) {
         const st = options.seeThrough

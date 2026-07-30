@@ -17,8 +17,7 @@
     border: var(--ui-border) solid var(--sj-ui-primary);
     border-radius: var(--ui-radius);
     background: var(--sj-ui-panel);
-    color: var(--sj-ui-primary); /* self-sufficient: the preview renders this outside .song-game */
-    font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
+    color: var(--sj-ui-primary);     font-size: calc(1.4 * var(--ui-vmin) * var(--ui-scale));
     letter-spacing: 0.14em;
 }
 
@@ -31,30 +30,8 @@
     }
 }
 
-/* "Are you ready?" prompt */
-.song-prompt {
-    position: absolute;
-    left: 50%;
-    bottom: 72px;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 18px 26px;
-    border: var(--ui-border) solid var(--sj-ui-primary);
-    border-radius: var(--ui-radius);
-    background: var(--sj-ui-panel);
-    pointer-events: auto;
-    animation: song-pop 0.18s ease-out;
-}
-
-.song-prompt-text {
-    margin: 0;
-    font-size: 18px;
-    letter-spacing: 0.04em;
-}
-
+/* Base mini-game button look — worn by the "Start" button below. The speech-bubble confirm
+   button (.dialogue-start) mirrors these values. */
 .song-yes {
     padding: calc(0.8 * var(--ui-vmin) * var(--ui-scale)) calc(2.8 * var(--ui-vmin) * var(--ui-scale));
     border: var(--ui-border) solid var(--sj-ui-primary);
@@ -142,7 +119,7 @@
     }
 }
 
-/* Status banners (Listen / Nice / fail) */
+/* Status banners — "Nice!" between rounds, and the win line on success. */
 .song-banner {
     position: absolute;
     left: 50%;
@@ -161,59 +138,6 @@
     border-color: #7be08a;
     color: #d8ffdf;
 }
-
-.song-bad {
-    border-color: #e87b7b;
-    color: #ffd8d8;
-}
-
-/* The note wheel — 7 circular buttons around a centre */
-.song-wheel {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 300px;
-    height: 300px;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    animation: song-fade 0.2s ease-out;
-}
-
-.song-note {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: var(--ui-border) solid var(--sj-ui-primary);
-    border-radius: 50%;
-    color: #0d0a2a;
-    font-size: 18px;
-    font-weight: 700;
-    cursor: pointer;
-    pointer-events: auto;
-    box-shadow: 0 2px 12px rgba(9, 8, 34, 0.55);
-    transition: transform 0.12s, filter 0.12s;
-}
-
-.song-note:hover {
-    filter: brightness(1.12);
-}
-
-.song-note:active {
-    filter: brightness(0.92);
-}
-
-/* Wheel shown but not yet accepting input (prompt over / listening). */
-.song-note-idle {
-    opacity: 0.5;
-    cursor: default;
-    box-shadow: 0 1px 6px rgba(9, 8, 34, 0.4);
-}
-
 .song-exit {
     box-sizing: border-box;
     position: absolute;
@@ -258,62 +182,6 @@
     transform: translate(var(--ui-chip-nudge-x), var(--ui-chip-nudge));
 }
 
-.song-wheel-center {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: 88px;
-    height: 88px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 2px solid var(--sj-ui-ring-track);
-    border-radius: 50%;
-    background: var(--sj-ui-panel);
-    font-size: 18px;
-    letter-spacing: 0.08em;
-}
-
-/* Notes rising above a singing head (rendered through drei <Html> in CompanionNotes). */
-.song-notes-anchor {
-    position: relative;
-    width: 0;
-    height: 0;
-}
-
-.song-float-note {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: var(--note-size, 48px);
-    height: var(--note-size, 48px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: var(--ui-border) solid var(--sj-ui-primary);
-    border-radius: 50%;
-    color: #0d0a2a;
-    font-weight: 700;
-    font-size: calc(var(--note-size, 48px) * 0.4);
-    box-shadow: 0 3px 14px rgba(9, 8, 34, 0.55);
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.3);
-    will-change: transform, opacity;
-    animation: song-float var(--note-dur, 1.5s) ease-out forwards;
-}
-
-/* Soft variant — a light note glyph, no vivid bubble; just signals the character is singing. */
-.song-float-note-soft {
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    color: rgba(224, 229, 255, 0.72);
-    font-size: calc(var(--note-size, 48px) * 0.95);
-    font-weight: 400;
-    text-shadow: 0 1px 6px rgba(9, 8, 34, 0.5);
-}
-
 @keyframes song-fade {
     from {
         opacity: 0;
@@ -331,28 +199,5 @@
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
-    }
-}
-
-@keyframes song-float {
-    0% {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.3);
-    }
-    18% {
-        opacity: 1;
-        transform: translate(calc(-50% + var(--note-wobble, 12px)), calc(-50% - var(--note-rise, 80px) * 0.12)) scale(1);
-    }
-    55% {
-        opacity: 1;
-        transform: translate(calc(-50% - var(--note-wobble, 12px)), calc(-50% - var(--note-rise, 80px) * 0.55)) scale(1.2);
-    }
-    82% {
-        opacity: 0.85;
-        transform: translate(calc(-50% + var(--note-wobble, 12px) * 0.5), calc(-50% - var(--note-rise, 80px) * 0.85)) scale(var(--note-grow, 1.7));
-    }
-    100% {
-        opacity: 0;
-        transform: translate(-50%, calc(-50% - var(--note-rise, 80px))) scale(var(--note-grow, 1.7));
     }
 }
