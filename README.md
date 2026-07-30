@@ -1,6 +1,6 @@
 # Utanomori
 
-![Utanomori — the hero and three collected spirits in the night forest](public/cover.webp)
+![Utanomori — the hero and three collected spirits in the night forest](public/cover.jpg)
 
 A painterly night-forest game built with React Three Fiber. You walk an endless procedural forest,
 find three music spirits, and play each one's melody back on a set of singing stones.
