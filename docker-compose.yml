@@ -1,7 +1,10 @@
+# Keeping it as sound-journey is what lets compose adopt and recreate the container already on the
+# server. Renaming the project needs a one-time `docker rm -f sound-journey` on the host first.
+name: sound-journey
 services:
-  sound-journey:
-    image: ${IMAGE}
-    container_name: sound-journey
-    restart: always
-    ports:
-      - "127.0.0.1:13115:80"
+    sound-journey:
+        image: ${IMAGE}
+        container_name: sound-journey
+        restart: always
+        ports:
+            - '127.0.0.1:13115:80'
