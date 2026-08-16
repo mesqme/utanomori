@@ -41,6 +41,15 @@ function dampAngle(current, target, lambda, delta) {
 // sitting next to the one you just collected — you follow the arrow out to find it.
 function findHiddenSpawn(player) {
     const revealRadius = getRevealRadius()
+    // HAZARD if the reveal circle is ever widened. Nothing here keeps the spawn inside
+    // ABANDON_RADIUS, and the abandon branch below relocates anything past that ring — every
+    // frame, at 60 Hz, each one allocating a new target object and re-rendering the whole spirit
+    // subtree. It reads as a frame-rate drop with no obvious cause.
+    //
+    // Correct today, but only just: the shipped radiusFactor 1 gives a max of 28.35 against a ring
+    // of 30, so it clears by 1.65 units. Above ~1.06 it starts intermittently; above ~1.65 it is
+    // permanent. If you widen the circle, wrap both distances below in
+    // Math.min(ABANDON_RADIUS - 1, ...) — at radiusFactor 1 that comes out identical.
     // 50% farther than the original 10 / ×1.35 / ×2.1 — a longer walk to each music character.
     const minDistance = Math.max(15, revealRadius * 2.025)
     const maxDistance = Math.max(minDistance + 7.5, revealRadius * 3.15)

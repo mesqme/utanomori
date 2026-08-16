@@ -1,5 +1,5 @@
 {
-    "name": "sound-journey",
+    "name": "utanomori",
     "private": true,
     "version": "1.0.0",
     "description": "Utanomori — a painterly night-forest exploration game built with React Three Fiber.",
@@ -7,7 +7,7 @@
     "homepage": "https://mesq.me/utanomori/",
     "repository": {
         "type": "git",
-        "url": "https://github.com/mesqme/sound-journey.git"
+        "url": "https://github.com/mesqme/utanomori.git"
     },
     "type": "module",
     "scripts": {
